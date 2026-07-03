@@ -1,0 +1,8 @@
+{
+  "name": "NexPlay",
+  "description": "The Ultimate Esports Platform & Tournament Hub: Create tournaments, join squad scrims, manage secure wallets, and climb national leaderboards.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -1,0 +1,3796 @@
+import React, { useEffect, useState } from 'react';
+import { collection, query, where, getDocs, doc, updateDoc, deleteDoc, orderBy, limit, setDoc, serverTimestamp, getDoc, writeBatch, increment, Timestamp } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, storage } from '../../../shared/config/firebase';
+import { useAuth } from '../../../shared/context/AuthContext';
+import { useNotification } from '../../../shared/context/NotificationContext';
+import { Transaction, UserProfile, Slide, PromoCode, Game, PaymentMethod, PaymentCategory, SiteSettings, OrgApplication, Tournament, TournamentEarning, ActivityLog, SubscriptionPlan } from '../../../shared/types/types';
+import { formatCurrency, formatDate, formatGameName } from '../../../shared/utils/utils';
+import { NotificationService } from '../../../shared/services/NotificationService';
+import ConfirmModal from '../../../shared/components/ConfirmModal';
+import TournamentCreateModal from '../../tournaments/components/TournamentCreateModal';
+import TransactionDetailModal from '../components/TransactionDetailModal';
+import TransactionHistoryTab from '../components/TransactionHistoryTab';
+import { useInvisibleImage } from '../../../shared/hooks/useInvisibleImage';
+import { ImageUploader } from '../../../shared/components/ImageUploader';
+import { MediaCategory, deleteImage } from '../../../shared/services/mediaService';
+import { DEFAULT_BANNER, NEXPLAY_LOGO } from '../../../shared/constants/constants';
+import { Users, ArrowDown, ArrowUp, Settings, Gift, Layout, Check, X, Download, Search, Trash, Edit, Upload, Image as ImageIcon, CreditCard, Eye, QrCode, Plus, Bell, Megaphone, Trophy, Gamepad2, Tag, Sliders, Info, ExternalLink, CheckCircle, DollarSign, AlertTriangle, RefreshCw, Send } from 'lucide-react';
+
+// ── Discord Admin Panel — local sub-component ─────────────────────────────────
+interface DiscordAdminPanelProps {
+    allTournaments: Tournament[];
+    showToast: (message: string, type: 'success' | 'error' | 'info' | 'warning') => void;
+}
+
+const DiscordAdminPanel: React.FC<DiscordAdminPanelProps> = ({ allTournaments, showToast }) => {
+    const [selectedTournamentId, setSelectedTournamentId] = useState('');
+    const [sending, setSending] = useState<string | null>(null);
+
+    const selectedTournament = allTournaments.find(t => t.id === selectedTournamentId) ?? null;
+
+    const handleSend = async (type: string) => {
+        if (!selectedTournament) {
+            showToast('Select a tournament first', 'warning');
+            return;
+        }
+        setSending(type);
+        try {
+            const token = await (await import('../../../shared/config/firebase')).auth.currentUser?.getIdToken();
+            if (!token) { showToast('Not authenticated', 'error'); return; }
+
+            const isScrim = selectedTournament.matchType === 'scrims';
+            const channel = isScrim ? 'scrims' : 'tournaments';
+
+            const dataMap: Record<string, object> = {
+                tournament_published: {
+                    tournamentId: selectedTournament.id,
+                    title: selectedTournament.title,
+                    game: selectedTournament.game,
+                    teamType: selectedTournament.teamType,
+                    type: selectedTournament.type,
+                    map: selectedTournament.map,
+                    startTime: selectedTournament.startTime?.toDate?.().toLocaleString() ?? 'TBD',
+                    prizePool: `Rs. ${selectedTournament.prizePool.toLocaleString()}`,
+                    entryFee: selectedTournament.entryFee === 0 ? 'FREE' : `Rs. ${selectedTournament.entryFee}`,
+                    currentPlayers: selectedTournament.currentPlayers,
+                    slots: selectedTournament.slots,
+                    bannerUrl: selectedTournament.bannerUrl,
+                },
+                tournament_live: {
+                    tournamentId: selectedTournament.id,
+                    title: selectedTournament.title,
+                    currentPlayers: selectedTournament.currentPlayers,
+                    slots: selectedTournament.slots,
+                    prizePool: `Rs. ${selectedTournament.prizePool.toLocaleString()}`,
+                    map: selectedTournament.map,
+                },
+                tournament_completed: {
+                    tournamentId: selectedTournament.id,
+                    title: selectedTournament.title,
+                    prizePool: `Rs. ${selectedTournament.prizePool.toLocaleString()}`,
+                    winner: selectedTournament.winners?.[0]?.username,
+                },
+                group_published: {
+                    tournamentId: selectedTournament.id,
+                    title: selectedTournament.title,
+                    groups: (selectedTournament.groups ?? []).map(g =>
+                        `${g.name} (${g.teams.length} teams): ${g.teams.map(t => t.name).join(', ')}`
+                    ),
+                },
+                game_start: {
+                    tournamentId: selectedTournament.id,
+                    title: selectedTournament.title,
+                    groupName: 'All Groups',
+                    map: selectedTournament.map ?? 'TBD',
+                    roomId: selectedTournament.roomId,
+                    roomPass: selectedTournament.roomPass,
+                },
+                game_time: {
+                    tournamentId: selectedTournament.id,
+                    title: selectedTournament.title,
+                    groupName: 'All Groups',
+                    startTime: selectedTournament.startTime?.toDate?.().toLocaleString() ?? 'TBD',
+                    timeLeft: '30 minutes',
+                    map: selectedTournament.map,
+                },
+                scrim_published: {
+                    tournamentId: selectedTournament.id,
+                    title: selectedTournament.title,
+                    game: selectedTournament.game,
+                    teamType: selectedTournament.teamType,
+                    startTime: selectedTournament.startTime?.toDate?.().toLocaleString() ?? 'TBD',
+                    prizePool: `Rs. ${selectedTournament.prizePool.toLocaleString()}`,
+                    entryFee: selectedTournament.entryFee === 0 ? 'FREE' : `Rs. ${selectedTournament.entryFee}`,
+                    currentPlayers: selectedTournament.currentPlayers,
+                    slots: selectedTournament.slots,
+                    bannerUrl: selectedTournament.bannerUrl,
+                },
+            };
+
+            const data = dataMap[type];
+            if (!data) { showToast('Unknown announcement type', 'error'); return; }
+
+            const res = await fetch('/api/discord/announce', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ type, data, channel }),
+            });
+            const json = await res.json();
+            showToast(json.message, json.success ? 'success' : 'error');
+        } catch (err: any) {
+            showToast('Failed to send announcement', 'error');
+        } finally {
+            setSending(null);
+        }
+    };
+
+    const announcements = [
+        { type: 'tournament_published', label: 'Publish',     color: 'text-[#5865F2] bg-[#5865F2]/10 border-[#5865F2]/20 hover:bg-[#5865F2]/20' },
+        { type: 'tournament_live',      label: '🔴 Live',     color: 'text-red-400 bg-red-500/10 border-red-500/20 hover:bg-red-500/20' },
+        { type: 'tournament_completed', label: 'Completed',   color: 'text-green-400 bg-green-500/10 border-green-500/20 hover:bg-green-500/20' },
+        { type: 'group_published',      label: 'Group Draw',  color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20 hover:bg-yellow-500/20' },
+        { type: 'game_start',           label: 'Match Start', color: 'text-pink-400 bg-pink-500/10 border-pink-500/20 hover:bg-pink-500/20' },
+        { type: 'game_time',            label: 'Reminder',    color: 'text-purple-400 bg-purple-500/10 border-purple-500/20 hover:bg-purple-500/20' },
+        { type: 'scrim_published',      label: 'Scrim Post',  color: 'text-brand-400 bg-brand-500/10 border-brand-500/20 hover:bg-brand-500/20' },
+    ];
+
+    return (
+        <div className="space-y-8">
+            <div className="border-b border-gray-800 pb-6">
+                <h2 className="text-2xl font-black text-white uppercase tracking-tighter flex items-center gap-3">
+                    <div className="p-2 bg-[#5865F2]/10 border border-[#5865F2]/20 rounded-xl">
+                        <Send className="w-5 h-5 text-[#5865F2]" />
+                    </div>
+                    Discord Announcements
+                </h2>
+                <p className="text-xs text-gray-500 font-bold uppercase tracking-widest mt-2">
+                    Send tournament updates directly to the Nexplay Discord server
+                </p>
+            </div>
+
+            {/* Tournament selector */}
+            <div className="bg-gray-900/50 p-6 rounded-3xl border border-gray-800 space-y-4">
+                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block">
+                    Select Tournament or Scrim
+                </label>
+                <select
+                    value={selectedTournamentId}
+                    onChange={e => setSelectedTournamentId(e.target.value)}
+                    aria-label="Select tournament for Discord announcement"
+                    className="w-full bg-black border border-gray-700 rounded-2xl px-5 py-4 text-white text-sm font-bold focus:border-[#5865F2] outline-none transition"
+                >
+                    <option value="">— Choose a tournament —</option>
+                    {allTournaments.map(t => (
+                        <option key={t.id} value={t.id}>
+                            [{t.status.toUpperCase()}] {t.title} ({t.matchType === 'scrims' ? '#scrims' : '#tournaments'})
+                        </option>
+                    ))}
+                </select>
+
+                {selectedTournament && (
+                    <div className="flex items-center gap-3 p-4 bg-black/40 rounded-2xl border border-gray-800">
+                        <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-900 border border-gray-700 shrink-0">
+                            {selectedTournament.bannerUrl && (
+                                <img src={selectedTournament.bannerUrl} alt="" className="w-full h-full object-cover" />
+                            )}
+                        </div>
+                        <div className="min-w-0">
+                            <div className="text-white font-black text-sm truncate">{selectedTournament.title}</div>
+                            <div className="text-[10px] text-gray-500 font-black uppercase tracking-widest">
+                                {selectedTournament.game} · {selectedTournament.teamType} · Posting to #{selectedTournament.matchType === 'scrims' ? 'scrims' : 'tournaments'}
+                            </div>
+                        </div>
+                        <span className={`ml-auto shrink-0 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                            selectedTournament.status === 'live' ? 'bg-red-500/10 text-red-400' :
+                            selectedTournament.status === 'completed' ? 'bg-green-500/10 text-green-400' :
+                            'bg-brand-500/10 text-brand-400'
+                        }`}>
+                            {selectedTournament.status}
+                        </span>
+                    </div>
+                )}
+            </div>
+
+            {/* Announce buttons */}
+            <div className="bg-gray-900/50 p-6 rounded-3xl border border-gray-800">
+                <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">
+                    Announcement Type
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {announcements.map(a => (
+                        <button
+                            key={a.type}
+                            onClick={() => handleSend(a.type)}
+                            disabled={sending !== null || !selectedTournament}
+                            className={`flex flex-col items-center gap-2 py-5 px-3 rounded-2xl border font-black text-xs uppercase tracking-widest transition-all disabled:opacity-40 disabled:cursor-not-allowed ${a.color}`}
+                        >
+                            {sending === a.type ? (
+                                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                                <Send className="w-4 h-4" />
+                            )}
+                            {a.label}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Setup guide */}
+            <div className="bg-[#5865F2]/5 border border-[#5865F2]/15 p-6 rounded-3xl space-y-3">
+                <div className="text-[10px] font-black text-[#5865F2] uppercase tracking-widest flex items-center gap-2">
+                    <Info className="w-4 h-4" /> Setup Guide
+                </div>
+                <ol className="text-xs text-gray-400 font-bold space-y-2 list-decimal list-inside">
+                    <li>Go to your Discord Server Settings → Integrations → Webhooks</li>
+                    <li>Create a webhook for your <span className="text-white">#tournaments</span> channel → copy URL → set <span className="font-mono text-brand-400">DISCORD_WEBHOOK_TOURNAMENTS</span> in <span className="font-mono">.env</span></li>
+                    <li>Create a webhook for your <span className="text-white">#scrims</span> channel → copy URL → set <span className="font-mono text-brand-400">DISCORD_WEBHOOK_SCRIMS</span> in <span className="font-mono">.env</span></li>
+                    <li>Restart the server — webhooks activate immediately</li>
+                </ol>
+            </div>
+        </div>
+    );
+};
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Admin Panel View - Main Management Hub
+const AdminPanel: React.FC = () => {
+    const { profile } = useAuth();
+    const { showToast } = useNotification();
+    const [activeTab, setActiveTab] = useState('tab-dashboard');
+    const [pendingTransactions, setPendingTransactions] = useState<Transaction[]>([]);
+    const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
+    const [allTournaments, setAllTournaments] = useState<Tournament[]>([]);
+    const [orgApplications, setOrgApplications] = useState<OrgApplication[]>([]);
+    const [organizers, setOrganizers] = useState<UserProfile[]>([]);
+    const [orgTournaments, setOrgTournaments] = useState<Tournament[]>([]);
+    const [selectedOrgId, setSelectedOrgId] = useState<string>('');
+    const [slides, setSlides] = useState<Slide[]>([]);
+    const [promoCodes, setPromoCodes] = useState<PromoCode[]>([]);
+    const [users, setUsers] = useState<UserProfile[]>([]);
+    const [games, setGames] = useState<Game[]>([]);
+    const [paymentCategories, setPaymentCategories] = useState<PaymentCategory[]>([]);
+    const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [stats, setStats] = useState({ totalBalance: 0, todayDep: 0, todayWith: 0 });
+    const [loading, setLoading] = useState(true);
+
+    // Game Form State
+    const [isGameModalOpen, setIsGameModalOpen] = useState(false);
+    const [editingGame, setEditingGame] = useState<Game | null>(null);
+    const [gameName, setGameName] = useState('');
+    const [gameLogo, setGameLogo] = useState('');
+    const [gameModes, setGameModes] = useState('');
+    const [isPublished, setIsPublished] = useState(true);
+    const [uploading, setUploading] = useState(false);
+
+    // Payment Category Form State
+    const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+    const [editingCategory, setEditingCategory] = useState<PaymentCategory | null>(null);
+    const [categoryName, setCategoryName] = useState('');
+    const [categoryDescription, setCategoryDescription] = useState('');
+    const [categoryActive, setCategoryActive] = useState(true);
+
+    // Payment Method Form State
+    const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+    const [editingPayment, setEditingPayment] = useState<PaymentMethod | null>(null);
+    const [paymentCategoryId, setPaymentCategoryId] = useState('');
+    const [paymentName, setPaymentName] = useState('');
+    const [paymentQr, setPaymentQr] = useState('');
+    const [paymentInstructions, setPaymentInstructions] = useState('');
+    const [paymentType, setPaymentType] = useState('eSewa');
+    const [paymentActive, setPaymentActive] = useState(true);
+    const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null);
+
+    // Promo Form State
+    const [isPromoModalOpen, setIsPromoModalOpen] = useState(false);
+    const [editingPromo, setEditingPromo] = useState<PromoCode | null>(null);
+    const [promoCode, setPromoCode] = useState('');
+    const [promoAmount, setPromoAmount] = useState('');
+    const [promoMaxUses, setPromoMaxUses] = useState('');
+    const [promoActive, setPromoActive] = useState(true);
+
+    // Slide Form State
+    const [isSlideModalOpen, setIsSlideModalOpen] = useState(false);
+    const [editingSlide, setEditingSlide] = useState<Slide | null>(null);
+    const [slideTitle, setSlideTitle] = useState('');
+    const [slideDescription, setSlideDescription] = useState('');
+    const [slideImage, setSlideImage] = useState('');
+    const [slideLink, setSlideLink] = useState('');
+    const [slideBtnText, setSlideBtnText] = useState('View More');
+    const [slideIsActive, setSlideIsActive] = useState(true);
+
+    // Settings State
+    const [minWithdrawal, setMinWithdrawal] = useState('');
+    const [supportEmail, setSupportEmail] = useState('');
+    const [supportPhone, setSupportPhone] = useState('');
+    const [notice, setNotice] = useState('');
+    const [isNoticeActive, setIsNoticeActive] = useState(false);
+    const [maintenanceMode, setMaintenanceMode] = useState(false);
+    const [orgFormDescription, setOrgFormDescription] = useState('');
+
+    // New UX State
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [activityLogs, setActivityLogs] = useState<any[]>([]);
+    const [txDateFrom, setTxDateFrom] = useState('');
+    const [txDateTo, setTxDateTo] = useState('');
+    const [banReason, setBanReason] = useState('');
+    const [rejectReason, setRejectReason] = useState('');
+    const [userAuditLogs, setUserAuditLogs] = useState<Transaction[]>([]);
+    const [isUserAuditDrawerOpen, setIsUserAuditDrawerOpen] = useState(false);
+    const [isNotifyUserModalOpen, setIsNotifyUserModalOpen] = useState(false);
+    const [notifyUserMessage, setNotifyUserMessage] = useState('');
+    const [notifyUserTitle, setNotifyUserTitle] = useState('');
+
+    // Media Library States
+    const [mediaItems, setMediaItems] = useState<any[]>([]);
+    const [mediaLoading, setMediaLoading] = useState(false);
+    const [mediaFilter, setMediaFilter] = useState("ALL");
+    const [mediaSearch, setMediaSearch] = useState("");
+    const [mockUploadUrl, setMockUploadUrl] = useState("");
+    const [selectedMediaCategory, setSelectedMediaCategory] = useState<MediaCategory>(MediaCategory.OTHER);
+
+    const fetchMedia = async () => {
+        setMediaLoading(true);
+        try {
+            const q = query(collection(db, "media"), orderBy("createdAt", "desc"));
+            const snap = await getDocs(q);
+            const items = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setMediaItems(items);
+        } catch (err) {
+            console.error("Error fetching media library records:", err);
+        } finally {
+            setMediaLoading(false);
+        }
+    };
+
+    const handleDeleteMedia = async (mediaId: string, url: string, publicId?: string) => {
+        setConfirmModal({
+            isOpen: true,
+            title: "Delete Image Reference",
+            message: `Are you sure you want to delete this image reference? This action will permanently remove it from Cloudinary and the catalog library. URL: ${url}`,
+            isDestructive: true,
+            onConfirm: async () => {
+                const actualPublicId = publicId || url;
+                const success = await deleteImage(mediaId, actualPublicId);
+                if (success) {
+                    showToast("Media asset deleted successfully from Cloudinary and catalog!", "success");
+                    await fetchMedia();
+                } else {
+                    showToast("Failed to delete media reference.", "error");
+                }
+                closeConfirmModal();
+            }
+        });
+    };
+
+    useEffect(() => {
+        if (activeTab === "tab-media") {
+            fetchMedia();
+        }
+    }, [activeTab]);
+
+    const { handlePaste: handlePasteSlide, handleDrop: handleDropSlide, handleDragOver: handleDragOverSlide, processAndUpload: processAndUploadSlide } = useInvisibleImage({
+        onUploadStart: () => setUploading(true),
+        onUploadEnd: () => setUploading(false),
+        onUploadSuccess: (url) => setSlideImage(url),
+        onError: (err) => showToast(err, 'error')
+    });
+
+    const { handlePaste: handlePasteGame, handleDrop: handleDropGame, handleDragOver: handleDragOverGame, processAndUpload: processAndUploadGame } = useInvisibleImage({
+        onUploadStart: () => setUploading(true),
+        onUploadEnd: () => setUploading(false),
+        onUploadSuccess: (url) => setGameLogo(url),
+        onError: (err) => showToast(err, 'error')
+    });
+
+    const { handlePaste: handlePastePayment, handleDrop: handleDropPayment, handleDragOver: handleDragOverPayment, processAndUpload: processAndUploadPayment } = useInvisibleImage({
+        onUploadStart: () => setUploading(true),
+        onUploadEnd: () => setUploading(false),
+        onUploadSuccess: (url) => setPaymentQr(url),
+        onError: (err) => showToast(err, 'error')
+    });
+
+    // Transaction Review State
+    const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
+    const [rejectionReason, setRejectionReason] = useState('');
+
+    // User Management State
+    const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
+    const [adjustmentAmount, setAdjustmentAmount] = useState('');
+    const [adjustmentType, setAdjustmentType] = useState<'add' | 'subtract'>('add');
+
+    // Organizer Edit State
+    const [isOrgEditModalOpen, setIsOrgEditModalOpen] = useState(false);
+    const [editingOrg, setEditingOrg] = useState<UserProfile | null>(null);
+    const [orgEmail, setOrgEmail] = useState('');
+    const [orgDiscord, setOrgDiscord] = useState('');
+    const [orgYoutube, setOrgYoutube] = useState('');
+    const [orgWhatsapp, setOrgWhatsapp] = useState('');
+    const [orgNameEdit, setOrgNameEdit] = useState('');
+
+    // Transaction Filter State
+    const [txFilterStatus, setTxFilterStatus] = useState<'all' | 'pending' | 'success' | 'rejected' | 'refunded'>('all');
+    const [txFilterType, setTxFilterType] = useState<'all' | 'deposit' | 'withdrawal' | 'prize' | 'refund' | 'entry_fee'>('all');
+    const [txFilterTournament, setTxFilterTournament] = useState<string>('all');
+    const [txSearchUser, setTxSearchUser] = useState('');
+    const [tournamentEarnings, setTournamentEarnings] = useState<TournamentEarning[]>([]);
+
+    // Confirm Modal State
+    const [confirmModal, setConfirmModal] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        onConfirm: () => void;
+        isDestructive?: boolean;
+    }>({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => {},
+    });
+
+    const closeConfirmModal = () => setConfirmModal(prev => ({ ...prev, isOpen: false }));
+
+    const getRelativeTime = (timestamp: any) => {
+        if (!timestamp) return '';
+        const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+        const now = new Date();
+        const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+        
+        if (diffInSeconds < 60) return `${diffInSeconds} seconds ago`;
+        if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+        return `${Math.floor(diffInSeconds / 86400)} days ago`;
+    };
+
+    const logAdminAction = async (action: string, details: string) => {
+        if (!profile) return;
+        try {
+            await setDoc(doc(collection(db, 'activityLogs')), {
+                adminId: profile.uid,
+                adminEmail: profile.email,
+                action,
+                details,
+                timestamp: serverTimestamp()
+            });
+        } catch (error) {
+            console.error("Failed to log admin action:", error);
+        }
+    };
+
+    useEffect(() => {
+        if (profile?.role !== 'admin') return;
+
+        const fetchData = async () => {
+            setLoading(true);
+            try {
+                // Fetch pending transactions
+                const txSnap = await getDocs(query(collection(db, 'transactions'), where('status', '==', 'pending')));
+                setPendingTransactions(txSnap.docs.map(d => ({ id: d.id, ...d.data() } as Transaction)));
+
+                // Fetch all recent transactions
+                const allTxSnap = await getDocs(query(collection(db, 'transactions'), orderBy('timestamp', 'desc'), limit(100)));
+                setAllTransactions(allTxSnap.docs.map(d => ({ id: d.id, ...d.data() } as Transaction)));
+
+                // Fetch all tournaments for filtering
+                const tourneySnap = await getDocs(query(collection(db, 'tournaments'), orderBy('createdAt', 'desc')));
+                setAllTournaments(tourneySnap.docs.map(d => ({ id: d.id, ...d.data() } as Tournament)));
+
+                // Fetch slides
+                const slideSnap = await getDocs(query(collection(db, 'slides'), orderBy('createdAt', 'desc')));
+                setSlides(slideSnap.docs.map(d => ({ id: d.id, ...d.data() } as Slide)));
+
+                // Fetch promo codes
+                const promoSnap = await getDocs(query(collection(db, 'promocodes'), orderBy('createdAt', 'desc')));
+                setPromoCodes(promoSnap.docs.map(d => ({ id: d.id, ...d.data() } as PromoCode)));
+
+                // Fetch games
+                const gameSnap = await getDocs(query(collection(db, 'games'), orderBy('createdAt', 'desc')));
+                setGames(gameSnap.docs.map(d => ({ id: d.id, ...d.data() } as Game)));
+
+                // Fetch payment categories
+                const payCatSnap = await getDocs(query(collection(db, 'paymentCategories'), orderBy('createdAt', 'desc')));
+                setPaymentCategories(payCatSnap.docs.map(d => ({ id: d.id, ...d.data() } as PaymentCategory)));
+
+                // Fetch payment methods
+                const paySnap = await getDocs(query(collection(db, 'paymentMethods'), orderBy('createdAt', 'desc')));
+                setPaymentMethods(paySnap.docs.map(d => ({ id: d.id, ...d.data() } as PaymentMethod)));
+
+                // Fetch Org Applications
+                const orgAppSnap = await getDocs(query(collection(db, 'orgApplications'), where('status', '==', 'pending')));
+                let orgApps = orgAppSnap.docs.map(d => ({ id: d.id, ...d.data() } as OrgApplication));
+                orgApps.sort((a,b) => {
+                    const aTime = a.timestamp?.toMillis ? a.timestamp.toMillis() : 0;
+                    const bTime = b.timestamp?.toMillis ? b.timestamp.toMillis() : 0;
+                    return bTime - aTime;
+                });
+                setOrgApplications(orgApps);
+
+                // Fetch Organizers
+                const orgsSnap = await getDocs(query(collection(db, 'users'), where('role', 'in', ['organizer', 'admin'])));
+                setOrganizers(orgsSnap.docs.map(d => ({ uid: d.id, ...d.data() } as UserProfile)));
+
+                // Fetch stats
+                const usersSnap = await getDocs(collection(db, 'users'));
+                const usersData = usersSnap.docs.map(d => ({ uid: d.id, ...d.data() } as UserProfile));
+                setUsers(usersData);
+                
+                let totalBal = 0;
+                usersSnap.forEach(d => totalBal += (d.data().balance || 0));
+
+                // Fetch activity logs
+                const logsSnap = await getDocs(query(collection(db, 'activityLogs'), orderBy('timestamp', 'desc'), limit(10)));
+                setActivityLogs(logsSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+
+                // Fetch tournament earnings
+                const earningsSnap = await getDocs(query(collection(db, 'tournamentEarnings'), orderBy('createdAt', 'desc')));
+                setTournamentEarnings(earningsSnap.docs.map(d => ({ id: d.id, ...d.data() } as TournamentEarning)));
+
+                // Fetch subscription plans
+                const planSnap = await getDocs(query(collection(db, 'subscriptionPlans'), orderBy('isActive', 'desc')));
+                setSubscriptionPlans(planSnap.docs.map(d => ({ id: d.id, ...d.data() } as any)));
+
+                // Load filters from local storage
+                const savedTxStatus = localStorage.getItem('txFilterStatus');
+                const savedTxType = localStorage.getItem('txFilterType');
+                const savedTxFrom = localStorage.getItem('txDateFrom');
+                const savedTxTo = localStorage.getItem('txDateTo');
+                if (savedTxStatus) setTxFilterStatus(savedTxStatus as any);
+                if (savedTxType) setTxFilterType(savedTxType as any);
+                if (savedTxFrom) setTxDateFrom(savedTxFrom);
+                if (savedTxTo) setTxDateTo(savedTxTo);
+
+                // Fetch site settings
+                const settingsSnap = await getDoc(doc(db, 'settings', 'site'));
+                if (settingsSnap.exists()) {
+                    const data = settingsSnap.data() as SiteSettings;
+                    setSiteSettings(data);
+                    setMinWithdrawal(data.minWithdrawal?.toString() || '');
+                    setSupportEmail(data.supportEmail || '');
+                    setSupportPhone(data.supportPhone || '');
+                    setNotice(data.notice || '');
+                    setIsNoticeActive(data.isNoticeActive || false);
+                    setMaintenanceMode(data.maintenanceMode || false);
+                    setOrgFormDescription(data.orgFormDescription || '');
+                }
+
+                const startOfDay = new Date();
+                startOfDay.setHours(0, 0, 0, 0);
+                const todayTxSnap = await getDocs(query(collection(db, 'transactions'), where('timestamp', '>=', startOfDay)));
+                let dep = 0, withdr = 0;
+                todayTxSnap.forEach(d => {
+                    const data = d.data();
+                    if (data.status === 'success') {
+                        if (data.type === 'deposit') dep += data.amount;
+                        if (data.type === 'withdrawal') withdr += Math.abs(data.amount);
+                    }
+                });
+
+                setStats({ totalBalance: totalBal, todayDep: dep, todayWith: withdr });
+            } catch (error) {
+                console.error("Error fetching admin data:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [profile]);
+
+    useEffect(() => {
+        setSelectedTx(null);
+    }, [activeTab]);
+
+    const handleApproveTx = async (tx: Transaction) => {
+        try {
+            const batch = writeBatch(db);
+            const txRef = doc(db, 'transactions', tx.id);
+            const userRef = doc(db, 'users', tx.userId);
+
+            if (tx.type === 'deposit') {
+                batch.update(userRef, { balance: increment(tx.amount) });
+            }
+            batch.update(txRef, { 
+                status: 'success',
+                confirmedBy: profile?.uid,
+                confirmedByUsername: profile?.username
+            });
+            await batch.commit();
+
+            // Send Notification
+            await NotificationService.create(
+                tx.userId,
+                'Transaction Approved',
+                `Your ${tx.type} of ${formatCurrency(tx.amount)} has been approved.`,
+                'success',
+                '/profile'
+            );
+
+            showToast('Transaction Approved', 'success');
+            setPendingTransactions(prev => prev.filter(t => t.id !== tx.id));
+            setAllTransactions(prev => prev.map(t => t.id === tx.id ? { ...t, status: 'success', confirmedByUsername: profile?.username } : t));
+            
+            if (selectedTx && selectedTx.id === tx.id) {
+                setSelectedTx({ ...selectedTx, status: 'success', confirmedByUsername: profile?.username });
+            }
+        } catch (error) {
+            console.error("Error approving transaction:", error);
+            showToast('Failed to approve transaction', 'error');
+        }
+    };
+
+    const handleRefundTx = async (tx: Transaction) => {
+        if (tx.status === 'refunded') return;
+        
+        setConfirmModal({
+            isOpen: true,
+            title: 'Confirm Refund',
+            message: `Are you sure you want to refund ${formatCurrency(Math.abs(tx.amount))} to ${tx.username}? This will add the amount back to their wallet balance.`,
+            onConfirm: async () => {
+                try {
+                    setLoading(true);
+                    const batch = writeBatch(db);
+                    const txRef = doc(db, 'transactions', tx.id);
+                    const userRef = doc(db, 'users', tx.userId);
+
+                    // 1. Update user balance
+                    batch.update(userRef, { balance: increment(Math.abs(tx.amount)) });
+
+                    // 2. Update transaction status
+                    batch.update(txRef, { 
+                        status: 'refunded',
+                        confirmedBy: profile?.uid,
+                        confirmedByUsername: profile?.username
+                    });
+
+                    // 3. Create a new refund record for clarity if needed, 
+                    // but usually updating the original is enough for manual override.
+                    
+                    await batch.commit();
+
+                    // Send Notification
+                    await NotificationService.create(
+                        tx.userId,
+                        'Transaction Refunded',
+                        `Your transaction of ${formatCurrency(Math.abs(tx.amount))} has been manually refunded by an admin.`,
+                        'info',
+                        '/profile'
+                    );
+
+                    showToast('Transaction Refunded', 'success');
+                    setAllTransactions(prev => prev.map(t => t.id === tx.id ? { ...t, status: 'refunded' } : t));
+                    setSelectedTx(null);
+                } catch (error) {
+                    console.error("Error refunding transaction:", error);
+                    showToast('Failed to refund transaction', 'error');
+                } finally {
+                    setLoading(false);
+                }
+            }
+        });
+    };
+
+    const executeRejectTx = async (tx: Transaction, reason: string) => {
+        try {
+            const batch = writeBatch(db);
+            const txRef = doc(db, 'transactions', tx.id);
+            const userRef = doc(db, 'users', tx.userId);
+
+            if (tx.type === 'withdrawal') {
+                batch.update(userRef, { balance: increment(Math.abs(tx.amount)) });
+            }
+            batch.update(txRef, { 
+                status: 'rejected',
+                rejectionReason: reason || 'No reason provided',
+                confirmedBy: profile?.uid,
+                confirmedByUsername: profile?.username
+            });
+            await batch.commit();
+
+            // Send Notification
+            await NotificationService.create(
+                tx.userId,
+                'Transaction Rejected',
+                `Your ${tx.type} of ${formatCurrency(tx.amount)} was rejected. Reason: ${reason || 'No reason provided'}`,
+                'alert',
+                '/profile'
+            );
+
+            showToast('Transaction Rejected', 'success');
+            setPendingTransactions(prev => prev.filter(t => t.id !== tx.id));
+            setSelectedTx(null);
+            setRejectionReason('');
+        } catch (error) {
+            console.error("Error rejecting transaction:", error);
+            showToast('Failed to reject transaction', 'error');
+        }
+    };
+
+    const handleRejectTx = (tx: Transaction) => {
+        if (!rejectionReason) {
+            setConfirmModal({
+                isOpen: true,
+                title: 'Reject without reason?',
+                message: 'Are you sure you want to reject this transaction without providing a reason?',
+                isDestructive: true,
+                onConfirm: () => executeRejectTx(tx, rejectionReason)
+            });
+            return;
+        }
+        executeRejectTx(tx, rejectionReason);
+    };
+
+    const handleAdjustBalance = async () => {
+        if (!selectedUser || !adjustmentAmount) return;
+        const amount = parseFloat(adjustmentAmount);
+        if (isNaN(amount)) return showToast('Invalid amount', 'error');
+
+        try {
+            const finalAmount = adjustmentType === 'add' ? amount : -amount;
+            await updateDoc(doc(db, 'users', selectedUser.uid), {
+                balance: increment(finalAmount)
+            });
+
+            // Create a manual adjustment transaction
+            const txRef = doc(collection(db, 'transactions'));
+            await setDoc(txRef, {
+                userId: selectedUser.uid,
+                amount: finalAmount,
+                type: 'prize', // Using prize as a generic adjustment type or add 'adjustment'
+                method: 'Manual Adjustment',
+                status: 'success',
+                timestamp: serverTimestamp(),
+                desc: `Admin Adjustment: ${adjustmentType === 'add' ? 'Added' : 'Subtracted'} ${amount}`
+            });
+
+            showToast('Balance Adjusted', 'success');
+            setUsers(prev => prev.map(u => u.uid === selectedUser.uid ? { ...u, balance: u.balance + finalAmount } : u));
+            setSelectedUser(null);
+            setAdjustmentAmount('');
+        } catch (error) {
+            console.error("Error adjusting balance:", error);
+            showToast('Failed to adjust balance', 'error');
+        }
+    };
+
+    const handleApproveOrg = async (app: OrgApplication) => {
+        try {
+            const batch = writeBatch(db);
+            const appRef = doc(db, 'orgApplications', app.id);
+            const userRef = doc(db, 'users', app.userId);
+
+            batch.update(userRef, { 
+                role: 'organizer',
+                orgStatus: 'approved',
+                orgName: app.orgName,
+                isOrganizer: true
+            });
+            batch.update(appRef, { status: 'approved' });
+            
+            await batch.commit();
+
+            await NotificationService.create(
+                app.userId,
+                'Organizer Application Approved',
+                `Congratulations! Your application for ${app.orgName} has been approved. You can now host tournaments.`,
+                'success',
+                '/organizer-panel'
+            );
+
+            showToast('Application Approved', 'success');
+            setOrgApplications(prev => prev.filter(a => a.id !== app.id));
+        } catch (error) {
+            console.error("Error approving org:", error);
+            showToast('Failed to approve application', 'error');
+        }
+    };
+
+    const handleCancelTournament = async (tournament: Tournament) => {
+        setConfirmModal({
+            isOpen: true,
+            title: 'Cancel Tournament',
+            message: `Are you sure you want to cancel "${tournament.title}"? All registered players will be automatically refunded. This action cannot be undone.`,
+            isDestructive: true,
+            onConfirm: async () => {
+                try {
+                    setLoading(true);
+                    const batch = writeBatch(db);
+                    
+                    // 1. Update tournament status
+                    const tournamentRef = doc(db, 'tournaments', tournament.id);
+                    batch.update(tournamentRef, { status: 'cancelled' });
+
+                    // 2. Fetch participants and pending transactions related to this tournament
+                    const [participantsSnap, pendingTxSnap] = await Promise.all([
+                        getDocs(query(collection(db, 'participants'), where('tournamentId', '==', tournament.id))),
+                        getDocs(query(collection(db, 'transactions'), where('tournamentId', '==', tournament.id), where('status', '==', 'pending')))
+                    ]);
+
+                    const participants = participantsSnap.docs.map(d => d.data());
+                    const pendingTxs = pendingTxSnap.docs;
+
+                    // 3. Reject any pending transactions related to this tournament
+                    for (const txDoc of pendingTxs) {
+                        batch.update(txDoc.ref, { 
+                            status: 'rejected', 
+                            rejectionReason: 'Tournament Cancelled',
+                            confirmedBy: profile?.uid,
+                            confirmedByUsername: profile?.username
+                        });
+                    }
+
+                    // 4. Process refunds for participants
+                    for (const participant of participants) {
+                        const userRef = doc(db, 'users', participant.userId);
+                        const refundAmount = tournament.entryFee;
+
+                        if (refundAmount > 0) {
+                            // Update user balance
+                            batch.update(userRef, { balance: increment(refundAmount) });
+
+                            // Create refund transaction
+                            const txRef = doc(collection(db, 'transactions'));
+                            batch.set(txRef, {
+                                userId: participant.userId,
+                                username: participant.username,
+                                type: 'refund',
+                                amount: refundAmount,
+                                method: 'Wallet Refund',
+                                refId: `REFUND-${tournament.id}-${participant.userId.slice(0, 5)}`,
+                                status: 'refunded',
+                                timestamp: serverTimestamp(),
+                                desc: `Refund for cancelled tournament: ${tournament.title}`,
+                                tournamentId: tournament.id,
+                                confirmedBy: profile?.uid,
+                                confirmedByUsername: profile?.username
+                            });
+
+                            // Send notification
+                            await NotificationService.create(
+                                participant.userId,
+                                'Tournament Cancelled - Refunded',
+                                `The tournament "${tournament.title}" has been cancelled. Your entry fee of ${formatCurrency(refundAmount)} has been refunded to your wallet.`,
+                                'info',
+                                '/profile'
+                            );
+                        }
+                    }
+
+                    // 4. Create Activity Log
+                    const logRef = doc(collection(db, 'activityLogs'));
+                    batch.set(logRef, {
+                        type: 'tournament_cancellation',
+                        adminId: profile?.uid,
+                        adminName: profile?.username,
+                        tournamentId: tournament.id,
+                        tournamentTitle: tournament.title,
+                        timestamp: serverTimestamp(),
+                        details: `Cancelled tournament and refunded ${participants.length} players.`
+                    });
+
+                    await batch.commit();
+                    showToast('Tournament cancelled and refunds processed', 'success');
+                    
+                    // Refresh tournaments if needed
+                    if (selectedOrgId) {
+                        fetchOrgTournaments(selectedOrgId);
+                    }
+                } catch (error) {
+                    console.error("Error cancelling tournament:", error);
+                    showToast('Failed to cancel tournament', 'error');
+                } finally {
+                    setLoading(false);
+                    closeConfirmModal();
+                }
+            }
+        });
+    };
+
+    const handleRejectOrg = async (app: OrgApplication) => {
+        try {
+            const batch = writeBatch(db);
+            const appRef = doc(db, 'orgApplications', app.id);
+            const userRef = doc(db, 'users', app.userId);
+
+            batch.update(userRef, { orgStatus: 'rejected' });
+            batch.update(appRef, { status: 'rejected' });
+            
+            await batch.commit();
+
+            await NotificationService.create(
+                app.userId,
+                'Organizer Application Rejected',
+                `We regret to inform you that your application for ${app.orgName} was rejected.`,
+                'alert',
+                '/contact'
+            );
+
+            showToast('Application Rejected', 'success');
+            setOrgApplications(prev => prev.filter(a => a.id !== app.id));
+        } catch (error) {
+            console.error("Error rejecting org:", error);
+            showToast('Failed to reject application', 'error');
+        }
+    };
+
+    const fetchOrgTournaments = async (orgId: string) => {
+        if (!orgId) return;
+        setSelectedOrgId(orgId);
+        try {
+            const q = query(collection(db, 'tournaments'), where('hostUid', '==', orgId));
+            const snap = await getDocs(q);
+            let tours = snap.docs.map(d => ({ id: d.id, ...(d.data() as any) } as Tournament));
+            tours.sort((a,b) => {
+                const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+                const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+                return bTime - aTime;
+            });
+            setOrgTournaments(tours);
+        } catch (error) {
+            console.error("Error fetching org tournaments:", error);
+            showToast('Failed to fetch tournaments', 'error');
+        }
+    };
+
+    const handleSaveCategory = async () => {
+        if (!categoryName) return showToast('Please provide a category name', 'warning');
+        
+        try {
+            const catData = {
+                name: categoryName,
+                description: categoryDescription,
+                isActive: categoryActive,
+                createdAt: editingCategory ? editingCategory.createdAt : serverTimestamp()
+            };
+
+            if (editingCategory) {
+                await updateDoc(doc(db, 'paymentCategories', editingCategory.id), catData);
+                setPaymentCategories(prev => prev.map(c => c.id === editingCategory.id ? { ...c, ...catData } : c));
+                showToast('Payment Category Updated', 'success');
+            } else {
+                const newRef = doc(collection(db, 'paymentCategories'));
+                await setDoc(newRef, catData);
+                setPaymentCategories(prev => [{ id: newRef.id, ...catData }, ...prev]);
+                showToast('Payment Category Added', 'success');
+            }
+            
+            setIsCategoryModalOpen(false);
+            setEditingCategory(null);
+            setCategoryName('');
+            setCategoryDescription('');
+            setCategoryActive(true);
+        } catch (error) {
+            console.error("Error saving payment category:", error);
+            showToast('Failed to save payment category', 'error');
+        }
+    };
+
+    const handleDeleteCategory = async (id: string) => {
+        setConfirmModal({
+            isOpen: true,
+            title: 'Delete Category',
+            message: 'Are you sure you want to delete this category?',
+            isDestructive: true,
+            onConfirm: async () => {
+                try {
+                    await deleteDoc(doc(db, 'paymentCategories', id));
+                    setPaymentCategories(prev => prev.filter(c => c.id !== id));
+                    showToast('Category Deleted', 'success');
+                    logAdminAction('Deleted Payment Category', `Category ID: ${id}`);
+                } catch (error) {
+                    console.error("Error deleting category:", error);
+                    showToast('Failed to delete category', 'error');
+                } finally {
+                    closeConfirmModal();
+                }
+            }
+        });
+    };
+
+    const handleSavePayment = async () => {
+        if (!paymentName || !paymentQr || !paymentInstructions || !paymentCategoryId) return showToast('Please fill all fields', 'warning');
+        
+        try {
+            const payData = {
+                name: paymentName,
+                categoryId: paymentCategoryId,
+                qrUrl: paymentQr,
+                instructions: paymentInstructions,
+                type: paymentType,
+                isActive: paymentActive,
+                createdAt: editingPayment ? editingPayment.createdAt : serverTimestamp()
+            };
+
+            if (editingPayment) {
+                await updateDoc(doc(db, 'paymentMethods', editingPayment.id), payData);
+                setPaymentMethods(prev => prev.map(p => p.id === editingPayment.id ? { ...p, ...payData } : p));
+                showToast('Payment Method Updated', 'success');
+            } else {
+                const newRef = doc(collection(db, 'paymentMethods'));
+                await setDoc(newRef, payData);
+                setPaymentMethods(prev => [{ id: newRef.id, ...payData }, ...prev]);
+                showToast('Payment Method Added', 'success');
+            }
+            
+            setIsPaymentModalOpen(false);
+            setEditingPayment(null);
+            setPaymentName('');
+            setPaymentCategoryId('');
+            setPaymentQr('');
+            setPaymentInstructions('');
+        } catch (error) {
+            console.error("Error saving payment method:", error);
+            showToast('Failed to save payment method', 'error');
+        }
+    };
+
+    const executeDeletePayment = async (id: string) => {
+        try {
+            await deleteDoc(doc(db, 'paymentMethods', id));
+            setPaymentMethods(prev => prev.filter(p => p.id !== id));
+            showToast('Payment method deleted', 'success');
+        } catch (error) {
+            console.error("Error deleting payment method:", error);
+            showToast('Failed to delete payment method', 'error');
+        }
+    };
+
+    const handleDeletePayment = (id: string) => {
+        setConfirmModal({
+            isOpen: true,
+            title: 'Delete Payment Method',
+            message: 'Are you sure you want to delete this payment method?',
+            isDestructive: true,
+            onConfirm: () => executeDeletePayment(id)
+        });
+    };
+
+    const handleSearchUsers = async () => {
+        if (!searchQuery.trim()) {
+            const snap = await getDocs(query(collection(db, 'users'), limit(20)));
+            setUsers(snap.docs.map(d => ({ uid: d.id, ...(d.data() as any) } as UserProfile)));
+            return;
+        }
+
+        setLoading(true);
+        try {
+            let q;
+            if (searchQuery.includes('@')) {
+                q = query(collection(db, 'users'), where('email', '==', searchQuery.trim().toLowerCase()), limit(1));
+            } else {
+                q = query(collection(db, 'users'), 
+                    where('username', '>=', searchQuery), 
+                    where('username', '<=', searchQuery + '\uf8ff'), 
+                    limit(20)
+                );
+            }
+            const snap = await getDocs(q);
+            setUsers(snap.docs.map(d => ({ uid: d.id, ...(d.data() as any) } as UserProfile)));
+        } catch (error) {
+            console.error("Error searching users:", error);
+            showToast('Search failed', 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSaveGame = async () => {
+        if (!gameName || !gameLogo || !gameModes) return showToast('Please fill all fields', 'warning');
+        const modesArray = gameModes.split(',').map(m => m.trim()).filter(m => m !== '');
+        
+        try {
+            const gameData = {
+                name: gameName,
+                logoUrl: gameLogo,
+                modes: modesArray,
+                isPublished: isPublished,
+                createdAt: editingGame ? editingGame.createdAt : serverTimestamp()
+            };
+
+            if (editingGame) {
+                await updateDoc(doc(db, 'games', editingGame.id), gameData);
+                setGames(prev => prev.map(g => g.id === editingGame.id ? { ...g, ...gameData } : g));
+                showToast('Game Updated', 'success');
+            } else {
+                const newGameRef = doc(collection(db, 'games'));
+                await setDoc(newGameRef, gameData);
+                setGames(prev => [{ id: newGameRef.id, ...gameData }, ...prev]);
+                showToast('Game Added', 'success');
+            }
+            
+            setIsGameModalOpen(false);
+            setEditingGame(null);
+            setGameName('');
+            setGameLogo('');
+            setGameModes('');
+        } catch (error) {
+            console.error("Error saving game:", error);
+            showToast('Failed to save game', 'error');
+        }
+    };
+
+    const handleSavePromo = async () => {
+        if (!promoCode || !promoAmount || !promoMaxUses) return showToast('Please fill all fields', 'warning');
+        try {
+            const promoData = {
+                code: promoCode.toUpperCase(),
+                amount: parseFloat(promoAmount),
+                maxUses: parseInt(promoMaxUses),
+                currentUses: editingPromo ? editingPromo.currentUses : 0,
+                isActive: promoActive,
+                createdAt: editingPromo ? editingPromo.createdAt : serverTimestamp()
+            };
+
+            if (editingPromo) {
+                await updateDoc(doc(db, 'promocodes', editingPromo.id), promoData);
+                setPromoCodes(prev => prev.map(p => p.id === editingPromo.id ? { ...p, ...promoData } : p));
+                showToast('Promo Code Updated', 'success');
+            } else {
+                const newRef = doc(collection(db, 'promocodes'));
+                await setDoc(newRef, promoData);
+                setPromoCodes(prev => [{ id: newRef.id, ...promoData }, ...prev]);
+                showToast('Promo Code Added', 'success');
+            }
+            setIsPromoModalOpen(false);
+            setEditingPromo(null);
+            setPromoCode('');
+            setPromoAmount('');
+            setPromoMaxUses('');
+        } catch (error) {
+            console.error("Error saving promo:", error);
+            showToast('Failed to save promo code', 'error');
+        }
+    };
+
+    const executeDeletePromo = async (id: string) => {
+        try {
+            await deleteDoc(doc(db, 'promocodes', id));
+            setPromoCodes(prev => prev.filter(p => p.id !== id));
+            showToast('Promo code deleted', 'success');
+        } catch (error) {
+            console.error("Error deleting promo:", error);
+            showToast('Failed to delete promo code', 'error');
+        }
+    };
+
+    const handleDeletePromo = (id: string) => {
+        setConfirmModal({
+            isOpen: true,
+            title: 'Delete Promo Code',
+            message: 'Are you sure you want to delete this promo code?',
+            isDestructive: true,
+            onConfirm: () => executeDeletePromo(id)
+        });
+    };
+
+    const handleSaveSlide = async () => {
+        if (!slideTitle || !slideImage || !slideLink) return showToast('Please fill all fields', 'warning');
+        try {
+            const slideData = {
+                title: slideTitle,
+                description: slideDescription,
+                imageUrl: slideImage,
+                link: slideLink,
+                buttonText: slideBtnText,
+                isActive: slideIsActive,
+                createdAt: editingSlide ? editingSlide.createdAt : serverTimestamp()
+            };
+
+            if (editingSlide) {
+                await updateDoc(doc(db, 'slides', editingSlide.id), slideData);
+                setSlides(prev => prev.map(s => s.id === editingSlide.id ? { ...s, ...slideData } : s));
+                showToast('Slide Updated', 'success');
+            } else {
+                const newRef = doc(collection(db, 'slides'));
+                await setDoc(newRef, slideData);
+                setSlides(prev => [{ id: newRef.id, ...slideData }, ...prev]);
+                showToast('Slide Added', 'success');
+            }
+            setIsSlideModalOpen(false);
+            setEditingSlide(null);
+            setSlideTitle('');
+            setSlideDescription('');
+            setSlideImage('');
+            setSlideLink('');
+            setSlideIsActive(true);
+        } catch (error) {
+            console.error("Error saving slide:", error);
+            showToast('Failed to save slide', 'error');
+        }
+    };
+
+    const executeDeleteSlide = async (id: string) => {
+        try {
+            await deleteDoc(doc(db, 'slides', id));
+            setSlides(prev => prev.filter(s => s.id !== id));
+            showToast('Slide deleted', 'success');
+        } catch (error) {
+            console.error("Error deleting slide:", error);
+            showToast('Failed to delete slide', 'error');
+        }
+    };
+
+    const handleDeleteSlide = (id: string) => {
+        setConfirmModal({
+            isOpen: true,
+            title: 'Delete Slide',
+            message: 'Are you sure you want to delete this slide?',
+            isDestructive: true,
+            onConfirm: () => executeDeleteSlide(id)
+        });
+    };
+
+    // Tournament Management State
+    const [isTournamentModalOpen, setIsTournamentModalOpen] = useState(false);
+    const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
+    const [subscriptionPlans, setSubscriptionPlans] = useState<SubscriptionPlan[]>([]);
+    const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
+    const [editingPlan, setEditingPlan] = useState<SubscriptionPlan | null>(null);
+    const [planName, setPlanName] = useState('');
+    const [planPrice, setPlanPrice] = useState('');
+    const [planDesc, setPlanDesc] = useState('');
+    const [planFeatures, setPlanFeatures] = useState('');
+    const [planMaxTournaments, setPlanMaxTournaments] = useState('10');
+    const [planIsActive, setPlanIsActive] = useState(true);
+
+    const handleSavePlan = async () => {
+        if (!planName || !planPrice) return showToast('Please fill all fields', 'warning');
+        try {
+            const planData = {
+                name: planName,
+                price: parseFloat(planPrice),
+                description: planDesc,
+                features: planFeatures.split(',').map(f => f.trim()).filter(f => f !== ''),
+                maxTournamentsPerMonth: parseInt(planMaxTournaments),
+                isActive: planIsActive
+            };
+
+            if (editingPlan) {
+                await updateDoc(doc(db, 'subscriptionPlans', editingPlan.id), planData);
+                setSubscriptionPlans(prev => prev.map(p => p.id === editingPlan.id ? { ...p, ...planData } : p));
+                showToast('Plan Updated', 'success');
+            } else {
+                const newRef = doc(collection(db, 'subscriptionPlans'));
+                await setDoc(newRef, planData);
+                setSubscriptionPlans(prev => [{ id: newRef.id, ...planData } as any, ...prev]);
+                showToast('Plan Added', 'success');
+            }
+            setIsPlanModalOpen(false);
+            setEditingPlan(null);
+            setPlanName('');
+            setPlanPrice('');
+            setPlanDesc('');
+            setPlanFeatures('');
+        } catch (error) {
+            console.error("Error saving plan:", error);
+            showToast('Failed to save subscription plan', 'error');
+        }
+    };
+
+    const handleUpdateUserSubscription = async (userId: string, planId: string) => {
+        try {
+            const plan = subscriptionPlans.find(p => p.id === planId);
+            if (!plan) return showToast('Plan not found', 'error');
+
+            const subscription = {
+                planId: plan.id,
+                planName: plan.name,
+                status: 'active' as 'active' | 'expired' | 'cancelled',
+                startDate: Timestamp.now(),
+                endDate: Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)), // 30 days
+                autoRenew: true
+            };
+
+            await updateDoc(doc(db, 'users', userId), { subscription });
+            setUsers(prev => prev.map(u => u.uid === userId ? { ...u, subscription } : u));
+            if (selectedUser?.uid === userId) {
+                setSelectedUser(prev => prev ? { ...prev, subscription } : null);
+            }
+            showToast(`Subscription updated to ${plan.name}`, 'success');
+        } catch (error) {
+            console.error("Error updating subscription:", error);
+            showToast('Failed to update subscription', 'error');
+        }
+    };
+
+    const handleDeletePlan = async (id: string) => {
+        setConfirmModal({
+            isOpen: true,
+            title: 'Delete Subscription Plan',
+            message: 'Are you sure you want to delete this plan? This may affect users subscribed to it.',
+            isDestructive: true,
+            onConfirm: async () => {
+                try {
+                    await deleteDoc(doc(db, 'subscriptionPlans', id));
+                    setSubscriptionPlans(prev => prev.filter(p => p.id !== id));
+                    showToast('Plan Deleted', 'success');
+                } catch (error) {
+                    showToast('Failed to delete plan', 'error');
+                }
+            }
+        });
+    };
+
+    const handleEditTournament = (tournament: Tournament) => {
+        setSelectedTournament(tournament);
+        setIsTournamentModalOpen(true);
+    };
+
+    const handleToggleFeatured = async (t: Tournament) => {
+        try {
+            const newStatus = !t.isFeatured;
+            await updateDoc(doc(db, 'tournaments', t.id), { isFeatured: newStatus });
+            setOrgTournaments(prev => prev.map(item => item.id === t.id ? { ...item, isFeatured: newStatus } : item));
+            setAllTournaments(prev => prev.map(item => item.id === t.id ? { ...item, isFeatured: newStatus } : item));
+            showToast(`Tournament ${newStatus ? 'featured' : 'unfeatured'}`, 'success');
+        } catch (error) {
+            console.error("Error toggling featured:", error);
+            showToast('Failed to update featured status', 'error');
+        }
+    };
+
+    const handleViewParticipants = (tournament: Tournament) => {
+        // Redirect to tournament page or show a modal
+        window.open(`/tournament/${tournament.id}`, '_blank');
+    };
+
+    const handleSaveSettings = async () => {
+        try {
+            const settingsData = {
+                minWithdrawal: parseFloat(minWithdrawal),
+                supportEmail,
+                supportPhone,
+                notice,
+                isNoticeActive,
+                maintenanceMode,
+                isOrgFormOpen: siteSettings?.isOrgFormOpen ?? true,
+                orgFormDescription,
+                updatedAt: serverTimestamp()
+            };
+            await setDoc(doc(db, 'settings', 'site'), settingsData);
+            setSiteSettings(settingsData as any);
+            showToast('Settings Saved', 'success');
+        } catch (error) {
+            console.error("Error saving settings:", error);
+            showToast('Failed to save settings', 'error');
+        }
+    };
+
+    const toggleOrgForm = async () => {
+        if (!siteSettings) return;
+        try {
+            const newValue = !siteSettings.isOrgFormOpen;
+            await updateDoc(doc(db, 'settings', 'site'), { isOrgFormOpen: newValue });
+            setSiteSettings(prev => prev ? { ...prev, isOrgFormOpen: newValue } : null);
+            showToast(`Organizer applications ${newValue ? 'opened' : 'closed'}`, 'success');
+        } catch (error) {
+            console.error("Error toggling org form:", error);
+            showToast('Failed to toggle form', 'error');
+        }
+    };
+
+    const handleUpdateUserRole = async (uid: string, newRole: 'player' | 'organizer' | 'admin') => {
+        try {
+            await updateDoc(doc(db, 'users', uid), { role: newRole });
+            setUsers(prev => prev.map(u => u.uid === uid ? { ...u, role: newRole } : u));
+            setOrganizers(prev => {
+                const updated = prev.map(u => u.uid === uid ? { ...u, role: newRole } : u);
+                if (newRole === 'player') return updated.filter(u => u.uid !== uid);
+                return updated;
+            });
+            showToast(`User role updated to ${newRole}`, 'success');
+        } catch (error) {
+            console.error("Error updating user role:", error);
+            showToast('Failed to update role', 'error');
+        }
+    };
+
+    const handleSaveOrgDetails = async () => {
+        if (!editingOrg) return;
+        try {
+            const updateData = {
+                email: orgEmail,
+                discord: orgDiscord,
+                youtube: orgYoutube,
+                whatsapp: orgWhatsapp,
+                orgName: orgNameEdit
+            };
+            await updateDoc(doc(db, 'users', editingOrg.uid), updateData);
+            setOrganizers(prev => prev.map(o => o.uid === editingOrg.uid ? { ...o, ...updateData } : o));
+            showToast('Organizer details updated', 'success');
+            setIsOrgEditModalOpen(false);
+        } catch (error) {
+            console.error("Error saving org details:", error);
+            showToast('Failed to save details', 'error');
+        }
+    };
+
+    const handleSuspendOrg = async (uid: string, isSuspended: boolean) => {
+        try {
+            await updateDoc(doc(db, 'users', uid), { isBanned: isSuspended });
+            setOrganizers(prev => prev.map(o => o.uid === uid ? { ...o, isBanned: isSuspended } : o));
+            showToast(`Organizer ${isSuspended ? 'suspended' : 'activated'}`, 'success');
+        } catch (error) {
+            console.error("Error suspending org:", error);
+            showToast('Failed to update status', 'error');
+        }
+    };
+
+    const togglePowerOrganizer = async (org: UserProfile) => {
+        try {
+            const newStatus = !org.isPowerOrganizer;
+            await updateDoc(doc(db, 'users', org.uid), { isPowerOrganizer: newStatus });
+            setOrganizers(prev => prev.map(o => o.uid === org.uid ? { ...o, isPowerOrganizer: newStatus } : o));
+            showToast(`Organizer power ${newStatus ? 'granted' : 'revoked'}`, 'success');
+        } catch (error) {
+            console.error("Error toggling power organizer:", error);
+            showToast('Failed to update organizer power', 'error');
+        }
+    };
+
+    const executeDeleteGame = async (id: string) => {
+        try {
+            await deleteDoc(doc(db, 'games', id));
+            setGames(prev => prev.filter(g => g.id !== id));
+            showToast('Game Deleted', 'success');
+        } catch (error) {
+            console.error("Error deleting game:", error);
+            showToast('Failed to delete game', 'error');
+        }
+    };
+
+    const handleDeleteGame = (id: string) => {
+        setConfirmModal({
+            isOpen: true,
+            title: 'Delete Game',
+            message: 'Are you sure you want to delete this game?',
+            isDestructive: true,
+            onConfirm: () => executeDeleteGame(id)
+        });
+    };
+
+    const openEditGame = (game: Game) => {
+        setEditingGame(game);
+        setGameName(game.name);
+        setGameLogo(game.logoUrl);
+        setGameModes(game.modes.join(', '));
+        setIsPublished(game.isPublished);
+        setIsGameModalOpen(true);
+    };
+
+    const handleReleaseEarnings = async (earning: TournamentEarning) => {
+        setConfirmModal({
+            isOpen: true,
+            title: 'Release Earnings',
+            message: `Are you sure you want to release ${formatCurrency(earning.orgShare)} to ${earning.orgName}'s wallet?`,
+            isDestructive: false,
+            onConfirm: async () => {
+                try {
+                    setLoading(true);
+                    const batch = writeBatch(db);
+                    
+                    // Update earning status
+                    const earningRef = doc(db, 'tournamentEarnings', earning.id);
+                    batch.update(earningRef, {
+                        status: 'released',
+                        releasedAt: serverTimestamp()
+                    });
+                    
+                    // Update org wallet
+                    const orgRef = doc(db, 'users', earning.orgId);
+                    batch.update(orgRef, {
+                        orgPendingEarnings: increment(-earning.orgShare),
+                        orgWalletBalance: increment(earning.orgShare)
+                    });
+                    
+                    // Add transaction record for the org
+                    const txRef = doc(collection(db, 'transactions'));
+                    batch.set(txRef, {
+                        userId: earning.orgId,
+                        username: earning.orgName,
+                        type: 'prize', // Using prize type for earnings
+                        amount: earning.orgShare,
+                        method: 'Tournament Earnings',
+                        refId: `EARN-${earning.tournamentId.slice(0, 8)}`,
+                        status: 'success',
+                        timestamp: serverTimestamp(),
+                        desc: `Earnings released for tournament: ${earning.tournamentName}`,
+                        tournamentId: earning.tournamentId,
+                        confirmedBy: profile?.uid,
+                        confirmedByUsername: profile?.username
+                    });
+                    
+                    await batch.commit();
+                    
+                    await NotificationService.create(
+                        earning.orgId,
+                        'Earnings Released',
+                        `${formatCurrency(earning.orgShare)} has been added to your wallet for tournament: ${earning.tournamentName}`,
+                        'success',
+                        '/wallet'
+                    );
+                    
+                    await logAdminAction('earnings_released', `Released ${formatCurrency(earning.orgShare)} to ${earning.orgName} for tournament ${earning.tournamentName}`);
+                    
+                    setTournamentEarnings(prev => prev.map(e => e.id === earning.id ? { ...e, status: 'released' } : e));
+                    showToast('Earnings released successfully', 'success');
+                } catch (error) {
+                    console.error("Error releasing earnings:", error);
+                    showToast('Failed to release earnings', 'error');
+                } finally {
+                    setLoading(false);
+                    closeConfirmModal();
+                }
+            }
+        });
+    };
+
+    if (profile?.role !== 'admin') return <div className="text-center text-red-500 mt-10">Restricted Area</div>;
+
+    const pendingDepositsCount = pendingTransactions.filter(t => t.type === 'deposit').length;
+    const pendingWithdrawalsCount = pendingTransactions.filter(t => t.type === 'withdrawal').length;
+    const pendingOrgCount = orgApplications.length;
+
+    return (
+        <div className="animate-fade-in max-w-7xl mx-auto flex flex-col md:flex-row gap-6 relative">
+            {/* Mobile Sidebar Toggle */}
+            <button 
+                className="md:hidden flex items-center justify-between bg-card p-4 rounded-2xl border border-gray-800 w-full"
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            >
+                <span className="font-bold text-white">Admin Menu</span>
+                {isSidebarOpen ? <X className="w-6 h-6 text-gray-400" /> : <Sliders className="w-6 h-6 text-gray-400" />}
+            </button>
+
+            {/* Sidebar Navigation */}
+            <div className={`w-full md:w-72 shrink-0 space-y-8 bg-gray-950/50 p-6 rounded-[2rem] border border-gray-800 h-fit md:sticky md:top-24 ${isSidebarOpen ? 'block' : 'hidden md:block'}`}>
+                <div>
+                    <div className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-6 px-3">Main</div>
+                    <div className="space-y-2">
+                        <button 
+                            onClick={() => { setActiveTab('tab-dashboard'); setIsSidebarOpen(false); }} 
+                            className={`w-full text-left px-5 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all flex items-center gap-4 ${
+                                activeTab === 'tab-dashboard' 
+                                    ? 'bg-brand-500 text-white shadow-xl shadow-brand-500/20' 
+                                    : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
+                            }`}
+                        >
+                            <Layout className={`w-5 h-5 ${activeTab === 'tab-dashboard' ? 'text-white' : 'text-gray-500'}`} />
+                            Dashboard
+                        </button>
+                        <button 
+                            onClick={() => { setActiveTab('tab-users'); setIsSidebarOpen(false); }} 
+                            className={`w-full text-left px-5 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all flex items-center gap-4 ${
+                                activeTab === 'tab-users' 
+                                    ? 'bg-brand-500 text-white shadow-xl shadow-brand-500/20' 
+                                    : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
+                            }`}
+                        >
+                            <Users className={`w-5 h-5 ${activeTab === 'tab-users' ? 'text-white' : 'text-gray-500'}`} />
+                            Manage Users
+                        </button>
+                        <button 
+                            onClick={() => { setActiveTab('tab-subscriptions'); setIsSidebarOpen(false); }} 
+                            className={`w-full text-left px-5 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all flex items-center gap-4 ${
+                                activeTab === 'tab-subscriptions' 
+                                    ? 'bg-brand-500 text-white shadow-xl shadow-brand-500/20' 
+                                    : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
+                            }`}
+                        >
+                            <CreditCard className={`w-5 h-5 ${activeTab === 'tab-subscriptions' ? 'text-white' : 'text-gray-500'}`} />
+                            Sub Plans
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <div className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-6 px-3">Financial</div>
+                    <div className="space-y-2">
+                        {[
+                            { id: 'pending-deposits', icon: ArrowDown, label: 'Pending Deposits', badge: pendingDepositsCount },
+                            { id: 'pending-withdrawals', icon: ArrowUp, label: 'Pending Withdrawals', badge: pendingWithdrawalsCount },
+                            { id: 'tx-history', icon: CreditCard, label: 'Transaction History' }
+                        ].map(tab => {
+                            const Icon = tab.icon;
+                            const isActive = activeTab === `tab-${tab.id}`;
+                            return (
+                                <button 
+                                    key={tab.id}
+                                    onClick={() => { setActiveTab(`tab-${tab.id}`); setIsSidebarOpen(false); }} 
+                                    className={`w-full text-left px-5 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all flex items-center justify-between ${
+                                        isActive 
+                                            ? 'bg-brand-500 text-white shadow-xl shadow-brand-500/20' 
+                                            : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-500'}`} />
+                                        {tab.label}
+                                    </div>
+                                    {tab.badge ? (
+                                        <span className="bg-red-500 text-white text-[10px] font-black px-3 py-1 rounded-full">
+                                            {tab.badge}
+                                        </span>
+                                    ) : null}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                <div>
+                    <div className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-6 px-3">Organizations</div>
+                    <div className="space-y-2">
+                        {[
+                            { id: 'org-approvals', icon: Check, label: 'Org Approvals', badge: pendingOrgCount },
+                            { id: 'org-tournaments', icon: Trophy, label: 'Org Tournaments' },
+                            { id: 'organizers', icon: Users, label: 'Manage Orgs' },
+                            { id: 'org-earnings', icon: DollarSign, label: 'Org Earnings' }
+                        ].map(tab => {
+                            const Icon = tab.icon;
+                            const isActive = activeTab === `tab-${tab.id}`;
+                            return (
+                                <button 
+                                    key={tab.id}
+                                    onClick={() => { setActiveTab(`tab-${tab.id}`); setIsSidebarOpen(false); }} 
+                                    className={`w-full text-left px-5 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all flex items-center justify-between ${
+                                        isActive 
+                                            ? 'bg-brand-500 text-white shadow-xl shadow-brand-500/20' 
+                                            : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-500'}`} />
+                                        {tab.label}
+                                    </div>
+                                    {tab.badge ? (
+                                        <span className="bg-red-500 text-white text-[10px] font-black px-3 py-1 rounded-full">
+                                            {tab.badge}
+                                        </span>
+                                    ) : null}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                <div>
+                    <div className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-6 px-3">Management</div>
+                    <div className="space-y-2">
+                        {[
+                            { id: 'tournaments', icon: Trophy, label: 'Tournaments' },
+                            { id: 'users', icon: Users, label: 'Users' },
+                            { id: 'games', icon: Gamepad2, label: 'Games' },
+                            { id: 'payments', icon: QrCode, label: 'Payments' },
+                            { id: 'promo', icon: Tag, label: 'Promo Codes' },
+                            { id: 'media', icon: ImageIcon, label: 'Media Library' }
+                        ].map(tab => {
+                            const Icon = tab.icon;
+                            const isActive = activeTab === `tab-${tab.id}`;
+                            return (
+                                <button 
+                                    key={tab.id}
+                                    onClick={() => { setActiveTab(`tab-${tab.id}`); setIsSidebarOpen(false); }} 
+                                    className={`w-full text-left px-5 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all flex items-center gap-4 ${
+                                        isActive 
+                                            ? 'bg-brand-500 text-white shadow-xl shadow-brand-500/20' 
+                                            : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
+                                    }`}
+                                >
+                                    <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-500'}`} />
+                                    {tab.label}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                <div>
+                    <div className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-6 px-3">System</div>
+                    <div className="space-y-2">
+                        <button 
+                            onClick={() => { setActiveTab('tab-discord'); setIsSidebarOpen(false); }} 
+                            className={`w-full text-left px-5 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all flex items-center gap-4 ${
+                                activeTab === 'tab-discord' 
+                                    ? 'bg-[#5865F2] text-white shadow-xl shadow-[#5865F2]/20' 
+                                    : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
+                            }`}
+                        >
+                            <Megaphone className={`w-5 h-5 ${activeTab === 'tab-discord' ? 'text-white' : 'text-gray-500'}`} />
+                            Discord
+                        </button>
+                        <button 
+                            onClick={() => { setActiveTab('tab-settings'); setIsSidebarOpen(false); }} 
+                            className={`w-full text-left px-5 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all flex items-center gap-4 ${
+                                activeTab === 'tab-settings' 
+                                    ? 'bg-brand-500 text-white shadow-xl shadow-brand-500/20' 
+                                    : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
+                            }`}
+                        >
+                            <Sliders className={`w-5 h-5 ${activeTab === 'tab-settings' ? 'text-white' : 'text-gray-500'}`} />
+                            Settings
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Main Content Area */}
+            <div className="flex-1 bg-gray-950/50 rounded-[2rem] border border-gray-800 p-8 min-h-[600px] w-full overflow-hidden">
+                <header className="mb-10 pb-8 border-b border-gray-800">
+                    <h1 className="text-4xl font-black text-white uppercase tracking-tighter">Admin Panel</h1>
+                </header>
+                {activeTab === 'tab-dashboard' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
+                    <div className="col-span-full grid grid-cols-1 md:grid-cols-4 gap-6 mb-2">
+                        <div className="relative overflow-hidden bg-gradient-to-br from-blue-900/40 to-blue-900/10 p-6 rounded-2xl border border-blue-500/20 flex items-center gap-5 group">
+                            <div className="absolute -right-6 -top-6 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-all"></div>
+                            <div className="w-14 h-14 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center text-xl border border-blue-500/30 shadow-lg shadow-blue-500/20">
+                                <Users className="w-7 h-7" />
+                            </div>
+                            <div>
+                                <div className="text-xs text-blue-200/70 uppercase font-bold tracking-wider mb-1">Total Holdings</div>
+                                <div className="text-3xl font-black text-white tracking-tight">{formatCurrency(stats.totalBalance)}</div>
+                            </div>
+                        </div>
+                        <div className="relative overflow-hidden bg-gradient-to-br from-green-900/40 to-green-900/10 p-6 rounded-2xl border border-green-500/20 flex items-center gap-5 group">
+                            <div className="absolute -right-6 -top-6 w-24 h-24 bg-green-500/10 rounded-full blur-2xl group-hover:bg-green-500/20 transition-all"></div>
+                            <div className="w-14 h-14 rounded-2xl bg-green-500/20 text-green-400 flex items-center justify-center text-xl border border-green-500/30 shadow-lg shadow-green-500/20">
+                                <ArrowDown className="w-7 h-7" />
+                            </div>
+                            <div>
+                                <div className="text-xs text-green-200/70 uppercase font-bold tracking-wider mb-1">Today's Deposits</div>
+                                <div className="text-3xl font-black text-white tracking-tight">{formatCurrency(stats.todayDep)}</div>
+                            </div>
+                        </div>
+                        <div className="relative overflow-hidden bg-gradient-to-br from-red-900/40 to-red-900/10 p-6 rounded-2xl border border-red-500/20 flex items-center gap-5 group">
+                            <div className="absolute -right-6 -top-6 w-24 h-24 bg-red-500/10 rounded-full blur-2xl group-hover:bg-red-500/20 transition-all"></div>
+                            <div className="w-14 h-14 rounded-2xl bg-red-500/20 text-red-400 flex items-center justify-center text-xl border border-red-500/30 shadow-lg shadow-red-500/20">
+                                <ArrowUp className="w-7 h-7" />
+                            </div>
+                            <div>
+                                <div className="text-xs text-red-200/70 uppercase font-bold tracking-wider mb-1">Today's Withdrawals</div>
+                                <div className="text-3xl font-black text-white tracking-tight">{formatCurrency(stats.todayWith)}</div>
+                            </div>
+                        </div>
+                        <div className="relative overflow-hidden bg-gradient-to-br from-purple-900/40 to-purple-900/10 p-6 rounded-2xl border border-purple-500/20 flex items-center gap-5 group">
+                            <div className="absolute -right-6 -top-6 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl group-hover:bg-purple-500/20 transition-all"></div>
+                            <div className="w-14 h-14 rounded-2xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-xl border border-purple-500/30 shadow-lg shadow-purple-500/20">
+                                <Users className="w-7 h-7" />
+                            </div>
+                            <div>
+                                <div className="text-xs text-purple-200/70 uppercase font-bold tracking-wider mb-1">Total Users</div>
+                                <div className="text-3xl font-black text-white tracking-tight">{users.length}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="col-span-full grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div className="bg-card p-6 rounded-2xl border border-gray-800 lg:col-span-2 shadow-xl">
+                            <div className="flex justify-between items-center mb-6 border-b border-gray-800 pb-4">
+                                <h2 className="font-bold text-white text-lg flex items-center gap-2">
+                                    <Bell className="w-5 h-5 text-brand-400" /> Pending Transactions
+                                </h2>
+                                <span className="bg-brand-500/20 text-brand-400 text-xs font-bold px-3 py-1 rounded-full border border-brand-500/30">
+                                    {pendingTransactions.length} Pending
+                                </span>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-[400px] overflow-y-auto custom-scrollbar content-start pr-2">
+                                {pendingTransactions.length > 0 ? (
+                                    pendingTransactions.map(t => (
+                                        <div key={t.id} className="bg-dark/50 hover:bg-dark p-5 rounded-2xl border border-gray-800 hover:border-gray-700 transition-all shadow-md group">
+                                            <div className="flex justify-between items-start mb-4 border-b border-gray-800 pb-3">
+                                                <div>
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <span className={`font-black tracking-wider ${t.type === 'deposit' ? 'text-green-400' : 'text-red-400'} uppercase text-xs`}>{t.type}</span>
+                                                        <span className="text-[10px] bg-gray-800 px-2 py-0.5 rounded-full text-gray-300 font-bold tracking-wider">{t.method}</span>
+                                                    </div>
+                                                    <div className="text-white font-bold text-sm mb-1">{t.username || 'Unknown User'}</div>
+                                                    <div className="text-[10px] text-gray-500 font-mono">{getRelativeTime(t.timestamp)}</div>
+                                                </div>
+                                                <div className="text-xl font-black text-white tracking-tight">{formatCurrency(Math.abs(t.amount))}</div>
+                                            </div>
+                                            <div className="text-[11px] text-gray-400 mb-5 bg-black/30 p-2 rounded-lg border border-gray-800/50 font-mono flex justify-between items-center">
+                                                <span className="text-gray-600">REF:</span> 
+                                                <span className="text-brand-300 select-all">{t.refId}</span>
+                                            </div>
+                                            <div className="grid grid-cols-3 gap-2">
+                                                <button onClick={() => handleApproveTx(t)} className="bg-green-600/20 hover:bg-green-600 text-green-400 hover:text-white border border-green-500/30 hover:border-green-500 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-all">
+                                                    <Check className="w-4 h-4" /> Approve
+                                                </button>
+                                                <button onClick={() => {
+                                                    setConfirmModal({
+                                                        isOpen: true,
+                                                        title: 'Reject Transaction',
+                                                        message: 'Are you sure you want to reject this transaction?',
+                                                        isDestructive: true,
+                                                        onConfirm: () => {
+                                                            executeRejectTx(t, 'Rejected by Admin');
+                                                            closeConfirmModal();
+                                                        }
+                                                    });
+                                                }} className="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/30 hover:border-red-500 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-all">
+                                                    <X className="w-4 h-4" /> Reject
+                                                </button>
+                                                <button onClick={() => setSelectedTx(t)} className="bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30 hover:border-blue-500 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-all">
+                                                    <Eye className="w-4 h-4" /> Review
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="col-span-full h-full flex flex-col items-center justify-center text-gray-500 py-10">
+                                        <div className="w-16 h-16 bg-dark rounded-full flex items-center justify-center mb-4 border border-gray-800">
+                                            <Check className="text-3xl text-green-500/50" />
+                                        </div>
+                                        <p className="font-bold uppercase tracking-widest text-sm text-gray-600">All Caught Up!</p>
+                                        <p className="text-xs text-gray-700 mt-1">No pending transactions to review.</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="bg-card p-6 rounded-2xl border border-gray-800 shadow-xl h-[490px] flex flex-col">
+                            <div className="flex justify-between items-center mb-6 border-b border-gray-800 pb-4">
+                                <h2 className="font-bold text-white text-lg flex items-center gap-2">
+                                    <Info className="w-5 h-5 text-brand-400" /> Activity Feed
+                                </h2>
+                            </div>
+                            <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-4">
+                                {activityLogs.length > 0 ? (
+                                    activityLogs.map(log => (
+                                        <div key={log.id} className="bg-dark/50 p-4 rounded-xl border border-gray-800">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <span className="text-brand-400 font-bold text-sm">{log.action}</span>
+                                                <div className="text-right">
+                                                    <div className="text-[10px] text-gray-500">{formatDate(log.timestamp)}</div>
+                                                    <div className="text-[10px] text-gray-500 font-mono">{getRelativeTime(log.timestamp)}</div>
+                                                </div>
+                                            </div>
+                                            <p className="text-gray-300 text-xs mb-2">{log.details}</p>
+                                            <div className="text-[10px] text-gray-500 font-mono">By: {log.adminEmail}</div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="h-full flex flex-col items-center justify-center text-gray-500">
+                                        <p className="text-sm">No recent activity.</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-6">
+                        <div className="bg-card p-4 rounded-xl border border-gray-800">
+                            <div className="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
+                                <h2 className="font-bold text-white">Promotion Slider</h2>
+                                <button 
+                                    onClick={() => {
+                                        setEditingSlide(null);
+                                        setSlideTitle('');
+                                        setSlideImage('');
+                                        setSlideLink('');
+                                        setSlideBtnText('View More');
+                                        setIsSlideModalOpen(true);
+                                    }}
+                                    className="bg-brand-600 px-2 py-1 rounded text-xs text-white"
+                                >
+                                    Add New
+                                </button>
+                            </div>
+                            <div className="h-48 overflow-y-auto custom-scrollbar">
+                                {slides.length > 0 ? (
+                                    slides.map(s => (
+                                        <div key={s.id} className="flex justify-between items-center bg-dark p-2 rounded mb-2 border border-gray-700">
+                                            <div className="flex items-center gap-2">
+                                                <img src={s.imageUrl || undefined} className="w-10 h-6 object-cover rounded" alt={s.title} />
+                                                <span className="text-white text-sm truncate w-32">{s.title}</span>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <button onClick={() => {
+                                                    setEditingSlide(s);
+                                                    setSlideTitle(s.title);
+                                                    setSlideDescription(s.description || '');
+                                                    setSlideImage(s.imageUrl);
+                                                    setSlideLink(s.link);
+                                                    setSlideBtnText(s.buttonText);
+                                                    setSlideIsActive(s.isActive);
+                                                    setIsSlideModalOpen(true);
+                                                }} className="text-blue-400 hover:text-white"><Edit className="w-4 h-4" /></button>
+                                                <button onClick={() => handleDeleteSlide(s.id)} className="text-red-400 hover:text-white"><Trash className="w-4 h-4" /></button>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-gray-500 text-sm text-center">No custom slides.</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {isSlideModalOpen && (
+                        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+                            <div className="bg-card w-full max-w-md rounded-2xl border border-gray-800 p-6 space-y-4 shadow-2xl overflow-y-auto max-h-[90vh] custom-scrollbar">
+                                <h3 className="text-xl font-bold text-white uppercase tracking-widest border-b border-gray-800 pb-4">
+                                    {editingSlide ? 'Edit Slide' : 'Add Slide'}
+                                </h3>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Title</label>
+                                        <input type="text" value={slideTitle} onChange={e => setSlideTitle(e.target.value)} className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Description</label>
+                                        <textarea value={slideDescription} onChange={e => setSlideDescription(e.target.value)} className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none h-20 resize-none" placeholder="Short description for the slide..." />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Image (Paste, Drop or Click to Select)</label>
+                                        <div 
+                                            onPaste={handlePasteSlide}
+                                            onDrop={handleDropSlide}
+                                            onDragOver={handleDragOverSlide}
+                                            onClick={() => document.getElementById('slide-image-file-input')?.click()}
+                                            className={`relative w-full aspect-video rounded-xl border-2 border-dashed transition-all flex items-center justify-center overflow-hidden group cursor-pointer ${uploading ? 'border-brand-500 bg-brand-500/10' : 'border-gray-700 hover:border-brand-500 bg-dark'}`}
+                                        >
+                                            {uploading ? (
+                                                <div className="flex flex-col items-center gap-2">
+                                                    <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
+                                                    <span className="text-[10px] text-brand-400 font-bold uppercase">Uploading...</span>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <img 
+                                                        src={slideImage || DEFAULT_BANNER || undefined} 
+                                                        alt="Slide Preview" 
+                                                        className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition"
+                                                        onError={(e) => (e.currentTarget.src = NEXPLAY_LOGO)}
+                                                        referrerPolicy="no-referrer"
+                                                    />
+                                                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition">
+                                                        <Plus className="w-8 h-8 text-white" />
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
+                                        <input 
+                                            id="slide-image-file-input"
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                                if (e.target.files?.[0]) {
+                                                    processAndUploadSlide(e.target.files[0]);
+                                                }
+                                            }}
+                                        />
+                                        <div className="mt-2">
+                                            <input type="text" value={slideImage} onChange={e => setSlideImage(e.target.value)} className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none text-xs" placeholder="Or paste URL..." />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Link</label>
+                                        <input type="text" value={slideLink} onChange={e => setSlideLink(e.target.value)} className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" placeholder="/tournaments or https://..." />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Button Text</label>
+                                        <input type="text" value={slideBtnText} onChange={e => setSlideBtnText(e.target.value)} className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" />
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <input 
+                                            type="checkbox" 
+                                            id="slideIsActive"
+                                            checked={slideIsActive} 
+                                            onChange={e => setSlideIsActive(e.target.checked)} 
+                                            className="w-4 h-4 rounded border-gray-700 bg-dark text-brand-600 focus:ring-brand-500"
+                                        />
+                                        <label htmlFor="slideIsActive" className="text-xs text-gray-300 font-bold uppercase cursor-pointer">Active Status</label>
+                                    </div>
+                                </div>
+                                <div className="flex gap-3 pt-4">
+                                    <button onClick={() => setIsSlideModalOpen(false)} className="flex-1 bg-gray-800 py-3 rounded-xl font-bold">Cancel</button>
+                                    <button onClick={handleSaveSlide} className="flex-1 bg-brand-600 py-3 rounded-xl font-bold">Save</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {activeTab === 'tab-tournaments' && (
+                <div className="bg-card p-6 rounded-xl border border-gray-800 space-y-6">
+                    <div className="flex justify-between items-center border-b border-gray-700 pb-4">
+                        <h2 className="text-xl font-bold text-white uppercase tracking-widest flex items-center gap-2">
+                            <Trophy className="text-brand-500" /> All Tournaments
+                        </h2>
+                        <div className="flex items-center gap-4">
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                                <input 
+                                    type="text" 
+                                    placeholder="Search tournaments..." 
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="bg-dark border border-gray-700 rounded-lg pl-10 pr-4 py-2 text-white text-sm focus:border-brand-500 outline-none w-64"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {allTournaments
+                            .filter(t => t.title.toLowerCase().includes(searchQuery.toLowerCase()))
+                            .map(t => (
+                                <div key={t.id} className="bg-dark p-4 rounded-xl border border-gray-800 space-y-3">
+                                    <img src={t.bannerUrl || undefined} className="w-full aspect-video object-cover rounded-lg" alt={t.title} />
+                                    <div>
+                                        <h3 className="font-bold text-white truncate">{t.title}</h3>
+                                        <div className="flex justify-between items-center mt-2">
+                                            <span className="text-[10px] text-gray-500 uppercase font-bold">{formatGameName(t.game)}</span>
+                                            <div className="flex items-center gap-2">
+                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
+                                                    t.status === 'upcoming' ? 'bg-blue-600/20 text-blue-400' :
+                                                    t.status === 'live' ? 'bg-green-600/20 text-green-400' :
+                                                    t.status === 'cancelled' ? 'bg-red-600/20 text-red-400' :
+                                                    'bg-gray-600/20 text-gray-400'
+                                                }`}>
+                                                    {t.status}
+                                                </span>
+                                                <div className="flex gap-1">
+                                                    <button 
+                                                        onClick={() => handleViewParticipants(t)}
+                                                        className="p-1.5 bg-brand-600/20 hover:bg-brand-600 text-brand-500 hover:text-white rounded-lg transition-all border border-brand-500/30"
+                                                        title="View Participants"
+                                                    >
+                                                        <Users className="w-3 h-3" />
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleEditTournament(t)}
+                                                        className="p-1.5 bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white rounded-lg transition-all border border-blue-500/30"
+                                                        title="Edit Tournament"
+                                                    >
+                                                        <Edit className="w-3 h-3" />
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleToggleFeatured(t)}
+                                                        className={`p-1.5 rounded-lg transition-all border ${
+                                                            t.isFeatured 
+                                                                ? 'bg-yellow-600/20 text-yellow-500 border-yellow-500/30 hover:bg-yellow-600 hover:text-white' 
+                                                                : 'bg-gray-600/20 text-gray-400 border-gray-500/30 hover:bg-gray-600 hover:text-white'
+                                                        }`}
+                                                        title={t.isFeatured ? "Unfeature" : "Feature"}
+                                                    >
+                                                        <Megaphone className="w-3 h-3" />
+                                                    </button>
+                                                    {t.status !== 'cancelled' && t.status !== 'completed' && (
+                                                        <button 
+                                                            onClick={() => handleCancelTournament(t)}
+                                                            className="p-1.5 bg-red-600/20 hover:bg-red-600 text-red-500 hover:text-white rounded-lg transition-all border border-red-500/30"
+                                                            title="Cancel Tournament"
+                                                        >
+                                                            <X className="w-3 h-3" />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                    </div>
+                </div>
+            )}
+
+            {activeTab === 'tab-org-approvals' && (
+                <div className="bg-card p-6 rounded-xl border border-gray-800">
+                    <h2 className="text-xl font-bold text-white mb-6 uppercase tracking-widest border-b border-gray-700 pb-2 flex items-center gap-2">
+                        <Check className="text-brand-500" /> Organization Approvals
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {orgApplications.length > 0 ? (
+                            orgApplications.map(app => (
+                                <div key={app.id} className="bg-dark p-6 rounded-2xl border border-gray-800 space-y-4">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <h3 className="text-lg font-bold text-white">{app.orgName}</h3>
+                                            <p className="text-xs text-gray-500">Applied by: {app.username}</p>
+                                        </div>
+                                        <span className="bg-yellow-600/20 text-yellow-500 text-[10px] font-bold px-2 py-0.5 rounded uppercase border border-yellow-500/30">
+                                            Pending
+                                        </span>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4 text-xs">
+                                        <div className="bg-black/30 p-3 rounded-xl border border-gray-800">
+                                            <div className="text-gray-500 uppercase font-bold text-[9px] mb-1">WhatsApp</div>
+                                            <div className="text-white">{app.whatsapp}</div>
+                                        </div>
+                                        <div className="bg-black/30 p-3 rounded-xl border border-gray-800">
+                                            <div className="text-gray-500 uppercase font-bold text-[9px] mb-1">Email</div>
+                                            <div className="text-white truncate">{app.email}</div>
+                                        </div>
+                                    </div>
+                                    <div className="bg-black/30 p-3 rounded-xl border border-gray-800">
+                                        <div className="text-gray-500 uppercase font-bold text-[9px] mb-1">Proof Link</div>
+                                        <a href={app.proofLink} target="_blank" rel="noreferrer" className="text-brand-400 hover:text-brand-300 flex items-center gap-2 truncate">
+                                            <ExternalLink className="w-3 h-3" /> {app.proofLink}
+                                        </a>
+                                    </div>
+                                    <div className="flex gap-3 pt-2">
+                                        <button onClick={() => handleRejectOrg(app)} className="flex-1 bg-red-600/20 hover:bg-red-600 text-red-500 hover:text-white border border-red-500/30 hover:border-red-500 py-2.5 rounded-xl text-xs font-bold uppercase transition-all">
+                                            Reject
+                                        </button>
+                                        <button onClick={() => handleApproveOrg(app)} className="flex-1 bg-green-600 hover:bg-green-500 text-white py-2.5 rounded-xl text-xs font-bold uppercase transition-all">
+                                            Approve
+                                        </button>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="col-span-full flex flex-col items-center justify-center py-20 text-gray-600">
+                                <CheckCircle className="w-12 h-12 mb-3 opacity-20" />
+                                <p className="text-sm font-bold uppercase tracking-widest">No pending applications</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {activeTab === 'tab-org-tournaments' && (
+                <div className="bg-card p-6 rounded-xl border border-gray-800 space-y-6">
+                    <div className="flex justify-between items-center border-b border-gray-700 pb-4">
+                        <h2 className="text-xl font-bold text-white uppercase tracking-widest flex items-center gap-2">
+                            <Trophy className="text-brand-500" /> Organization Tournaments
+                        </h2>
+                        <select 
+                            value={selectedOrgId}
+                            onChange={(e) => fetchOrgTournaments(e.target.value)}
+                            className="bg-dark border border-gray-700 rounded-lg p-2 text-white text-sm focus:border-brand-500 outline-none"
+                        >
+                            <option value="">Select Organization</option>
+                            {organizers.map(org => (
+                                <option key={org.uid} value={org.uid}>{org.username}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {orgTournaments.length > 0 ? (
+                            orgTournaments.map(t => (
+                                <div key={t.id} className="bg-dark p-4 rounded-xl border border-gray-800 space-y-3">
+                                    <img src={t.bannerUrl || undefined} className="w-full aspect-video object-cover rounded-lg" alt={t.title} />
+                                    <div>
+                                        <h3 className="font-bold text-white truncate">{t.title}</h3>
+                                        <div className="flex justify-between items-center mt-2">
+                                            <span className="text-[10px] text-gray-500 uppercase font-bold">{formatGameName(t.game)}</span>
+                                            <div className="flex items-center gap-2">
+                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
+                                                    t.status === 'upcoming' ? 'bg-blue-600/20 text-blue-400' :
+                                                    t.status === 'live' ? 'bg-green-600/20 text-green-400' :
+                                                    t.status === 'cancelled' ? 'bg-red-600/20 text-red-400' :
+                                                    'bg-gray-600/20 text-gray-400'
+                                                }`}>
+                                                    {t.status}
+                                                </span>
+                                                <div className="flex gap-1">
+                                                    <button 
+                                                        onClick={() => handleViewParticipants(t)}
+                                                        className="p-1.5 bg-brand-600/20 hover:bg-brand-600 text-brand-500 hover:text-white rounded-lg transition-all border border-brand-500/30"
+                                                        title="View Participants"
+                                                    >
+                                                        <Users className="w-3 h-3" />
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleEditTournament(t)}
+                                                        className="p-1.5 bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white rounded-lg transition-all border border-blue-500/30"
+                                                        title="Edit Tournament"
+                                                    >
+                                                        <Edit className="w-3 h-3" />
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleToggleFeatured(t)}
+                                                        className={`p-1.5 rounded-lg transition-all border ${
+                                                            t.isFeatured 
+                                                                ? 'bg-yellow-600/20 text-yellow-500 border-yellow-500/30 hover:bg-yellow-600 hover:text-white' 
+                                                                : 'bg-gray-600/20 text-gray-400 border-gray-500/30 hover:bg-gray-600 hover:text-white'
+                                                        }`}
+                                                        title={t.isFeatured ? "Unfeature" : "Feature"}
+                                                    >
+                                                        <Megaphone className="w-3 h-3" />
+                                                    </button>
+                                                    {t.status !== 'cancelled' && t.status !== 'completed' && (
+                                                        <button 
+                                                            onClick={() => handleCancelTournament(t)}
+                                                            className="p-1.5 bg-red-600/20 hover:bg-red-600 text-red-500 hover:text-white rounded-lg transition-all border border-red-500/30"
+                                                            title="Cancel Tournament"
+                                                        >
+                                                            <X className="w-3 h-3" />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))
+                        ) : selectedOrgId ? (
+                            <div className="col-span-full flex flex-col items-center justify-center py-20 text-gray-600">
+                                <Trophy className="w-12 h-12 mb-3 opacity-20" />
+                                <p className="text-sm font-bold uppercase tracking-widest">No tournaments found for this organization</p>
+                            </div>
+                        ) : (
+                            <div className="col-span-full flex flex-col items-center justify-center py-20 text-gray-600">
+                                <Users className="w-12 h-12 mb-3 opacity-20" />
+                                <p className="text-sm font-bold uppercase tracking-widest">Select an organization to view their tournaments</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {activeTab === 'tab-users' && (
+                <div className="bg-card p-6 rounded-xl border border-gray-800 space-y-6">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-700 pb-4">
+                        <h2 className="text-xl font-bold text-white uppercase tracking-widest flex items-center gap-2">
+                            <Users className="text-brand-500" /> Manage Users
+                        </h2>
+                        <div className="relative w-full md:w-64">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
+                            <input 
+                                type="text"
+                                placeholder="Search users..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full bg-dark border border-gray-700 rounded-lg pl-10 pr-4 py-2 text-sm text-white focus:border-brand-500 outline-none"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="text-[10px] text-gray-500 uppercase font-black tracking-widest border-b border-gray-800">
+                                    <th className="px-4 py-4">User</th>
+                                    <th className="px-4 py-4">Role</th>
+                                    <th className="px-4 py-4">Balance</th>
+                                    <th className="px-4 py-4">Status</th>
+                                    <th className="px-4 py-4 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-800/50">
+                                {users
+                                    .filter(u => 
+                                        u.username.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                        u.email.toLowerCase().includes(searchQuery.toLowerCase())
+                                    )
+                                    .map(u => (
+                                    <tr key={u.uid} className="hover:bg-white/[0.02] transition-colors">
+                                        <td className="px-4 py-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 bg-brand-600/20 rounded-lg flex items-center justify-center border border-brand-500/30">
+                                                    <Users className="text-brand-500 w-4 h-4" />
+                                                </div>
+                                                <div>
+                                                    <div className="text-sm font-bold text-white">{u.username}</div>
+                                                    <div className="text-[10px] text-gray-500">{u.email}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-4">
+                                            <select 
+                                                value={u.role}
+                                                onChange={(e) => handleUpdateUserRole(u.uid, e.target.value as any)}
+                                                className="bg-dark border border-gray-700 rounded-lg px-2 py-1 text-xs text-white outline-none focus:border-brand-500"
+                                            >
+                                                <option value="player">Player</option>
+                                                <option value="organizer">Organizer</option>
+                                                <option value="admin">Admin</option>
+                                            </select>
+                                        </td>
+                                        <td className="px-4 py-4">
+                                            <div className="text-sm font-mono font-bold text-white">{formatCurrency(u.balance)}</div>
+                                        </td>
+                                        <td className="px-4 py-4">
+                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${u.isBanned ? 'bg-red-600/20 text-red-400' : 'bg-green-600/20 text-green-400'}`}>
+                                                {u.isBanned ? 'Banned' : 'Active'}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-4 text-right">
+                                            <div className="flex justify-end gap-2">
+                                                <button 
+                                                    onClick={() => setSelectedUser(u)}
+                                                    className="p-1.5 bg-blue-600/20 text-blue-400 border border-blue-500/30 hover:bg-blue-600 hover:text-white rounded-lg transition-all"
+                                                    title="Manage Balance & Role"
+                                                >
+                                                    <Edit className="w-3.5 h-3.5" />
+                                                </button>
+                                                <button 
+                                                    onClick={() => handleSuspendOrg(u.uid, !u.isBanned)}
+                                                    className={`p-1.5 rounded-lg border transition-all ${
+                                                        u.isBanned 
+                                                            ? 'bg-green-600/20 text-green-400 border-green-500/30 hover:bg-green-600 hover:text-white' 
+                                                            : 'bg-red-600/20 text-red-400 border-red-500/30 hover:bg-red-600 hover:text-white'
+                                                    }`}
+                                                >
+                                                    {u.isBanned ? <CheckCircle className="w-3.5 h-3.5" /> : <Trash className="w-3.5 h-3.5" />}
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
+
+            {activeTab === 'tab-organizers' && (
+                <div className="bg-card p-6 rounded-xl border border-gray-800 space-y-6">
+                    <div className="flex justify-between items-center border-b border-gray-700 pb-4">
+                        <h2 className="text-xl font-bold text-white uppercase tracking-widest flex items-center gap-2">
+                            <Users className="text-brand-500" /> Manage Organizers
+                        </h2>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {organizers.map(org => (
+                            <div key={org.uid} className="bg-dark p-5 rounded-2xl border border-gray-800 space-y-4 relative overflow-hidden group">
+                                <div className="flex justify-between items-start">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-12 h-12 bg-brand-600/20 rounded-full flex items-center justify-center border border-brand-500/30">
+                                            <Users className="text-brand-500 w-6 h-6" />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-white">{org.username}</h3>
+                                            <div className="flex items-center gap-2">
+                                                <p className="text-[10px] text-gray-500 uppercase font-bold">{org.orgName || 'No Org Name'}</p>
+                                                <span className="text-[8px] bg-brand-600/10 text-brand-400 px-1.5 py-0.5 rounded border border-brand-500/20 uppercase font-black">{org.role}</span>
+                                            </div>
+                                            <button
+                                                onClick={() => togglePowerOrganizer(org)}
+                                                className={`mt-1 flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded ${org.isPowerOrganizer ? 'bg-green-600/20 text-green-500' : 'bg-gray-600/20 text-gray-500'}`}
+                                            >
+                                                {org.isPowerOrganizer ? <CheckCircle className="w-3 h-3" /> : <X className="w-3 h-3" />}
+                                                {org.isPowerOrganizer ? 'Power' : 'Standard'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button 
+                                            onClick={() => {
+                                                setEditingOrg(org);
+                                                setOrgEmail(org.email || '');
+                                                setOrgDiscord(org.discord || '');
+                                                setOrgYoutube(org.youtube || '');
+                                                setOrgWhatsapp(org.whatsapp || '');
+                                                setOrgNameEdit(org.orgName || '');
+                                                setIsOrgEditModalOpen(true);
+                                            }}
+                                            className="p-2 bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white rounded-xl transition-all border border-blue-500/30"
+                                        >
+                                            <Edit className="w-4 h-4" />
+                                        </button>
+                                        <button 
+                                            onClick={() => handleSuspendOrg(org.uid, !org.isBanned)}
+                                            className={`p-2 rounded-xl transition-all border ${
+                                                org.isBanned 
+                                                    ? 'bg-green-600/20 hover:bg-green-600 text-green-400 hover:text-white border-green-500/30' 
+                                                    : 'bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white border-red-500/30'
+                                            }`}
+                                        >
+                                            {org.isBanned ? <CheckCircle className="w-4 h-4" /> : <Trash className="w-4 h-4" />}
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 text-[10px]">
+                                    <div className="bg-black/30 p-2 rounded-lg border border-gray-800">
+                                        <div className="text-gray-600 uppercase font-bold mb-0.5">Email</div>
+                                        <div className="text-gray-300 truncate">{org.email}</div>
+                                    </div>
+                                    <div className="bg-black/30 p-2 rounded-lg border border-gray-800">
+                                        <div className="text-gray-600 uppercase font-bold mb-0.5">Status</div>
+                                        <div className={`font-bold ${org.isBanned ? 'text-red-500' : 'text-green-500'}`}>
+                                            {org.isBanned ? 'SUSPENDED' : 'ACTIVE'}
+                                        </div>
+                                    </div>
+                                    <div className="bg-black/30 p-2 rounded-lg border border-gray-800">
+                                        <div className="text-gray-600 uppercase font-bold mb-0.5">Org Wallet</div>
+                                        <div className="text-brand-400 font-bold">{formatCurrency(org.orgWalletBalance || 0)}</div>
+                                    </div>
+                                    <div className="bg-black/30 p-2 rounded-lg border border-gray-800">
+                                        <div className="text-gray-600 uppercase font-bold mb-0.5">Pending</div>
+                                        <div className="text-yellow-500 font-bold">{formatCurrency(org.orgPendingEarnings || 0)}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {isOrgEditModalOpen && (
+                        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+                            <div className="bg-card w-full max-w-md rounded-2xl border border-gray-800 p-6 space-y-4 shadow-2xl overflow-y-auto max-h-[90vh] custom-scrollbar">
+                                <h3 className="text-xl font-bold text-white uppercase tracking-widest border-b border-gray-800 pb-4">
+                                    Edit Organizer Details
+                                </h3>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Organization Name</label>
+                                        <input type="text" value={orgNameEdit} onChange={e => setOrgNameEdit(e.target.value)} className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Email</label>
+                                        <input type="email" value={orgEmail} onChange={e => setOrgEmail(e.target.value)} className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">WhatsApp</label>
+                                        <input type="text" value={orgWhatsapp} onChange={e => setOrgWhatsapp(e.target.value)} className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Discord</label>
+                                        <input type="text" value={orgDiscord} onChange={e => setOrgDiscord(e.target.value)} className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">YouTube</label>
+                                        <input type="text" value={orgYoutube} onChange={e => setOrgYoutube(e.target.value)} className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" />
+                                    </div>
+                                </div>
+                                <div className="flex gap-4 pt-4">
+                                    <button onClick={() => setIsOrgEditModalOpen(false)} className="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-3 rounded-xl font-bold transition">Cancel</button>
+                                    <button onClick={handleSaveOrgDetails} className="flex-1 bg-brand-600 hover:bg-brand-500 text-white py-3 rounded-xl font-bold transition">Save Changes</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {activeTab === 'tab-org-earnings' && (
+                <div className="bg-card p-6 rounded-xl border border-gray-800 space-y-6">
+                    <div className="flex justify-between items-center border-b border-gray-700 pb-4">
+                        <div className="flex items-center gap-4">
+                            <h2 className="text-xl font-bold text-white uppercase tracking-widest flex items-center gap-2">
+                                <DollarSign className="text-brand-500" /> Org Earnings
+                            </h2>
+                        </div>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="border-b border-gray-800 text-gray-400 text-sm uppercase tracking-wider">
+                                    <th className="p-4 font-medium">Date</th>
+                                    <th className="p-4 font-medium">Tournament</th>
+                                    <th className="p-4 font-medium">Organizer</th>
+                                    <th className="p-4 font-medium">Total Prize</th>
+                                    <th className="p-4 font-medium">Org Share</th>
+                                    <th className="p-4 font-medium">Status</th>
+                                    <th className="p-4 font-medium text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-800/50">
+                                {tournamentEarnings.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={7} className="p-8 text-center text-gray-500">
+                                            No earnings records found.
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    tournamentEarnings.map(earning => (
+                                        <tr key={earning.id} className="hover:bg-gray-800/20 transition-colors">
+                                            <td className="p-4 text-gray-300">
+                                                {earning.createdAt?.toDate().toLocaleDateString() || 'N/A'}
+                                            </td>
+                                            <td className="p-4 text-white font-medium">
+                                                {earning.tournamentName}
+                                            </td>
+                                            <td className="p-4 text-gray-300">
+                                                {earning.orgName}
+                                            </td>
+                                            <td className="p-4 text-gray-300">
+                                                {formatCurrency(earning.prizePoolTotal)}
+                                            </td>
+                                            <td className="p-4 text-brand-400 font-bold">
+                                                {formatCurrency(earning.orgShare)}
+                                            </td>
+                                            <td className="p-4">
+                                                <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                                                    earning.status === 'released' ? 'bg-green-500/20 text-green-400' :
+                                                    'bg-yellow-500/20 text-yellow-400'
+                                                }`}>
+                                                    {earning.status.toUpperCase()}
+                                                </span>
+                                            </td>
+                                            <td className="p-4 text-right">
+                                                {earning.status === 'pending' && (
+                                                    <button
+                                                        onClick={() => handleReleaseEarnings(earning)}
+                                                        className="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition"
+                                                    >
+                                                        Release
+                                                    </button>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
+
+                {activeTab === 'tab-pending-deposits' && (
+                    <div className="bg-card p-6 rounded-xl border border-gray-800 space-y-6">
+                        <div className="flex justify-between items-center border-b border-gray-700 pb-4">
+                            <div className="flex items-center gap-4">
+                                <h2 className="text-xl font-bold text-white uppercase tracking-widest flex items-center gap-2">
+                                    <ArrowDown className="text-green-500" /> Pending Deposits
+                                </h2>
+                                <span className="bg-brand-500/20 text-brand-400 text-xs font-bold px-3 py-1 rounded-full border border-brand-500/30">
+                                    {allTransactions.filter(t => t.type === 'deposit' && t.status === 'pending').length} Pending
+                                </span>
+                            </div>
+                            {allTransactions.filter(t => t.type === 'deposit' && t.status === 'pending').length > 0 && (
+                                <button 
+                                    onClick={() => {
+                                        setConfirmModal({
+                                            isOpen: true,
+                                            title: 'Bulk Approve Deposits',
+                                            message: 'Are you sure you want to approve ALL pending deposits?',
+                                            onConfirm: async () => {
+                                                const pending = allTransactions.filter(t => t.type === 'deposit' && t.status === 'pending');
+                                                for (const t of pending) {
+                                                    await handleApproveTx(t);
+                                                }
+                                                closeConfirmModal();
+                                            }
+                                        });
+                                    }}
+                                    className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg font-bold text-sm transition"
+                                >
+                                    Bulk Approve All
+                                </button>
+                            )}
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-[500px] overflow-y-auto custom-scrollbar content-start pr-2">
+                            {allTransactions.filter(t => t.type === 'deposit' && t.status === 'pending').length > 0 ? (
+                                allTransactions.filter(t => t.type === 'deposit' && t.status === 'pending').map(t => (
+                                    <div key={t.id} className="bg-dark/50 hover:bg-dark p-5 rounded-2xl border border-gray-800 hover:border-gray-700 transition-all shadow-md group">
+                                        <div className="flex justify-between items-start mb-4 border-b border-gray-800 pb-3">
+                                            <div>
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <span className="font-black tracking-wider text-green-400 uppercase text-xs">Deposit</span>
+                                                    <span className="text-[10px] bg-gray-800 px-2 py-0.5 rounded-full text-gray-300 font-bold tracking-wider">{t.method}</span>
+                                                </div>
+                                                <div className="text-white font-bold text-sm">{t.username || 'Unknown User'}</div>
+                                                <div className="text-[10px] text-gray-500 font-mono">{getRelativeTime(t.timestamp)}</div>
+                                            </div>
+                                            <div className="text-xl font-black text-white tracking-tight">{formatCurrency(Math.abs(t.amount))}</div>
+                                        </div>
+                                        <div className="text-[11px] text-gray-400 mb-5 space-y-2">
+                                            <div className="bg-black/30 p-2 rounded-lg border border-gray-800/50 font-mono flex justify-between items-center">
+                                                <span className="text-gray-600">REF:</span> 
+                                                <span className="text-brand-300 select-all">{t.refId}</span>
+                                            </div>
+                                            {t.accountDetails && (
+                                                <div className="bg-black/30 p-2 rounded-lg border border-gray-800/50 font-mono flex justify-between items-center">
+                                                    <span className="text-gray-600">ACC:</span> 
+                                                    <span className="text-brand-300 select-all">{t.accountDetails}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <button onClick={() => handleApproveTx(t)} className="bg-green-600/20 hover:bg-green-600 text-green-400 hover:text-white border border-green-500/30 hover:border-green-500 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all">
+                                                <Check className="w-4 h-4" /> Approve
+                                            </button>
+                                            <button onClick={() => setSelectedTx(t)} className="bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30 hover:border-blue-500 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all">
+                                                <Eye className="w-4 h-4" /> Review
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="col-span-full h-full flex flex-col items-center justify-center text-gray-500 py-20">
+                                    <div className="w-16 h-16 bg-dark rounded-full flex items-center justify-center mb-4 border border-gray-800">
+                                        <Check className="text-3xl text-green-500/50" />
+                                    </div>
+                                    <p className="font-bold uppercase tracking-widest text-sm text-gray-600">All Caught Up!</p>
+                                    <p className="text-xs text-gray-700 mt-1">No pending deposits to review.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'tab-pending-withdrawals' && (
+                    <div className="bg-card p-6 rounded-xl border border-gray-800 space-y-6">
+                        <div className="flex justify-between items-center border-b border-gray-700 pb-4">
+                            <div className="flex items-center gap-4">
+                                <h2 className="text-xl font-bold text-white uppercase tracking-widest flex items-center gap-2">
+                                    <ArrowUp className="text-red-500" /> Pending Withdrawals
+                                </h2>
+                                <span className="bg-brand-500/20 text-brand-400 text-xs font-bold px-3 py-1 rounded-full border border-brand-500/30">
+                                    {allTransactions.filter(t => t.type === 'withdrawal' && t.status === 'pending').length} Pending
+                                </span>
+                            </div>
+                            {allTransactions.filter(t => t.type === 'withdrawal' && t.status === 'pending').length > 0 && (
+                                <button 
+                                    onClick={() => {
+                                        setConfirmModal({
+                                            isOpen: true,
+                                            title: 'Bulk Approve Withdrawals',
+                                            message: 'Are you sure you want to approve ALL pending withdrawals?',
+                                            onConfirm: async () => {
+                                                const pending = allTransactions.filter(t => t.type === 'withdrawal' && t.status === 'pending');
+                                                for (const t of pending) {
+                                                    await handleApproveTx(t);
+                                                }
+                                                closeConfirmModal();
+                                            }
+                                        });
+                                    }}
+                                    className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg font-bold text-sm transition"
+                                >
+                                    Bulk Approve All
+                                </button>
+                            )}
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-[500px] overflow-y-auto custom-scrollbar content-start pr-2">
+                            {allTransactions.filter(t => t.type === 'withdrawal' && t.status === 'pending').length > 0 ? (
+                                allTransactions.filter(t => t.type === 'withdrawal' && t.status === 'pending').map(t => (
+                                    <div key={t.id} className="bg-dark/50 hover:bg-dark p-5 rounded-2xl border border-gray-800 hover:border-gray-700 transition-all shadow-md group">
+                                        <div className="flex justify-between items-start mb-4 border-b border-gray-800 pb-3">
+                                            <div>
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <span className="font-black tracking-wider text-red-400 uppercase text-xs">Withdrawal</span>
+                                                    <span className="text-[10px] bg-gray-800 px-2 py-0.5 rounded-full text-gray-300 font-bold tracking-wider">{t.method}</span>
+                                                </div>
+                                                <div className="text-white font-bold text-sm">{t.username || 'Unknown User'}</div>
+                                                <div className="text-[10px] text-gray-500 font-mono">{getRelativeTime(t.timestamp)}</div>
+                                            </div>
+                                            <div className="text-xl font-black text-white tracking-tight">{formatCurrency(Math.abs(t.amount))}</div>
+                                        </div>
+                                        <div className="text-[11px] text-gray-400 mb-5 space-y-2">
+                                            <div className="bg-black/30 p-2 rounded-lg border border-gray-800/50 font-mono flex justify-between items-center">
+                                                <span className="text-gray-600">REF:</span> 
+                                                <span className="text-brand-300 select-all">{t.refId}</span>
+                                            </div>
+                                            {t.accountDetails && (
+                                                <div className="bg-black/30 p-2 rounded-lg border border-gray-800/50 font-mono flex justify-between items-center">
+                                                    <span className="text-gray-600">ACC:</span> 
+                                                    <span className="text-brand-300 select-all">{t.accountDetails}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <button onClick={() => handleApproveTx(t)} className="bg-green-600/20 hover:bg-green-600 text-green-400 hover:text-white border border-green-500/30 hover:border-green-500 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all">
+                                                <Check className="w-4 h-4" /> Approve
+                                            </button>
+                                            <button onClick={() => setSelectedTx(t)} className="bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30 hover:border-blue-500 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all">
+                                                <Eye className="w-4 h-4" /> Review
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="col-span-full h-full flex flex-col items-center justify-center text-gray-500 py-20">
+                                    <div className="w-16 h-16 bg-dark rounded-full flex items-center justify-center mb-4 border border-gray-800">
+                                        <Check className="text-3xl text-green-500/50" />
+                                    </div>
+                                    <p className="font-bold uppercase tracking-widest text-sm text-gray-600">All Caught Up!</p>
+                                    <p className="text-xs text-gray-700 mt-1">No pending withdrawals to review.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'tab-tx-history' && (
+                    <TransactionHistoryTab 
+                        allTransactions={allTransactions}
+                        allTournaments={allTournaments}
+                        setSelectedTx={setSelectedTx}
+                        formatDate={formatDate}
+                        getRelativeTime={getRelativeTime}
+                        formatCurrency={formatCurrency}
+                        txFilterType={txFilterType}
+                        setTxFilterType={setTxFilterType}
+                        txFilterStatus={txFilterStatus}
+                        setTxFilterStatus={setTxFilterStatus}
+                        txFilterTournament={txFilterTournament}
+                        setTxFilterTournament={setTxFilterTournament}
+                        txSearchUser={txSearchUser}
+                        setTxSearchUser={setTxSearchUser}
+                    />
+                )}
+
+            {activeTab === 'tab-subscriptions' && (
+                <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                        <h2 className="text-xl font-bold text-white uppercase tracking-wider">Subscription Plans</h2>
+                        <button 
+                            onClick={() => {
+                                setEditingPlan(null);
+                                setPlanName('');
+                                setPlanPrice('');
+                                setPlanDesc('');
+                                setPlanFeatures('');
+                                setPlanMaxTournaments('10');
+                                setPlanIsActive(true);
+                                setIsPlanModalOpen(true);
+                            }}
+                            className="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2"
+                        >
+                            <Plus className="w-4 h-4" /> Add Plan
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {subscriptionPlans.map(plan => (
+                            <div key={plan.id} className="bg-card p-6 rounded-2xl border border-gray-800 flex flex-col gap-4 relative group">
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <h3 className="font-bold text-white text-lg">{plan.name}</h3>
+                                        <div className="text-brand-400 font-bold text-2xl mt-1">{formatCurrency(plan.price)}<span className="text-xs text-gray-500">/mo</span></div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button 
+                                            onClick={() => {
+                                                setEditingPlan(plan);
+                                                setPlanName(plan.name);
+                                                setPlanPrice(plan.price.toString());
+                                                setPlanDesc(plan.description || '');
+                                                setPlanFeatures(plan.features.join(', '));
+                                                setPlanMaxTournaments(plan.maxTournamentsPerMonth.toString());
+                                                setPlanIsActive(plan.isActive);
+                                                setIsPlanModalOpen(true);
+                                            }}
+                                            className="text-blue-400 hover:text-white p-2 bg-blue-600/10 rounded-lg"
+                                        >
+                                            <Edit className="w-4 h-4" />
+                                        </button>
+                                        <button onClick={() => handleDeletePlan(plan.id)} className="text-red-400 hover:text-white p-2 bg-red-600/10 rounded-lg">
+                                            <Trash className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <p className="text-xs text-gray-400 leading-relaxed min-h-[40px]">{plan.description}</p>
+                                
+                                <div className="space-y-2 border-t border-gray-800 pt-4">
+                                    <div className="flex items-center gap-2 text-[10px] text-gray-300">
+                                        <CheckCircle className="w-3 h-3 text-brand-500" />
+                                        {plan.maxTournamentsPerMonth} Tournaments / month
+                                    </div>
+                                    <div className="flex items-center gap-2 text-[10px] text-gray-300">
+                                        <CheckCircle className={`w-3 h-3 ${plan.isActive ? 'text-brand-500' : 'text-gray-600'}`} />
+                                        Status: {plan.isActive ? 'ACTIVE' : 'INACTIVE'}
+                                    </div>
+                                </div>
+
+                                <div className="mt-auto">
+                                    <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Features</h4>
+                                    <div className="flex flex-wrap gap-1">
+                                        {plan.features.map((f, i) => (
+                                            <span key={i} className="text-[9px] bg-dark px-2 py-0.5 rounded-full border border-gray-800 text-gray-400">{f}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {isPlanModalOpen && (
+                        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+                            <div className="bg-card w-full max-w-md rounded-2xl border border-gray-800 p-6 space-y-4 shadow-2xl overflow-y-auto max-h-[90vh] custom-scrollbar">
+                                <h3 className="text-xl font-bold text-white uppercase tracking-widest border-b border-gray-800 pb-4">
+                                    {editingPlan ? 'Edit Plan' : 'Add Plan'}
+                                </h3>
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Plan Name</label>
+                                            <input type="text" value={planName} onChange={e => setPlanName(e.target.value)} className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" placeholder="e.g. Pro Plan" />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Monthly Price</label>
+                                            <input type="number" value={planPrice} onChange={e => setPlanPrice(e.target.value)} className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" placeholder="e.g. 999" />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Description</label>
+                                        <textarea value={planDesc} onChange={e => setPlanDesc(e.target.value)} className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none h-20" placeholder="Plan details..." />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Max Tournaments / Mo</label>
+                                        <input type="number" value={planMaxTournaments} onChange={e => setPlanMaxTournaments(e.target.value)} className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Features (Comma separated)</label>
+                                        <textarea value={planFeatures} onChange={e => setPlanFeatures(e.target.value)} className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none h-24" placeholder="Feature 1, Feature 2..." />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4 pt-2">
+                                        <label className="flex items-center gap-3 cursor-pointer bg-dark/50 p-3 rounded-xl border border-gray-800">
+                                            <input type="checkbox" checked={planIsActive} onChange={e => setPlanIsActive(e.target.checked)} className="accent-brand-500 w-4 h-4" />
+                                            <span className="text-xs text-gray-300 font-bold uppercase">Is Active</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div className="flex gap-4 pt-4">
+                                    <button onClick={() => setIsPlanModalOpen(false)} className="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-3 rounded-xl font-bold transition">Cancel</button>
+                                    <button onClick={handleSavePlan} className="flex-1 bg-brand-600 hover:bg-brand-500 text-white py-3 rounded-xl font-bold transition">Save Plan</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {activeTab === 'tab-games' && (
+                <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                        <h2 className="text-xl font-bold text-white uppercase tracking-wider">Game Management</h2>
+                        <button 
+                            onClick={() => {
+                                setEditingGame(null);
+                                setGameName('');
+                                setGameLogo('');
+                                setGameModes('');
+                                setIsPublished(true);
+                                setIsGameModalOpen(true);
+                            }}
+                            className="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2"
+                        >
+                            <Plus className="w-4 h-4" /> Add Game
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {games.map(game => (
+                            <div key={game.id} className="bg-card p-4 rounded-xl border border-gray-800 flex items-center gap-4">
+                                <img src={game.logoUrl || undefined} className="w-16 h-16 object-cover rounded-lg border border-gray-700" alt={formatGameName(game.name)} />
+                                <div className="flex-grow">
+                                    <h3 className="font-bold text-white">{formatGameName(game.name)}</h3>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <span className={`w-2 h-2 rounded-full ${game.isPublished ? 'bg-green-500' : 'bg-gray-600'}`}></span>
+                                        <span className="text-[10px] text-gray-500 uppercase font-bold">{game.isPublished ? 'Published' : 'Draft'}</span>
+                                    </div>
+                                    <div className="text-[10px] text-gray-400 mt-1 truncate w-32">
+                                        {game.modes.join(', ')}
+                                    </div>
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                    <button onClick={() => openEditGame(game)} className="text-blue-400 hover:text-white"><Edit className="w-4 h-4" /></button>
+                                    <button onClick={() => handleDeleteGame(game.id)} className="text-red-400 hover:text-white"><Trash className="w-4 h-4" /></button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {isGameModalOpen && (
+                        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+                            <div className="bg-card w-full max-w-md rounded-2xl border border-gray-800 p-6 space-y-4 shadow-2xl overflow-y-auto max-h-[90vh] custom-scrollbar">
+                                <h3 className="text-xl font-bold text-white uppercase tracking-widest border-b border-gray-800 pb-4">
+                                    {editingGame ? 'Edit Game' : 'Add Game'}
+                                </h3>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Game Name</label>
+                                        <input 
+                                            type="text" 
+                                            value={gameName}
+                                            onChange={(e) => setGameName(e.target.value)}
+                                            className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none"
+                                            placeholder="e.g. PUBG Mobile"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Logo/Banner (Paste, Drop or Click to Select)</label>
+                                        <div 
+                                            onPaste={handlePasteGame}
+                                            onDrop={handleDropGame}
+                                            onDragOver={handleDragOverGame}
+                                            onClick={() => document.getElementById('game-logo-file-input')?.click()}
+                                            className={`relative w-full aspect-video rounded-xl border-2 border-dashed transition-all flex items-center justify-center overflow-hidden group cursor-pointer ${uploading ? 'border-brand-500 bg-brand-500/10' : 'border-gray-700 hover:border-brand-500 bg-dark'}`}
+                                        >
+                                            {uploading ? (
+                                                <div className="flex flex-col items-center gap-2">
+                                                    <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
+                                                    <span className="text-[10px] text-brand-400 font-bold uppercase">Uploading...</span>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <img 
+                                                        src={gameLogo || DEFAULT_BANNER || undefined} 
+                                                        alt="Game Logo Preview" 
+                                                        className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition"
+                                                        onError={(e) => (e.currentTarget.src = NEXPLAY_LOGO)}
+                                                        referrerPolicy="no-referrer"
+                                                    />
+                                                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition">
+                                                        <Plus className="w-8 h-8 text-white" />
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
+                                        <input 
+                                            id="game-logo-file-input"
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                                if (e.target.files?.[0]) {
+                                                    processAndUploadGame(e.target.files[0]);
+                                                }
+                                            }}
+                                        />
+                                        <div className="mt-2">
+                                            <input 
+                                                type="text" 
+                                                value={gameLogo}
+                                                onChange={(e) => setGameLogo(e.target.value)}
+                                                className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none text-sm"
+                                                placeholder="Or paste image URL..."
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Game Modes (Comma separated)</label>
+                                        <textarea 
+                                            value={gameModes}
+                                            onChange={(e) => setGameModes(e.target.value)}
+                                            className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none h-24"
+                                            placeholder="Battle Royale, Ranked, Arcade..."
+                                        />
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <input 
+                                            type="checkbox" 
+                                            id="isPublished"
+                                            checked={isPublished}
+                                            onChange={(e) => setIsPublished(e.target.checked)}
+                                            className="w-4 h-4 accent-brand-500"
+                                        />
+                                        <label htmlFor="isPublished" className="text-sm text-gray-300 font-bold uppercase">Published (Visible to users)</label>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-3 pt-4">
+                                    <button 
+                                        onClick={() => setIsGameModalOpen(false)}
+                                        className="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-3 rounded-xl font-bold transition"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button 
+                                        onClick={handleSaveGame}
+                                        className="flex-1 bg-brand-600 hover:bg-brand-500 text-white py-3 rounded-xl font-bold transition"
+                                    >
+                                        {editingGame ? 'Update' : 'Save'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {activeTab === 'tab-payments' && (
+                <div className="space-y-12">
+                    {/* Payment Categories Section */}
+                    <div className="space-y-6">
+                        <div className="flex justify-between items-center">
+                            <h2 className="text-xl font-bold text-white uppercase tracking-wider">Payment Categories</h2>
+                            <button 
+                                onClick={() => {
+                                    setEditingCategory(null);
+                                    setCategoryName('');
+                                    setCategoryDescription('');
+                                    setCategoryActive(true);
+                                    setIsCategoryModalOpen(true);
+                                }}
+                                className="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2"
+                            >
+                                <Plus className="w-4 h-4" /> Add Category
+                            </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {paymentCategories.map(cat => (
+                                <div key={cat.id} className="bg-card p-4 rounded-xl border border-gray-800 flex flex-col gap-4">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <h3 className="font-bold text-white">{cat.name}</h3>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <span className={`w-2 h-2 rounded-full ${cat.isActive ? 'bg-green-500' : 'bg-gray-600'}`}></span>
+                                                <span className="text-[10px] text-gray-500 uppercase font-bold">{cat.isActive ? 'Active' : 'Inactive'}</span>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button onClick={() => {
+                                                setEditingCategory(cat);
+                                                setCategoryName(cat.name);
+                                                setCategoryDescription(cat.description);
+                                                setCategoryActive(cat.isActive);
+                                                setIsCategoryModalOpen(true);
+                                            }} className="text-blue-400 hover:text-white"><Edit className="w-4 h-4" /></button>
+                                            <button onClick={() => handleDeleteCategory(cat.id)} className="text-red-400 hover:text-white"><Trash className="w-4 h-4" /></button>
+                                        </div>
+                                    </div>
+                                    <div className="text-[10px] text-gray-500 bg-dark p-2 rounded border border-gray-700 h-16 overflow-y-auto">
+                                        {cat.description || 'No description'}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Payment Methods Section */}
+                    <div className="space-y-6">
+                        <div className="flex justify-between items-center">
+                            <h2 className="text-xl font-bold text-white uppercase tracking-wider">Payment Methods (QR Codes)</h2>
+                            <button 
+                                onClick={() => {
+                                    setEditingPayment(null);
+                                    setPaymentName('');
+                                    setPaymentCategoryId('');
+                                    setPaymentQr('');
+                                    setPaymentInstructions('');
+                                    setPaymentType('eSewa');
+                                    setPaymentActive(true);
+                                    setIsPaymentModalOpen(true);
+                                }}
+                                className="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2"
+                            >
+                                <Plus className="w-4 h-4" /> Add Method
+                            </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {paymentMethods.map(pm => {
+                                const category = paymentCategories.find(c => c.id === pm.categoryId);
+                                return (
+                                <div key={pm.id} className="bg-card p-4 rounded-xl border border-gray-800 flex flex-col gap-4">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-16 h-16 bg-dark rounded-lg border border-gray-700 flex items-center justify-center overflow-hidden">
+                                            <img src={pm.qrUrl || undefined} className="w-full h-full object-contain" alt="QR" />
+                                        </div>
+                                        <div className="flex-grow">
+                                            <h3 className="font-bold text-white">{pm.name}</h3>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <span className={`w-2 h-2 rounded-full ${pm.isActive ? 'bg-green-500' : 'bg-gray-600'}`}></span>
+                                                <span className="text-[10px] text-gray-500 uppercase font-bold">{category ? category.name : pm.type} | {pm.isActive ? 'Active' : 'Inactive'}</span>
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-col gap-2">
+                                            <button onClick={() => {
+                                                setEditingPayment(pm);
+                                                setPaymentName(pm.name);
+                                                setPaymentCategoryId(pm.categoryId || '');
+                                                setPaymentQr(pm.qrUrl);
+                                                setPaymentInstructions(pm.instructions);
+                                                setPaymentType(pm.type);
+                                                setPaymentActive(pm.isActive);
+                                                setIsPaymentModalOpen(true);
+                                            }} className="text-blue-400 hover:text-white"><Edit className="w-4 h-4" /></button>
+                                            <button onClick={() => handleDeletePayment(pm.id)} className="text-red-400 hover:text-white"><Trash className="w-4 h-4" /></button>
+                                        </div>
+                                    </div>
+                                    <div className="text-[10px] text-gray-500 bg-dark p-2 rounded border border-gray-700 h-16 overflow-y-auto">
+                                        {pm.instructions}
+                                    </div>
+                                </div>
+                            )})}
+                        </div>
+                    </div>
+
+                    {isCategoryModalOpen && (
+                        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+                            <div className="bg-card w-full max-w-lg rounded-2xl border border-gray-800 p-8 space-y-6 shadow-2xl">
+                                <h3 className="text-xl font-bold text-white uppercase tracking-widest border-b border-gray-800 pb-4">
+                                    {editingCategory ? 'Edit Category' : 'Add Category'}
+                                </h3>
+                                
+                                <div className="space-y-5">
+                                    <div>
+                                        <label className="text-xs text-gray-400 uppercase font-bold mb-2 block">Category Name</label>
+                                        <input 
+                                            type="text" 
+                                            value={categoryName}
+                                            onChange={(e) => setCategoryName(e.target.value)}
+                                            className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none transition"
+                                            placeholder="e.g. E-Wallet, Bank Transfer"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-400 uppercase font-bold mb-2 block">Description</label>
+                                        <textarea 
+                                            value={categoryDescription}
+                                            onChange={(e) => setCategoryDescription(e.target.value)}
+                                            className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none transition h-24 resize-none"
+                                            placeholder="Description of this category..."
+                                        />
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <input 
+                                            type="checkbox" 
+                                            id="catActive"
+                                            checked={categoryActive}
+                                            onChange={(e) => setCategoryActive(e.target.checked)}
+                                            className="w-4 h-4 rounded bg-dark border-gray-700 text-brand-500 focus:ring-brand-500"
+                                        />
+                                        <label htmlFor="catActive" className="text-sm text-white font-bold">Active (Visible to users)</label>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-4 pt-4 border-t border-gray-800">
+                                    <button 
+                                        onClick={() => setIsCategoryModalOpen(false)}
+                                        className="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-3 rounded-xl font-bold transition"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button 
+                                        onClick={handleSaveCategory}
+                                        className="flex-1 bg-brand-600 hover:bg-brand-500 text-white py-3 rounded-xl font-bold transition"
+                                    >
+                                        {editingCategory ? 'Update' : 'Save'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {isPaymentModalOpen && (
+                        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+                            <div className="bg-card w-full max-w-lg rounded-2xl border border-gray-800 p-8 space-y-6 shadow-2xl overflow-y-auto max-h-[90vh] custom-scrollbar">
+                                <h3 className="text-xl font-bold text-white uppercase tracking-widest border-b border-gray-800 pb-4">
+                                    {editingPayment ? 'Edit Payment Method' : 'Add Payment Method'}
+                                </h3>
+                                
+                                <div className="space-y-5">
+                                    <div>
+                                        <label className="text-xs text-gray-400 uppercase font-bold mb-2 block">Category</label>
+                                        <select 
+                                            value={paymentCategoryId}
+                                            onChange={(e) => setPaymentCategoryId(e.target.value)}
+                                            className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none transition"
+                                        >
+                                            <option value="">Select a category</option>
+                                            {paymentCategories.map(cat => (
+                                                <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-400 uppercase font-bold mb-2 block">Method Name</label>
+                                        <input 
+                                            type="text" 
+                                            value={paymentName}
+                                            onChange={(e) => setPaymentName(e.target.value)}
+                                            className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none transition"
+                                            placeholder="e.g. eSewa (Personal)"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-400 uppercase font-bold mb-2 block">QR Code Image (Paste, Drop or Click to Select)</label>
+                                        <div 
+                                            onPaste={handlePastePayment}
+                                            onDrop={handleDropPayment}
+                                            onDragOver={handleDragOverPayment}
+                                            onClick={() => document.getElementById('payment-qr-file-input')?.click()}
+                                            className={`relative w-48 h-48 mx-auto rounded-xl border-2 border-dashed transition-all flex items-center justify-center overflow-hidden group cursor-pointer ${uploading ? 'border-brand-500 bg-brand-500/10' : 'border-gray-700 hover:border-brand-500 bg-dark'}`}
+                                        >
+                                            {uploading ? (
+                                                <div className="flex flex-col items-center gap-2">
+                                                    <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
+                                                    <span className="text-[10px] text-brand-400 font-bold uppercase">Uploading...</span>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <img 
+                                                        src={paymentQr || NEXPLAY_LOGO || undefined} 
+                                                        alt="QR Preview" 
+                                                        className="w-full h-full object-contain opacity-80 group-hover:opacity-100 transition"
+                                                        onError={(e) => (e.currentTarget.src = NEXPLAY_LOGO)}
+                                                        referrerPolicy="no-referrer"
+                                                    />
+                                                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition">
+                                                        <Plus className="w-8 h-8 text-white" />
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
+                                        <input 
+                                            id="payment-qr-file-input"
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                                if (e.target.files?.[0]) {
+                                                    processAndUploadPayment(e.target.files[0]);
+                                                }
+                                            }}
+                                        />
+                                        <div className="mt-3">
+                                            <input 
+                                                type="text" 
+                                                value={paymentQr}
+                                                onChange={(e) => setPaymentQr(e.target.value)}
+                                                className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none text-sm transition"
+                                                placeholder="Or paste QR URL..."
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-400 uppercase font-bold mb-2 block">Instructions (Account Name, Number, etc.)</label>
+                                        <textarea 
+                                            value={paymentInstructions}
+                                            onChange={(e) => setPaymentInstructions(e.target.value)}
+                                            className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none h-24 transition"
+                                            placeholder="Account Name: John Doe&#10;Number: 98XXXXXXXX"
+                                        />
+                                    </div>
+                                    <div className="flex items-center gap-3 bg-gray-900/50 p-3 rounded-lg border border-gray-800">
+                                        <input 
+                                            type="checkbox" 
+                                            id="paymentActive"
+                                            checked={paymentActive}
+                                            onChange={(e) => setPaymentActive(e.target.checked)}
+                                            className="w-5 h-5 accent-brand-500 cursor-pointer"
+                                        />
+                                        <label htmlFor="paymentActive" className="text-sm text-gray-300 font-bold uppercase cursor-pointer">Active (Visible to users)</label>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-4 pt-2">
+                                    <button 
+                                        onClick={() => setIsPaymentModalOpen(false)}
+                                        className="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-3 rounded-xl font-bold transition"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button 
+                                        onClick={handleSavePayment}
+                                        className="flex-1 bg-brand-600 hover:bg-brand-500 text-white py-3 rounded-xl font-bold transition"
+                                    >
+                                        {editingPayment ? 'Update' : 'Save'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {activeTab === 'tab-promo' && (
+                <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                        <h2 className="text-xl font-bold text-white uppercase tracking-wider">Promo Codes</h2>
+                        <button 
+                            onClick={() => {
+                                setEditingPromo(null);
+                                setPromoCode('');
+                                setPromoAmount('');
+                                setPromoMaxUses('');
+                                setPromoActive(true);
+                                setIsPromoModalOpen(true);
+                            }}
+                            className="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2"
+                        >
+                            <Plus className="w-4 h-4" /> Add Promo
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {promoCodes.map(p => (
+                            <div key={p.id} className="bg-card p-4 rounded-xl border border-gray-800">
+                                <div className="flex justify-between items-start mb-4">
+                                    <div>
+                                        <div className="text-xl font-black text-brand-400 tracking-tighter">{p.code}</div>
+                                        <div className="text-xs text-gray-500 font-bold uppercase">{p.isActive ? 'Active' : 'Inactive'}</div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button onClick={() => {
+                                            setEditingPromo(p);
+                                            setPromoCode(p.code);
+                                            setPromoAmount(p.amount.toString());
+                                            setPromoMaxUses(p.maxUses.toString());
+                                            setPromoActive(p.isActive);
+                                            setIsPromoModalOpen(true);
+                                        }} className="text-blue-400 hover:text-white"><Edit className="w-4 h-4" /></button>
+                                        <button onClick={() => handleDeletePromo(p.id)} className="text-red-400 hover:text-white"><Trash className="w-4 h-4" /></button>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 mb-4">
+                                    <div className="bg-dark p-2 rounded border border-gray-700">
+                                        <div className="text-[10px] text-gray-500 uppercase font-bold">Amount</div>
+                                        <div className="text-sm text-white font-bold">{formatCurrency(p.amount)}</div>
+                                    </div>
+                                    <div className="bg-dark p-2 rounded border border-gray-700">
+                                        <div className="text-[10px] text-gray-500 uppercase font-bold">Uses</div>
+                                        <div className="text-sm text-white font-bold">{p.currentUses} / {p.maxUses}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {isPromoModalOpen && (
+                        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+                            <div className="bg-card w-full max-w-md rounded-2xl border border-gray-800 p-6 space-y-4 shadow-2xl overflow-y-auto max-h-[90vh] custom-scrollbar">
+                                <h3 className="text-xl font-bold text-white uppercase tracking-widest border-b border-gray-800 pb-4">
+                                    {editingPromo ? 'Edit Promo Code' : 'Add Promo Code'}
+                                </h3>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Code</label>
+                                        <input type="text" value={promoCode} onChange={e => setPromoCode(e.target.value)} className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none uppercase" placeholder="WELCOME50" />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Amount</label>
+                                        <input type="number" value={promoAmount} onChange={e => setPromoAmount(e.target.value)} className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Max Uses</label>
+                                        <input type="number" value={promoMaxUses} onChange={e => setPromoMaxUses(e.target.value)} className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" />
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <input type="checkbox" id="promoActive" checked={promoActive} onChange={e => setPromoActive(e.target.checked)} className="w-4 h-4 accent-brand-500" />
+                                        <label htmlFor="promoActive" className="text-sm text-gray-300 font-bold uppercase">Active</label>
+                                    </div>
+                                </div>
+                                <div className="flex gap-3 pt-4">
+                                    <button onClick={() => setIsPromoModalOpen(false)} className="flex-1 bg-gray-800 py-3 rounded-xl font-bold">Cancel</button>
+                                    <button onClick={handleSavePromo} className="flex-1 bg-brand-600 py-3 rounded-xl font-bold">Save</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {activeTab === 'tab-media' && (
+                <div className="bg-card p-6 rounded-xl border border-gray-800 space-y-8 animate-fade-in">
+                    <div className="border-b border-gray-700 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <h2 className="text-xl font-bold text-white uppercase tracking-widest flex items-center gap-2">
+                                <ImageIcon className="text-brand-500" /> Media Library Assets
+                            </h2>
+                            <p className="text-xs text-gray-500 mt-1 uppercase font-bold">Securely browse and manage image assets uploaded through ImgBB proxy.</p>
+                        </div>
+                        <button
+                            onClick={fetchMedia}
+                            disabled={mediaLoading}
+                            className="bg-gray-800 hover:bg-gray-750 text-white px-5 py-2 rounded-lg font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition"
+                        >
+                            <RefreshCw className={`w-4 h-4 ${mediaLoading ? 'animate-spin' : ''}`} />
+                            Refresh Library
+                        </button>
+                    </div>
+
+                    {/* Uploder catalog registration box */}
+                    <div className="bg-dark/40 p-5 rounded-xl border border-gray-800/80 space-y-4">
+                        <h3 className="text-sm font-bold text-brand-400 uppercase tracking-widest pl-3 border-l-2 border-brand-500">Quick Upload to Library</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+                            <div className="space-y-2">
+                                <label className="text-[10px] text-gray-500 uppercase font-black tracking-wider">Asset Category Group</label>
+                                <select
+                                    value={selectedMediaCategory}
+                                    onChange={(e) => setSelectedMediaCategory(e.target.value as MediaCategory)}
+                                    className="w-full bg-surface border border-gray-700 rounded-lg p-3 text-white text-xs font-bold uppercase tracking-wider focus:border-brand-500 outline-none"
+                                >
+                                    {Object.values(MediaCategory).map((cat) => (
+                                        <option key={cat} value={cat}>
+                                            {cat.replace("_", " ")}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="md:col-span-2">
+                                <ImageUploader
+                                    category={selectedMediaCategory}
+                                    value={mockUploadUrl}
+                                    onChange={(url) => {
+                                        setMockUploadUrl(url);
+                                        if (url) {
+                                            showToast("Asset successfully uploaded and registered in library!", "success");
+                                            fetchMedia();
+                                            setMockUploadUrl(""); // reset uploader slot
+                                        }
+                                    }}
+                                    aspectRatio="video"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Filter and Search controls */}
+                    <div className="flex flex-col md:flex-row gap-4 items-center justify-between pb-2 border-b border-gray-800">
+                        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                            <button
+                                onClick={() => setMediaFilter("ALL")}
+                                className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors ${
+                                    mediaFilter === "ALL"
+                                        ? "bg-brand-500 text-white"
+                                        : "bg-gray-800/80 text-gray-400 hover:bg-gray-800 hover:text-white"
+                                }`}
+                            >
+                                All Assets
+                            </button>
+                            {Object.values(MediaCategory).map((cat) => {
+                                // check if we have items of this type
+                                const count = mediaItems.filter(item => item.category === cat).length;
+                                if (count === 0 && cat !== MediaCategory.OTHER) return null;
+                                return (
+                                    <button
+                                        key={cat}
+                                        onClick={() => setMediaFilter(cat)}
+                                        className={`px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors ${
+                                            mediaFilter === cat
+                                                ? "bg-brand-500 text-white"
+                                                : "bg-gray-800/85 text-gray-400 hover:bg-gray-800 hover:text-white"
+                                        }`}
+                                    >
+                                        {cat.replace("_", " ")} <span className="opacity-60">({count})</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {/* Search keyword input */}
+                        <div className="relative w-full md:w-80">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
+                            <input
+                                type="text"
+                                value={mediaSearch}
+                                onChange={(e) => setMediaSearch(e.target.value)}
+                                placeholder="Search by asset name..."
+                                className="w-full bg-dark/70 border border-gray-700/80 rounded-lg py-2.5 pl-10 pr-4 text-xs text-white focus:border-brand-500 outline-none"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Assets Grid */}
+                    {mediaLoading ? (
+                        <div className="flex flex-col items-center justify-center p-12 space-y-3">
+                            <RefreshCw className="w-8 h-8 text-brand-500 animate-spin" />
+                            <p className="text-xs text-gray-500 uppercase font-bold tracking-widest animate-pulse">Scanning Media Catalog...</p>
+                        </div>
+                    ) : (
+                        (() => {
+                            const filtered = mediaItems.filter((item) => {
+                                const matchesFilter = mediaFilter === "ALL" || item.category === mediaFilter;
+                                const matchesSearch =
+                                    !mediaSearch ||
+                                    (item.fileName && item.fileName.toLowerCase().includes(mediaSearch.toLowerCase())) ||
+                                    (item.url && item.url.toLowerCase().includes(mediaSearch.toLowerCase()));
+                                return matchesFilter && matchesSearch;
+                            });
+
+                            if (filtered.length === 0) {
+                                return (
+                                    <div className="bg-dark/10 border border-dashed border-gray-800 rounded-xl p-12 text-center text-gray-500">
+                                        <ImageIcon className="w-12 h-12 mx-auto text-gray-700 mb-3" />
+                                        <p className="text-sm font-bold uppercase tracking-wider text-gray-400">No media assets found</p>
+                                        <p className="text-xs uppercase text-gray-600 mt-1 font-semibold">Try changing your filter settings or upload a new asset above.</p>
+                                    </div>
+                                );
+                            }
+
+                            return (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                                    {filtered.map((item) => (
+                                        <div key={item.id} className="group bg-dark/60 rounded-xl border border-gray-800 overflow-hidden hover:border-gray-700 transition duration-150 flex flex-col pt-0 pb-0">
+                                            <div className="relative aspect-video bg-slate-950 overflow-hidden border-b border-gray-850">
+                                                <img
+                                                    src={item.url}
+                                                    alt={item.fileName || "Media Asset"}
+                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                                                    referrerPolicy="no-referrer"
+                                                />
+                                                <div className="absolute top-2 left-2 bg-black/75 px-2.5 py-1 rounded text-[9px] font-bold text-brand-400 uppercase tracking-wider border border-brand-500/10">
+                                                    {item.category ? item.category.replace("_", " ") : "OTHER"}
+                                                </div>
+                                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                                    <a
+                                                        href={item.url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="p-2 rounded-lg bg-gray-850 text-white hover:bg-amber-500 hover:text-black transition shadow"
+                                                        title="Open direct image link"
+                                                    >
+                                                        <ExternalLink className="w-4 h-4" />
+                                                    </a>
+                                                    <button
+                                                        onClick={() => {
+                                                            navigator.clipboard.writeText(item.url);
+                                                            showToast("Direct link copied to clipboard!", "success");
+                                                        }}
+                                                        className="p-2 rounded-lg bg-gray-850 text-white hover:bg-brand-500 hover:text-white transition shadow text-xs font-bold uppercase"
+                                                        title="Copy URL link"
+                                                    >
+                                                        Copy URL
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div className="p-3 flex-1 flex flex-col justify-between">
+                                                <div className="min-w-0">
+                                                    <p className="text-xs font-bold text-gray-200 truncate" title={item.fileName}>
+                                                        {item.fileName || "unnamed_asset"}
+                                                    </p>
+                                                    <p className="text-[10px] text-gray-500 font-bold uppercase mt-1">
+                                                        {(item.fileSize / 1024).toFixed(1)} KB • {item.mimeType?.replace("image/", "") || "IMG"}
+                                                    </p>
+                                                </div>
+                                                <div className="mt-3 pt-2.5 border-t border-gray-850 flex items-center justify-between text-[10px]">
+                                                    <span className="text-gray-600 font-bold uppercase">{getRelativeTime(item.createdAt)}</span>
+                                                    <button
+                                                        onClick={() => handleDeleteMedia(item.id, item.url, item.publicId || item.public_id)}
+                                                        className="text-rose-500 hover:text-rose-400 flex items-center gap-1 font-bold uppercase"
+                                                        title="Delete reference"
+                                                    >
+                                                        <Trash className="w-3 h-3" />
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            );
+                        })()
+                    )}
+                </div>
+            )}
+
+            {activeTab === 'tab-settings' && (
+                <div className="bg-card p-6 rounded-xl border border-gray-800 space-y-8">
+                    <div className="border-b border-gray-700 pb-4">
+                        <h2 className="text-xl font-bold text-white uppercase tracking-widest flex items-center gap-2">
+                            <Settings className="text-brand-500" /> Site Configuration
+                        </h2>
+                        <p className="text-xs text-gray-500 mt-1 uppercase font-bold">Manage global application settings and support info.</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-6">
+                            <h3 className="text-sm font-bold text-brand-400 uppercase tracking-widest border-l-2 border-brand-500 pl-3">Financial Settings</h3>
+                            <div>
+                                <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Minimum Withdrawal Amount</label>
+                                <div className="relative">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold">Rs.</span>
+                                    <input 
+                                        type="number" 
+                                        value={minWithdrawal}
+                                        onChange={e => setMinWithdrawal(e.target.value)}
+                                        className="w-full bg-dark border border-gray-700 rounded-lg p-3 pl-10 text-white focus:border-brand-500 outline-none"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-6">
+                            <h3 className="text-sm font-bold text-brand-400 uppercase tracking-widest border-l-2 border-brand-500 pl-3">Support Info</h3>
+                            <div className="grid grid-cols-1 gap-4">
+                                <div>
+                                    <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Support Email</label>
+                                    <input 
+                                        type="email" 
+                                        value={supportEmail}
+                                        onChange={e => setSupportEmail(e.target.value)}
+                                        className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Support Phone / WhatsApp</label>
+                                    <input 
+                                        type="text" 
+                                        value={supportPhone}
+                                        onChange={e => setSupportPhone(e.target.value)}
+                                        className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="col-span-full space-y-6">
+                            <h3 className="text-sm font-bold text-brand-400 uppercase tracking-widest border-l-2 border-brand-500 pl-3">Maintenance</h3>
+                            <div className="bg-dark p-4 rounded-xl border border-gray-800 space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <AlertTriangle className="text-red-500 w-5 h-5" />
+                                        <span className="text-sm text-white font-bold uppercase">Maintenance Mode</span>
+                                    </div>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" checked={maintenanceMode} onChange={e => setMaintenanceMode(e.target.checked)} className="sr-only peer" />
+                                        <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
+                                    </label>
+                                </div>
+                                <p className="text-[10px] text-gray-400 font-bold uppercase">When enabled, the entire website will be disabled for normal users. Only Admins can access the site.</p>
+                            </div>
+
+                            <h3 className="text-sm font-bold text-brand-400 uppercase tracking-widest border-l-2 border-brand-500 pl-3">System Notice</h3>
+                            <div className="bg-dark p-4 rounded-xl border border-gray-800 space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <Megaphone className="text-brand-500 w-5 h-5" />
+                                        <span className="text-sm text-white font-bold uppercase">Display Site-wide Notice</span>
+                                    </div>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" checked={isNoticeActive} onChange={e => setIsNoticeActive(e.target.checked)} className="sr-only peer" />
+                                        <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-600"></div>
+                                    </label>
+                                </div>
+                                <textarea 
+                                    value={notice}
+                                    onChange={e => setNotice(e.target.value)}
+                                    className="w-full bg-surface border border-gray-700 rounded-lg p-4 text-white focus:border-brand-500 outline-none h-32"
+                                    placeholder="Enter notice message here... (e.g. Scheduled maintenance at 10 PM)"
+                                />
+                            </div>
+
+                            <h3 className="text-sm font-bold text-brand-400 uppercase tracking-widest border-l-2 border-brand-500 pl-3 pt-4">Organizer Settings</h3>
+                            <div className="bg-dark p-4 rounded-xl border border-gray-800 space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <Users className="text-brand-500 w-5 h-5" />
+                                        <span className="text-sm text-white font-bold uppercase">Open Organizer Applications</span>
+                                    </div>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" checked={siteSettings?.isOrgFormOpen || false} onChange={toggleOrgForm} className="sr-only peer" />
+                                        <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-600"></div>
+                                    </label>
+                                </div>
+                                <p className="text-[10px] text-gray-500 uppercase font-bold">Toggle whether users can apply to become an organization from the contact page.</p>
+                                
+                                <div className="pt-4 border-t border-gray-800">
+                                    <label className="text-[10px] text-gray-500 uppercase font-black mb-2 block tracking-widest">Organizer Form Description</label>
+                                    <textarea 
+                                        value={orgFormDescription}
+                                        onChange={e => setOrgFormDescription(e.target.value)}
+                                        className="w-full bg-surface border border-gray-700 rounded-lg p-4 text-white focus:border-brand-500 outline-none h-32 text-sm"
+                                        placeholder="Explain the requirements for becoming an organizer..."
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="pt-6 border-t border-gray-800 flex justify-end">
+                        <button 
+                            onClick={handleSaveSettings}
+                            className="bg-brand-600 hover:bg-brand-500 text-white px-10 py-3 rounded-xl font-bold transition shadow-lg shadow-brand-600/20 uppercase tracking-widest"
+                        >
+                            Save All Settings
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {activeTab === 'tab-discord' && (
+                <DiscordAdminPanel allTournaments={allTournaments} showToast={showToast} />
+            )}
+            </div>
+
+            {/* Tournament Edit Modal */}
+            <TournamentCreateModal 
+                isOpen={isTournamentModalOpen}
+                onClose={() => {
+                    setIsTournamentModalOpen(false);
+                    setSelectedTournament(null);
+                }}
+                onSuccess={() => {
+                    // Refresh tournaments
+                    if (selectedOrgId) fetchOrgTournaments(selectedOrgId);
+                }}
+                editTournament={selectedTournament}
+            />
+
+            {selectedUser && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+                    <div className="bg-card w-full max-w-md rounded-2xl border border-gray-800 p-6 space-y-6 shadow-2xl overflow-y-auto max-h-[90vh] custom-scrollbar">
+                        <div className="flex justify-between items-center border-b border-gray-800 pb-4">
+                            <h3 className="text-xl font-bold text-white uppercase tracking-widest">Manage User</h3>
+                            <button onClick={() => setSelectedUser(null)} className="text-gray-500 hover:text-white bg-dark p-2 rounded-full transition"><X className="w-5 h-5" /></button>
+                        </div>
+
+                        <div className="bg-dark p-4 rounded-xl border border-gray-800">
+                            <div className="text-white font-bold">{selectedUser.username}</div>
+                            <div className="text-sm text-gray-400">{selectedUser.email}</div>
+                            <div className="text-sm text-brand-400 mt-2 font-mono">Current Balance: {formatCurrency(selectedUser.balance)}</div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <label className="text-xs text-gray-500 uppercase font-bold block">Adjust Balance</label>
+                            <div className="flex gap-2">
+                                <button 
+                                    onClick={() => setAdjustmentType('add')}
+                                    className={`flex-1 py-2 rounded-lg font-bold text-xs uppercase border ${adjustmentType === 'add' ? 'bg-green-600 border-green-500 text-white' : 'bg-dark border-gray-700 text-gray-500'}`}
+                                >
+                                    Add
+                                </button>
+                                <button 
+                                    onClick={() => setAdjustmentType('subtract')}
+                                    className={`flex-1 py-2 rounded-lg font-bold text-xs uppercase border ${adjustmentType === 'subtract' ? 'bg-red-600 border-red-500 text-white' : 'bg-dark border-gray-700 text-gray-500'}`}
+                                >
+                                    Subtract
+                                </button>
+                            </div>
+                            <input 
+                                type="number" 
+                                value={adjustmentAmount}
+                                onChange={(e) => setAdjustmentAmount(e.target.value)}
+                                placeholder="Enter amount..."
+                                className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none"
+                            />
+                            <button onClick={handleAdjustBalance} className="w-full bg-brand-600 hover:bg-brand-500 text-white py-3 rounded-xl font-bold transition uppercase text-sm">
+                                Confirm Adjustment
+                            </button>
+                        </div>
+
+                        <div className="space-y-4 border-t border-gray-800 pt-6">
+                            <label className="text-xs text-gray-500 uppercase font-bold block">Assigned Subscription Plan</label>
+                            <div className="grid grid-cols-1 gap-2">
+                                <select 
+                                    value={selectedUser.subscription?.planId || ''}
+                                    onChange={(e) => handleUpdateUserSubscription(selectedUser.uid, e.target.value)}
+                                    className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none text-sm"
+                                >
+                                    <option value="">No Plan / Free</option>
+                                    {subscriptionPlans.map(plan => (
+                                        <option key={plan.id} value={plan.id}>{plan.name} - {formatCurrency(plan.price)}/mo</option>
+                                    ))}
+                                </select>
+                                {selectedUser.subscription && (
+                                    <div className="text-[10px] text-gray-500 flex justify-between items-center px-1">
+                                        <span>Expires: {selectedUser.subscription.endDate?.toDate().toLocaleDateString()}</span>
+                                        <span className="text-brand-500 font-bold uppercase">{selectedUser.subscription.status}</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="space-y-4 border-t border-gray-800 pt-6">
+                            <label className="text-xs text-gray-500 uppercase font-bold block">Update Role</label>
+                            <div className="grid grid-cols-3 gap-2">
+                                {(['player', 'organizer', 'admin'] as const).map(role => (
+                                    <button 
+                                        key={role}
+                                        onClick={() => handleUpdateUserRole(selectedUser.uid, role)}
+                                        className={`py-2 rounded-lg font-bold text-[10px] uppercase border transition-all ${selectedUser.role === role ? 'bg-brand-600 border-brand-500 text-white' : 'bg-dark border-gray-700 text-gray-500 hover:border-gray-600'}`}
+                                    >
+                                        {role}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {selectedTx && (
+                <TransactionDetailModal 
+                    selectedTx={selectedTx}
+                    onClose={() => setSelectedTx(null)}
+                    onDashboard={() => { setSelectedTx(null); setActiveTab('tab-dashboard'); }}
+                    onApprove={handleApproveTx}
+                    onReject={handleRejectTx}
+                    onRefund={handleRefundTx}
+                    rejectionReason={rejectionReason}
+                    setRejectionReason={setRejectionReason}
+                    getRelativeTime={getRelativeTime}
+                />
+            )}
+
+            <ConfirmModal
+                isOpen={confirmModal.isOpen}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                onConfirm={confirmModal.onConfirm}
+                onCancel={closeConfirmModal}
+                isDestructive={confirmModal.isDestructive}
+            />
+        </div>
+    );
+};
+
+export default AdminPanel;

@@ -1,0 +1,324 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "username": { "type": "string" },
+        "role": { "type": "string", "enum": ["player", "organizer", "admin"] },
+        "balance": { "type": "number" },
+        "totalEarnings": { "type": "number" },
+        "xp": { "type": "integer" },
+        "level": { "type": "integer" },
+        "inGameId": { "type": "string" },
+        "teamName": { "type": "string" },
+        "teamId": { "type": "string" },
+        "isVerified": { "type": "boolean" },
+        "isChampion": { "type": "boolean" },
+        "rank": { "type": "string" },
+        "points": { "type": "integer" },
+        "wins": { "type": "integer" },
+        "tournamentsPlayed": { "type": "integer" },
+        "winRate": { "type": "number" },
+        "rankChange": { "type": "integer" },
+        "status": { "type": "string", "enum": ["online", "idle", "dnd", "offline"] },
+        "phone": { "type": "string" },
+        "isBanned": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "bio": { "type": "string" },
+        "profilePicUrl": { "type": "string" },
+        "contactInfo": { "type": "string" }
+      },
+      "required": ["uid", "email", "username", "role", "balance", "totalEarnings"]
+    },
+    "Tournament": {
+      "title": "Tournament",
+      "description": "Tournament details",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "game": { "type": "string" },
+        "prizePool": { "type": "number" },
+        "entryFee": { "type": "number" },
+        "slots": { "type": "integer" },
+        "currentPlayers": { "type": "integer" },
+        "status": { "type": "string", "enum": ["upcoming", "live", "completed"] },
+        "hostUid": { "type": "string" },
+        "startTime": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "game", "prizePool", "entryFee", "slots", "currentPlayers", "status", "hostUid", "startTime"]
+    },
+    "Participant": {
+      "title": "Participant",
+      "description": "Tournament participant record",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "tournamentId": { "type": "string" },
+        "inGameId": { "type": "string" },
+        "username": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "tournamentId", "inGameId", "username", "timestamp"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Wallet transaction record",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "type": { "type": "string", "enum": ["deposit", "withdrawal", "prize"] },
+        "amount": { "type": "number" },
+        "method": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "success", "rejected"] },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "proofUrl": { "type": "string" },
+        "rejectionReason": { "type": "string" },
+        "accountDetails": { "type": "string" }
+      },
+      "required": ["userId", "type", "amount", "status", "timestamp"]
+    },
+    "Scrim": {
+      "title": "Scrim",
+      "description": "Daily scrim match details",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "game": { "type": "string" },
+        "time": { "type": "string", "format": "date-time" },
+        "entryFee": { "type": "number" },
+        "prizePool": { "type": "number" },
+        "slots": { "type": "integer" },
+        "currentSlots": { "type": "integer" },
+        "status": { "type": "string", "enum": ["open", "full", "completed"] },
+        "orgId": { "type": "string" },
+        "rules": { "type": "string" }
+      },
+      "required": ["title", "game", "time", "status", "orgId"]
+    },
+    "Result": {
+      "title": "Result",
+      "description": "Tournament match result",
+      "type": "object",
+      "properties": {
+        "tournamentId": { "type": "string" },
+        "groupId": { "type": "string" },
+        "teamResults": { "type": "array" },
+        "screenshotUrl": { "type": "string" },
+        "uploadedBy": { "type": "string" },
+        "verified": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["tournamentId", "groupId", "teamResults", "uploadedBy", "createdAt"]
+    },
+    "Dispute": {
+      "title": "Dispute",
+      "description": "User reported dispute for a transaction",
+      "type": "object",
+      "properties": {
+        "transactionId": { "type": "string" },
+        "userId": { "type": "string" },
+        "username": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "amount": { "type": "number" },
+        "type": { "type": "string" },
+        "reason": { "type": "string" },
+        "status": { "type": "string", "enum": ["open", "resolved", "closed"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["transactionId", "userId", "reason", "status", "createdAt"]
+    },
+    "PaymentCategory": {
+      "title": "PaymentCategory",
+      "description": "Admin-managed payment categories",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "isActive": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "isActive", "createdAt"]
+    },
+    "PaymentMethod": {
+      "title": "PaymentMethod",
+      "description": "Admin-managed payment methods and QR codes",
+      "type": "object",
+      "properties": {
+        "categoryId": { "type": "string" },
+        "name": { "type": "string" },
+        "qrUrl": { "type": "string" },
+        "instructions": { "type": "string" },
+        "type": { "type": "string" },
+        "isActive": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "qrUrl", "instructions", "type", "isActive", "createdAt"]
+    },
+    "PublicProfile": {
+      "title": "PublicProfile",
+      "description": "Public user profile for leaderboard",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "username": { "type": "string" },
+        "profilePicUrl": { "type": "string" },
+        "totalEarnings": { "type": "number" },
+        "points": { "type": "integer" },
+        "wins": { "type": "integer" },
+        "tournamentsPlayed": { "type": "integer" },
+        "winRate": { "type": "number" },
+        "rankChange": { "type": "integer" },
+        "isVerified": { "type": "boolean" },
+        "isChampion": { "type": "boolean" },
+        "rank": { "type": "string" },
+        "status": { "type": "string" },
+        "inGameId": { "type": "string" },
+        "teamName": { "type": "string" },
+        "teamId": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "username", "totalEarnings"]
+    },
+    "Team": {
+      "title": "Team",
+      "description": "Team details",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "tag": { "type": "string" },
+        "description": { "type": "string" },
+        "logoUrl": { "type": "string" },
+        "bannerUrl": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "region": { "type": "string" },
+        "totalEarnings": { "type": "number" },
+        "points": { "type": "integer" },
+        "wins": { "type": "integer" },
+        "rankChange": { "type": "integer" },
+        "formationDate": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "ownerId", "totalEarnings"]
+    },
+    "SubscriptionPlan": {
+      "title": "SubscriptionPlan",
+      "description": "SaaS subscription plans",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "price": { "type": "number" },
+        "description": { "type": "string" },
+        "features": { "type": "array", "items": { "type": "string" } },
+        "maxTournamentsPerMonth": { "type": "integer" },
+        "hasOverlay": { "type": "boolean" },
+        "isActive": { "type": "boolean" }
+      },
+      "required": ["name", "price", "isActive"]
+    },
+    "MatchHistory": {
+      "title": "MatchHistory",
+      "description": "Record of a player's or team's match",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "teamId": { "type": "string" },
+        "tournamentId": { "type": "string" },
+        "tournamentName": { "type": "string" },
+        "result": { "type": "string", "enum": ["victory", "defeat"] },
+        "kills": { "type": "integer" },
+        "prize": { "type": "number" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "tournamentId", "result", "timestamp"]
+    },
+    "Game": {
+      "title": "Game",
+      "description": "Game details and available modes",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "logoUrl": { "type": "string" },
+        "modes": { "type": "array", "items": { "type": "string" } },
+        "isPublished": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "logoUrl", "modes", "isPublished", "createdAt"]
+    },
+    "AuditReport": {
+      "title": "AuditReport",
+      "description": "Formated audit report details",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "url": { "type": "string" },
+        "score": { "type": "integer" },
+        "metadata": { "type": "object" },
+        "issues": { "type": "array" },
+        "recommendations": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "createdBy": { "type": "string" }
+      },
+      "required": ["id", "score", "issues", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/audit_reports/{reportId}": {
+      "schema": "AuditReport",
+      "description": "Webpage audit report document references"
+    },
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile documents"
+    },
+    "/users_public/{userId}": {
+      "schema": "PublicProfile",
+      "description": "Public user profile documents"
+    },
+    "/games/{gameId}": {
+      "schema": "Game",
+      "description": "Game listing documents"
+    },
+    "/tournaments/{tournamentId}": {
+      "schema": "Tournament",
+      "description": "Tournament documents"
+    },
+    "/tournaments/{tournamentId}/groups/{groupId}": {
+      "schema": "LobbyGroup",
+      "description": "Groups/Lobbies subcollection for a tournament"
+    },
+    "/participants/{participantId}": {
+      "schema": "Participant",
+      "description": "Tournament participant records"
+    },
+    "/scrims/{scrimId}": {
+      "schema": "Scrim",
+      "description": "Scrim listing documents"
+    },
+    "/results/{resultId}": {
+      "schema": "Result",
+      "description": "Tournament and Scrim match results"
+    },
+    "/notifications/{notificationId}": {
+      "schema": "Notification",
+      "description": "User notification records"
+    },
+    "/disputes/{disputeId}": {
+      "schema": "Dispute",
+      "description": "User reported disputes"
+    },
+    "/paymentCategories/{categoryId}": {
+      "schema": "PaymentCategory",
+      "description": "Payment category documents"
+    },
+    "/paymentMethods/{methodId}": {
+      "schema": "PaymentMethod",
+      "description": "Payment method and QR code documents"
+    }
+  }
+}

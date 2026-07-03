@@ -1,0 +1,904 @@
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { doc, getDoc, collection, query, where, getDocs, runTransaction, serverTimestamp, addDoc, onSnapshot } from 'firebase/firestore';
+import { db } from '../../../shared/config/firebase';
+import { Tournament, UserProfile, Participant } from '../../../shared/types/types';
+import { DEFAULT_BANNER } from '../../../shared/constants/constants';
+import { useAuth } from '../../../shared/context/AuthContext';
+import { formatCurrency, formatDate, formatGameName, getYoutubeId, toDateSafe } from '../../../shared/utils/utils';
+import { Clock, Users, Trophy, Lock, Eye, EyeOff, Play, Share2, Calendar, MapPin, Info, Medal, ExternalLink, ChevronRight, AlertCircle, CheckCircle2, Search, Building2 } from 'lucide-react';
+import RegistrationModal from '../components/RegistrationModal';
+import JoinTournamentModal from '../components/JoinTournamentModal';
+import { motion, AnimatePresence } from 'motion/react';
+import { NotificationService } from '../../../shared/services/NotificationService';
+import { useNotification } from '../../../shared/context/NotificationContext';
+import { Helmet } from 'react-helmet-async';
+import ProfileLink from '../../profile/components/ProfileLink';
+import PrizeBoard from '../components/PrizeBoard';
+import TournamentResultModal from '../components/TournamentResultModal';
+import RoadmapView from '../components/RoadmapView';
+import GroupStandingsView from '../components/GroupStandingsView';
+import { telemetry } from '../../../shared/services/TelemetryService';
+
+export default function TournamentDetails() {
+    const { id } = useParams<{ id: string }>();
+    const { user, profile } = useAuth();
+    const { showToast } = useNotification();
+    const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const [tournament, setTournament] = useState<Tournament | null>(null);
+    const [isJoined, setIsJoined] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState<'overview' | 'description' | 'participants' | 'groups' | 'roadmap' | 'results'>(
+        (searchParams.get('tab') as any) || 'overview'
+    );
+    const [isResultModalOpen, setIsResultModalOpen] = useState(false);
+    const [participants, setParticipants] = useState<any[]>([]);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [relatedTournaments, setRelatedTournaments] = useState<Tournament[]>([]);
+    const [timeLeft, setTimeLeft] = useState<{ d: number; h: number; m: number; s: number } | null>(null);
+    const [showJoinModal, setShowJoinModal] = useState(false);
+    const [showRegistrationModal, setShowRegistrationModal] = useState(false);
+    const [teammate1, setTeammate1] = useState('');
+    const [teammate2, setTeammate2] = useState('');
+    const [teammate3, setTeammate3] = useState('');
+    const [teamMembers, setTeamMembers] = useState<any[]>([]);
+    const [showPassword, setShowPassword] = useState(false);
+    const [hostProfile, setHostProfile] = useState<UserProfile | null>(null);
+
+    useEffect(() => {
+        if (!id) return;
+        setLoading(true);
+        const startTime = performance.now();
+        telemetry.trackFunnel('TournamentDetailsLoad', 'UserTournamentDetailsNavigation', true, { id });
+
+        // 1. Core Tournament Listener (Real-time & Self-healing)
+        const unsubTournament = onSnapshot(doc(db, 'tournaments', id), (snapshot) => {
+            if (snapshot.exists()) {
+                const tData = { id: snapshot.id, ...snapshot.data() } as Tournament;
+                setTournament(tData);
+                setLoading(false);
+                telemetry.trackPerformance('LoadTournamentDetailsData', performance.now() - startTime, { id, title: tData.title });
+            } else {
+                telemetry.trackError('TournamentNotFound', id);
+                showToast("Tournament not found", "error");
+                navigate('/tournaments');
+            }
+        }, (error) => {
+            console.error("Tournament lookup failed:", error);
+            telemetry.trackError('TournamentLookupFailed', error.message || 'Unknown error', { id });
+            // Self-healing: if listener fails, try one-time fetch as fallback
+            getDoc(doc(db, 'tournaments', id)).then(snap => {
+                if (snap.exists()) setTournament({ id: snap.id, ...snap.data() } as Tournament);
+            }).finally(() => setLoading(false));
+        });
+
+        // 2. Participants Listener
+        const unsubParticipants = onSnapshot(query(collection(db, 'participants'), where('tournamentId', '==', id)), (snapshot) => {
+            setParticipants(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+        });
+
+        // 3. Related Tournaments & Host Profile (One-time fetch is okay)
+        const fetchMeta = async () => {
+            try {
+                const docSnap = await getDoc(doc(db, 'tournaments', id));
+                if (docSnap.exists()) {
+                    const tData = docSnap.data() as Tournament;
+                    
+                    // Host Profile
+                    if (tData.hostUid) {
+                        const hostRef = doc(db, 'users_public', tData.hostUid);
+                        const hostSnap = await getDoc(hostRef);
+                        if (hostSnap.exists()) {
+                            setHostProfile({ uid: hostSnap.id, ...hostSnap.data() } as UserProfile);
+                        }
+                    }
+
+                    // Related Tournaments
+                    if (tData.game) {
+                        const relSnap = await getDocs(query(
+                            collection(db, 'tournaments'),
+                            where('status', '==', 'upcoming'),
+                            where('game', '==', tData.game)
+                        ));
+                        setRelatedTournaments(relSnap.docs.map(d => ({ id: d.id, ...d.data() } as Tournament)).filter(t => t.id !== id).slice(0, 3));
+                    }
+                }
+            } catch (err) {
+                console.warn("Meta data fetch failed", err);
+            }
+        };
+        fetchMeta();
+
+        return () => {
+            unsubTournament();
+            unsubParticipants();
+        };
+    }, [id]);
+
+    // Independent effect for join status (depends on user/profile which might resolve later)
+    useEffect(() => {
+        if (!user || !id) {
+            setIsJoined(false);
+            return;
+        }
+
+        const unsubJoin = onSnapshot(query(
+            collection(db, 'participants'),
+            where('tournamentId', '==', id),
+            where('userId', '==', user.uid)
+        ), async (snapshot) => {
+            let joined = !snapshot.empty;
+            if (!joined && profile?.teamId) {
+                const teamSnap = await getDocs(query(
+                    collection(db, 'participants'),
+                    where('tournamentId', '==', id),
+                    where('teamId', '==', profile.teamId)
+                ));
+                if (!teamSnap.empty) joined = true;
+            }
+            setIsJoined(joined);
+        });
+
+        return () => unsubJoin();
+    }, [id, user, profile?.teamId]);
+
+    useEffect(() => {
+        if (!loading && tournament && searchParams.get('tab') === 'results') {
+            setIsResultModalOpen(true);
+            setActiveTab('overview');
+            // Remove the ?tab=results from URL so refreshing won't keep popping it
+            navigate(`/details/${tournament.id}`, { replace: true });
+        }
+    }, [searchParams, tournament, loading, navigate]);
+
+    useEffect(() => {
+        const fetchTeamMembers = async () => {
+            if (profile?.teamId) {
+                try {
+                    const q = query(collection(db, 'team_members'), where('teamId', '==', profile.teamId));
+                    const snap = await getDocs(q);
+                    const members = snap.docs.map(d => d.data());
+                    
+                    // Fetch user profiles for these members to get their inGameName
+                    const profiles = await Promise.all(members.map(async (m) => {
+                        const userDoc = await getDoc(doc(db, 'users_public', m.userId));
+                        if (userDoc.exists()) {
+                            return { ...m, ...userDoc.data() };
+                        }
+                        return m;
+                    }));
+                    
+                    // Filter out the current user
+                    setTeamMembers(profiles.filter(p => p.userId !== user?.uid));
+                } catch (error) {
+                    console.error("Error fetching team members:", error);
+                }
+            }
+        };
+        fetchTeamMembers();
+    }, [profile?.teamId, user?.uid]);
+
+    useEffect(() => {
+        if (!tournament?.startTime) return;
+
+        const startDate = toDateSafe(tournament.startTime);
+        if (!startDate) {
+            return;
+        }
+
+        const start = startDate.getTime();
+
+        const timer = setInterval(() => {
+            const now = new Date().getTime();
+            const diff = start - now;
+
+            if (diff <= 0) {
+                setTimeLeft(null);
+                clearInterval(timer);
+                return;
+            }
+
+            setTimeLeft({
+                d: Math.floor(diff / (1000 * 60 * 60 * 24)),
+                h: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+                m: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+                s: Math.floor((diff % (1000 * 60)) / 1000)
+            });
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [tournament?.startTime]);
+
+    const filteredParticipants = participants.filter(p => 
+        p.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.inGameId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (p.teamName && p.teamName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (p.teammates && p.teammates.some((tm: string) => tm.toLowerCase().includes(searchTerm.toLowerCase())))
+    );
+
+    const handleJoinClick = () => {
+        if (!user) {
+            showToast("Please login to join!", "warning");
+            telemetry.trackInteraction('JoinClickAnonymous', 'TournamentDetails', { id });
+            return;
+        }
+        if (!tournament || !profile) return;
+
+        telemetry.trackInteraction('JoinClickAttempt', 'TournamentDetails', { tournamentId: id, teamType: tournament.teamType });
+
+        // Requirement: In-game ID is compulsory for all games
+        if (!profile.inGameId) {
+            showToast("In-Game ID is required for all tournaments!", "warning");
+            telemetry.trackError('RegistrationValidationFailed', 'In-Game ID is missing', { tournamentId: id });
+            navigate('/profile');
+            return;
+        }
+
+        // Requirement: In-game Name is compulsory for all games
+        if (!profile.inGameName) {
+            showToast("In-Game Name is required for all tournaments!", "warning");
+            telemetry.trackError('RegistrationValidationFailed', 'In-Game Name is missing', { tournamentId: id });
+            navigate('/profile');
+            return;
+        }
+
+        // Requirement: Team Name is compulsory for all tournaments
+        if (!profile.teamName) {
+            showToast("Team Name is required for all tournaments!", "warning");
+            telemetry.trackError('RegistrationValidationFailed', 'Team Name is missing', { tournamentId: id });
+            navigate('/profile');
+            return;
+        }
+
+        // Requirement: Team ID is compulsory for team tournaments
+        if ((tournament.teamType === 'duo' || tournament.teamType === 'squad') && !profile.teamId) {
+            showToast("You must be in a team to join team tournaments!", "warning");
+            telemetry.trackError('RegistrationValidationFailed', 'Team ID is missing', { tournamentId: id, teamType: tournament.teamType });
+            navigate('/teams');
+            return;
+        }
+
+        telemetry.trackFunnel('RegistrationModalOpen', 'UserTournamentSignupFunnel', true, { tournamentId: id, teamType: tournament.teamType });
+
+        if (tournament.teamType === 'duo' || tournament.teamType === 'squad') {
+            setShowJoinModal(true);
+        } else {
+            setShowRegistrationModal(true);
+        }
+    };
+
+    const handleJoinSuccess = () => {
+        setIsJoined(true);
+        telemetry.trackFunnel('RegistrationComplete', 'UserTournamentSignupFunnel', true, { tournamentId: id });
+    };
+
+    const handleLeaveTournament = async () => {
+        if (!user || !tournament || !isJoined) return;
+        if (tournament.status !== 'upcoming') {
+            showToast("You cannot leave a tournament that has already started.", "error");
+            telemetry.trackError('AttemptedLeaveStartedTournament', 'Tournament already active', { tournamentId: id });
+            return;
+        }
+        if (!window.confirm('Are you sure you want to leave this tournament? Your entry fee will be refunded.')) return;
+        telemetry.trackInteraction('LeaveTournamentClick', 'TournamentDetails', { tournamentId: id });
+
+        const tRef = doc(db, 'tournaments', tournament.id);
+        const userRef = doc(db, 'users', user.uid);
+
+        try {
+            await runTransaction(db, async (transaction) => {
+                const tDoc = await transaction.get(tRef);
+                const uDoc = await transaction.get(userRef);
+                if (!tDoc.exists()) throw new Error("Tournament does not exist!");
+                const tData = tDoc.data() as Tournament;
+                const uData = uDoc.data() as UserProfile;
+
+                // Find the participant record
+                const partQ = query(
+                    collection(db, 'participants'),
+                    where('tournamentId', '==', tournament.id),
+                    where('userId', '==', user.uid)
+                );
+                const pSnap = await getDocs(partQ);
+                if (pSnap.empty) throw new Error("Participant record not found!");
+
+                // Refund entry fee
+                transaction.update(userRef, { balance: uData.balance + tData.entryFee });
+                // Decrement players
+                transaction.update(tRef, { currentPlayers: Math.max(0, tData.currentPlayers - 1) });
+                // Delete participant record
+                transaction.delete(doc(db, 'participants', pSnap.docs[0].id));
+            });
+
+            setIsJoined(false);
+            await NotificationService.create(
+                user.uid,
+                'Tournament Left',
+                `You have left ${tournament.title}. Your entry fee has been refunded.`,
+                'info',
+                `/details/${tournament.id}`
+            );
+            telemetry.trackFunnel('LeaveTournamentSuccess', 'UserTournamentCancellation', true, { tournamentId: id });
+            showToast('Left Tournament Successfully!', 'success');
+        } catch (e: any) {
+            telemetry.trackError('LeaveTournamentFailed', e.message || 'Unknown error', { tournamentId: id });
+            showToast(e.message, 'error');
+        }
+    };
+
+    const handleShare = () => {
+        telemetry.trackInteraction('ShareTournamentClick', 'TournamentDetails', { tournamentId: id });
+        if (navigator.share) {
+            navigator.share({
+                title: tournament.title,
+                text: `Join ${tournament.title} on our platform!`,
+                url: window.location.href,
+            });
+        } else {
+            navigator.clipboard.writeText(window.location.href);
+            showToast("Link copied to clipboard!", "success");
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh]">
+                <div className="loader mb-4"></div>
+                <p className="text-brand-500 text-sm animate-pulse font-mono">ESTABLISHING UPLINK...</p>
+            </div>
+        );
+    }
+
+    if (!tournament) return <p className="text-center mt-10">Tournament not found.</p>;
+
+    const bannerUrl = tournament.bannerUrl || DEFAULT_BANNER;
+    const bannerStyle = { backgroundImage: `url('${bannerUrl}')`, backgroundSize: 'cover', backgroundPosition: 'center' };
+    const showRoom = tournament.matchType === 'scrims' && isJoined && (tournament.status === 'live' || (tournament.roomId && tournament.status === 'upcoming'));
+    // No-op
+    const ytId = getYoutubeId(tournament.ytLink);
+
+    return (
+        <div className="animate-fade-in max-w-6xl mx-auto px-4 py-6">
+            {tournament && (
+                <Helmet>
+                    <title>{tournament.title} | NexPlay</title>
+                    <meta name="description" content={`Join ${tournament.title} on NexPlay. Prize Pool: ${formatCurrency(tournament.prizePool)}.`} />
+                </Helmet>
+            )}
+            {/* Hero Section */}
+            <div className="relative h-[400px] md:h-[500px] rounded-[2rem] overflow-hidden mb-12 shadow-2xl group border border-gray-800">
+                <div className="absolute inset-0 bg-gray-950 transition-transform duration-700 group-hover:scale-105" style={{...bannerStyle, opacity: 0.6}}></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/60 to-transparent"></div>
+                
+                <div className="absolute top-8 left-8 flex flex-wrap gap-3">
+                    <span className="bg-white/10 backdrop-blur-md text-white text-xs font-black px-4 py-2 rounded-full uppercase tracking-widest border border-white/10 shadow-xl">
+                        {formatGameName(tournament.game)}
+                    </span>
+                    <span className={`backdrop-blur-md text-white text-xs font-black px-4 py-2 rounded-full uppercase tracking-widest shadow-xl border ${
+                        tournament.status === 'live' ? 'bg-red-600/90 border-red-500/30' : 
+                        tournament.status === 'completed' ? 'bg-blue-600/90 border-blue-500/30' : 
+                        'bg-green-600/90 border-green-500/30'
+                    }`}>
+                        {tournament.status}
+                    </span>
+                    {tournament.ytLink && tournament.status === 'live' && (
+                        <span className="bg-red-600 animate-pulse text-white text-xs font-black px-4 py-2 rounded-full uppercase tracking-widest shadow-xl flex items-center gap-2">
+                            <Play className="w-4 h-4 fill-current" /> LIVE STREAM
+                        </span>
+                    )}
+                </div>
+
+                <button 
+                    onClick={handleShare}
+                    aria-label="Share Tournament"
+                    className="absolute top-8 right-8 p-4 bg-white/5 backdrop-blur-md hover:bg-white/10 text-white rounded-full transition-all border border-white/10 active:scale-95 z-20 shadow-xl"
+                >
+                    <Share2 className="w-6 h-6" />
+                </button>
+
+                <div className="absolute bottom-12 left-12 right-12">
+                    <motion.h1 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-5xl md:text-7xl font-black text-white mb-6 tracking-tighter leading-none"
+                    >
+                        {tournament.title}
+                    </motion.h1>
+                    <div className="text-gray-300 font-bold text-sm mb-6 uppercase tracking-widest flex items-center gap-2">
+                        Organized by: {tournament.hostUid ? <ProfileLink to={`/organization/${tournament.hostUid}`} name={tournament.hostName || 'Official Host'} /> : <span className="text-gray-500">Official Host</span>}
+                    </div>
+                    
+                    <div className="flex flex-wrap items-center gap-8 text-gray-200 font-bold text-sm uppercase tracking-widest">
+                        <div className="flex items-center gap-3">
+                            <Calendar className="w-5 h-5 text-brand-500" />
+                            {formatDate(tournament.startTime)}
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <MapPin className="w-5 h-5 text-brand-500" />
+                            {tournament.map || 'TBD'}
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <Users className="w-5 h-5 text-brand-500" />
+                            {tournament.teamType} • {tournament.type}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                {/* Main Content */}
+                <div className="lg:col-span-8 space-y-8">
+                    {/* Tabs Navigation */}
+                    <div className="flex p-2 bg-gray-900/50 rounded-full border border-gray-800 sticky top-20 sm:top-24 z-10 backdrop-blur-xl overflow-x-auto custom-scrollbar">
+                        {[
+                            { id: 'overview', label: 'Overview', icon: Info },
+                            { id: 'description', label: 'Description', icon: Info },
+                            { id: 'participants', label: 'Players', icon: Users },
+                            { id: 'roadmap', label: 'Roadmap', icon: Calendar },
+                            { id: 'groups', label: 'Match Groups', icon: Trophy },
+                            tournament.status === 'completed' ? { id: 'results', label: 'Results', icon: Trophy } : null
+                        ].filter((tab): tab is {id: string, label: string, icon: any} => tab !== null).map((tab) => (
+                            <button 
+                                key={tab.id}
+                                onClick={() => {
+                                    if (tab.id === 'results') {
+                                        setIsResultModalOpen(true);
+                                        telemetry.trackInteraction('TabClick', 'TournamentDetailsTabs', { tabId: 'results', id });
+                                    } else {
+                                        setActiveTab(tab.id as any);
+                                        telemetry.trackInteraction('TabClick', 'TournamentDetailsTabs', { tabId: tab.id, id });
+                                    }
+                                }}
+                                className={`flex-1 flex items-center justify-center gap-3 py-4 px-6 rounded-full text-xs font-black transition-all uppercase tracking-wider ${
+                                    (activeTab === tab.id && tab.id !== 'results') 
+                                    ? 'bg-brand-500 text-white shadow-xl shadow-brand-500/20' 
+                                    : 'text-gray-500 hover:text-white hover:bg-gray-800/50'
+                                }`}
+                            >
+                                <tab.icon className="w-4 h-4" />
+                                {tab.label}
+                            </button>
+                        ))}
+                    </div>
+
+                    <AnimatePresence mode="wait">
+                        {activeTab === 'overview' && (
+                            <motion.div 
+                                key="overview"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                className="space-y-8"
+                            >
+                                {ytId && (
+                                    <div className="rounded-3xl overflow-hidden border border-gray-800 shadow-2xl aspect-video bg-black">
+                                        <iframe 
+                                            src={`https://www.youtube.com/embed/${ytId}`} 
+                                            frameBorder="0" 
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                            allowFullScreen 
+                                            className="w-full h-full"
+                                        ></iframe>
+                                    </div>
+                                )}
+                                {tournament.ytLink && (
+                                    <div className="flex justify-center">
+                                        <a 
+                                            href={tournament.ytLink} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className="flex items-center gap-2 text-brand-500 hover:text-brand-400 font-bold text-sm transition"
+                                        >
+                                            <Play className="w-4 h-4 fill-current" /> Visit YouTube Channel
+                                        </a>
+                                    </div>
+                                )}
+
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    {[
+                                        { label: 'Prize Pool', value: formatCurrency(tournament.prizePool), icon: Trophy, color: 'text-yellow-500' },
+                                        { label: 'Entry Fee', value: tournament.entryFee > 0 ? formatCurrency(tournament.entryFee) : 'FREE', icon: Medal, color: 'text-brand-500' },
+                                        { label: 'Slots', value: `${tournament.currentPlayers}/${tournament.slots}`, icon: Users, color: 'text-blue-500' },
+                                        { label: 'Game Mode', value: tournament.type, icon: Play, color: 'text-red-500' },
+                                    ].map((stat, i) => (
+                                        <div key={i} className="bg-gray-900/50 p-6 rounded-3xl border border-gray-800 hover:border-gray-700 transition-all hover:bg-gray-800/50">
+                                            <stat.icon className={`w-6 h-6 ${stat.color} mb-4`} />
+                                            <div className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1">{stat.label}</div>
+                                            <div className="text-white font-black text-xl">{stat.value}</div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {showRoom && (
+                                    <div className="bg-brand-500/10 border border-brand-500/20 p-8 rounded-3xl relative overflow-hidden group">
+                                        <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:scale-110 transition-transform">
+                                            <Play className="w-32 h-32 text-brand-500" />
+                                        </div>
+                                        <h3 className="text-brand-400 font-black text-xs uppercase tracking-widest mb-6 flex items-center gap-3">
+                                            <Lock className="w-5 h-5" /> Match Credentials
+                                        </h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="bg-black/50 p-6 rounded-2xl border border-white/5">
+                                                <div className="text-[10px] text-gray-500 uppercase font-black mb-2 tracking-widest">Room ID</div>
+                                                <div className="text-white font-mono text-2xl flex justify-between items-center tracking-tight">
+                                                    {tournament.roomId || 'WAITING...'}
+                                                    <button onClick={() => {
+                                                        navigator.clipboard.writeText(tournament.roomId || '');
+                                                        showToast("Copied!", "success");
+                                                    }} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
+                                                        <ExternalLink className="w-5 h-5 text-gray-500" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div className="bg-black/50 p-6 rounded-2xl border border-white/5">
+                                                <div className="text-[10px] text-gray-500 uppercase font-black mb-2 tracking-widest">Password</div>
+                                                <div className="text-white font-mono text-2xl flex justify-between items-center tracking-tight">
+                                                    {showPassword ? (tournament.roomPass || '---') : '••••••'}
+                                                    <div className="flex items-center gap-1">
+                                                        <button 
+                                                            onClick={() => setShowPassword(!showPassword)} 
+                                                            className="p-2 hover:bg-white/10 rounded-xl transition-colors relative z-20"
+                                                        >
+                                                            {showPassword ? <EyeOff className="w-5 h-5 text-gray-500" /> : <Eye className="w-5 h-5 text-gray-500" />}
+                                                        </button>
+                                                        <button onClick={() => {
+                                                            navigator.clipboard.writeText(tournament.roomPass || '');
+                                                            showToast("Copied!", "success");
+                                                        }} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
+                                                            <ExternalLink className="w-5 h-5 text-gray-500" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </motion.div>
+                        )}
+
+                        {activeTab === 'description' && (
+                            <motion.div 
+                                key="description"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                className="space-y-8"
+                            >
+                                <div className="bg-gray-900/50 p-8 rounded-3xl border border-gray-800">
+                                    <h3 className="text-white font-black text-xs uppercase tracking-widest mb-6 flex items-center gap-3">
+                                        <Building2 className="w-5 h-5 text-brand-500" /> Organization
+                                    </h3>
+                                    {hostProfile ? (
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-16 h-16 rounded-2xl bg-dark border border-gray-700 overflow-hidden flex items-center justify-center">
+                                                {hostProfile.profilePicUrl ? (
+                                                    <img src={hostProfile.profilePicUrl || undefined} alt={hostProfile.username} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <Building2 className="w-8 h-8 text-gray-600" />
+                                                )}
+                                            </div>
+                                            <div>
+                                                <div className="text-white font-black text-lg">
+                                                    <ProfileLink to={`/organization/${tournament.hostUid}`} name={hostProfile.username} />
+                                                </div>
+                                                <p className="text-gray-400 text-xs mt-1 line-clamp-2">{hostProfile.bio || 'No bio available.'}</p>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <ProfileLink to={`/organization/${tournament.hostUid}`} name={tournament.hostName || 'Official Host'} />
+                                    )}
+                                </div>
+                                {tournament.prizeDistribution && tournament.prizeDistribution.length > 0 && (
+                                    <div className="mb-8">
+                                        <PrizeBoard 
+                                            prizes={tournament.prizeDistribution} 
+                                            currency={tournament.currency} 
+                                            totalPrizePool={tournament.prizePool}
+                                        />
+                                    </div>
+                                )}
+                                <div className="bg-gray-900/50 p-8 rounded-3xl border border-gray-800">
+                                    <h3 className="text-white font-black text-xs uppercase tracking-widest mb-6 flex items-center gap-3">
+                                        <Lock className="w-5 h-5 text-brand-500" /> Rules & Regulations
+                                    </h3>
+                                    <div className="prose prose-invert max-w-none">
+                                        <div className="text-gray-400 text-sm leading-relaxed whitespace-pre-wrap font-medium">
+                                            {tournament.rules || 'No specific rules provided. Play fair and respect other players.'}
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {activeTab === 'participants' && (
+                            <motion.div 
+                                key="participants"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                className="space-y-4"
+                            >
+                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                                    <h3 className="text-white font-black text-xl uppercase tracking-tighter">Registered Players</h3>
+                                    <div className="relative w-full sm:w-64">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                                        <input 
+                                            type="text" 
+                                            placeholder="Search player or ID..."
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                            className="w-full bg-surface border border-gray-800 rounded-xl py-2 pl-10 pr-4 text-sm text-white focus:border-brand-500 outline-none transition"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {filteredParticipants.length > 0 ? filteredParticipants.map((p, i) => (
+                                        <div key={i} className="bg-surface p-5 rounded-2xl border border-gray-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 group hover:border-brand-500/30 transition-all shadow-lg hover:shadow-brand-500/5">
+                                            <div className="flex items-start sm:items-center gap-4">
+                                                <div className="w-12 h-12 shrink-0 bg-brand-600/10 rounded-2xl flex items-center justify-center text-brand-500 font-black border border-brand-500/20">
+                                                    {i + 1}
+                                                </div>
+                                                <div className="flex flex-col gap-2">
+                                                    <div className="text-white font-black text-lg leading-none">
+                                                        <ProfileLink to={`/profile/${p.userId}`} name={p.username} />
+                                                    </div>
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        <div className="flex items-center gap-1.5 bg-dark px-2 py-1 rounded-lg border border-gray-800">
+                                                            <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest">UID:</span>
+                                                            <span className="text-xs text-brand-400 font-mono font-bold">{p.inGameId}</span>
+                                                        </div>
+                                                        {p.inGameName && (
+                                                            <div className="flex items-center gap-1.5 bg-dark px-2 py-1 rounded-lg border border-gray-800">
+                                                                <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest">IGN:</span>
+                                                                <span className="text-xs text-brand-400 font-mono font-bold">{p.inGameName}</span>
+                                                            </div>
+                                                        )}
+                                                        {p.teammates && p.teammates.map((tm: string, idx: number) => (
+                                                            <div key={idx} className="flex items-center gap-1.5 bg-dark px-2 py-1 rounded-lg border border-gray-800">
+                                                                <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest">T{idx + 1}:</span>
+                                                                <span className="text-xs text-brand-400 font-mono font-bold">{tm}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="text-left sm:text-right bg-dark sm:bg-transparent p-3 sm:p-0 rounded-xl sm:rounded-none border border-gray-800 sm:border-none">
+                                                <div className="text-[9px] text-gray-500 uppercase font-black tracking-widest mb-1">Team Name</div>
+                                                <div className={`inline-block px-3 py-1 rounded-lg text-xs font-black uppercase tracking-tight ${p.teamName ? 'bg-brand-600/20 text-brand-400 border border-brand-500/20' : 'bg-gray-800 text-gray-500'}`}>
+                                                    {p.teamId ? <ProfileLink to={`/team/${p.teamId}`} name={p.teamName || 'TEAM'} /> : (p.teamName || 'SOLO PLAYER')}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )) : (
+                                        <div className="col-span-full py-12 text-center bg-surface rounded-3xl border border-gray-800 border-dashed">
+                                            <Users className="w-12 h-12 text-gray-700 mx-auto mb-4" />
+                                            <p className="text-gray-500 font-bold">No participants yet. Be the first to join!</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {activeTab === 'roadmap' && (
+                            <motion.div 
+                                key="roadmap"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                            >
+                                <RoadmapView tournament={tournament} />
+                            </motion.div>
+                        )}
+                        {activeTab === 'groups' && (
+                            <motion.div
+                                key="groups"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                            >
+                                <GroupStandingsView tournament={tournament} participants={participants} />
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+                    {/* Related Tournaments */}
+                    {false && relatedTournaments.length > 0 && (
+                        <div className="space-y-6 pt-8 border-t border-gray-800/50">
+                            <div className="flex justify-between items-center">
+                                {/* <h3 className="text-xl font-black text-white uppercase tracking-tighter">Other {tournament.game} Events</h3> */}
+                                <button onClick={() => navigate('/tournaments')} className="text-xs font-black text-brand-500 uppercase tracking-widest hover:text-brand-400 transition-colors flex items-center gap-1">
+                                    View All <ChevronRight className="w-4 h-4" />
+                                </button>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {relatedTournaments.map((t) => (
+                                    <div 
+                                        key={t.id} 
+                                        onClick={() => navigate(`/details/${t.id}`)}
+                                        className="bg-surface rounded-2xl border border-gray-800 overflow-hidden cursor-pointer group hover:border-brand-500/50 transition-all"
+                                    >
+                                        <div className="h-24 overflow-hidden relative">
+                                            <img 
+                                                src={t.bannerUrl || DEFAULT_BANNER || undefined} 
+                                                alt={t.title}
+                                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                            />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-gray-950 to-transparent"></div>
+                                        </div>
+                                        <div className="p-4">
+                                            <h4 className="text-white font-black text-sm truncate mb-1">{t.title}</h4>
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-[10px] text-brand-500 font-black uppercase">{formatCurrency(t.prizePool)}</span>
+                                                <span className="text-[10px] text-gray-500 font-bold">{formatDate(t.startTime)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                {/* Sidebar */}
+                <div className="lg:col-span-4 space-y-6">
+                    {/* Join Card */}
+                    <div className="bg-surface p-8 rounded-3xl border border-gray-800 shadow-2xl sticky top-20 sm:top-24">
+                        {timeLeft && (
+                            <div className="mb-8 text-center">
+                                <div className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-3 flex items-center justify-center gap-2">
+                                    <Clock className="w-3 h-3" /> Starts In
+                                </div>
+                                <div className="flex justify-center gap-3">
+                                    {[
+                                        { label: 'D', value: timeLeft.d },
+                                        { label: 'H', value: timeLeft.h },
+                                        { label: 'M', value: timeLeft.m },
+                                        { label: 'S', value: timeLeft.s },
+                                    ].map((t, i) => (
+                                        <div key={i} className="flex flex-col items-center">
+                                            <div className="w-12 h-12 bg-dark rounded-xl border border-gray-800 flex items-center justify-center text-xl font-black text-white shadow-inner">
+                                                {t.value.toString().padStart(2, '0')}
+                                            </div>
+                                            <span className="text-[10px] text-gray-600 font-black mt-1">{t.label}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="space-y-4 mb-8">
+                            <div className="flex justify-between items-center p-4 bg-dark rounded-2xl border border-gray-800">
+                                <span className="text-xs text-gray-500 font-black uppercase tracking-widest">Entry Fee</span>
+                                <span className="text-xl font-black text-white">
+                                    {tournament.entryFee > 0 ? formatCurrency(tournament.entryFee) : 'FREE'}
+                                </span>
+                            </div>
+                            <div className="p-4 bg-dark rounded-2xl border border-gray-800">
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="text-xs text-gray-500 font-black uppercase tracking-widest">Slots Filled</span>
+                                    <span className="text-xs text-white font-black">{tournament.currentPlayers} / {tournament.slots}</span>
+                                </div>
+                                <div className="w-full bg-gray-900 rounded-full h-2.5 overflow-hidden">
+                                    <motion.div 
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${(tournament.currentPlayers / tournament.slots) * 100}%` }}
+                                        className="bg-brand-600 h-full rounded-full shadow-[0_0_10px_rgba(var(--brand-primary-rgb),0.5)]"
+                                    ></motion.div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {tournament.status === 'completed' ? (
+                            <button 
+                                onClick={() => setIsResultModalOpen(true)}
+                                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-5 rounded-2xl font-black uppercase tracking-widest shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all active:scale-95 flex items-center justify-center gap-3 group"
+                            >
+                                <Trophy className="w-6 h-6 group-hover:scale-110 transition-transform" /> View Results
+                            </button>
+                        ) : !user ? (
+                            <button 
+                                onClick={() => navigate('/profile')}
+                                className="w-full bg-gray-800 hover:bg-gray-700 text-white py-5 rounded-2xl font-black uppercase tracking-widest transition-all active:scale-95"
+                            >
+                                Login to Join
+                            </button>
+                        ) : isJoined ? (
+                            <div className="space-y-3">
+                                {/* Registration status badge */}
+                                {(() => {
+                                    const myParticipant = participants.find(p => p.userId === user?.uid);
+                                    const status = myParticipant?.status;
+                                    if (!status || status === 'approved') return (
+                                        <div className="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/20 rounded-2xl">
+                                            <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" />
+                                            <span className="text-xs font-black text-green-400 uppercase tracking-widest">Registration Confirmed</span>
+                                        </div>
+                                    );
+                                    if (status === 'pending') return (
+                                        <div className="flex items-center gap-2 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-2xl">
+                                            <AlertCircle className="w-4 h-4 text-yellow-400 shrink-0" />
+                                            <span className="text-xs font-black text-yellow-400 uppercase tracking-widest">Awaiting Approval</span>
+                                        </div>
+                                    );
+                                    if (status === 'rejected') return (
+                                        <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-2xl">
+                                            <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+                                            <span className="text-xs font-black text-red-400 uppercase tracking-widest">Registration Rejected</span>
+                                        </div>
+                                    );
+                                    return null;
+                                })()}
+                                <div className="grid grid-cols-2 gap-2">
+                                    <button 
+                                        onClick={() => setActiveTab('overview')}
+                                        className="bg-dark hover:bg-gray-800 text-gray-400 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest border border-gray-800 transition-all"
+                                    >
+                                        Room Access
+                                    </button>
+                                    <button 
+                                        onClick={() => window.open('https://discord.gg', '_blank')}
+                                        className="bg-brand-600/10 hover:bg-brand-600/20 text-brand-500 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest border border-brand-500/20 transition-all"
+                                    >
+                                        Join Discord
+                                    </button>
+                                </div>
+                                {tournament.status === 'upcoming' && (
+                                    <div className="space-y-3">
+                                        <button 
+                                            onClick={handleLeaveTournament}
+                                            className="w-full bg-red-600/10 hover:bg-red-600/20 text-red-500 py-4 rounded-xl text-xs font-black uppercase tracking-widest border border-red-500/20 transition-all"
+                                        >
+                                            Leave Tournament
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        ) : tournament.currentPlayers >= tournament.slots ? (
+                            <button disabled className="w-full bg-red-900/20 text-red-500 border border-red-900/50 py-5 rounded-2xl font-black uppercase tracking-widest cursor-not-allowed">
+                                Tournament Full
+                            </button>
+                        ) : tournament.status !== 'upcoming' ? (
+                            <button disabled className="w-full bg-gray-900 text-gray-600 py-5 rounded-2xl font-black uppercase tracking-widest cursor-not-allowed border border-gray-800">
+                                Registration Closed
+                            </button>
+                        ) : (
+                            <button 
+                                onClick={handleJoinClick}
+                                className="w-full bg-brand-600 hover:bg-brand-500 text-white py-5 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-brand-600/20 transition-all active:scale-95 flex items-center justify-center gap-3 group"
+                            >
+                                Join Tournament <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {showJoinModal && tournament && profile && (
+                <JoinTournamentModal 
+                    isOpen={showJoinModal}
+                    onClose={() => setShowJoinModal(false)}
+                    tournament={tournament}
+                    profile={profile}
+                    teamMembers={teamMembers}
+                    onSuccess={handleJoinSuccess}
+                />
+            )}
+
+            {showRegistrationModal && tournament && profile && (
+                <RegistrationModal 
+                    isOpen={showRegistrationModal}
+                    onClose={() => setShowRegistrationModal(false)}
+                    tournament={tournament}
+                    profile={profile}
+                    onSuccess={handleJoinSuccess}
+                />
+            )}
+
+            <TournamentResultModal
+                isOpen={isResultModalOpen}
+                onClose={() => setIsResultModalOpen(false)}
+                tournament={tournament}
+            />
+        </div>
+    );
+}

@@ -1,0 +1,301 @@
+import React, { useEffect, useState } from 'react';
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import { db } from '../../../shared/config/firebase';
+import { useAuth } from '../../../shared/context/AuthContext';
+import { Tournament, SiteSettings, Team } from '../../../shared/types/types';
+import { formatCurrency, formatGameName } from '../../../shared/utils/utils';
+import { useNavigate } from 'react-router-dom';
+import { Trophy, Eye, Upload, BarChart, User, Shield, Users } from 'lucide-react';
+import ResultUploadModal from '../../results/components/ResultUploadModal';
+import TournamentResultModal from '../../tournaments/components/TournamentResultModal';
+import { telemetry } from '../../../shared/services/TelemetryService';
+
+const Dashboard: React.FC = () => {
+    const { user, profile } = useAuth();
+    const [myTournaments, setMyTournaments] = useState<(Tournament & { role: 'participant' | 'organizer'; registration?: any })[]>([]);
+    const [myTeams, setMyTeams] = useState<Team[]>([]);
+    const [settings, setSettings] = useState<SiteSettings | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
+    const [isResultModalOpen, setIsResultModalOpen] = useState(false);
+    const [viewResultTournament, setViewResultTournament] = useState<Tournament | null>(null);
+    const navigate = useNavigate();
+
+    const fetchAllData = async () => {
+        if (!user) return;
+        const startTime = performance.now();
+        telemetry.trackFunnel('DashboardLoad', 'UserDashboardFunnel', true);
+        try {
+            // Fetch Joined Tournaments
+            const partSnap = await getDocs(query(
+                collection(db, 'participants'),
+                where('userId', '==', user.uid)
+            ));
+            
+            const partDocs = partSnap.docs.map(doc => doc.data());
+            partDocs.sort((a, b) => {
+                const aTime = a.timestamp?.toMillis ? a.timestamp.toMillis() : 0;
+                const bTime = b.timestamp?.toMillis ? b.timestamp.toMillis() : 0;
+                return bTime - aTime;
+            });
+            const joinedTours: (Tournament & { role: 'participant' | 'organizer'; registration?: any })[] = [];
+            const tournamentIds = partDocs.map(data => data.tournamentId);
+            const uniqueTournamentIds = [...new Set(tournamentIds)];
+            
+            if (uniqueTournamentIds.length > 0) {
+                const chunks = [];
+                for (let i = 0; i < uniqueTournamentIds.length; i += 10) {
+                    chunks.push(uniqueTournamentIds.slice(i, i + 10));
+                }
+                
+                for (const chunk of chunks) {
+                    const q = query(collection(db, 'tournaments'), where('__name__', 'in', chunk));
+                    const tSnap = await getDocs(q);
+                    
+                    tSnap.docs.forEach(tDoc => {
+                        // Find the corresponding participant record
+                        const pDoc = partSnap.docs.find(p => p.data().tournamentId === tDoc.id);
+                        if (pDoc) {
+                            joinedTours.push({ 
+                                id: tDoc.id, 
+                                ...tDoc.data(), 
+                                role: 'participant',
+                                registration: pDoc.data() 
+                             } as Tournament & { role: 'participant' | 'organizer'; registration?: any });
+                        }
+                    });
+                }
+            }
+
+            // Fetch Hosted Tournaments if organizer/admin
+            let hostedTours: (Tournament & { role: 'participant' | 'organizer'; registration?: any })[] = [];
+            if (profile?.role === 'organizer' || profile?.role === 'admin') {
+                const hostedSnap = await getDocs(query(
+                    collection(db, 'tournaments'),
+                    where('hostUid', '==', user.uid)
+                ));
+                hostedTours = hostedSnap.docs.map(d => ({ id: d.id, ...d.data(), role: 'organizer' } as Tournament & { role: 'participant' | 'organizer'; registration?: any }));
+                hostedTours.sort((a, b) => {
+                    const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+                    const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+                    return bTime - aTime;
+                });
+            }
+
+            // Merge and remove duplicates (if any)
+            const allTours = [...hostedTours, ...joinedTours];
+            const uniqueTours = allTours.filter((t, index, self) => 
+                index === self.findIndex((m) => m.id === t.id)
+            );
+            
+            setMyTournaments(uniqueTours);
+
+            // Fetch My Teams
+            const memberQ = query(collection(db, 'team_members'), where('userId', '==', user.uid));
+            const memberSnap = await getDocs(memberQ);
+            const myTeamIds = [...new Set(memberSnap.docs.map(d => d.data().teamId))];
+            
+            if (myTeamIds.length > 0) {
+                const teamsData: Team[] = [];
+                const chunks = [];
+                for (let i = 0; i < myTeamIds.length; i += 10) {
+                    chunks.push(myTeamIds.slice(i, i + 10));
+                }
+                
+                for (const chunk of chunks) {
+                    const q = query(collection(db, 'teams'), where('__name__', 'in', chunk));
+                    const teamSnap = await getDocs(q);
+                    teamSnap.docs.forEach(teamDoc => {
+                        teamsData.push({ id: teamDoc.id, ...teamDoc.data() } as Team);
+                    });
+                }
+                setMyTeams(teamsData);
+            }
+
+            // Fetch Site Settings
+            const settingsSnap = await getDoc(doc(db, 'settings', 'site'));
+            if (settingsSnap.exists()) {
+                setSettings(settingsSnap.data() as SiteSettings);
+            }
+
+            telemetry.trackPerformance('FetchDashboardData', performance.now() - startTime);
+        } catch (error: any) {
+            console.error("Error fetching dashboard data:", error);
+            telemetry.trackError('FetchDashboardFailed', error?.message || 'Unknown error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchAllData();
+    }, [user, profile]);
+
+    const handleUploadResult = (t: Tournament) => {
+        setSelectedTournament(t);
+        setIsResultModalOpen(true);
+    };
+
+    if (loading) {
+        return (
+            <div className="min-h-[60vh] flex flex-col items-center justify-center">
+                <div className="w-12 h-12 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                <p className="text-xs text-gray-500 font-black uppercase tracking-widest">Loading Dashboard...</p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="animate-fade-in max-w-5xl mx-auto p-4 md:p-8">
+            <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6 border-b border-gray-800 pb-8">
+                <h2 className="text-4xl font-black text-white uppercase tracking-tighter">My Dashboard</h2>
+            </header>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
+                {[
+                    { title: 'Profile', icon: User, path: '/profile', interaction: 'ClickProfileIcon' },
+                    { title: 'Teams', icon: Users, path: '/teams', interaction: 'ClickTeamsIcon' },
+                    { title: 'Tournaments', icon: Trophy, path: '#my-tournaments', interaction: 'ClickMyTournamentsAnchor' },
+                    { title: 'Leaderboard', icon: BarChart, path: '/leaderboard', interaction: 'ClickLeaderboardIcon' },
+                ].map((item, idx) => {
+                    const Component = item.path.startsWith('#') ? 'a' : 'div';
+                    const props = item.path.startsWith('#') ? { href: item.path } : { onClick: () => { telemetry.trackInteraction(item.interaction, 'DashboardGrid'); navigate(item.path); } };
+                    
+                    return (
+                        <Component 
+                            key={idx}
+                            {...props}
+                            className="bg-gray-900/50 p-8 rounded-3xl border border-gray-800 hover:border-brand-500/50 transition-all hover:-translate-y-1 cursor-pointer group shadow-2xl flex flex-col items-center text-center gap-5"
+                        >
+                            <div className="w-16 h-16 rounded-2xl bg-black flex items-center justify-center border border-gray-800 group-hover:bg-brand-500/10 group-hover:border-brand-500/50 transition duration-300">
+                                <item.icon className="w-7 h-7 text-brand-500" />
+                            </div>
+                            <h3 className="text-white font-black uppercase tracking-widest text-xs group-hover:text-brand-400 transition">{item.title}</h3>
+                        </Component>
+                    );
+                })}
+            </div>
+
+            <h3 id="my-tournaments" className="text-3xl font-black text-white uppercase tracking-tighter mb-8 pt-4 border-t border-gray-800 pt-8">My Tournaments</h3>
+            <div className="grid gap-6">
+                {myTournaments.length > 0 ? (
+                    myTournaments.map(t => {
+                        const isLive = t.status === 'live';
+                        const isCompleted = t.status === 'completed';
+                        const showRoom = isLive || (t.status === 'upcoming' && t.roomId);
+
+                        return (
+                            <div key={t.id} className="bg-black border border-gray-800 p-8 rounded-3xl transition duration-300 hover:border-gray-700 hover:bg-gray-900/50 group">
+                                <div className="flex justify-between items-start gap-6">
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-3 mb-4 flex-wrap">
+                                            {t.role === 'organizer' ? (
+                                                <span className="bg-brand-500/10 text-brand-400 text-xs font-black px-4 py-1.5 rounded-full border border-brand-500/20 flex items-center gap-2 uppercase tracking-widest">
+                                                    <Shield className="w-4 h-4" /> Host
+                                                </span>
+                                            ) : (
+                                                <span className="bg-blue-500/10 text-blue-400 text-xs font-black px-4 py-1.5 rounded-full border border-blue-500/20 flex items-center gap-2 uppercase tracking-widest">
+                                                    <User className="w-4 h-4" /> Participant
+                                                </span>
+                                            )}
+                                            <span className="bg-gray-800 text-gray-400 text-xs font-black px-4 py-1.5 rounded-full border border-gray-700 uppercase tracking-widest">{formatGameName(t.game)}</span>
+                                            <span className="bg-brand-500/10 text-brand-300 text-xs font-black px-4 py-1.5 rounded-full border border-brand-500/20 uppercase tracking-widest">{t.teamType}</span>
+                                        </div>
+                                        <h3 
+                                            className="text-2xl font-black text-white mb-3 hover:text-brand-400 transition cursor-pointer tracking-tighter" 
+                                            onClick={() => {
+                                                    telemetry.trackInteraction('ClickDashboardTournamentTitle', 'DashboardTournaments', { id: t.id, title: t.title });
+                                                    navigate(`/details/${t.id}`);
+                                                }}
+                                        >
+                                            {t.title}
+                                        </h3>
+                                        {t.registration && (
+                                            <div className="flex flex-wrap gap-6 mt-4">
+                                                <div className="text-xs text-gray-400 font-black uppercase tracking-widest">
+                                                    Team: <span className="text-brand-300">{t.registration.teamName || 'SOLO'}</span>
+                                                </div>
+                                                <div className="text-xs text-gray-400 font-black uppercase tracking-widest">
+                                                    UID: <span className="text-brand-300">{t.registration.inGameId}</span>
+                                                </div>
+                                            </div>
+                                        )}
+                                        <div className={`text-xs font-black uppercase tracking-widest mt-4 ${isLive ? 'text-emerald-400 animate-pulse' : isCompleted ? 'text-gray-500' : 'text-blue-400'}`}>
+                                            Status: {t.status}
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="text-xl font-black text-brand-400">{formatCurrency(t.prizePool)}</div>
+                                    </div>
+                                </div>
+                                {showRoom && (
+                                    <div className="mt-8 bg-gray-900/50 p-6 rounded-2xl border border-gray-800 flex gap-8 text-sm font-mono items-center justify-center">
+                                        <div>
+                                            <span className="text-gray-500 uppercase text-xs font-black tracking-widest">Room ID:</span> <span className="text-white font-black select-all ml-3">{t.roomId || 'Wait'}</span>
+                                        </div>
+                                        <div className="w-px h-6 bg-gray-800"></div>
+                                        <div>
+                                            <span className="text-gray-500 uppercase text-xs font-black tracking-widest">Pass:</span> <span className="text-white font-black select-all ml-3">{t.roomPass || 'Wait'}</span>
+                                        </div>
+                                    </div>
+                                )}
+                                <div className="mt-8 flex gap-6 border-t border-gray-800 pt-8">
+                                    <button onClick={() => {
+                                            telemetry.trackInteraction('ClickDashboardTournamentDetails', 'DashboardTournaments', { id: t.id });
+                                            navigate(`/details/${t.id}`);
+                                        }} className="flex items-center gap-3 text-xs font-black uppercase tracking-widest text-gray-400 hover:text-white transition">
+                                        <Eye className="w-5 h-5" /> View Details
+                                    </button>
+                                    {isLive && t.role === 'organizer' && (
+                                        <button 
+                                            onClick={() => {
+                                                    telemetry.trackInteraction('ClickDashboardUploadResultInitiate', 'DashboardTournaments', { id: t.id });
+                                                    handleUploadResult(t);
+                                                }}
+                                            className="flex items-center gap-3 text-xs font-black uppercase tracking-widest text-emerald-400 hover:text-white transition"
+                                        >
+                                            <Upload className="w-5 h-5" /> Upload Result
+                                        </button>
+                                    )}
+                                    {isCompleted && (
+                                        <button 
+                                            onClick={() => {
+                                                    telemetry.trackInteraction('ClickDashboardViewResultModal', 'DashboardTournaments', { id: t.id });
+                                                    setViewResultTournament(t);
+                                                }}
+                                            className="flex items-center gap-3 text-xs font-black uppercase tracking-widest text-blue-400 hover:text-white transition"
+                                        >
+                                            <BarChart className="w-5 h-5" /> View Result
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    })
+                ) : (
+                    <div className="bg-gray-900/50 p-16 rounded-3xl border border-gray-800 text-center">
+                        <p className="text-gray-500 font-bold uppercase tracking-widest">No matches found.</p>
+                    </div>
+                )}
+            </div>
+            {selectedTournament && (
+                <ResultUploadModal 
+                    isOpen={isResultModalOpen}
+                    onClose={() => setIsResultModalOpen(false)}
+                    tournament={selectedTournament}
+                    onSuccess={fetchAllData}
+                />
+            )}
+
+            {viewResultTournament && (
+                <TournamentResultModal
+                    isOpen={!!viewResultTournament}
+                    onClose={() => setViewResultTournament(null)}
+                    tournament={viewResultTournament}
+                />
+            )}
+        </div>
+    );
+};
+
+export default Dashboard;

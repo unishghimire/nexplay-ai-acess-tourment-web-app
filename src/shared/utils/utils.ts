@@ -1,0 +1,130 @@
+import { Timestamp } from 'firebase/firestore';
+
+export const formatCurrency = (amount: number | string, prefix: string = 'Rs. ') => {
+    const numAmount = Number(amount);
+    if (amount === null || amount === undefined || isNaN(numAmount)) return `${prefix}0`;
+
+    const absAmount = Math.abs(numAmount);
+    const sign = numAmount < 0 ? '-' : '';
+
+    let formattedValue = '';
+    if (absAmount >= 1_000_000_000) {
+        formattedValue = (Math.trunc(absAmount / 100_000_000) / 10).toString() + 'B';
+    } else if (absAmount >= 1_000_000) {
+        formattedValue = (Math.trunc(absAmount / 100_000) / 10).toString() + 'M';
+    } else if (absAmount >= 1_000) {
+        formattedValue = (Math.trunc(absAmount / 100) / 10).toString() + 'K';
+    } else {
+        formattedValue = absAmount.toLocaleString('en-US', { maximumFractionDigits: 1 });
+    }
+
+    return `${sign}${prefix}${formattedValue}`;
+};
+
+type FirestoreTimestamp = { seconds: number; nanoseconds: number; toDate?: () => Date };
+type TimestampInput = import('firebase/firestore').Timestamp | FirestoreTimestamp | Date | string | number | null | undefined;
+
+export const toDateSafe = (ts: TimestampInput): Date | null => {
+    if (!ts) return null;
+
+    if (ts instanceof Timestamp) return ts.toDate();
+
+    if ((ts as FirestoreTimestamp).seconds !== undefined) {
+        return new Timestamp((ts as FirestoreTimestamp).seconds, (ts as FirestoreTimestamp).nanoseconds).toDate();
+    }
+
+    const date = new Date(ts as string | number | Date);
+    return Number.isNaN(date.getTime()) ? null : date;
+};
+
+export const formatDate = (ts: TimestampInput): string => {
+    const date = toDateSafe(ts);
+    return date ? date.toLocaleString('en-NP') : 'N/A';
+};
+
+export const timeAgo = (ts: TimestampInput): string => {
+    const date = toDateSafe(ts);
+    if (!date) return 'Just now';
+    const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
+    let interval = seconds / 31536000;
+    if (interval > 1) return Math.floor(interval) + "y ago";
+    interval = seconds / 2592000;
+    if (interval > 1) return Math.floor(interval) + "mo ago";
+    interval = seconds / 86400;
+    if (interval > 1) return Math.floor(interval) + "d ago";
+    interval = seconds / 3600;
+    if (interval > 1) return Math.floor(interval) + "h ago";
+    interval = seconds / 60;
+    if (interval > 1) return Math.floor(interval) + "m ago";
+    return "Just now";
+};
+
+export const getYoutubeId = (url: string | undefined) => {
+    if (!url) return null;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+};
+
+export const calculateLevel = (xp: number = 0) => {
+    // Simple level formula: Level = floor(XP / 500) + 1
+    return Math.floor(xp / 500) + 1;
+};
+
+export const getXPForNextLevel = (level: number) => {
+    // XP needed for level N+1 is N * 500
+    return level * 500;
+};
+
+export const getLevelProgress = (xp: number = 0) => {
+    const level = calculateLevel(xp);
+    const currentLevelXP = (level - 1) * 500;
+    const nextLevelXP = level * 500;
+    const progress = ((xp - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100;
+    return Math.min(100, Math.max(0, progress));
+};
+
+const GAME_MODE_LABELS: Record<string, string> = {
+    battelroyal: 'Battle Royale',
+    battleroyale: 'Battle Royale',
+    'battle royale': 'Battle Royale',
+    clashsquad: 'Clash Squad',
+    'clash squad': 'Clash Squad',
+    lionwolf: 'Lone Wolf',
+    lonewolf: 'Lone Wolf',
+    'lone wolf': 'Lone Wolf',
+};
+
+export const formatGameModeLabel = (mode: string) => {
+    const normalized = mode.trim().toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ');
+    const compact = normalized.replace(/\s+/g, '');
+    const mappedLabel = GAME_MODE_LABELS[normalized] || GAME_MODE_LABELS[compact];
+
+    if (mappedLabel) return mappedLabel;
+    if (!normalized) return mode;
+
+    return normalized
+        .split(' ')
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+};
+
+const GAME_NAME_LABELS: Record<string, string> = {
+    'free fire': 'Free Fire',
+    'pubg mobile': 'PUBG Mobile',
+    pubg: 'PUBG',
+    'mobile legends': 'Mobile Legends',
+};
+
+export const formatGameName = (name: string) => {
+    const normalized = name.trim().toLowerCase().replace(/\s+/g, ' ');
+    const mappedLabel = GAME_NAME_LABELS[normalized];
+
+    if (mappedLabel) return mappedLabel;
+    if (!normalized) return name;
+
+    return normalized
+        .split(' ')
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+};
