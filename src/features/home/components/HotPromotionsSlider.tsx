@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, Trophy, ChevronLeft, ChevronRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Star, Trophy, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
 import { formatGameName } from '../../../shared/utils/utils';
+import { Slide } from '../../../shared/types/types';
 
 export interface PromoSlide {
-    id: number;
+    id: number | string;
     tournamentName: string;
     game: string;
     format: string;
@@ -15,11 +17,12 @@ export interface PromoSlide {
     link: string;
 }
 
-interface HotPromotionsSliderProps {
-    slides: PromoSlide[];
+export interface HotPromotionsSliderProps {
+    slides: (Slide | PromoSlide)[];
+    variant?: 'hero' | 'hot';
 }
 
-const HotPromotionsSlider: React.FC<HotPromotionsSliderProps> = ({ slides }) => {
+const HotPromotionsSlider: React.FC<HotPromotionsSliderProps> = ({ slides, variant }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isPaused, setIsPaused] = useState(false);
     const [touchStart, setTouchStart] = useState<number | null>(null);
@@ -28,13 +31,14 @@ const HotPromotionsSlider: React.FC<HotPromotionsSliderProps> = ({ slides }) => 
     const navigate = useNavigate();
 
     const minSwipeDistance = 50;
+    const isHero = variant === 'hero' || (variant === undefined && slides.length > 0 && 'imageUrl' in slides[0]);
 
     const nextSlide = useCallback(() => {
-        setCurrentIndex((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
+        setCurrentIndex((prev) => (prev + 1) % slides.length);
     }, [slides.length]);
 
     const prevSlide = useCallback(() => {
-        setCurrentIndex((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
+        setCurrentIndex((prev) => (prev - 1 + slides.length) % slides.length);
     }, [slides.length]);
 
     const goToSlide = (index: number) => {
@@ -47,13 +51,13 @@ const HotPromotionsSlider: React.FC<HotPromotionsSliderProps> = ({ slides }) => 
         if (!isPaused && slides.length > 1 && !prefersReducedMotion) {
             timerRef.current = setInterval(() => {
                 nextSlide();
-            }, 4000);
+            }, isHero ? 5000 : 4000);
         }
 
         return () => {
             if (timerRef.current) clearInterval(timerRef.current);
         };
-    }, [isPaused, nextSlide, slides.length]);
+    }, [isPaused, nextSlide, slides.length, isHero]);
 
     const onTouchStart = (e: React.TouchEvent) => {
         setTouchEnd(null);
@@ -71,12 +75,9 @@ const HotPromotionsSlider: React.FC<HotPromotionsSliderProps> = ({ slides }) => 
             return;
         }
         const distance = touchStart - touchEnd;
-        const isLeftSwipe = distance > minSwipeDistance;
-        const isRightSwipe = distance < -minSwipeDistance;
-
-        if (isLeftSwipe) {
+        if (distance > minSwipeDistance) {
             nextSlide();
-        } else if (isRightSwipe) {
+        } else if (distance < -minSwipeDistance) {
             prevSlide();
         }
         
@@ -84,6 +85,109 @@ const HotPromotionsSlider: React.FC<HotPromotionsSliderProps> = ({ slides }) => 
     };
 
     if (!slides || slides.length === 0) return null;
+
+    if (isHero) {
+        const currentSlide = slides[currentIndex] as Slide;
+        return (
+            <div 
+                className="relative w-full h-[350px] md:h-[500px] rounded-3xl overflow-hidden bg-gray-900 border border-gray-800 shadow-2xl group"
+                onMouseEnter={() => setIsPaused(true)}
+                onMouseLeave={() => setIsPaused(false)}
+                onTouchStart={onTouchStart}
+                onTouchMove={onTouchMove}
+                onTouchEnd={onTouchEnd}
+            >
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={currentSlide.id}
+                        initial={{ opacity: 0, x: 50 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -50 }}
+                        transition={{ duration: 0.5, ease: "easeInOut" }}
+                        className="absolute inset-0"
+                    >
+                        <img 
+                            src={currentSlide.imageUrl || (currentSlide as any).image || 'https://picsum.photos/seed/promo/1920/1080'} 
+                            alt={currentSlide.title || (currentSlide as any).tournamentName || ''} 
+                            className="w-full h-full object-cover"
+                            referrerPolicy="no-referrer"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                        
+                        <div className="absolute bottom-0 left-0 p-6 md:p-12 w-full md:w-3/4 space-y-3 md:space-y-4">
+                            <motion.h2 
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.2 }}
+                                className="text-3xl md:text-6xl font-black text-white tracking-tight leading-tight"
+                            >
+                                {currentSlide.title || (currentSlide as any).tournamentName}
+                            </motion.h2>
+                            {currentSlide.description && (
+                                <motion.p 
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.3 }}
+                                    className="text-gray-300 text-sm md:text-lg max-w-2xl line-clamp-2 md:line-clamp-none font-medium"
+                                >
+                                    {currentSlide.description}
+                                </motion.p>
+                            )}
+                            <motion.div 
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.4 }}
+                                className="flex items-center gap-4 pt-2 md:pt-4"
+                            >
+                                <button 
+                                    onClick={() => navigate(currentSlide.link)}
+                                    className="bg-brand-600 hover:bg-brand-500 text-white px-6 md:px-10 py-3 md:py-4 rounded-xl font-black uppercase tracking-widest transition-all hover:scale-105 shadow-xl shadow-brand-600/20 flex items-center gap-2 text-xs md:text-sm"
+                                >
+                                    {currentSlide.buttonText || 'Explore'} <ExternalLink className="w-4 h-4" />
+                                </button>
+                            </motion.div>
+                        </div>
+                    </motion.div>
+                </AnimatePresence>
+
+                {/* Navigation Arrows */}
+                {slides.length > 1 && (
+                    <>
+                        <button 
+                            onClick={prevSlide} 
+                            aria-label="Previous slide"
+                            className="absolute left-4 top-1/2 -translate-y-1/2 p-2 md:p-3 bg-black/40 hover:bg-brand-600 text-white rounded-full backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-300 border border-white/10"
+                        >
+                            <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
+                        </button>
+                        <button 
+                            onClick={nextSlide} 
+                            aria-label="Next slide"
+                            className="absolute right-4 top-1/2 -translate-y-1/2 p-2 md:p-3 bg-black/40 hover:bg-brand-600 text-white rounded-full backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all duration-300 border border-white/10"
+                        >
+                            <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
+                        </button>
+                    </>
+                )}
+
+                {/* Dot Indicators */}
+                {slides.length > 1 && (
+                    <div className="absolute bottom-6 right-6 md:right-12 flex items-center gap-2">
+                        {slides.map((s, idx) => (
+                            <button
+                                key={s.id}
+                                onClick={() => goToSlide(idx)}
+                                aria-label={`Go to slide ${idx + 1}`}
+                                className={`h-1.5 transition-all duration-300 rounded-full ${idx === currentIndex ? 'w-8 bg-brand-500' : 'w-2 bg-white/30 hover:bg-white/50'}`}
+                            />
+                        ))}
+                    </div>
+                )}
+            </div>
+        );
+    }
+
+    const promoSlides = slides as PromoSlide[];
 
     return (
         <div 
@@ -102,13 +206,13 @@ const HotPromotionsSlider: React.FC<HotPromotionsSliderProps> = ({ slides }) => 
                 
                 {/* Dot Indicators (Header) */}
                 <div className="flex items-center gap-2">
-                    {slides.map((slide) => (
+                    {promoSlides.map((slide, idx) => (
                         <button
                             key={slide.id}
-                            onClick={() => goToSlide(slides.indexOf(slide))}
-                            aria-label={`Go to slide ${slides.indexOf(slide) + 1}`}
+                            onClick={() => goToSlide(idx)}
+                            aria-label={`Go to slide ${idx + 1}`}
                             className={`w-2 h-2 rounded-full transition-all ${
-                                currentIndex === slides.indexOf(slide) ? 'bg-brand-500 w-4' : 'bg-gray-600 hover:bg-gray-500'
+                                currentIndex === idx ? 'bg-brand-500 w-4' : 'bg-gray-600 hover:bg-gray-500'
                             }`}
                         />
                     ))}
@@ -129,7 +233,7 @@ const HotPromotionsSlider: React.FC<HotPromotionsSliderProps> = ({ slides }) => 
                     className="flex h-full transition-transform duration-500 ease-in-out"
                     style={{ transform: `translateX(-${currentIndex * 100}%)` }}
                 >
-                    {slides.map((slide) => (
+                    {promoSlides.map((slide) => (
                         <div key={slide.id} className="min-w-full h-full flex flex-col-reverse sm:flex-row">
                             
                             {/* Left Side (Content) */}
@@ -224,13 +328,13 @@ const HotPromotionsSlider: React.FC<HotPromotionsSliderProps> = ({ slides }) => 
 
                 {/* Bottom Dot Indicators */}
                 <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2 z-20 sm:hidden">
-                    {slides.map((slide) => (
+                    {promoSlides.map((slide, idx) => (
                         <button
                             key={slide.id}
-                            onClick={() => goToSlide(slides.indexOf(slide))}
-                            aria-label={`Go to slide ${slides.indexOf(slide) + 1}`}
+                            onClick={() => goToSlide(idx)}
+                            aria-label={`Go to slide ${idx + 1}`}
                             className={`w-2 h-2 rounded-full transition-all ${
-                                currentIndex === slides.indexOf(slide) ? 'bg-brand-500 w-4' : 'bg-white/30 hover:bg-white/50'
+                                currentIndex === idx ? 'bg-brand-500 w-4' : 'bg-white/30 hover:bg-white/50'
                             }`}
                         />
                     ))}
@@ -282,7 +386,7 @@ const CountdownTimer: React.FC<{ targetDate: string }> = ({ targetDate }) => {
 
     return (
         <div className="flex gap-1.5">
-            {timeBlocks.map((block, idx) => (
+            {timeBlocks.map((block) => (
                 <div key={block.label} className="flex flex-col items-center">
                     <div className="bg-[#0a0e1a] border border-brand-500/30 rounded w-7 h-7 flex items-center justify-center text-white text-xs font-bold">
                         {block.value.toString().padStart(2, '0')}
@@ -294,4 +398,5 @@ const CountdownTimer: React.FC<{ targetDate: string }> = ({ targetDate }) => {
     );
 };
 
+export const PromotionSlider = HotPromotionsSlider;
 export default HotPromotionsSlider;

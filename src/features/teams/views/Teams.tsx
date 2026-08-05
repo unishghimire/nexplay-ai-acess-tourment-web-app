@@ -9,7 +9,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useInvisibleImage } from '../../../shared/hooks/useInvisibleImage';
 import { DEFAULT_TEAM_LOGO, NEXPLAY_LOGO, PRESET_TEAM_LOGOS } from '../../../shared/constants/constants';
 import Modal from '../../../shared/components/Modal';
-import { telemetry } from '../../../shared/services/TelemetryService';
 
 const Teams: React.FC = () => {
     const { user, profile } = useAuth();
@@ -32,22 +31,18 @@ const Teams: React.FC = () => {
     const { handlePaste, handleDrop, handleDragOver, processAndUpload } = useInvisibleImage({
         onUploadStart: () => {
             setIsUploadingLogo(true);
-            telemetry.trackInteraction('TeamLogoUploadStart', 'TeamsPanel');
         },
         onUploadEnd: () => setIsUploadingLogo(false),
         onUploadSuccess: (url) => {
             setNewTeamLogo(url);
-            telemetry.trackInteraction('TeamLogoUploadSuccess', 'TeamsPanel', { url });
         },
         onError: (err) => {
             showToast(err, 'error');
-            telemetry.trackError('TeamLogoUploadFailed', err);
         }
     });
 
     useEffect(() => {
         fetchTeams();
-        telemetry.trackFunnel('TeamsListExpanded', 'UserTeamBrowserLayout', true);
     }, [user]);
 
     const fetchTeams = async () => {
@@ -68,10 +63,8 @@ const Teams: React.FC = () => {
                 
                 setMyTeams(allTeams.filter(t => myTeamIds.includes(t.id) || t.ownerId === user.uid));
             }
-            telemetry.trackPerformance('FetchTeamsAndMembers', performance.now() - startTime);
         } catch (error: any) {
             console.error("Error fetching teams:", error);
-            telemetry.trackError('FetchTeamsAndMembersFailed', error?.message || 'Unknown error');
         } finally {
             setLoading(false);
         }
@@ -82,13 +75,11 @@ const Teams: React.FC = () => {
 
         if (myTeams.length >= 1) {
             showToast('You can only be in one team at a time.', 'error');
-            telemetry.trackError('TeamCreationRestricted', 'User already associated with a team', { userId: user.uid });
             return;
         }
 
         setCreating(true);
         const startTime = performance.now();
-        telemetry.trackFunnel('CreateTeamSubmitAttempt', 'UserTeamRegistrationFunnel', true, { name: newTeamName });
         try {
             const teamData = {
                 name: newTeamName,
@@ -117,8 +108,6 @@ const Teams: React.FC = () => {
                 teamId: docRef.id 
             }, { merge: true });
 
-            telemetry.trackPerformance('TeamCreationOperation', performance.now() - startTime, { teamId: docRef.id, name: newTeamName });
-            telemetry.trackFunnel('CreateTeamComplete', 'UserTeamRegistrationFunnel', true, { teamId: docRef.id, name: newTeamName });
 
             showToast('Team created successfully!', 'success');
             setIsCreating(false);
@@ -129,7 +118,6 @@ const Teams: React.FC = () => {
             navigate(`/team/${docRef.id}`);
         } catch (error: any) {
             console.error("Error creating team:", error);
-            telemetry.trackError('TeamCreationOperationFailed', error?.message || 'Unknown error');
             showToast('Failed to create team', 'error');
         } finally {
             setCreating(false);
@@ -263,7 +251,6 @@ const Teams: React.FC = () => {
                                 onClick={() => {
                                     setNewTeamLogo(url);
                                     setShowPresetModal(false);
-                                    telemetry.trackInteraction('ChoosePresetLogoTeam', 'PresetLogoModal', { index, url });
                                 }}
                                 className="relative group rounded-2xl overflow-hidden border-2 border-gray-800 hover:border-brand-500 transition-all aspect-square bg-dark"
                             >
@@ -318,7 +305,6 @@ const Teams: React.FC = () => {
                             onChange={(e) => {
                                 const val = e.target.value;
                                 setSearchTerm(val);
-                                telemetry.trackInteraction('SearchTeams', 'TeamsSearch', { term: val });
                             }}
                             placeholder="Search teams..."
                             className="w-full bg-gray-900/50 border border-gray-800 rounded-2xl pl-12 pr-4 py-3 text-sm text-white focus:border-brand-500 outline-none font-bold"

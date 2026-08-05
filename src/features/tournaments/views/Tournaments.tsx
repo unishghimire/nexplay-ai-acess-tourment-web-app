@@ -5,7 +5,6 @@ import { db } from '../../../shared/config/firebase';
 import { Tournament, Game } from '../../../shared/types/types';
 import TournamentCard from '../components/TournamentCard';
 import { Filter, Search } from 'lucide-react';
-import { telemetry } from '../../../shared/services/TelemetryService';
 import { formatGameModeLabel, formatGameName, toDateSafe } from '../../../shared/utils/utils';
 
 const Tournaments: React.FC = () => {
@@ -41,11 +40,8 @@ const Tournaments: React.FC = () => {
 
                 setTournaments(tours);
                 setGames(gamesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Game)));
-                telemetry.trackPerformance('FetchTournamentsAndGames', performance.now() - startTime);
-                telemetry.trackFunnel('TournamentsListLoad', 'UserTournamentNavigation', true);
             } catch (error: any) {
                 console.error("Error fetching data:", error);
-                telemetry.trackError('FetchTournamentsFailed', error?.message || 'Unknown error');
             } finally {
                 setLoading(false);
             }
@@ -62,14 +58,6 @@ const Tournaments: React.FC = () => {
         if (entryFilter !== 'all') params.set('entry', entryFilter);
         if (teamTypeFilter !== 'all') params.set('teamType', teamTypeFilter);
         setSearchParams(params, { replace: true });
-        
-        telemetry.trackInteraction('ApplyTournamentFilters', 'TournamentsFilterPanel', {
-            game: gameFilter,
-            mode: modeFilter,
-            status: statusFilter,
-            entry: entryFilter,
-            teamType: teamTypeFilter
-        });
     }, [gameFilter, modeFilter, statusFilter, entryFilter, teamTypeFilter, setSearchParams]);
 
     const filteredTournaments = tournaments.filter(t => {

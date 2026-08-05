@@ -18,7 +18,6 @@ import PrizeBoard from '../components/PrizeBoard';
 import TournamentResultModal from '../components/TournamentResultModal';
 import RoadmapView from '../components/RoadmapView';
 import GroupStandingsView from '../components/GroupStandingsView';
-import { telemetry } from '../../../shared/services/TelemetryService';
 
 export default function TournamentDetails() {
     const { id } = useParams<{ id: string }>();
@@ -50,7 +49,6 @@ export default function TournamentDetails() {
         if (!id) return;
         setLoading(true);
         const startTime = performance.now();
-        telemetry.trackFunnel('TournamentDetailsLoad', 'UserTournamentDetailsNavigation', true, { id });
 
         // 1. Core Tournament Listener (Real-time & Self-healing)
         const unsubTournament = onSnapshot(doc(db, 'tournaments', id), (snapshot) => {
@@ -58,15 +56,12 @@ export default function TournamentDetails() {
                 const tData = { id: snapshot.id, ...snapshot.data() } as Tournament;
                 setTournament(tData);
                 setLoading(false);
-                telemetry.trackPerformance('LoadTournamentDetailsData', performance.now() - startTime, { id, title: tData.title });
             } else {
-                telemetry.trackError('TournamentNotFound', id);
                 showToast("Tournament not found", "error");
                 navigate('/tournaments');
             }
         }, (error) => {
             console.error("Tournament lookup failed:", error);
-            telemetry.trackError('TournamentLookupFailed', error.message || 'Unknown error', { id });
             // Self-healing: if listener fails, try one-time fetch as fallback
             getDoc(doc(db, 'tournaments', id)).then(snap => {
                 if (snap.exists()) setTournament({ id: snap.id, ...snap.data() } as Tournament);
@@ -220,17 +215,14 @@ export default function TournamentDetails() {
     const handleJoinClick = () => {
         if (!user) {
             showToast("Please login to join!", "warning");
-            telemetry.trackInteraction('JoinClickAnonymous', 'TournamentDetails', { id });
             return;
         }
         if (!tournament || !profile) return;
 
-        telemetry.trackInteraction('JoinClickAttempt', 'TournamentDetails', { tournamentId: id, teamType: tournament.teamType });
 
         // Requirement: In-game ID is compulsory for all games
         if (!profile.inGameId) {
             showToast("In-Game ID is required for all tournaments!", "warning");
-            telemetry.trackError('RegistrationValidationFailed', 'In-Game ID is missing', { tournamentId: id });
             navigate('/profile');
             return;
         }
@@ -238,7 +230,6 @@ export default function TournamentDetails() {
         // Requirement: In-game Name is compulsory for all games
         if (!profile.inGameName) {
             showToast("In-Game Name is required for all tournaments!", "warning");
-            telemetry.trackError('RegistrationValidationFailed', 'In-Game Name is missing', { tournamentId: id });
             navigate('/profile');
             return;
         }
@@ -246,7 +237,6 @@ export default function TournamentDetails() {
         // Requirement: Team Name is compulsory for all tournaments
         if (!profile.teamName) {
             showToast("Team Name is required for all tournaments!", "warning");
-            telemetry.trackError('RegistrationValidationFailed', 'Team Name is missing', { tournamentId: id });
             navigate('/profile');
             return;
         }
@@ -254,12 +244,10 @@ export default function TournamentDetails() {
         // Requirement: Team ID is compulsory for team tournaments
         if ((tournament.teamType === 'duo' || tournament.teamType === 'squad') && !profile.teamId) {
             showToast("You must be in a team to join team tournaments!", "warning");
-            telemetry.trackError('RegistrationValidationFailed', 'Team ID is missing', { tournamentId: id, teamType: tournament.teamType });
             navigate('/teams');
             return;
         }
 
-        telemetry.trackFunnel('RegistrationModalOpen', 'UserTournamentSignupFunnel', true, { tournamentId: id, teamType: tournament.teamType });
 
         if (tournament.teamType === 'duo' || tournament.teamType === 'squad') {
             setShowJoinModal(true);
@@ -270,18 +258,15 @@ export default function TournamentDetails() {
 
     const handleJoinSuccess = () => {
         setIsJoined(true);
-        telemetry.trackFunnel('RegistrationComplete', 'UserTournamentSignupFunnel', true, { tournamentId: id });
     };
 
     const handleLeaveTournament = async () => {
         if (!user || !tournament || !isJoined) return;
         if (tournament.status !== 'upcoming') {
             showToast("You cannot leave a tournament that has already started.", "error");
-            telemetry.trackError('AttemptedLeaveStartedTournament', 'Tournament already active', { tournamentId: id });
             return;
         }
         if (!window.confirm('Are you sure you want to leave this tournament? Your entry fee will be refunded.')) return;
-        telemetry.trackInteraction('LeaveTournamentClick', 'TournamentDetails', { tournamentId: id });
 
         const tRef = doc(db, 'tournaments', tournament.id);
         const userRef = doc(db, 'users', user.uid);
@@ -319,16 +304,13 @@ export default function TournamentDetails() {
                 'info',
                 `/details/${tournament.id}`
             );
-            telemetry.trackFunnel('LeaveTournamentSuccess', 'UserTournamentCancellation', true, { tournamentId: id });
             showToast('Left Tournament Successfully!', 'success');
         } catch (e: any) {
-            telemetry.trackError('LeaveTournamentFailed', e.message || 'Unknown error', { tournamentId: id });
             showToast(e.message, 'error');
         }
     };
 
     const handleShare = () => {
-        telemetry.trackInteraction('ShareTournamentClick', 'TournamentDetails', { tournamentId: id });
         if (navigator.share) {
             navigator.share({
                 title: tournament.title,
@@ -444,10 +426,8 @@ export default function TournamentDetails() {
                                 onClick={() => {
                                     if (tab.id === 'results') {
                                         setIsResultModalOpen(true);
-                                        telemetry.trackInteraction('TabClick', 'TournamentDetailsTabs', { tabId: 'results', id });
                                     } else {
                                         setActiveTab(tab.id as any);
-                                        telemetry.trackInteraction('TabClick', 'TournamentDetailsTabs', { tabId: tab.id, id });
                                     }
                                 }}
                                 className={`flex-1 flex items-center justify-center gap-3 py-4 px-6 rounded-full text-xs font-black transition-all uppercase tracking-wider ${

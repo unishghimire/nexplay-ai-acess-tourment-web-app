@@ -8,8 +8,6 @@ import { Plus, ArrowUpRight, ArrowDownRight, Clock, CheckCircle2, XCircle, Walle
 import WalletModal from '../components/WalletModal';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { useInView } from '../../../shared/hooks/useInView';
-import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell } from 'recharts';
-import { telemetry } from '../../../shared/services/TelemetryService';
 
 const Wallet: React.FC = () => {
     const { user, profile } = useAuth();
@@ -39,7 +37,6 @@ const Wallet: React.FC = () => {
     useEffect(() => {
         if (user) {
             fetchTransactions();
-            telemetry.trackFunnel('WalletLoad', 'UserBillingFunnel', true);
         }
     }, [user]);
 
@@ -73,7 +70,6 @@ const Wallet: React.FC = () => {
                     setTransactions(nextBatch);
                 }
                 setHasMore(endIndex < txs.length);
-                telemetry.trackPerformance('FetchTransactionsFallback', performance.now() - startTime, { count: nextBatch.length });
             } else {
                 try {
                     let q;
@@ -106,13 +102,11 @@ const Wallet: React.FC = () => {
                         setLastDoc(snap.docs[snap.docs.length - 1]);
                     }
                     setHasMore(snap.docs.length === (isLoadMore ? 10 : 5));
-                    telemetry.trackPerformance('FetchTransactionsMain', performance.now() - startTime, { isLoadMore, count: txs.length });
 
                 } catch (err: any) {
                     if (err.message && err.message.includes('index')) {
                         console.warn("Missing index, switching to fallback mode (client-side pagination)");
                         setFallbackMode(true);
-                        telemetry.trackError('WalletMissingIndexFallbackTriggered', err.message);
                         // Rerun fetch in fallback mode
                         const fallbackQ = query(collection(db, 'transactions'), where('userId', '==', user.uid));
                         snap = await getDocs(fallbackQ);
@@ -131,7 +125,6 @@ const Wallet: React.FC = () => {
             }
         } catch (error: any) {
             console.error("Error fetching transactions:", error);
-            telemetry.trackError('FetchTransactionsFailed', error?.message || 'Unknown error');
         } finally {
             setLoading(false);
             setLoadingMore(false);
@@ -162,7 +155,7 @@ const Wallet: React.FC = () => {
             }
         });
 
-        // Generate chart data matching recharts format
+        // Generate chart data for CSS bars
         const chartData = [...transactions].reverse().map(tx => ({
             name: formatDate(tx.timestamp).split(',')[0], // Short date
             amount: tx.amount,
@@ -177,14 +170,12 @@ const Wallet: React.FC = () => {
         if (!promoCode.trim() || !user) return;
         setIsRedeeming(true);
         const code = promoCode.trim().toUpperCase();
-        telemetry.trackInteraction('RedeemPromoAttempt', 'PromoModal', { code });
         try {
             const q = query(collection(db, 'promocodes'), where('code', '==', code));
             const snap = await getDocs(q);
             
             if (snap.empty) {
                 showToast('Invalid promo code', 'error');
-                telemetry.trackError('InvalidPromoCode', code);
                 setIsRedeeming(false);
                 return;
             }
@@ -194,14 +185,12 @@ const Wallet: React.FC = () => {
 
             if (!promoData.isActive) {
                 showToast('This promo code is no longer active', 'error');
-                telemetry.trackError('PromoInactive', code);
                 setIsRedeeming(false);
                 return;
             }
 
             if (promoData.currentUses >= promoData.maxUses) {
                 showToast('This promo code has reached its maximum uses', 'error');
-                telemetry.trackError('PromoMaxUsesReached', code);
                 setIsRedeeming(false);
                 return;
             }
@@ -215,7 +204,6 @@ const Wallet: React.FC = () => {
             const txSnap = await getDocs(txQuery);
             if (!txSnap.empty) {
                 showToast('You have already used this promo code', 'error');
-                telemetry.trackError('PromoAlreadyUsed', code);
                 setIsRedeeming(false);
                 return;
             }
@@ -245,7 +233,6 @@ const Wallet: React.FC = () => {
             });
 
             await batch.commit();
-            telemetry.trackFunnel('PromoRedeemed', 'UserBillingFunnel', true, { code, amount: promoData.amount });
             showToast(`Successfully redeemed ${formatCurrency(promoData.amount)}!`, 'success');
             setPromoCode('');
             setIsPromoModalOpen(false);
@@ -255,7 +242,6 @@ const Wallet: React.FC = () => {
             fetchTransactions();
         } catch (error: any) {
             console.error("Error redeeming promo code:", error);
-            telemetry.trackError('PromoRedemptionError', error.message || 'Unknown error', { code });
             showToast('Failed to redeem promo code', 'error');
         } finally {
             setIsRedeeming(false);
@@ -266,7 +252,6 @@ const Wallet: React.FC = () => {
         if (!selectedTxForDispute || !disputeReason.trim() || !user) return;
         setIsSubmittingDispute(true);
         const startTime = performance.now();
-        telemetry.trackFunnel('DisputeReportAttempt', 'UserBillingFunnel', true, { txId: selectedTxForDispute.id });
         try {
             await addDoc(collection(db, 'disputes'), {
                 transactionId: selectedTxForDispute.id,
@@ -279,8 +264,6 @@ const Wallet: React.FC = () => {
                 status: 'open',
                 createdAt: serverTimestamp()
             });
-            telemetry.trackPerformance('DisputeSubmission', performance.now() - startTime);
-            telemetry.trackFunnel('DisputeReportSuccess', 'UserBillingFunnel', true);
             showToast('Dispute reported successfully. Our team will review it.', 'success');
             setDisputeModalOpen(false);
             setDisputeReason('');
@@ -288,8 +271,6 @@ const Wallet: React.FC = () => {
         } catch (error: any) {
             console.error("Error reporting dispute:", error);
             const errMsg = error?.message || 'Failed to report dispute';
-            telemetry.trackError('DisputeSubmissionFailed', errMsg);
-            telemetry.trackFunnel('DisputeReportFailed', 'UserBillingFunnel', false, { error: errMsg });
             showToast('Failed to report dispute', 'error');
         } finally {
             setIsSubmittingDispute(false);
@@ -344,7 +325,6 @@ const Wallet: React.FC = () => {
                     <button 
                         onClick={() => {
                             setActiveModal('deposit');
-                            telemetry.trackInteraction('ClickOpenDepositModal', 'WalletQuickActions');
                         }}
                         className="flex-1 bg-brand-500 hover:bg-brand-400 text-white p-10 rounded-3xl font-black uppercase tracking-widest text-sm transition-all shadow-lg shadow-brand-500/20 flex flex-col items-center justify-center gap-4 hover:-translate-y-1"
                     >
@@ -355,7 +335,6 @@ const Wallet: React.FC = () => {
                         <button 
                             onClick={() => {
                                 setActiveModal('withdraw');
-                                telemetry.trackInteraction('ClickOpenWithdrawModal', 'WalletQuickActions');
                             }}
                             className="flex-1 bg-gray-900 hover:bg-gray-800 text-white p-8 rounded-3xl font-black uppercase tracking-widest text-xs transition-all border border-gray-800 flex flex-col items-center justify-center gap-3 hover:-translate-y-1"
                         >
@@ -365,7 +344,6 @@ const Wallet: React.FC = () => {
                         <button 
                             onClick={() => {
                                 setIsPromoModalOpen(true);
-                                telemetry.trackInteraction('ClickOpenPromoModal', 'WalletQuickActions');
                             }}
                             className="flex-1 bg-gray-900 hover:bg-gray-800 text-white p-8 rounded-3xl font-black uppercase tracking-widest text-xs transition-all border border-gray-800 flex flex-col items-center justify-center gap-3 hover:-translate-y-1"
                         >
@@ -414,7 +392,6 @@ const Wallet: React.FC = () => {
                         <h3 className="text-sm font-black text-white uppercase tracking-widest">Transaction Ledger</h3>
                         <button 
                             onClick={() => {
-                                telemetry.trackInteraction('ClickDownloadStatement', 'TransactionLedger');
                             }}
                             className="text-xs font-black uppercase text-gray-400 hover:text-white bg-black px-5 py-2.5 rounded-2xl border border-gray-800 transition flex items-center gap-2"
                         >
@@ -478,7 +455,6 @@ const Wallet: React.FC = () => {
                                                     onClick={() => {
                                                         setSelectedTxForDispute(tx);
                                                         setDisputeModalOpen(true);
-                                                        telemetry.trackInteraction('ClickInitiateDisputeReport', 'TransactionLedger', { txId: tx.id });
                                                     }}
                                                     className="opacity-0 group-hover:opacity-100 absolute sm:relative right-4 sm:right-auto text-[10px] font-bold uppercase tracking-widest text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 px-3 py-2 rounded-lg transition border border-red-500/20 flex items-center gap-1"
                                                 >
@@ -519,28 +495,43 @@ const Wallet: React.FC = () => {
                             Activity Overview
                             <span className="text-[10px] bg-black px-3 py-1 rounded-full text-gray-500 border border-gray-800">Recent</span>
                         </h3>
-                        <div className="h-48 w-full">
-                            {isChartInView && analytics.chartData.length > 0 ? (
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={analytics.chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                                        <XAxis dataKey="name" stroke="#334155" fontSize={10} tickLine={false} axisLine={false} />
-                                        <YAxis stroke="#334155" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => `${val}`} />
-                                        <RechartsTooltip 
-                                            cursor={{fill: 'rgba(255,255,255,0.02)'}}
-                                            contentStyle={{backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold'}}
-                                            itemStyle={{color: '#fff'}}
-                                            formatter={(value: number, name: string, props: any) => [`${formatCurrency(value)}`, props.payload.type === 'deposit' ? 'Incoming' : 'Outgoing']}
-                                        />
-                                        <Bar dataKey="amount" radius={[4, 4, 0, 0]}>
-                                            {
-                                                analytics.chartData.map((entry, index) => (
-                                                    <Cell key={`cell-${index}`} fill={entry.type === 'deposit' || entry.type === 'promo' ? '#10b981' : '#3b82f6'} />
-                                                ))
-                                            }
-                                        </Bar>
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            ) : (
+                        <div className="h-48 w-full flex flex-col justify-end">
+                            {isChartInView && analytics.chartData.length > 0 ? (() => {
+                                const maxAmount = Math.max(...analytics.chartData.map(d => d.amount), 1);
+                                return (
+                                    <div className="w-full h-full flex flex-col justify-end">
+                                        <div className="flex-1 flex items-end justify-between gap-1 sm:gap-2 px-1">
+                                            {analytics.chartData.map((item, index) => {
+                                                const heightPct = Math.max(8, Math.round((item.amount / maxAmount) * 100));
+                                                const isIncoming = item.type === 'deposit' || item.type === 'promo';
+                                                return (
+                                                    <div key={index} className="flex-1 flex flex-col items-center h-full justify-end group relative">
+                                                        {/* Tooltip */}
+                                                        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none absolute -top-10 z-20 bg-slate-900 border border-slate-800 text-white text-[10px] font-bold py-1 px-2 rounded-xl whitespace-nowrap shadow-xl flex flex-col items-center">
+                                                            <span>{formatCurrency(item.amount)}</span>
+                                                            <span className="text-[9px] text-gray-400 font-normal">{isIncoming ? 'Incoming' : 'Outgoing'}</span>
+                                                        </div>
+                                                        {/* Bar */}
+                                                        <div
+                                                            style={{ height: `${heightPct}%` }}
+                                                            className={`w-full max-w-[18px] rounded-t-sm transition-all duration-300 ${
+                                                                isIncoming ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-blue-500 hover:bg-blue-400'
+                                                            }`}
+                                                        />
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                        <div className="flex justify-between items-center w-full pt-2 border-t border-gray-800/60 mt-2 gap-1 px-1">
+                                            {analytics.chartData.map((item, index) => (
+                                                <span key={index} className="flex-1 text-[9px] text-slate-500 font-medium truncate text-center">
+                                                    {item.name}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                );
+                            })() : (
                                 <div className="h-full w-full flex items-center justify-center">
                                     <p className="text-gray-600 text-xs font-bold uppercase tracking-widest">Not enough data</p>
                                 </div>

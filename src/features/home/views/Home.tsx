@@ -4,7 +4,6 @@ import { db } from '../../../shared/config/firebase';
 import { Tournament, Game, Slide } from '../../../shared/types/types';
 import TournamentCard from '../../tournaments/components/TournamentCard';
 import GameCard from '../components/GameCard';
-import PromotionSlider from '../components/PromotionSlider';
 import HotPromotionsSlider, { PromoSlide } from '../components/HotPromotionsSlider';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -26,12 +25,7 @@ import {
 import { useAuth } from '../../../shared/context/AuthContext';
 import { formatGameName } from '../../../shared/utils/utils';
 
-import { telemetry } from '../../../shared/services/TelemetryService';
 
-// Thin wrapper kept for call-site compatibility — delegates to the shared telemetry service
-const trackEvent = (category: string, action: string, label?: string) => {
-    telemetry.trackInteraction(action, category, label ? { label } : undefined);
-};
 
 // Sample data for Hot Promotions Slider with high quality illustrative fallback gradients
 const promoSlides: PromoSlide[] = [
@@ -82,7 +76,6 @@ const Home: React.FC = () => {
 
     useEffect(() => {
         // Track Page View
-        trackEvent('PageNavigation', 'ViewHome');
 
         const fetchData = async () => {
             const startPerf = performance.now();
@@ -155,7 +148,6 @@ const Home: React.FC = () => {
             }
 
             const endPerf = performance.now();
-            telemetry.trackPerformance('HomePageDataLoad', endPerf - startPerf);
             setLoading(false);
         };
 
@@ -163,7 +155,6 @@ const Home: React.FC = () => {
     }, []);
 
     const handleCtaClick = (destination: string, source: string) => {
-        trackEvent('CTA_Interaction', `Click_${source}`, destination);
         navigate(destination);
     };
 
@@ -203,12 +194,12 @@ const Home: React.FC = () => {
             {/* Main Promotion Carousel Section */}
             {slides.length > 0 && (
                 <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-gray-800">
-                    <PromotionSlider slides={slides} />
+                    <HotPromotionsSlider slides={slides} variant="hero" />
                 </div>
             )}
 
             {/* Hot Promotions Section */}
-            <HotPromotionsSlider slides={promoSlides} />
+            <HotPromotionsSlider slides={promoSlides} variant="hot" />
 
             {/* Value Highlights (Conversion Funnel Indicators) */}
             <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

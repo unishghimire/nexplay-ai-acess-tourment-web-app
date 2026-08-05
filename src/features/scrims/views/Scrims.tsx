@@ -5,7 +5,6 @@ import { motion } from 'motion/react';
 import { formatCurrency, formatDate, formatGameName } from '../../../shared/utils/utils';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { useNavigate } from 'react-router-dom';
-import { telemetry } from '../../../shared/services/TelemetryService';
 
 const Scrims: React.FC = () => {
     const [scrims, setScrims] = useState<Scrim[]>([]);
@@ -26,11 +25,8 @@ const Scrims: React.FC = () => {
                 if (result.success) {
                     setScrims(result.scrims);
                 }
-                telemetry.trackPerformance('FetchScrims', performance.now() - startTime);
-                telemetry.trackFunnel('ScrimsListLoad', 'UserScrimsNavigation', true);
             } catch (error: any) {
                 console.error("Error fetching scrims:", error);
-                telemetry.trackError('FetchScrimsFailed', error?.message || 'Unknown error');
                 showToast("Failed to fetch scrims", "error");
             } finally {
                 setLoading(false);
@@ -85,7 +81,6 @@ const Scrims: React.FC = () => {
                         onChange={(e) => {
                             const val = e.target.value;
                             setFilterGame(val);
-                            telemetry.trackInteraction('FilterScrimByGame', 'ScrimsFilterPanel', { game: val });
                         }}
                         className="w-full bg-black border border-gray-800 rounded-2xl py-4 pl-12 pr-6 text-white focus:border-brand-500 outline-none transition-all shadow-xl font-bold appearance-none"
                     >
@@ -112,7 +107,6 @@ const Scrims: React.FC = () => {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             onClick={() => {
-                                telemetry.trackInteraction('ClickScrimCard', 'ScrimsGrid', { scrimId: scrim.id, game: scrim.game });
                                 navigate(`/details/${scrim.tournamentId || scrim.id}`);
                             }}
                             className="bg-gray-900/50 rounded-[2rem] border border-gray-800 overflow-hidden cursor-pointer group hover:border-brand-500/50 transition-all hover:bg-gray-900"

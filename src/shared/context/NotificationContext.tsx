@@ -39,30 +39,53 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     useEffect(() => {
         if (!user) return;
 
+        let isMounted = true;
         const notifiedSet = notifiedTournamentsRef.current;
+        const unsubList: (() => void)[] = [];
 
-        const unsubTournaments = onSnapshot(collection(db, 'tournaments'), async (snapshot) => {
-            snapshot.docChanges().forEach(async (change) => {
-                if (change.type === 'modified') {
-                    const t = { id: change.doc.id, ...change.doc.data() } as Tournament;
-                    
-                    if (t.status === 'live') {
-                        const pSnap = await getDocs(query(
-                            collection(db, 'participants'),
-                            where('tournamentId', '==', t.id),
-                            where('userId', '==', user.uid)
-                        ));
-                        
-                        if (!pSnap.empty && !notifiedSet.has(t.id + '_live')) {
-                            notifiedSet.add(t.id + '_live');
-                            showToast(`${t.title} is now LIVE!`, 'success');
+        const setupLiveListeners = async () => {
+            try {
+                const partSnap = await getDocs(query(
+                    collection(db, 'participants'),
+                    where('userId', '==', user.uid)
+                ));
+
+                if (!isMounted) return;
+
+                const tourIds = Array.from(
+                    new Set(partSnap.docs.map(d => d.data().tournamentId).filter(Boolean))
+                );
+
+                if (tourIds.length === 0) return;
+
+                tourIds.forEach((tId) => {
+                    let isInitial = true;
+                    const unsub = onSnapshot(
+                        doc(db, 'tournaments', tId),
+                        (docSnap) => {
+                            if (docSnap.exists()) {
+                                const t = { id: docSnap.id, ...docSnap.data() } as Tournament;
+                                if (!isInitial) {
+                                    if (t.status === 'live' && !notifiedSet.has(t.id + '_live')) {
+                                        notifiedSet.add(t.id + '_live');
+                                        showToast(`${t.title} is now LIVE!`, 'success');
+                                    }
+                                }
+                                isInitial = false;
+                            }
+                        },
+                        (error) => {
+                            console.warn("Error in tournament snapshot:", error);
                         }
-                    }
-                }
-            });
-        }, (error) => {
-            console.error("Error in tournament snapshot:", error);
-        });
+                    );
+                    unsubList.push(unsub);
+                });
+            } catch (error) {
+                console.warn("Error setting up tournament listeners:", error);
+            }
+        };
+
+        setupLiveListeners();
 
         const checkUpcoming = async () => {
             const now = new Date();
@@ -95,7 +118,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
                     }
                 }
             } catch (err) {
-                console.error("Error checking upcoming tournaments:", err);
+                console.warn("Error checking upcoming tournaments:", err);
             }
         };
 
@@ -103,7 +126,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         const interval = setInterval(checkUpcoming, 5 * 60000);
 
         return () => {
-            unsubTournaments();
+            isMounted = false;
+            unsubList.forEach(unsub => unsub());
             clearInterval(interval);
         };
     }, [user?.uid, showToast]);

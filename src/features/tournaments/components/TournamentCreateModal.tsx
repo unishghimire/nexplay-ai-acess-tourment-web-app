@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { collection, addDoc, getDocs, serverTimestamp, Timestamp, updateDoc, doc, writeBatch, where, query } from 'firebase/firestore';
 import { Tournament } from '../../../shared/types/types';
-import { db } from '../../../shared/config/firebase';
+import { db, auth } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import Modal from '../../../shared/components/Modal';
@@ -287,7 +287,7 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
 
     setIsGeneratingBanner(true);
     try {
-      const token = await user.getIdToken();
+      const token = await auth.currentUser?.getIdToken();
       const response = await fetch('/api/generate-banner', {
         method: 'POST',
         headers: {

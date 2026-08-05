@@ -1,0 +1,9 @@
+export { OverviewTab } from './OverviewTab';
+export { CompetitionsTab } from './CompetitionsTab';
+export { RegistrationsTab } from './RegistrationsTab';
+export { OperationsTab } from './OperationsTab';
+export { FinanceTab } from './FinanceTab';
+export { CommunicationTab } from './CommunicationTab';
+export { TeamCenterTab } from './TeamCenterTab';
+export { AnalyticsTab } from './AnalyticsTab';
+export { SettingsTab } from './SettingsTab';

@@ -6,7 +6,6 @@ import { motion } from 'motion/react';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck } from 'lucide-react';
 import { signInWithEmailAndPassword, signInWithPopup, sendPasswordResetEmail } from 'firebase/auth';
 import { auth, googleProvider } from '../../../shared/config/firebase';
-import { telemetry } from '../../../shared/services/TelemetryService';
 import ReCAPTCHA from 'react-google-recaptcha';
 
 const Login: React.FC = () => {
@@ -23,7 +22,6 @@ const Login: React.FC = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        telemetry.trackFunnel('LoadLoginPage', 'UserAuthFunnel', true);
     }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -32,7 +30,6 @@ const Login: React.FC = () => {
 
         if (recaptchaSiteKey && !captchaValue) {
             setError('Please complete the CAPTCHA');
-            telemetry.trackError('LoginValidationError', 'Captcha Missing');
             return;
         }
 
@@ -41,17 +38,12 @@ const Login: React.FC = () => {
 
         try {
             await signInWithEmailAndPassword(auth, email, password);
-            telemetry.trackPerformance('LoginDuration', performance.now() - startTime);
-            telemetry.trackUser('LoginSuccess', email);
-            telemetry.trackFunnel('LoginSuccess', 'UserAuthFunnel', true);
             showToast('Welcome back!', 'success');
             navigate('/');
         } catch (err: any) {
             console.error('Login error:', err);
             const errMsg = err.message || 'Login failed';
             setError(errMsg);
-            telemetry.trackError('LoginFailure', errMsg, { email });
-            telemetry.trackFunnel('LoginFailed', 'UserAuthFunnel', false, { error: errMsg });
             showToast('Login failed', 'error');
         } finally {
             setIsLoading(false);
@@ -65,17 +57,12 @@ const Login: React.FC = () => {
 
         try {
             const result = await signInWithPopup(auth, googleProvider);
-            telemetry.trackPerformance('GoogleLoginDuration', performance.now() - startTime);
-            telemetry.trackUser('GoogleLoginSuccess', result.user?.email || 'unknown');
-            telemetry.trackFunnel('LoginSuccess', 'UserAuthFunnel', true, { provider: 'google' });
             showToast('Welcome back!', 'success');
             navigate('/');
         } catch (err: any) {
             console.error('Google Sign-In error:', err);
             const errMsg = err.message || 'Google Sign-In failed';
             setError(errMsg);
-            telemetry.trackError('GoogleLoginFailure', errMsg);
-            telemetry.trackFunnel('LoginFailed', 'UserAuthFunnel', false, { provider: 'google', error: errMsg });
             showToast('Google Sign-In failed', 'error');
         } finally {
             setIsGoogleLoading(false);

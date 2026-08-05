@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { UserProfile, Team } from '../../../shared/types/types';
@@ -7,7 +7,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { motion } from 'motion/react';
 import { formatCurrency } from '../../../shared/utils/utils';
-import { telemetry } from '../../../shared/services/TelemetryService';
 
 const RankIndicator = ({ change }: { change?: number }) => {
     if (change === undefined || change === 0) return <Minus className="w-3 h-3 text-gray-600" />;
@@ -39,14 +38,22 @@ const PodiumCard = ({ item, rank, type, navigate }: {
     const bgColor = isFirst ? 'from-amber-500/10' : isSecond ? 'from-gray-500/10' : 'from-amber-800/10';
     const shadowColor = isFirst ? 'shadow-amber-500/20' : isSecond ? 'shadow-gray-500/20' : 'shadow-amber-800/20';
 
+    const isPlayer = type === 'player';
+    const player = isPlayer ? (item as UserProfile) : null;
+    const team = !isPlayer ? (item as Team) : null;
+    const itemId = isPlayer ? player!.uid : team!.id;
+    const avatarUrl = isPlayer ? player?.profilePicUrl : team?.logoUrl;
+    const avatarSeed = isPlayer ? player?.username : team?.name;
+    const displayName = isPlayer ? player?.username : team?.name;
+    const subLabel = isPlayer ? player?.teamName || 'Free Agent' : team?.tag || 'TEAM';
+
     return (
         <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: rank * 0.1 }}
             onClick={() => {
-                telemetry.trackInteraction('LeaderboardPodiumClick', 'PodiumCard', { type, id: type === 'player' ? item.uid : item.id, rank });
-                navigate(type === 'player' ? `/user/${item.uid}` : `/team/${item.id}`);
+                navigate(isPlayer ? `/user/${itemId}` : `/team/${itemId}`);
             }}
             className={`relative flex flex-col items-center p-8 rounded-3xl border ${borderColor} bg-gradient-to-b ${bgColor} to-black ${shadowColor} shadow-2xl cursor-pointer group hover:border-brand-500/50 transition-all duration-300 hover:-translate-y-2`}
         >
@@ -59,12 +66,12 @@ const PodiumCard = ({ item, rank, type, navigate }: {
             <div className="relative mb-6">
                 <div className={`w-28 h-28 rounded-full border-4 ${borderColor} overflow-hidden bg-black shadow-xl`}>
                     <img 
-                        src={(type === 'player' ? item.profilePicUrl : item.logoUrl) || `https://api.dicebear.com/7.x/avataaars/svg?seed=${type === 'player' ? item.username : item.name}`} 
+                        src={avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${avatarSeed}`} 
                         alt="Avatar" 
                         className="w-full h-full object-cover"
                     />
                 </div>
-                {type === 'player' && item.status === 'online' && (
+                {isPlayer && player?.status === 'online' && (
                     <div className="absolute bottom-1.5 right-1.5 w-5 h-5 bg-emerald-500 border-4 border-black rounded-full"></div>
                 )}
                 <div className={`absolute -bottom-2 -right-2 w-10 h-10 rounded-full ${isFirst ? 'bg-amber-500' : isSecond ? 'bg-gray-400' : 'bg-amber-800'} flex items-center justify-center font-black text-black text-lg shadow-lg`}>
@@ -74,11 +81,11 @@ const PodiumCard = ({ item, rank, type, navigate }: {
 
             <div className="text-center">
                 <h3 className="text-xl font-black text-white truncate max-w-[180px] mb-2 group-hover:text-brand-400 transition">
-                    {type === 'player' ? item.username : item.name}
+                    {displayName}
                 </h3>
                 <div className="flex items-center justify-center gap-2 mb-4">
                     <span className="text-xs font-black text-gray-500 uppercase tracking-widest">
-                        {type === 'player' ? item.teamName || 'Free Agent' : item.tag || 'TEAM'}
+                        {subLabel}
                     </span>
                     <RankIndicator change={item.rankChange} />
                 </div>
@@ -102,7 +109,6 @@ const Leaderboard: React.FC = () => {
 
     useEffect(() => {
         fetchLeaderboard();
-        telemetry.trackFunnel('LeaderboardViewToggle', 'UserLeaderboardNavigation', true, { view, season });
     }, [view, season]);
 
     const fetchLeaderboard = async () => {
@@ -134,10 +140,8 @@ const Leaderboard: React.FC = () => {
                 } as Team));
                 setTeams(teamsData);
             }
-            telemetry.trackPerformance('FetchLeaderboard', performance.now() - startTime, { type: view, season });
         } catch (error: any) {
             console.error("Error fetching leaderboard:", error);
-            telemetry.trackError('FetchLeaderboardFailed', error?.message || 'Unknown error', { type: view, season });
         } finally {
             setLoading(false);
         }
@@ -241,17 +245,24 @@ const Leaderboard: React.FC = () => {
                     <div className="space-y-3">
                         {rest.map((item, index) => {
                             const rank = index + 4;
-                            const isUser = view === 'players' && item.uid === user?.uid;
+                            const isPlayerView = view === 'players';
+                            const player = isPlayerView ? (item as UserProfile) : null;
+                            const team = !isPlayerView ? (item as Team) : null;
+                            const itemId = isPlayerView ? player!.uid : team!.id;
+                            const isUser = isPlayerView && player?.uid === user?.uid;
+                            const avatarUrl = isPlayerView ? player?.profilePicUrl : team?.logoUrl;
+                            const avatarSeed = isPlayerView ? player?.username : team?.name;
+                            const displayName = isPlayerView ? player?.username : team?.name;
+                            const subLabel = isPlayerView ? player?.teamName || 'Free Agent' : team?.tag || 'TEAM';
                             
                             return (
                                 <motion.div 
-                                    key={view === 'players' ? item.uid : item.id}
+                                    key={itemId}
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: index * 0.05 }}
                                     onClick={() => {
-                                        telemetry.trackInteraction('LeaderboardRowClick', 'LeaderboardList', { type: view, id: view === 'players' ? item.uid : item.id, rank });
-                                        navigate(view === 'players' ? `/user/${item.uid}` : `/team/${item.id}`);
+                                        navigate(isPlayerView ? `/user/${itemId}` : `/team/${itemId}`);
                                     }}
                                     className={`flex items-center justify-between p-6 rounded-3xl border transition cursor-pointer group ${isUser ? 'bg-brand-500/10 border-brand-500/50' : 'bg-gray-900/50 border-gray-800 hover:border-gray-700 hover:bg-gray-900'}`}
                                 >
@@ -263,12 +274,12 @@ const Leaderboard: React.FC = () => {
                                         <div className="relative">
                                             <div className="w-16 h-16 rounded-2xl overflow-hidden bg-black border border-gray-800">
                                                 <img 
-                                                    src={(view === 'players' ? item.profilePicUrl : item.logoUrl) || `https://api.dicebear.com/7.x/avataaars/svg?seed=${view === 'players' ? item.username : item.name}`} 
+                                                    src={avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${avatarSeed}`} 
                                                     alt="Avatar" 
                                                     className="w-full h-full object-cover"
                                                 />
                                             </div>
-                                            {view === 'players' && item.status === 'online' && (
+                                            {isPlayerView && player?.status === 'online' && (
                                                 <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 border-4 border-black rounded-full"></div>
                                             )}
                                         </div>
@@ -276,7 +287,7 @@ const Leaderboard: React.FC = () => {
                                         <div>
                                             <div className="flex items-center gap-3">
                                                 <h4 className={`font-black text-lg ${isUser ? 'text-brand-400' : 'text-white'} group-hover:text-brand-400 transition`}>
-                                                    {view === 'players' ? item.username : item.name}
+                                                    {displayName}
                                                 </h4>
                                                 {isUser && (
                                                     <span className="bg-brand-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest">YOU</span>
@@ -284,7 +295,7 @@ const Leaderboard: React.FC = () => {
                                             </div>
                                             <div className="flex items-center gap-3 mt-1">
                                                 <span className="text-xs font-black text-gray-500 uppercase tracking-widest">
-                                                    {view === 'players' ? item.teamName || 'Free Agent' : item.tag || 'TEAM'}
+                                                    {subLabel}
                                                 </span>
                                                 <RankIndicator change={item.rankChange} />
                                             </div>

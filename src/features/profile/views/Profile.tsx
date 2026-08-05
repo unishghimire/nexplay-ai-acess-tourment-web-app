@@ -12,7 +12,6 @@ import { useInvisibleImage } from '../../../shared/hooks/useInvisibleImage';
 import { DEFAULT_AVATAR, NEXPLAY_LOGO, PRESET_AVATARS, PRESET_PLAYER_BANNERS } from '../../../shared/constants/constants';
 import { User, Mail, Phone, Shield, Trophy, Wallet as WalletIcon, Camera, Save, Info, Briefcase, Users, Hash, Clock, ArrowDown, ArrowUp, Copy, CheckCircle2, Image as ImageIcon, Settings as SettingsIcon, X } from 'lucide-react';
 import { Transaction, SiteSettings } from '../../../shared/types/types';
-import { telemetry } from '../../../shared/services/TelemetryService';
 
 const Profile: React.FC = () => {
     const { user, profile } = useAuth();
@@ -54,7 +53,6 @@ const Profile: React.FC = () => {
         folder: `profiles/${user?.uid}`,
         onUploadStart: () => {
             setIsUploading(true);
-            telemetry.trackInteraction('ProfileImageUploadStart', 'ProfileHeader');
         },
         onUploadEnd: () => setIsUploading(false),
         onUploadSuccess: async (url) => {
@@ -64,11 +62,8 @@ const Profile: React.FC = () => {
                 await updateDoc(doc(db, 'users', user.uid), {
                     profilePicUrl: url
                 });
-                telemetry.trackPerformance('ProfileImageDbUpdate', performance.now() - startTime);
-                telemetry.trackInteraction('ProfileImageUploadSuccess', 'ProfileHeader', { url });
                 showToast('Profile picture updated!', 'success');
             } catch (err: any) {
-                telemetry.trackError('ProfileImageDbUpdateFailed', err.message || 'Unknown error');
                 showToast('Error updating profile picture', 'error');
             }
         }
@@ -76,7 +71,6 @@ const Profile: React.FC = () => {
 
     useEffect(() => {
         if (profile) {
-            telemetry.trackFunnel('ProfilePageLoaded', 'UserProfileFunnel', true, { role: profile.role, xp: profile.xp });
         }
     }, [profile]);
 
@@ -147,10 +141,8 @@ const Profile: React.FC = () => {
                         return bTime - aTime;
                     });
                     setRecentActivity(txs.slice(0, 10));
-                    telemetry.trackPerformance('ProfileFetchActivity', performance.now() - startTime);
                 } catch (error: any) {
                     console.error("Error fetching activity:", error);
-                    telemetry.trackError('ProfileFetchActivityFailed', error?.message || 'Unknown error');
                 } finally {
                     setLoadingActivity(false);
                 }
@@ -173,13 +165,11 @@ const Profile: React.FC = () => {
 
         if (!inGameId.trim() || !inGameName.trim() || !phone.trim()) {
             showToast('In-Game ID, In-Game Name, and Phone Number are required', 'error');
-            telemetry.trackError('ProfileSaveValidationError', 'Missing required gamer identity fields');
             return;
         }
 
         setIsSaving(true);
         const startTime = performance.now();
-        telemetry.trackFunnel('ProfileSaveAttempt', 'UserProfileFunnel', true, { inGameId, inGameName });
         try {
             const updateData: any = {
                 inGameId: inGameId.trim(),
@@ -219,15 +209,11 @@ const Profile: React.FC = () => {
             }, { merge: true });
 
             await batch.commit();
-            telemetry.trackPerformance('ProfileSaveDuration', performance.now() - startTime);
-            telemetry.trackFunnel('ProfileSaveSuccess', 'UserProfileFunnel', true);
             showToast('Profile updated!', 'success');
             setShowSettingsModal(false);
         } catch (error: any) {
             console.error("Error updating profile:", error);
             const errMsg = error?.message || 'Error saving profile';
-            telemetry.trackError('ProfileSaveFailed', errMsg);
-            telemetry.trackFunnel('ProfileSaveFailed', 'UserProfileFunnel', false, { error: errMsg });
             showToast('Error saving profile', 'error');
         } finally {
             setIsSaving(false);
@@ -236,13 +222,11 @@ const Profile: React.FC = () => {
 
     const handleOrgApply = async () => {
         if (!user || !orgName || !orgWhatsapp || !orgEmail || !orgProofLink) {
-            telemetry.trackError('OrgApplyValidationError', 'Missing required organizer details');
             return showToast('Please fill all fields', 'error');
         }
         
         setIsApplying(true);
         const startTime = performance.now();
-        telemetry.trackFunnel('OrgApplyAttempt', 'OrganizerOnboardingFunnel', true, { orgName });
         try {
             const batch = writeBatch(db);
             
@@ -266,8 +250,6 @@ const Profile: React.FC = () => {
             });
 
             await batch.commit();
-            telemetry.trackPerformance('OrgApplyDuration', performance.now() - startTime);
-            telemetry.trackFunnel('OrgApplySuccess', 'OrganizerOnboardingFunnel', true);
             showToast('Application sent! Admin will review your request.', 'success');
             
             // Reset form
@@ -277,8 +259,6 @@ const Profile: React.FC = () => {
         } catch (error: any) {
             console.error("Error applying for organizer:", error);
             const errMsg = error?.message || 'Failed to send application';
-            telemetry.trackError('OrgApplyFailed', errMsg);
-            telemetry.trackFunnel('OrgApplyFailed', 'OrganizerOnboardingFunnel', false, { error: errMsg });
             showToast('Failed to send application', 'error');
         } finally {
             setIsApplying(false);
@@ -291,7 +271,6 @@ const Profile: React.FC = () => {
             setCopiedId(true);
             setTimeout(() => setCopiedId(false), 2000);
             showToast('User ID copied to clipboard', 'success');
-            telemetry.trackInteraction('CopyUserIdToClipboard', 'ProfileView');
         }
     };
 
@@ -302,14 +281,11 @@ const Profile: React.FC = () => {
         try {
             await updateEmail(auth.currentUser, newEmail);
             await updateDoc(doc(db, 'users', user!.uid), { email: newEmail });
-            telemetry.trackPerformance('UpdateEmailDuration', performance.now() - startTime);
-            telemetry.trackUser('AccountEmailUpdated', newEmail);
             showToast('Email updated successfully!', 'success');
             setNewEmail('');
         } catch (error: any) {
             console.error("Error updating email:", error);
             const errMsg = error.message || 'Failed to update email';
-            telemetry.trackError('UpdateEmailFailed', errMsg);
             if (error.code === 'auth/requires-recent-login') {
                 showToast('Please log out and log back in to change your email.', 'error');
             } else {
@@ -327,13 +303,10 @@ const Profile: React.FC = () => {
             await updateDoc(doc(db, 'users', user.uid), {
                 bannerUrl: url
             });
-            telemetry.trackPerformance('ProfileBannerUpdate', performance.now() - startTime);
-            telemetry.trackInteraction('ProfileBannerSelectSuccess', 'ProfileBannerPresetModal', { url });
             setShowBannerPresetModal(false);
             showToast('Banner updated!', 'success');
         } catch (error: any) {
             console.error("Error updating banner:", error);
-            telemetry.trackError('ProfileBannerUpdateFailed', error?.message || 'Unknown error');
             showToast('Failed to update banner', 'error');
         }
     };
@@ -462,7 +435,6 @@ const Profile: React.FC = () => {
                     <button 
                         onClick={() => {
                             setActiveTab('settings');
-                            telemetry.trackInteraction('SwitchProfileTabSettings', 'ProfileTabBar');
                         }}
                         className={`px-6 py-4 font-black text-xs uppercase tracking-widest transition border-t-2 ${activeTab === 'settings' ? 'text-brand-400 border-brand-500' : 'text-gray-500 border-transparent hover:text-white'}`}
                     >
@@ -471,7 +443,6 @@ const Profile: React.FC = () => {
                     <button 
                         onClick={() => {
                             setActiveTab('activity');
-                            telemetry.trackInteraction('SwitchProfileTabActivity', 'ProfileTabBar');
                         }}
                         className={`px-6 py-4 font-black text-xs uppercase tracking-widest transition border-t-2 ${activeTab === 'activity' ? 'text-brand-400 border-brand-500' : 'text-gray-500 border-transparent hover:text-white'}`}
                     >
@@ -480,7 +451,6 @@ const Profile: React.FC = () => {
                     <button 
                         onClick={() => {
                             setShowSettingsModal(true);
-                            telemetry.trackInteraction('OpenProfileSettingsModal', 'ProfileTabBar');
                         }}
                         className="px-6 py-4 font-black text-xs uppercase tracking-widest text-gray-500 hover:text-white transition border-t-2 border-transparent flex items-center gap-2"
                     >
@@ -615,19 +585,15 @@ const Profile: React.FC = () => {
                                 onClick={async () => {
                                     if (!user) return;
                                     const startTime = performance.now();
-                                    telemetry.trackInteraction('ClickPresetAvatarItemStart', 'ProfilePresetAvatarModal', { index, url });
                                     setShowPresetModal(false);
                                     setIsUploading(true);
                                     try {
                                         await updateDoc(doc(db, 'users', user.uid), {
                                             profilePicUrl: url
                                         });
-                                        telemetry.trackPerformance('ProfileAvatarUpdate', performance.now() - startTime);
-                                        telemetry.trackInteraction('ProfileAvatarUpdateSuccess', 'ProfilePresetAvatarModal', { url });
                                         showToast('Profile picture updated!', 'success');
                                     } catch (error: any) {
                                         console.error("Error updating profile picture:", error);
-                                        telemetry.trackError('ProfileAvatarUpdateFailed', error?.message || 'Unknown error');
                                         showToast('Failed to update profile picture', 'error');
                                     } finally {
                                         setIsUploading(false);

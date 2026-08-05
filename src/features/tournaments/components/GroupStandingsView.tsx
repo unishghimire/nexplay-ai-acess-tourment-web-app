@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'motion/react';
+import { Trophy, CheckCircle2, Copy, EyeOff, Eye, Users, Sword, Lock } from 'lucide-react';
 import { Tournament, TournamentGroup, Participant } from '../../../shared/types/types';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { useAuth } from '../../../shared/context/AuthContext';
@@ -219,133 +220,198 @@ function GroupCard({ group, participants, currentTeamId, isHighlighted, label }:
             </div>
 
             {/* Tab switcher */}
-            <div className="flex border-b border-gray-800 bg-black/20">
-                {(['standings', 'teams', 'matches'] as const).map(v => (
+            <div className="flex border-b border-gray-800/80 bg-gray-950/40 px-6 pt-2">
+                {(['standings', 'matches', 'teams'] as const).map(tab => (
                     <button
-                        key={v}
-                        onClick={() => setActiveView(v)}
-                        className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition ${
-                            activeView === v ? 'text-brand-400 border-b-2 border-brand-500' : 'text-gray-600 hover:text-gray-400'
+                        key={tab}
+                        onClick={() => setActiveView(tab)}
+                        className={`pb-3 px-4 font-black text-xs uppercase tracking-widest border-b-2 transition -mb-px ${
+                            activeView === tab
+                                ? 'border-brand-500 text-brand-400'
+                                : 'border-transparent text-gray-500 hover:text-gray-300'
                         }`}
                     >
-                        {v}
+                        {tab === 'standings' && 'Standings'}
+                        {tab === 'matches' && `Matches (${group.matches?.length ?? 0})`}
+                        {tab === 'teams' && `Teams (${group.teams.length})`}
                     </button>
                 ))}
             </div>
 
-            <div className="p-4 bg-gray-950/50">
-                {/* Standings */}
+            {/* Content area */}
+            <div className="p-6 bg-gray-950/20">
+                {/* ── Standings Table ── */}
                 {activeView === 'standings' && (
-                    <div className="space-y-2">
-                        {standings.length === 0 && (
-                            <p className="text-center text-gray-600 text-sm font-bold py-6">No match data yet.</p>
-                        )}
-                        {standings.map((team, i) => (
-                            <div
-                                key={team.id}
-                                className={`flex items-center gap-3 px-4 py-3 rounded-2xl ${
-                                    team.isCurrentUser
-                                        ? 'bg-brand-500/10 border border-brand-500/20'
-                                        : i % 2 === 0 ? 'bg-gray-900/50' : 'bg-transparent'
-                                }`}
-                            >
-                                <span className={`w-7 text-center font-black text-sm shrink-0 ${
-                                    i === 0 ? 'text-amber-400' : i === 1 ? 'text-gray-300' : i === 2 ? 'text-amber-700' : 'text-gray-600'
-                                }`}>{i + 1}</span>
-                                <span className={`flex-1 font-black uppercase tracking-tight truncate text-sm ${team.isCurrentUser ? 'text-brand-300' : 'text-white'}`}>
-                                    {team.name}
-                                    {team.isCurrentUser && <span className="ml-2 text-[9px] bg-brand-500 text-white px-1.5 py-0.5 rounded font-black uppercase">You</span>}
-                                </span>
-                                <div className="flex items-center gap-4 text-right shrink-0">
-                                    <div className="hidden sm:block">
-                                        <div className="text-[9px] text-gray-600 uppercase font-black">W/L</div>
-                                        <div className="text-white font-black text-sm">{team.wins}/{team.losses}</div>
-                                    </div>
-                                    <div>
-                                        <div className="text-[9px] text-gray-600 uppercase font-black">Pts</div>
-                                        <div className="text-brand-400 font-black text-lg">{team.points}</div>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left">
+                            <thead>
+                                <tr className="border-b border-gray-800 text-[10px] font-black uppercase tracking-widest text-gray-500">
+                                    <th className="pb-3 pl-2 w-12">#</th>
+                                    <th className="pb-3">Team / Player</th>
+                                    <th className="pb-3 text-center w-16">PTS</th>
+                                    <th className="pb-3 text-center w-16">W</th>
+                                    <th className="pb-3 text-center w-16">L</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-800/50">
+                                {standings.map((s, idx) => (
+                                    <tr
+                                        key={s.id}
+                                        className={`transition ${s.isCurrentUser ? 'bg-brand-500/10 font-bold' : 'hover:bg-white/[0.02]'}`}
+                                    >
+                                        <td className="py-3.5 pl-2 font-black text-sm">
+                                            <span className={`inline-flex items-center justify-center w-6 h-6 rounded-lg text-xs font-black ${
+                                                idx === 0 ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
+                                                idx === 1 ? 'bg-gray-400/20 text-gray-300 border border-gray-400/30' :
+                                                idx === 2 ? 'bg-amber-800/20 text-amber-600 border border-amber-800/30' :
+                                                'text-gray-500'
+                                            }`}>
+                                                {idx + 1}
+                                            </span>
+                                        </td>
+                                        <td className="py-3.5">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-xl bg-gray-800 border border-gray-700 flex items-center justify-center font-black text-xs text-brand-400 overflow-hidden shrink-0">
+                                                    {s.logoUrl ? (
+                                                        <img src={s.logoUrl} alt={s.name} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        s.name.charAt(0).toUpperCase()
+                                                    )}
+                                                </div>
+                                                <span className={`text-sm font-black truncate max-w-[180px] ${s.isCurrentUser ? 'text-brand-400' : 'text-white'}`}>
+                                                    {s.name}
+                                                </span>
+                                                {s.isCurrentUser && (
+                                                    <span className="bg-brand-500 text-white text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full shrink-0">
+                                                        YOU
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td className="py-3.5 text-center font-black text-brand-400 text-sm">{s.points}</td>
+                                        <td className="py-3.5 text-center font-bold text-emerald-400 text-sm">{s.wins}</td>
+                                        <td className="py-3.5 text-center font-bold text-red-400/80 text-sm">{s.losses}</td>
+                                    </tr>
+                                ))}
+                                {standings.length === 0 && (
+                                    <tr>
+                                        <td colSpan={5} className="py-8 text-center text-gray-500 text-xs uppercase font-black tracking-widest">
+                                            No teams assigned yet
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
                     </div>
                 )}
 
-                {/* Teams roster */}
-                {activeView === 'teams' && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {group.teams.map(team => {
-                            const p = participants.find(pt => pt.teamId === team.id || pt.userId === team.id);
-                            const isMe = team.id === currentTeamId;
+                {/* ── Matches View ── */}
+                {activeView === 'matches' && (
+                    <div className="space-y-3">
+                        {(group.matches ?? []).map((m, idx) => {
+                            const t1Name = resolveTeamName(m.team1Id ?? '', group, participants);
+                            const t2Name = resolveTeamName(m.team2Id ?? '', group, participants);
+                            const isDone = m.status === 'completed';
+                            const isLive = m.status === 'live';
+
                             return (
-                                <div key={team.id} className={`flex items-center gap-3 p-3 rounded-2xl border ${isMe ? 'border-brand-500/30 bg-brand-500/5' : 'border-gray-800 bg-gray-900/30'}`}>
-                                    <div className="w-10 h-10 rounded-xl bg-black border border-gray-800 overflow-hidden shrink-0 flex items-center justify-center">
-                                        {team.logoUrl
-                                            ? <img src={team.logoUrl} alt={team.name} className="w-full h-full object-cover" />
-                                            : <Users className="w-4 h-4 text-gray-600" />
-                                        }
+                                <div
+                                    key={m.id || idx}
+                                    className="p-4 rounded-2xl bg-black/40 border border-gray-800/80 flex items-center justify-between gap-4"
+                                >
+                                    <div className="flex items-center gap-2 text-xs font-black text-gray-500 uppercase tracking-widest shrink-0 w-24">
+                                        <Sword className="w-3.5 h-3.5 text-brand-500" />
+                                        Match {m.round || idx + 1}
                                     </div>
-                                    <div className="min-w-0">
-                                        <div className={`font-black text-sm uppercase tracking-tight truncate ${isMe ? 'text-brand-300' : 'text-white'}`}>
-                                            {team.name}
-                                            {isMe && <span className="ml-2 text-[9px] bg-brand-500 text-white px-1.5 py-0.5 rounded font-black">You</span>}
+
+                                    <div className="flex-1 grid grid-cols-3 items-center text-center max-w-md mx-auto">
+                                        <div className={`text-sm font-black truncate text-right ${m.winnerId === m.team1Id ? 'text-brand-400' : 'text-gray-200'}`}>
+                                            {t1Name || 'TBD'}
                                         </div>
-                                        {p?.inGameId && (
-                                            <div className="text-[10px] text-gray-500 font-mono">{p.inGameId}</div>
+
+                                        <div className="px-3">
+                                            {isDone ? (
+                                                <span className="font-mono font-black text-white bg-gray-800 px-3 py-1 rounded-xl text-sm border border-gray-700">
+                                                    {m.score1 ?? 0} - {m.score2 ?? 0}
+                                                </span>
+                                            ) : isLive ? (
+                                                <span className="bg-red-500/20 text-red-400 border border-red-500/30 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full animate-pulse">
+                                                    LIVE
+                                                </span>
+                                            ) : (
+                                                <span className="text-gray-600 text-xs font-black uppercase tracking-widest">VS</span>
+                                            )}
+                                        </div>
+
+                                        <div className={`text-sm font-black truncate text-left ${m.winnerId === m.team2Id ? 'text-brand-400' : 'text-gray-200'}`}>
+                                            {t2Name || 'TBD'}
+                                        </div>
+                                    </div>
+
+                                    <div className="shrink-0 w-24 text-right">
+                                        {isDone && (
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
+                                                Done
+                                            </span>
+                                        )}
+                                        {!isDone && !isLive && (
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 bg-gray-900 border border-gray-800 px-2.5 py-1 rounded-full">
+                                                Upcoming
+                                            </span>
                                         )}
                                     </div>
                                 </div>
                             );
                         })}
+
+                        {(group.matches ?? []).length === 0 && (
+                            <div className="py-8 text-center text-gray-500 text-xs font-black uppercase tracking-widest">
+                                No matches scheduled for this group yet
+                            </div>
+                        )}
                     </div>
                 )}
 
-                {/* Match schedule */}
-                {activeView === 'matches' && (
-                    <div className="space-y-3">
-                        {(!group.matches || group.matches.length === 0) && (
-                            <p className="text-center text-gray-600 text-sm font-bold py-6">No matches scheduled yet.</p>
-                        )}
-                        {(group.matches ?? []).map(match => {
-                            const t1Name = resolveTeamName(match.team1Id || 'TBD', group, participants);
-                            const t2Name = resolveTeamName(match.team2Id || 'TBD', group, participants);
-                            const isMyMatch = match.team1Id === currentTeamId || match.team2Id === currentTeamId;
+                {/* ── Teams Roster View ── */}
+                {activeView === 'teams' && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                        {group.teams.map(t => {
+                            const isMe = t.id === currentTeamId;
+                            const participant = participants.find(p => p.teamId === t.id || p.userId === t.id);
 
                             return (
-                                <div key={match.id} className={`p-4 rounded-2xl border ${isMyMatch ? 'border-brand-500/30 bg-brand-500/5' : 'border-gray-800 bg-gray-900/30'}`}>
-                                    <div className="flex items-center justify-between mb-3">
-                                        <div className="flex items-center gap-2">
-                                            <Sword className="w-3.5 h-3.5 text-gray-600" />
-                                            <span className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Round {match.round}</span>
-                                            {match.map && <span className="text-[10px] text-brand-400 font-black uppercase tracking-widest bg-brand-500/10 px-2 py-0.5 rounded-full">{match.map}</span>}
-                                        </div>
-                                        <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-full ${
-                                            match.status === 'completed' ? 'bg-green-500/10 text-green-400' :
-                                            match.status === 'live' ? 'bg-red-500/10 text-red-400 animate-pulse' :
-                                            'bg-gray-800 text-gray-500'
-                                        }`}>{match.status}</span>
+                                <div
+                                    key={t.id}
+                                    className={`p-4 rounded-2xl border flex items-center gap-3 ${
+                                        isMe
+                                            ? 'bg-brand-500/10 border-brand-500/30'
+                                            : 'bg-black/30 border-gray-800/80'
+                                    }`}
+                                >
+                                    <div className="w-10 h-10 rounded-xl bg-gray-800 border border-gray-700 flex items-center justify-center font-black text-sm text-brand-400 overflow-hidden shrink-0">
+                                        {participant?.logoUrl ? (
+                                            <img src={participant.logoUrl} alt={t.name} className="w-full h-full object-cover" />
+                                        ) : (
+                                            t.name.charAt(0).toUpperCase()
+                                        )}
                                     </div>
-
-                                    <div className="grid grid-cols-3 items-center gap-2">
-                                        <div className="text-right">
-                                            <div className={`font-black text-sm uppercase tracking-tight truncate ${match.team1Id === currentTeamId ? 'text-brand-300' : 'text-white'}`}>{t1Name}</div>
-                                        </div>
-                                        <div className="text-center">
-                                            {match.status === 'completed' || match.status === 'live' ? (
-                                                <span className="font-black text-2xl text-white tabular-nums">
-                                                    {match.score1 ?? 0} <span className="text-gray-700">:</span> {match.score2 ?? 0}
-                                                </span>
-                                            ) : (
-                                                <span className="font-black text-xs text-gray-600 uppercase tracking-widest">VS</span>
-                                            )}
-                                        </div>
-                                        <div className="text-left">
-                                            <div className={`font-black text-sm uppercase tracking-tight truncate ${match.team2Id === currentTeamId ? 'text-brand-300' : 'text-white'}`}>{t2Name}</div>
-                                        </div>
+                                    <div className="min-w-0 flex-1">
+                                        <div className="text-white font-black text-sm truncate">{t.name}</div>
+                                        {isMe && (
+                                            <div className="text-brand-400 font-black text-[9px] uppercase tracking-widest">
+                                                Your Team
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             );
                         })}
+
+                        {group.teams.length === 0 && (
+                            <div className="col-span-full py-8 text-center text-gray-500 text-xs font-black uppercase tracking-widest">
+                                No teams in this group yet
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

@@ -8,7 +8,6 @@ import { createUserWithEmailAndPassword, signInWithPopup, updateProfile } from '
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db, googleProvider } from '../../../shared/config/firebase';
 import ReCAPTCHA from 'react-google-recaptcha';
-import { telemetry } from '../../../shared/services/TelemetryService';
 
 const Register: React.FC = () => {
     const [username, setUsername] = useState('');
@@ -33,7 +32,6 @@ const Register: React.FC = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        telemetry.trackFunnel('LoadRegisterPage', 'UserAuthFunnel', true);
     }, []);
 
     useEffect(() => {
@@ -63,36 +61,30 @@ const Register: React.FC = () => {
 
         if (password !== confirmPassword) {
             setError('Passwords do not match');
-            telemetry.trackError('RegisterValidationError', 'Passwords Mismatch');
             return;
         }
 
         if (passwordStrength < 3) {
             setError('Please choose a stronger password');
-            telemetry.trackError('RegisterValidationError', 'Weak Password', { strength: passwordStrength });
             return;
         }
 
         if (!agreeTerms) {
             setError('You must agree to the Terms & Conditions');
-            telemetry.trackError('RegisterValidationError', 'Terms Not Accepted');
             return;
         }
 
         if (recaptchaSiteKey && !captchaValue) {
             setError('Please complete the CAPTCHA');
-            telemetry.trackError('RegisterValidationError', 'Captcha Missing');
             return;
         }
 
         if (!inGameId.trim() || !inGameName.trim() || !phone.trim()) {
             setError('In-Game ID, In-Game Name, and Phone Number are required');
-            telemetry.trackError('RegisterValidationError', 'Missing Required Profile Fields');
             return;
         }
 
         setIsLoading(true);
-        telemetry.trackFunnel('RegisterFormSubmitAttempt', 'UserAuthFunnel', true, { email, username });
 
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -128,9 +120,6 @@ const Register: React.FC = () => {
                 updatedAt: serverTimestamp(),
             });
 
-            telemetry.trackPerformance('RegisterDuration', performance.now() - startTime);
-            telemetry.trackUser('RegisterSuccess', email);
-            telemetry.trackFunnel('RegisterSuccess', 'UserAuthFunnel', true);
 
             showToast('Welcome to Nexplay, ' + username + '!', 'success');
             navigate('/dashboard');
@@ -138,8 +127,6 @@ const Register: React.FC = () => {
             console.error('Registration error:', err);
             const errMsg = err.message || 'Registration failed';
             setError(errMsg);
-            telemetry.trackError('RegisterFailure', errMsg, { email });
-            telemetry.trackFunnel('RegisterFailed', 'UserAuthFunnel', false, { error: errMsg });
             showToast('Registration failed', 'error');
         } finally {
             setIsLoading(false);
@@ -150,21 +137,15 @@ const Register: React.FC = () => {
         setError('');
         setIsGoogleLoading(true);
         const startTime = performance.now();
-        telemetry.trackFunnel('GoogleRegisterAttempt', 'UserAuthFunnel', true);
 
         try {
             const result = await signInWithPopup(auth, googleProvider);
-            telemetry.trackPerformance('GoogleRegisterDuration', performance.now() - startTime);
-            telemetry.trackUser('GoogleRegisterSuccess', result.user?.email || 'unknown');
-            telemetry.trackFunnel('RegisterSuccess', 'UserAuthFunnel', true, { provider: 'google' });
             showToast('Welcome to Nexplay!', 'success');
             navigate('/dashboard');
         } catch (err: any) {
             console.error('Google Sign-In error:', err);
             const errMsg = err.message || 'Google Sign-In failed';
             setError(errMsg);
-            telemetry.trackError('GoogleRegisterFailure', errMsg);
-            telemetry.trackFunnel('RegisterFailed', 'UserAuthFunnel', false, { provider: 'google', error: errMsg });
             showToast('Google Sign-In failed', 'error');
         } finally {
             setIsGoogleLoading(false);

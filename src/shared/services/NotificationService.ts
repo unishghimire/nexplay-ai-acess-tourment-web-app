@@ -66,15 +66,11 @@ export const NotificationService = {
         try {
             const q = query(
                 collection(db, 'notifications'),
-                where('userId', '==', userId)
+                where('userId', '==', userId),
+                orderBy('timestamp', 'desc')
             );
             return onSnapshot(q, (snapshot) => {
                 let notifications = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Notification));
-                notifications.sort((a,b) => {
-                    const aTime = a.timestamp?.toMillis ? a.timestamp.toMillis() : 0;
-                    const bTime = b.timestamp?.toMillis ? b.timestamp.toMillis() : 0;
-                    return bTime - aTime;
-                });
                 callback(notifications);
             }, (error) => {
                 console.warn("Permission restricted for notifications, returning empty");

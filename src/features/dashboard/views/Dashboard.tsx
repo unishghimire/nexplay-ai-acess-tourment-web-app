@@ -8,7 +8,6 @@ import { useNavigate } from 'react-router-dom';
 import { Trophy, Eye, Upload, BarChart, User, Shield, Users } from 'lucide-react';
 import ResultUploadModal from '../../results/components/ResultUploadModal';
 import TournamentResultModal from '../../tournaments/components/TournamentResultModal';
-import { telemetry } from '../../../shared/services/TelemetryService';
 
 const Dashboard: React.FC = () => {
     const { user, profile } = useAuth();
@@ -24,7 +23,6 @@ const Dashboard: React.FC = () => {
     const fetchAllData = async () => {
         if (!user) return;
         const startTime = performance.now();
-        telemetry.trackFunnel('DashboardLoad', 'UserDashboardFunnel', true);
         try {
             // Fetch Joined Tournaments
             const partSnap = await getDocs(query(
@@ -118,10 +116,8 @@ const Dashboard: React.FC = () => {
                 setSettings(settingsSnap.data() as SiteSettings);
             }
 
-            telemetry.trackPerformance('FetchDashboardData', performance.now() - startTime);
         } catch (error: any) {
             console.error("Error fetching dashboard data:", error);
-            telemetry.trackError('FetchDashboardFailed', error?.message || 'Unknown error');
         } finally {
             setLoading(false);
         }
@@ -159,7 +155,7 @@ const Dashboard: React.FC = () => {
                     { title: 'Leaderboard', icon: BarChart, path: '/leaderboard', interaction: 'ClickLeaderboardIcon' },
                 ].map((item, idx) => {
                     const Component = item.path.startsWith('#') ? 'a' : 'div';
-                    const props = item.path.startsWith('#') ? { href: item.path } : { onClick: () => { telemetry.trackInteraction(item.interaction, 'DashboardGrid'); navigate(item.path); } };
+                    const props = item.path.startsWith('#') ? { href: item.path } : { onClick: () => { navigate(item.path); } };
                     
                     return (
                         <Component 
@@ -204,7 +200,6 @@ const Dashboard: React.FC = () => {
                                         <h3 
                                             className="text-2xl font-black text-white mb-3 hover:text-brand-400 transition cursor-pointer tracking-tighter" 
                                             onClick={() => {
-                                                    telemetry.trackInteraction('ClickDashboardTournamentTitle', 'DashboardTournaments', { id: t.id, title: t.title });
                                                     navigate(`/details/${t.id}`);
                                                 }}
                                         >
@@ -241,7 +236,6 @@ const Dashboard: React.FC = () => {
                                 )}
                                 <div className="mt-8 flex gap-6 border-t border-gray-800 pt-8">
                                     <button onClick={() => {
-                                            telemetry.trackInteraction('ClickDashboardTournamentDetails', 'DashboardTournaments', { id: t.id });
                                             navigate(`/details/${t.id}`);
                                         }} className="flex items-center gap-3 text-xs font-black uppercase tracking-widest text-gray-400 hover:text-white transition">
                                         <Eye className="w-5 h-5" /> View Details
@@ -249,7 +243,6 @@ const Dashboard: React.FC = () => {
                                     {isLive && t.role === 'organizer' && (
                                         <button 
                                             onClick={() => {
-                                                    telemetry.trackInteraction('ClickDashboardUploadResultInitiate', 'DashboardTournaments', { id: t.id });
                                                     handleUploadResult(t);
                                                 }}
                                             className="flex items-center gap-3 text-xs font-black uppercase tracking-widest text-emerald-400 hover:text-white transition"
@@ -260,7 +253,6 @@ const Dashboard: React.FC = () => {
                                     {isCompleted && (
                                         <button 
                                             onClick={() => {
-                                                    telemetry.trackInteraction('ClickDashboardViewResultModal', 'DashboardTournaments', { id: t.id });
                                                     setViewResultTournament(t);
                                                 }}
                                             className="flex items-center gap-3 text-xs font-black uppercase tracking-widest text-blue-400 hover:text-white transition"

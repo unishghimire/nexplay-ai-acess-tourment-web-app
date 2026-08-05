@@ -11,7 +11,6 @@ import { NEXPLAY_LOGO, PRESET_TEAM_LOGOS } from '../../../shared/constants/const
 import { timeAgo, formatDate, formatCurrency } from '../../../shared/utils/utils';
 import Modal from '../../../shared/components/Modal';
 import { motion } from 'motion/react';
-import { telemetry } from '../../../shared/services/TelemetryService';
 
 const TeamDetails: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -147,11 +146,8 @@ const TeamDetails: React.FC = () => {
             acts.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
             setActivities(acts);
 
-            telemetry.trackPerformance('TeamDetailsFetch', performance.now() - startTime, { id });
-            telemetry.trackFunnel('TeamViewMounted', 'TeamRosterManagement', true, { teamId: id });
         } catch (error: any) {
             console.error("Error fetching team:", error);
-            telemetry.trackError('TeamDataFetchFailed', error?.message || 'Unknown error');
         } finally {
             setLoading(false);
         }
@@ -177,7 +173,6 @@ const TeamDetails: React.FC = () => {
         if (!team || !editName.trim()) return;
         setSaving(true);
         const startTime = performance.now();
-        telemetry.trackFunnel('TeamSaveSettingsAttempt', 'TeamRosterManagement', true, { name: editName });
         try {
             await updateDoc(doc(db, 'teams', team.id), {
                 name: editName,
@@ -188,16 +183,12 @@ const TeamDetails: React.FC = () => {
                 bannerUrl: editBanner
             });
             await logActivity('updated_team', 'Updated team profile settings');
-            telemetry.trackPerformance('TeamProfileSave', performance.now() - startTime, { id: team.id });
-            telemetry.trackFunnel('TeamSaveSettingsSuccess', 'TeamRosterManagement', true);
             showToast('Team updated successfully', 'success');
             setIsEditing(false);
             fetchTeamData();
         } catch (error: any) {
             console.error("Error updating team:", error);
             const errMsg = error?.message || 'Failed to update team';
-            telemetry.trackError('TeamProfileSaveFailed', errMsg);
-            telemetry.trackFunnel('TeamSaveSettingsFailed', 'TeamRosterManagement', false, { error: errMsg });
             showToast('Failed to update team', 'error');
         } finally {
             setSaving(false);
@@ -208,12 +199,10 @@ const TeamDetails: React.FC = () => {
         if (!team || !user || !inviteUserId.trim()) return;
         if (members.length >= 6) {
             showToast('Team is full (max 6 players)', 'error');
-            telemetry.trackError('InviteValidationError', 'Team reached the 6 player maximum limit');
             return;
         }
         setInviting(true);
         const startTime = performance.now();
-        telemetry.trackFunnel('TeamInviteUserAttempt', 'TeamRecruitmentFunnel', true, { inviteeId: inviteUserId });
         try {
             const userDoc = await getDoc(doc(db, 'users_public', inviteUserId));
             if (!userDoc.exists()) {
@@ -249,16 +238,12 @@ const TeamDetails: React.FC = () => {
                 timestamp: serverTimestamp()
             });
             await logActivity('invited_user', `Invited user ${userDoc.data().username}`);
-            telemetry.trackPerformance('TeamInviteCreation', performance.now() - startTime, { teamId: team.id });
-            telemetry.trackFunnel('TeamInviteUserSuccess', 'TeamRecruitmentFunnel', true);
             showToast('Invitation sent!', 'success');
             setInviteUserId('');
             fetchTeamData();
         } catch (error: any) {
             console.error("Error sending invite:", error);
             const errMsg = error?.message || 'Failed to send invite';
-            telemetry.trackError('TeamInviteFailed', errMsg);
-            telemetry.trackFunnel('TeamInviteUserFailed', 'TeamRecruitmentFunnel', false, { error: errMsg });
             showToast('Failed to send invite', 'error');
         } finally {
             setInviting(false);
@@ -269,12 +254,10 @@ const TeamDetails: React.FC = () => {
         if (!team || !user) return;
         if (members.length >= 6) {
             showToast('Team is full (max 6 players)', 'error');
-            telemetry.trackError('AcceptInviteValidationError', 'Team full');
             return;
         }
         if (profile?.teamId && profile.teamId !== team.id) {
             showToast('You are already in a team. Leave your current team first.', 'error');
-            telemetry.trackError('AcceptInviteValidationError', 'Already in team');
             return;
         }
         const startTime = performance.now();
@@ -289,13 +272,10 @@ const TeamDetails: React.FC = () => {
             await updateDoc(doc(db, 'users', user.uid), { teamName: team.name, teamId: team.id });
             await setDoc(doc(db, 'users_public', user.uid), { teamName: team.name, teamId: team.id }, { merge: true });
             await logActivity('joined_team', 'Joined the team via invitation');
-            telemetry.trackPerformance('AcceptInviteDuration', performance.now() - startTime, { teamId: team.id });
-            telemetry.trackInteraction('TeamInviteAccepted', 'InviteManager', { teamId: team.id });
             showToast('Joined team successfully!', 'success');
             fetchTeamData();
         } catch (error: any) {
             console.error("Error accepting invite:", error);
-            telemetry.trackError('AcceptInviteFailed', error?.message || 'Failed to join');
             showToast('Failed to join team', 'error');
         }
     };
@@ -303,7 +283,6 @@ const TeamDetails: React.FC = () => {
     const handleDeclineInvite = async (inviteId: string) => {
         try {
             await updateDoc(doc(db, 'team_invites', inviteId), { status: 'declined' });
-            telemetry.trackInteraction('TeamInviteDeclined', 'InviteManager', { teamId: id });
             showToast('Invitation declined', 'info');
             fetchTeamData();
         } catch (error) {
@@ -333,13 +312,10 @@ const TeamDetails: React.FC = () => {
                 await setDoc(doc(db, 'users_public', user.uid), { teamName: '', teamId: '' }, { merge: true });
             }
             await logActivity('left_team', 'Left the team');
-            telemetry.trackPerformance('LeaveTeamDuration', performance.now() - startTime, { teamId: team.id });
-            telemetry.trackInteraction('TeamMemberLeft', 'TeamHeroPanel', { teamId: team.id });
             showToast('You have left the team', 'info');
             navigate('/teams');
         } catch (error: any) {
             console.error("Error leaving team:", error);
-            telemetry.trackError('LeaveTeamFailed', error?.message || 'Failed to leave team');
             showToast('Failed to leave team', 'error');
         } finally {
             setSaving(false);
@@ -390,13 +366,10 @@ const TeamDetails: React.FC = () => {
             const activitySnap = await getDocs(activityQ);
             await Promise.all(activitySnap.docs.map(d => deleteDoc(doc(db, 'team_activity', d.id))));
             await deleteDoc(doc(db, 'teams', team.id));
-            telemetry.trackPerformance('DeleteTeamDuration', performance.now() - startTime, { teamId: team.id });
-            telemetry.trackInteraction('TeamDeletedPermanently', 'TeamHeroPanel', { teamId: team.id });
             showToast('Team deleted successfully', 'success');
             navigate('/teams');
         } catch (error: any) {
             console.error("Error deleting team:", error);
-            telemetry.trackError('DeleteTeamFailed', error?.message || 'Failed to delete team');
             showToast('Failed to delete team', 'error');
         } finally {
             setSaving(false);

@@ -6,7 +6,6 @@ import { useNotification } from '../../../shared/context/NotificationContext';
 import { Search, UserPlus, UserMinus, Building2, ChevronRight, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { telemetry } from '../../../shared/services/TelemetryService';
 
 const OrgBrowser: React.FC = () => {
     const { user } = useAuth();
@@ -20,21 +19,18 @@ const OrgBrowser: React.FC = () => {
     useEffect(() => {
         fetchOrgs();
         if (user) fetchFollowing();
-        telemetry.trackFunnel('OrgBrowserViewMounted', 'UserOrganizerDiscovery', true);
     }, [user]);
 
     const fetchOrgs = async () => {
         setLoading(true);
-        const startTime = performance.now();
         try {
             const snap = await getDocs(query(collection(db, 'users_public')));
             const orgsData = snap.docs
                 .map(d => ({ uid: d.id, ...(d.data() as any) }))
                 .filter((d: any) => d.role === 'organizer');
             setOrgs(orgsData);
-            telemetry.trackPerformance('FetchOrganizersData', performance.now() - startTime, { count: orgsData.length });
         } catch (error: any) {
-            telemetry.trackError('FetchOrganizersFailed', error?.message || 'Unknown error');
+            console.error('FetchOrganizersFailed:', error);
         } finally {
             setLoading(false);
         }
@@ -46,25 +42,18 @@ const OrgBrowser: React.FC = () => {
             const snap = await getDocs(query(collection(db, 'follows'), where('followerId', '==', user.uid)));
             setFollowing(new Set(snap.docs.map(d => d.data().followingId)));
         } catch (error: any) {
-            telemetry.trackError('FetchFollowingListFailed', error?.message || 'Unknown error');
+            console.error('FetchFollowingListFailed:', error);
         }
     };
 
     const handleToggleFollow = async (orgId: string) => {
         if (!user) {
             showToast('Please login to follow', 'warning');
-            telemetry.trackInteraction('ClickFollowAnonymous', 'OrgBrowserGrid');
             return;
         }
 
         setTogglingId(orgId);
-        const startTime = performance.now();
         const isCurrentlyFollowing = following.has(orgId);
-        telemetry.trackFunnel(
-            isCurrentlyFollowing ? 'UnfollowAttempt' : 'FollowAttempt',
-            'UserFollowerInteractions', true, { orgId }
-        );
-
         try {
             if (isCurrentlyFollowing) {
                 const snap = await getDocs(query(
@@ -76,7 +65,6 @@ const OrgBrowser: React.FC = () => {
                     await deleteDoc(doc(db, 'follows', snap.docs[0].id));
                     setFollowing(prev => { const next = new Set(prev); next.delete(orgId); return next; });
                     showToast('Unfollowed', 'success');
-                    telemetry.trackPerformance('UnfollowActionDuration', performance.now() - startTime, { orgId });
                 }
             } else {
                 await addDoc(collection(db, 'follows'), {
@@ -86,15 +74,8 @@ const OrgBrowser: React.FC = () => {
                 });
                 setFollowing(prev => new Set(prev).add(orgId));
                 showToast('Following', 'success');
-                telemetry.trackPerformance('FollowActionDuration', performance.now() - startTime, { orgId });
-            }
-            telemetry.trackFunnel(
-                isCurrentlyFollowing ? 'UnfollowSuccess' : 'FollowSuccess',
-                'UserFollowerInteractions', true
-            );
-        } catch (error: any) {
-            const errMsg = error?.message || 'Failed to toggle follow';
-            telemetry.trackError('FollowToggleFailed', errMsg);
+            }        } catch (error: any) {
+            console.error('FollowToggleFailed:', error);
             showToast('Action failed. Try again.', 'error');
         } finally {
             setTogglingId(null);
@@ -210,7 +191,6 @@ const OrgBrowser: React.FC = () => {
                                             <div className="flex gap-2">
                                                 <Link
                                                     to={`/profile/${org.uid}`}
-                                                    onClick={() => telemetry.trackInteraction('ClickViewOrganizerProfile', 'FeaturedOrganizationsList', { orgId: org.uid })}
                                                     className="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-2.5 rounded-xl text-center font-black text-xs uppercase tracking-widest transition flex items-center justify-center gap-2"
                                                 >
                                                     Profile <ChevronRight className="w-3 h-3" />
@@ -277,7 +257,6 @@ const OrgBrowser: React.FC = () => {
                                     <div className="flex items-center gap-3 shrink-0">
                                         <Link
                                             to={`/profile/${org.uid}`}
-                                            onClick={() => telemetry.trackInteraction('ClickViewOrganizerProfile', 'AllOrganizationsList', { orgId: org.uid })}
                                             className="hidden sm:flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-white px-5 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition"
                                         >
                                             View <ChevronRight className="w-3 h-3" />
