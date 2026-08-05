@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 
@@ -12,12 +12,17 @@ interface ModalProps {
 
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, maxWidth = 'sm:max-w-lg' }) => {
     const location = useLocation();
+    // ponytail: only close on actual route path change, not on mount.
+    // The old effect fired onClose() immediately when the modal opened
+    // because it ran on mount with isOpen=true.
+    const prevPath = useRef(location.pathname);
 
     useEffect(() => {
-        if (isOpen) {
+        if (isOpen && prevPath.current !== location.pathname) {
             onClose();
+            prevPath.current = location.pathname;
         }
-    }, [location.pathname]);
+    }, [location.pathname, isOpen, onClose]);
 
     if (!isOpen) return null;
 

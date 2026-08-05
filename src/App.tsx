@@ -26,6 +26,7 @@ const Leaderboard = lazy(() => import('./features/leaderboard/views/Leaderboard'
 const AdminPanel = lazy(() => import('./features/admin/views/AdminPanel'));
 const OrganizerPanel = lazy(() => import('./features/organizer/views/OrganizerPanel'));
 const TournamentAdminPanel = lazy(() => import('./features/admin/views/TournamentAdminPanel'));
+const ScrimDetailPage = lazy(() => import('./features/organizer/views/ScrimDetailPage'));
 const About = lazy(() => import('./features/home/views/About'));
 const Contact = lazy(() => import('./features/home/views/Contact'));
 const Privacy = lazy(() => import('./features/home/views/Privacy'));
@@ -148,6 +149,7 @@ const AppContent = ({ toasts, removeToast }: { toasts: ToastData[], removeToast:
               <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminPanel /></ProtectedRoute>} />
               <Route path="/organizer" element={<ProtectedRoute allowedRoles={['organizer', 'admin']}><OrganizerPanel /></ProtectedRoute>} />
               <Route path="/tournament-admin/:id" element={<ProtectedRoute allowedRoles={['organizer', 'admin']}><TournamentAdminPanel /></ProtectedRoute>} />
+              <Route path="/organizer/scrim/:id" element={<ProtectedRoute allowedRoles={["organizer", "admin"]}><ScrimDetailPage /></ProtectedRoute>} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/about" element={<About />} />
