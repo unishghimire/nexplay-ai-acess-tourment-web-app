@@ -13,8 +13,6 @@ import {
     RotateCcw, Sword, Send
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import Modal from '../../../shared/components/Modal';
-import ResultUploader from '../../results/components/ResultUploader';
 import { formatCurrency, formatDate } from '../../../shared/utils/utils';
 import {
     announceNewTournament,
@@ -746,26 +744,6 @@ export default function TournamentAdminPanel() {
         }
     };
 
-    // Group participants by team for display
-    const groupedParticipants = participants.reduce((acc: any, p) => {
-        const teamKey = p.teamId || p.userId;
-        if (!acc[teamKey]) {
-            acc[teamKey] = {
-                id: teamKey,
-                name: p.teamName || p.username,
-                logoUrl: p.logoUrl,
-                players: p.teammates ? [p.username, ...p.teammates] : [p.username],
-                participantId: p.id
-            };
-        }
-        return acc;
-    }, {});
-    
-    const availableTeams = Object.values(groupedParticipants).filter((team: any) => {
-        // Check if team is already in ANY group
-        return !tournament?.groups?.some(g => g.teams.some(t => t.id === team.id));
-    });
-
     if (loading) {
         return (
             <div className="min-h-screen pt-24 pb-12 flex items-center justify-center">
@@ -774,7 +752,25 @@ export default function TournamentAdminPanel() {
         );
     }
 
+
     if (!tournament) return null;
+
+    // ponytail: shared props object — spread to all tabs, each destructures what it needs
+    const tabProps = {
+        tournament, setTournament, setParticipants, tournamentEarning,
+        participants, fetchingParticipants, selectedGroup, selectedMatch,
+        setSelectedMatch, matchScore, newGroup, newMatchData, gameStartGroupId,
+        discordSending, isCreateGroupModalOpen, isManageTeamsModalOpen,
+        isUpdateScoreModalOpen, isResultUploaderOpen, isAddMatchModalOpen,
+        setNewGroup, setSelectedGroup, setGameStartGroupId, setMatchScore,
+        setNewMatchData, setIsCreateGroupModalOpen, setIsManageTeamsModalOpen,
+        setIsUpdateScoreModalOpen, setIsResultUploaderOpen, setIsAddMatchModalOpen,
+        handleUpdateStatus, handleUpdateStage, handleAdvanceRound,
+        handleAutoGenerateGroups, handleCreateGroup, handleDeleteGroup,
+        handleAssignTeam, handleRemoveTeam, handleDiscord,
+        handleAddMatch, handleUpdateScore, handleGenerateBracket,
+        handleGenerateGroupMatches, getTeamName, showToast,
+    };
 
     return (
         <div className="min-h-screen pt-24 pb-12 px-6 lg:px-8 max-w-7xl mx-auto">
@@ -852,338 +848,17 @@ export default function TournamentAdminPanel() {
                 ))}
             </div>
 
-            {/* Content Area */}
+            {/* ponytail: shared tabProps — built once, spread to each tab */}
             <div className="bg-gray-950/50 rounded-[2rem] border border-gray-800 p-8">
                 <AnimatePresence mode="wait">
-                    {activeTab === 'overview' && <OverviewTab {...{ tournament, setTournament, setParticipants, tournamentEarning, participants, fetchingParticipants, selectedGroup, selectedMatch, setSelectedMatch, matchScore, newGroup, newMatchData, gameStartGroupId, discordSending, isCreateGroupModalOpen, isManageTeamsModalOpen, isUpdateScoreModalOpen, isResultUploaderOpen, isAddMatchModalOpen, setNewGroup, setSelectedGroup, setGameStartGroupId, setMatchScore, setNewMatchData, setIsCreateGroupModalOpen, setIsManageTeamsModalOpen, setIsUpdateScoreModalOpen, setIsResultUploaderOpen, setIsAddMatchModalOpen, handleUpdateStatus, handleUpdateStage, handleAdvanceRound, handleAutoGenerateGroups, handleCreateGroup, handleDeleteGroup, handleAssignTeam, handleRemoveTeam, handleDiscord, handleAddMatch, handleUpdateScore, handleGenerateBracket, handleGenerateGroupMatches, getTeamName, showToast }} />}
-
-                    {activeTab === 'groups' && <GroupsTab {...{ tournament, setTournament, setParticipants, tournamentEarning, participants, fetchingParticipants, selectedGroup, selectedMatch, setSelectedMatch, matchScore, newGroup, newMatchData, gameStartGroupId, discordSending, isCreateGroupModalOpen, isManageTeamsModalOpen, isUpdateScoreModalOpen, isResultUploaderOpen, isAddMatchModalOpen, setNewGroup, setSelectedGroup, setGameStartGroupId, setMatchScore, setNewMatchData, setIsCreateGroupModalOpen, setIsManageTeamsModalOpen, setIsUpdateScoreModalOpen, setIsResultUploaderOpen, setIsAddMatchModalOpen, handleUpdateStatus, handleUpdateStage, handleAdvanceRound, handleAutoGenerateGroups, handleCreateGroup, handleDeleteGroup, handleAssignTeam, handleRemoveTeam, handleDiscord, handleAddMatch, handleUpdateScore, handleGenerateBracket, handleGenerateGroupMatches, getTeamName, showToast }} />}
-
-                    {activeTab === 'matches' && <MatchesTab {...{ tournament, setTournament, setParticipants, tournamentEarning, participants, fetchingParticipants, selectedGroup, selectedMatch, setSelectedMatch, matchScore, newGroup, newMatchData, gameStartGroupId, discordSending, isCreateGroupModalOpen, isManageTeamsModalOpen, isUpdateScoreModalOpen, isResultUploaderOpen, isAddMatchModalOpen, setNewGroup, setSelectedGroup, setGameStartGroupId, setMatchScore, setNewMatchData, setIsCreateGroupModalOpen, setIsManageTeamsModalOpen, setIsUpdateScoreModalOpen, setIsResultUploaderOpen, setIsAddMatchModalOpen, handleUpdateStatus, handleUpdateStage, handleAdvanceRound, handleAutoGenerateGroups, handleCreateGroup, handleDeleteGroup, handleAssignTeam, handleRemoveTeam, handleDiscord, handleAddMatch, handleUpdateScore, handleGenerateBracket, handleGenerateGroupMatches, getTeamName, showToast }} />}
-
-                    {activeTab === 'brackets' && <BracketsTab {...{ tournament, setTournament, setParticipants, tournamentEarning, participants, fetchingParticipants, selectedGroup, selectedMatch, setSelectedMatch, matchScore, newGroup, newMatchData, gameStartGroupId, discordSending, isCreateGroupModalOpen, isManageTeamsModalOpen, isUpdateScoreModalOpen, isResultUploaderOpen, isAddMatchModalOpen, setNewGroup, setSelectedGroup, setGameStartGroupId, setMatchScore, setNewMatchData, setIsCreateGroupModalOpen, setIsManageTeamsModalOpen, setIsUpdateScoreModalOpen, setIsResultUploaderOpen, setIsAddMatchModalOpen, handleUpdateStatus, handleUpdateStage, handleAdvanceRound, handleAutoGenerateGroups, handleCreateGroup, handleDeleteGroup, handleAssignTeam, handleRemoveTeam, handleDiscord, handleAddMatch, handleUpdateScore, handleGenerateBracket, handleGenerateGroupMatches, getTeamName, showToast }} />}
-                    {activeTab === 'settings' && <SettingsTab {...{ tournament, setTournament, setParticipants, tournamentEarning, participants, fetchingParticipants, selectedGroup, selectedMatch, setSelectedMatch, matchScore, newGroup, newMatchData, gameStartGroupId, discordSending, isCreateGroupModalOpen, isManageTeamsModalOpen, isUpdateScoreModalOpen, isResultUploaderOpen, isAddMatchModalOpen, setNewGroup, setSelectedGroup, setGameStartGroupId, setMatchScore, setNewMatchData, setIsCreateGroupModalOpen, setIsManageTeamsModalOpen, setIsUpdateScoreModalOpen, setIsResultUploaderOpen, setIsAddMatchModalOpen, handleUpdateStatus, handleUpdateStage, handleAdvanceRound, handleAutoGenerateGroups, handleCreateGroup, handleDeleteGroup, handleAssignTeam, handleRemoveTeam, handleDiscord, handleAddMatch, handleUpdateScore, handleGenerateBracket, handleGenerateGroupMatches, getTeamName, showToast }} />}
-
-
-                    {activeTab === 'participants' && <ParticipantsTab {...{ tournament, setTournament, setParticipants, tournamentEarning, participants, fetchingParticipants, selectedGroup, selectedMatch, setSelectedMatch, matchScore, newGroup, newMatchData, gameStartGroupId, discordSending, isCreateGroupModalOpen, isManageTeamsModalOpen, isUpdateScoreModalOpen, isResultUploaderOpen, isAddMatchModalOpen, setNewGroup, setSelectedGroup, setGameStartGroupId, setMatchScore, setNewMatchData, setIsCreateGroupModalOpen, setIsManageTeamsModalOpen, setIsUpdateScoreModalOpen, setIsResultUploaderOpen, setIsAddMatchModalOpen, handleUpdateStatus, handleUpdateStage, handleAdvanceRound, handleAutoGenerateGroups, handleCreateGroup, handleDeleteGroup, handleAssignTeam, handleRemoveTeam, handleDiscord, handleAddMatch, handleUpdateScore, handleGenerateBracket, handleGenerateGroupMatches, getTeamName, showToast }} />}
+                    {activeTab === 'overview' && <OverviewTab {...tabProps} />}
+                    {activeTab === 'groups' && <GroupsTab {...tabProps} />}
+                    {activeTab === 'matches' && <MatchesTab {...tabProps} />}
+                    {activeTab === 'brackets' && <BracketsTab {...tabProps} />}
+                    {activeTab === 'settings' && <SettingsTab {...tabProps} />}
+                    {activeTab === 'participants' && <ParticipantsTab {...tabProps} />}
                 </AnimatePresence>
             </div>
-
-            {/* Create Group Modal */}
-            <Modal isOpen={isCreateGroupModalOpen} onClose={() => setIsCreateGroupModalOpen(false)} title="Create New Group">
-                <div className="space-y-4">
-                    <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Group Name</label>
-                        <input 
-                            type="text" 
-                            value={newGroup.name}
-                            onChange={(e) => setNewGroup({...newGroup, name: e.target.value})}
-                            placeholder="e.g., Group A, Region East"
-                            className="w-full bg-dark border border-gray-800 text-white rounded-xl p-3 focus:border-brand-500 outline-none transition"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Team Limit</label>
-                        <input 
-                            type="number" 
-                            value={newGroup.teamLimit}
-                            onChange={(e) => setNewGroup({...newGroup, teamLimit: parseInt(e.target.value) || 0})}
-                            className="w-full bg-dark border border-gray-800 text-white rounded-xl p-3 focus:border-brand-500 outline-none transition"
-                        />
-                    </div>
-                    <div className="flex items-center justify-between bg-dark p-3 rounded-xl border border-gray-800">
-                        <div>
-                            <p className="text-sm font-bold text-white">Public Group</p>
-                            <p className="text-xs text-gray-500">Anyone can join if they have the link</p>
-                        </div>
-                        <button 
-                            onClick={() => setNewGroup({...newGroup, isPublic: !newGroup.isPublic})}
-                            className={`w-12 h-6 rounded-full transition-colors relative ${newGroup.isPublic ? 'bg-brand-500' : 'bg-gray-700'}`}
-                        >
-                            <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${newGroup.isPublic ? 'translate-x-7' : 'translate-x-1'}`} />
-                        </button>
-                    </div>
-                    {!newGroup.isPublic && (
-                        <div>
-                            <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Passcode</label>
-                            <input 
-                                type="text" 
-                                value={newGroup.passCode}
-                                onChange={(e) => setNewGroup({...newGroup, passCode: e.target.value})}
-                                placeholder="Enter a secure passcode"
-                                className="w-full bg-dark border border-gray-800 text-white rounded-xl p-3 focus:border-brand-500 outline-none transition"
-                            />
-                        </div>
-                    )}
-                    <div className="pt-4 flex gap-3">
-                        <button 
-                            onClick={() => setIsCreateGroupModalOpen(false)}
-                            className="flex-1 bg-dark hover:bg-gray-800 text-white py-3 rounded-xl font-bold transition border border-gray-800"
-                        >
-                            Cancel
-                        </button>
-                        <button 
-                            onClick={handleCreateGroup}
-                            disabled={!newGroup.name.trim()}
-                            className="flex-1 bg-brand-600 hover:bg-brand-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3 rounded-xl font-bold transition"
-                        >
-                            Create Group
-                        </button>
-                    </div>
-                </div>
-            </Modal>
-
-            {/* Manage Teams Modal */}
-            <Modal isOpen={isManageTeamsModalOpen} onClose={() => setIsManageTeamsModalOpen(false)} title={`Manage Teams: ${selectedGroup?.name}`} maxWidth="max-w-4xl">
-                {selectedGroup && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-[60vh]">
-                        {/* Assigned Teams */}
-                        <div className="flex flex-col h-full bg-dark rounded-xl border border-gray-800 overflow-hidden">
-                            <div className="p-4 border-b border-gray-800 bg-surface flex justify-between items-center">
-                                <h3 className="font-black text-white uppercase tracking-widest text-sm">Assigned Teams</h3>
-                                <span className="text-xs font-bold text-gray-500">{selectedGroup.teams.length} / {selectedGroup.teamLimit}</span>
-                            </div>
-                            <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
-                                {selectedGroup.teams.length > 0 ? (
-                                    selectedGroup.teams.map(team => (
-                                        <div key={team.id} className="flex justify-between items-center p-3 bg-surface rounded-lg border border-gray-800">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-gray-800 overflow-hidden">
-                                                    {team.logoUrl ? (
-                                                        <img src={team.logoUrl} alt={team.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                                                    ) : (
-                                                        <div className="w-full h-full flex items-center justify-center text-xs font-bold text-gray-500">
-                                                            {team.name.charAt(0).toUpperCase()}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm font-bold text-white">{team.name}</p>
-                                                    <p className="text-[10px] text-gray-500">{team.players.length} Players</p>
-                                                </div>
-                                            </div>
-                                            <button 
-                                                onClick={() => handleRemoveTeam(team.id)}
-                                                className="text-gray-500 hover:text-red-500 transition-colors p-2"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="h-full flex flex-col items-center justify-center text-gray-500">
-                                        <Users className="w-8 h-8 mb-2 opacity-50" />
-                                        <p className="text-sm">No teams assigned yet</p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Available Teams */}
-                        <div className="flex flex-col h-full bg-dark rounded-xl border border-gray-800 overflow-hidden">
-                            <div className="p-4 border-b border-gray-800 bg-surface flex justify-between items-center">
-                                <h3 className="font-black text-white uppercase tracking-widest text-sm">Available Teams</h3>
-                                <span className="text-xs font-bold text-gray-500">{availableTeams.length} Total</span>
-                            </div>
-                            <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
-                                {fetchingParticipants ? (
-                                    <div className="h-full flex items-center justify-center">
-                                        <div className="w-6 h-6 border-2 border-brand-500/30 border-t-brand-500 rounded-full animate-spin"></div>
-                                    </div>
-                                ) : availableTeams.length > 0 ? (
-                                    availableTeams.map((team: any) => (
-                                        <div key={team.id} className="flex justify-between items-center p-3 bg-surface rounded-lg border border-gray-800">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-gray-800 overflow-hidden">
-                                                    {team.logoUrl ? (
-                                                        <img src={team.logoUrl} alt={team.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                                                    ) : (
-                                                        <div className="w-full h-full flex items-center justify-center text-xs font-bold text-gray-500">
-                                                            {team.name.charAt(0).toUpperCase()}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm font-bold text-white">{team.name}</p>
-                                                    <p className="text-[10px] text-gray-500">{team.players.length} Players</p>
-                                                </div>
-                                            </div>
-                                            <button 
-                                                onClick={() => handleAssignTeam(team.participantId)}
-                                                disabled={selectedGroup.teams.length >= selectedGroup.teamLimit}
-                                                className="bg-brand-600/10 hover:bg-brand-600/20 text-brand-500 disabled:opacity-50 disabled:cursor-not-allowed px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all"
-                                            >
-                                                Assign
-                                            </button>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="h-full flex flex-col items-center justify-center text-gray-500">
-                                        <Users className="w-8 h-8 mb-2 opacity-50" />
-                                        <p className="text-sm text-center px-4">All registered teams have been assigned to groups.</p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </Modal>
-            {/* Update Score Modal */}
-            <Modal isOpen={isUpdateScoreModalOpen} onClose={() => setIsUpdateScoreModalOpen(false)} title="Update Match Score">
-                {selectedMatch && (
-                    <div className="space-y-6">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-dark p-4 rounded-xl border border-gray-800 text-center">
-                                <p className="text-xs font-bold text-gray-500 uppercase mb-2">
-                                    {getTeamName(selectedMatch.match.team1Id || 'TBD')}
-                                </p>
-                                <input 
-                                    type="number" 
-                                    value={matchScore.score1}
-                                    onChange={(e) => setMatchScore({...matchScore, score1: parseInt(e.target.value) || 0})}
-                                    className="w-full bg-surface border border-gray-700 text-white text-center text-2xl font-black rounded-lg p-2 focus:border-brand-500 outline-none transition"
-                                />
-                            </div>
-                            <div className="bg-dark p-4 rounded-xl border border-gray-800 text-center">
-                                <p className="text-xs font-bold text-gray-500 uppercase mb-2">
-                                    {getTeamName(selectedMatch.match.team2Id || 'TBD')}
-                                </p>
-                                <input 
-                                    type="number" 
-                                    value={matchScore.score2}
-                                    onChange={(e) => setMatchScore({...matchScore, score2: parseInt(e.target.value) || 0})}
-                                    className="w-full bg-surface border border-gray-700 text-white text-center text-2xl font-black rounded-lg p-2 focus:border-brand-500 outline-none transition"
-                                />
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Map Name</label>
-                            <input 
-                                type="text" 
-                                value={matchScore.map || ''}
-                                onChange={(e) => setMatchScore({...matchScore, map: e.target.value})}
-                                placeholder="e.g., Erangel, Miramar"
-                                className="w-full bg-dark border border-gray-800 text-white rounded-xl p-3 focus:border-brand-500 outline-none transition"
-                            />
-                        </div>
-                        
-                        <div>
-                            <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Match Status</label>
-                            <select 
-                                value={matchScore.status}
-                                onChange={(e) => setMatchScore({...matchScore, status: e.target.value as any})}
-                                className="w-full bg-dark border border-gray-800 text-white rounded-xl p-3 focus:border-brand-500 outline-none transition"
-                            >
-                                <option value="scheduled">Scheduled</option>
-                                <option value="live">Live</option>
-                                <option value="completed">Completed</option>
-                            </select>
-                        </div>
-
-                        <div className="pt-4 flex gap-3">
-                            <button 
-                                onClick={() => setIsUpdateScoreModalOpen(false)}
-                                className="flex-1 bg-dark hover:bg-gray-800 text-white py-3 rounded-xl font-bold transition border border-gray-800"
-                            >
-                                Cancel
-                            </button>
-                            <button 
-                                onClick={handleUpdateScore}
-                                className="flex-1 bg-brand-600 hover:bg-brand-500 text-white py-3 rounded-xl font-bold transition"
-                            >
-                                Save Score
-                            </button>
-                        </div>
-                    </div>
-                )}
-            </Modal>
-            {selectedMatch && selectedGroup && isResultUploaderOpen && (
-                <ResultUploader 
-                    isOpen={isResultUploaderOpen}
-                    onClose={() => setIsResultUploaderOpen(false)}
-                    tournament={tournament}
-                    group={selectedGroup}
-                    match={selectedMatch.match}
-                    onSuccess={() => setIsResultUploaderOpen(false)}
-                />
-            )}
-
-            {/* Add Match Modal */}
-            <Modal isOpen={isAddMatchModalOpen} onClose={() => setIsAddMatchModalOpen(false)} title={`Add Match to ${selectedGroup?.name}`}>
-                {selectedGroup && (
-                    <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Team 1</label>
-                                <select 
-                                    value={newMatchData.team1Id}
-                                    onChange={(e) => setNewMatchData({...newMatchData, team1Id: e.target.value})}
-                                    className="w-full bg-dark border border-gray-800 text-white rounded-xl p-3 focus:border-brand-500 outline-none transition"
-                                >
-                                    <option value="">Select Team</option>
-                                    <option value="TBD">TBD</option>
-                                    {selectedGroup.teams.map(team => (
-                                        <option key={team.id} value={team.id}>{team.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Team 2</label>
-                                <select 
-                                    value={newMatchData.team2Id}
-                                    onChange={(e) => setNewMatchData({...newMatchData, team2Id: e.target.value})}
-                                    className="w-full bg-dark border border-gray-800 text-white rounded-xl p-3 focus:border-brand-500 outline-none transition"
-                                >
-                                    <option value="">Select Team</option>
-                                    <option value="TBD">TBD</option>
-                                    {selectedGroup.teams.map(team => (
-                                        <option key={team.id} value={team.id}>{team.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Round</label>
-                                <input 
-                                    type="number"
-                                    value={newMatchData.round}
-                                    onChange={(e) => setNewMatchData({...newMatchData, round: parseInt(e.target.value) || 1})}
-                                    className="w-full bg-dark border border-gray-800 text-white rounded-xl p-3 focus:border-brand-500 outline-none transition"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Map</label>
-                                <input 
-                                    type="text"
-                                    value={newMatchData.map}
-                                    onChange={(e) => setNewMatchData({...newMatchData, map: e.target.value})}
-                                    placeholder="e.g., Erangel"
-                                    className="w-full bg-dark border border-gray-800 text-white rounded-xl p-3 focus:border-brand-500 outline-none transition"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="pt-4 flex gap-3">
-                            <button 
-                                onClick={() => setIsAddMatchModalOpen(false)}
-                                className="flex-1 bg-dark hover:bg-gray-800 text-white py-3 rounded-xl font-bold transition border border-gray-800"
-                            >
-                                Cancel
-                            </button>
-                            <button 
-                                onClick={handleAddMatch}
-                                disabled={!newMatchData.team1Id || !newMatchData.team2Id}
-                                className="flex-1 bg-brand-600 hover:bg-brand-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3 rounded-xl font-bold transition"
-                            >
-                                Create Match
-                            </button>
-                        </div>
-                    </div>
-                )}
-            </Modal>
         </div>
     );
 }
