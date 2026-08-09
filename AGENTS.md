@@ -1,341 +1,305 @@
-# NEXPLAY ACCURACY-FIRST EXECUTION PROMPT
+# NEXPLAY AI ENGINEERING RULES
 
-You are not a code generator.
+You are an AI coding agent working on NexPlay.
 
-You are a Senior Principal Software Architect, Production Engineer, Repository Auditor, Security Engineer, QA Engineer, and Refactoring Specialist.
+NexPlay is a production esports tournament platform.
 
-Your objective is to provide repository-verified answers rather than predicted answers.
+Core systems include:
 
-# PRIMARY DIRECTIVE
+- User authentication
+- Player profiles
+- Organizations
+- Tournament creation
+- Tournament registration
+- Teams
+- Matches
+- Scoreboards
+- Leaderboards
+- Payments
+- Wallets
+- Prize settlement
+- Discord integration
+- Admin dashboard
+- Organization dashboard
+- Broadcast/overlay systems
+- Firebase/Firestore
+- Cloud Functions
+- Vercel deployment
 
-Never guess.
+==================================================
+1. SOURCE OF TRUTH
+==================================================
 
-Never assume.
+The repository is the source of truth.
 
-Never infer.
+Never assume that a feature exists.
 
-Never hallucinate.
+Before changing code, inspect:
 
-Never create code based on prediction.
+- repository structure
+- package.json
+- source files
+- Firebase configuration
+- Firestore rules
+- Cloud Functions
+- existing services
+- existing types
+- existing tests
+- environment configuration
 
-Every answer must be based on evidence discovered inside the repository.
+Classify findings as:
 
-If evidence cannot be found, explicitly state:
+EXISTS
+IMPLEMENTED
+PARTIALLY IMPLEMENTED
+BROKEN
+MISSING
+UNUSED
+DEPRECATED
 
-"Repository evidence not found. Additional file inspection required."
+Never fabricate missing implementation.
+
+==================================================
+2. NO BLIND CODING
+==================================================
+
+Never immediately start writing code for a complex request.
+
+First:
+
+1. Understand the request.
+2. Inspect the repository.
+3. Identify affected systems.
+4. Identify dependencies.
+5. Identify security implications.
+6. Identify database implications.
+7. Identify tests required.
+8. Produce an implementation plan.
+
+For small safe changes, planning may be brief.
+
+For high-risk changes, planning is mandatory.
+
+==================================================
+3. MINIMAL CHANGE PRINCIPLE
+==================================================
+
+Modify only what is necessary.
+
+Do not:
+
+- rewrite unrelated components
+- rename unrelated files
+- replace frameworks
+- replace architecture
+- remove working features
+- change database structures unnecessarily
+- add dependencies without justification
+
+==================================================
+4. NEVER FABRICATE
+==================================================
 
 Never invent:
 
-* File names
-* Folder names
-* APIs
-* Services
-* Hooks
-* Firestore collections
-* Database schemas
-* Environment variables
-* Business logic
+- APIs
+- endpoints
+- Firebase collections
+- Firestore fields
+- environment variables
+- payment responses
+- webhook payloads
+- Discord API behavior
+- authentication claims
+- database records
+- test results
 
----
+If something is unknown:
 
-# MANDATORY REPOSITORY ANALYSIS
+STOP and identify it.
 
-Before performing any task:
+==================================================
+5. SECURITY
+==================================================
 
-1. Inspect repository structure.
-2. Inspect dependencies.
-3. Inspect imports.
-4. Inspect related services.
-5. Inspect related hooks.
-6. Inspect related components.
-7. Inspect related schemas.
-8. Inspect related database models.
-9. Inspect affected routes.
-10. Build dependency map.
+Never trust client input for:
 
-Do not write code until analysis is complete.
+- user roles
+- admin privileges
+- payment status
+- wallet balance
+- tournament eligibility
+- prize amount
+- transaction status
+- organization permissions
 
----
+All sensitive operations require server-side authorization and validation.
 
-# ACCURACY REQUIREMENT
+Never weaken security rules to make functionality work.
 
-All claims must be classified as one of:
+Never expose:
 
-VERIFIED
-PARTIALLY VERIFIED
-UNKNOWN
+- private keys
+- service account credentials
+- API secrets
+- webhook secrets
+- passwords
+- tokens
 
-Examples:
+==================================================
+6. FINANCIAL SYSTEM
+==================================================
 
-VERIFIED:
-Found directly in repository.
+Payment and wallet operations are HIGH-RISK.
 
-PARTIALLY VERIFIED:
-Evidence exists but requires further inspection.
+Never allow the client to directly determine:
 
-UNKNOWN:
-Cannot be confirmed from repository.
+- wallet balance
+- payment success
+- prize amount
+- transaction status
+- withdrawal status
 
-Never present UNKNOWN information as fact.
+Financial operations must use:
 
----
+- server-side verification
+- idempotency
+- immutable transaction records
+- audit logs
+- atomic operations where required
+- reconciliation
 
-# BEFORE EVERY RESPONSE
+Prevent:
 
-Output:
+- duplicate payments
+- duplicate webhooks
+- replay attacks
+- double spending
+- duplicate prize settlement
 
-## Repository Evidence
+==================================================
+7. DATABASE
+==================================================
 
-List files inspected.
+Before changing Firestore:
 
-## Findings
+Check:
 
-List verified facts.
+- schema
+- security rules
+- indexes
+- query patterns
+- concurrency
+- document size
+- read/write cost
+- migration requirements
 
-## Unknown Areas
+Avoid unbounded queries.
 
-List missing evidence.
+Avoid unnecessary real-time listeners.
 
-## Impact Analysis
+Use pagination where appropriate.
 
-List affected systems.
+==================================================
+8. TYPESCRIPT
+==================================================
 
-## Recommendation
+Use strict TypeScript.
 
-Explain best approach.
+Avoid `any`.
 
-Only after this may implementation begin.
+Avoid unsafe casts.
 
----
+Prefer:
 
-# FEATURE DEVELOPMENT RULES
+- explicit types
+- discriminated unions
+- runtime validation
+- typed service boundaries
+- reusable domain types
 
-Before building any feature:
+==================================================
+9. ERROR HANDLING
+==================================================
 
-Identify:
+Every production feature must consider:
 
-* Existing feature owner
-* Existing service
-* Existing hooks
-* Existing schemas
-* Existing database models
-* Existing routes
+- success
+- loading
+- empty
+- validation error
+- authorization failure
+- network failure
+- server failure
+- database failure
+- timeout
+- retry behavior
 
-If reusable implementation exists:
+Never silently swallow errors.
 
-Reuse it.
+==================================================
+10. TESTING
+==================================================
 
-Do not duplicate.
+Never claim tests passed unless they actually ran.
 
----
+Relevant changes should run:
 
-# CODE MODIFICATION RULES
+- type checking
+- lint
+- unit tests
+- integration tests
+- E2E tests where applicable
+- production build
 
-Before modifying code:
+==================================================
+11. PRODUCTION
+==================================================
 
-Explain:
+Do not deploy unreviewed changes.
 
-Current location
+Production changes require:
 
-Current responsibility
+- successful CI
+- code review
+- security review for sensitive changes
+- financial review for financial changes
+- production build
+- deployment verification
+- smoke testing
 
-Dependencies
+==================================================
+12. REPORTING
+==================================================
 
-Affected modules
+At the end of every task report:
 
-Risk level
+WHAT CHANGED
 
-Expected side effects
+FILES CHANGED
 
-Only then proceed.
+DATABASE IMPACT
 
----
+SECURITY IMPACT
 
-# SELF-AUDIT MODE
+TESTS RUN
 
-Before generating code:
+TEST RESULTS
 
-Audit for:
+KNOWN LIMITATIONS
 
-* Duplicate code
-* Dead code
-* Unused imports
-* Unused components
-* Circular dependencies
-* Security risks
-* Accessibility issues
-* Performance issues
-* Type safety issues
+UNVERIFIED ITEMS
 
-Report findings first.
+Never hide failures.
 
----
+==================================================
+13. CORE PRINCIPLE
+==================================================
 
-# SECURITY FIRST
+Evidence beats assumptions.
 
-Before approving any implementation:
+Existing code beats imagined architecture.
 
-Check for:
+Verified behavior beats AI confidence.
 
-* XSS
-* CSRF
-* Injection attacks
-* Auth bypass
-* Authorization flaws
-* Secret exposure
-* Unsafe HTML rendering
-* Firestore rule violations
-
-If a security issue exists:
-
-Block implementation.
-
-Provide fix first.
-
----
-
-# FIRESTORE SAFETY
-
-Never:
-
-Create random collections.
-
-Create duplicate collections.
-
-Create duplicate indexes.
-
-Create duplicate models.
-
-Always inspect existing architecture first.
-
----
-
-# ARCHITECTURE ENFORCEMENT
-
-Required flow:
-
-UI
-→ Components
-→ Hooks
-→ Services
-→ Database
-
-Forbidden flow:
-
-UI
-→ Database
-
-UI
-→ Firestore
-
-UI
-→ Direct API Logic
-
-Reject violations.
-
----
-
-# PRODUCTION READINESS ENFORCEMENT
-
-Every implementation must satisfy:
-
-Scalability
-Maintainability
-Type Safety
-Security
-Accessibility
-Performance
-
-If not:
-
-Do not implement.
-
-Provide remediation plan first.
-
----
-
-# RESPONSE FORMAT
-
-Always follow this exact structure:
-
-# Repository Analysis
-
-# Files Inspected
-
-# Verified Facts
-
-# Unknown Areas
-
-# Dependency Map
-
-# Impact Analysis
-
-# Risks
-
-# Recommended Approach
-
-# Production Readiness Score
-
-# Implementation Plan
-
-Only after all sections are complete may code generation begin.
-
----
-
-# CAPACITY SAFEGUARD
-
-Never generate multiple files in one response.
-
-Generate one file only.
-
-If more files are required:
-
-Provide plan.
-
-Wait for approval.
-
-Continue sequentially.
-
-Never truncate code.
-
-Never use placeholders.
-
-Never use TODO comments.
-
-Never leave incomplete implementations.
-
----
-
-# SUCCESS CRITERIA
-
-A task is considered complete only when:
-
-✓ Repository evidence exists
-
-✓ Architecture remains consistent
-
-✓ No duplicate logic introduced
-
-✓ Security validated
-
-✓ Accessibility validated
-
-✓ Performance validated
-
-✓ Type safety validated
-
-✓ Production readiness maintained
-
-If any criterion fails:
-
-Stop implementation.
-
-Explain why.
-
-Request additional repository inspection.
-
-Accuracy is more important than speed.
-
-Evidence is more important than assumptions.
-
-Repository truth is more important than prediction.
+A successful build does NOT prove the application works.

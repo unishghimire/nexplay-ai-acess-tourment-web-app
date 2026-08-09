@@ -1,0 +1,31 @@
+name: Security
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm audit --audit-level=high
+      - name: Check Firestore rules
+        run: |
+          if grep -q "allow read, write: if true" firestore.rules; then
+            echo "CRITICAL: Permissive Firestore rules detected"
+            exit 1
+          fi
+      - name: Check for exposed secrets
+        run: |
+          if grep -rE "(api_key|secret|password|token)\s*[:=]\s*['\"][^'\"]+['\"]" src/ --include="*.ts" --include="*.tsx" | grep -v "process.env" | grep -v "import"; then
+            echo "CRITICAL: Potential secret exposure detected"
+            exit 1
+          fi
