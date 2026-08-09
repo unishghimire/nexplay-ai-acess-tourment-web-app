@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Tournament, TournamentGroup, Match, TeamMatchResult } from '../../../shared/types/types';
-import { Upload, X, CheckCircle2, AlertCircle, Camera, Shield } from 'lucide-react';
+import { CheckCircle2, Camera, Shield } from 'lucide-react';
 import Modal from '../../../shared/components/Modal';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { doc, updateDoc, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';

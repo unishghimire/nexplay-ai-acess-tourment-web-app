@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../../shared/context/AuthContext';
-import { collection, query, where, getDocs, orderBy, limit, doc, updateDoc, increment, addDoc, serverTimestamp, writeBatch, startAfter, QueryDocumentSnapshot } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, limit, doc, increment, addDoc, serverTimestamp, writeBatch, startAfter, QueryDocumentSnapshot } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { Transaction, PromoCode } from '../../../shared/types/types';
 import { formatCurrency, formatDate } from '../../../shared/utils/utils';
-import { Plus, ArrowUpRight, ArrowDownRight, Clock, CheckCircle2, XCircle, Wallet as WalletIcon, Gift, AlertTriangle, X, DollarSign, ShieldCheck, Download, PiggyBank, TrendingUp, TrendingDown, ChevronRight, BarChart2 } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, CheckCircle2, Wallet as WalletIcon, Gift, AlertTriangle, X, ShieldCheck, Download, TrendingUp, ChevronRight } from 'lucide-react';
 import WalletModal from '../components/WalletModal';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { useInView } from '../../../shared/hooks/useInView';
@@ -44,7 +44,6 @@ const Wallet: React.FC = () => {
         if (!user) return;
         if (isLoadMore) setLoadingMore(true);
         else setLoading(true);
-        const startTime = performance.now();
         
         try {
             let snap;
@@ -251,7 +250,6 @@ const Wallet: React.FC = () => {
     const handleReportDispute = async () => {
         if (!selectedTxForDispute || !disputeReason.trim() || !user) return;
         setIsSubmittingDispute(true);
-        const startTime = performance.now();
         try {
             await addDoc(collection(db, 'disputes'), {
                 transactionId: selectedTxForDispute.id,
@@ -270,7 +268,6 @@ const Wallet: React.FC = () => {
             setSelectedTxForDispute(null);
         } catch (error: any) {
             console.error("Error reporting dispute:", error);
-            const errMsg = error?.message || 'Failed to report dispute';
             showToast('Failed to report dispute', 'error');
         } finally {
             setIsSubmittingDispute(false);

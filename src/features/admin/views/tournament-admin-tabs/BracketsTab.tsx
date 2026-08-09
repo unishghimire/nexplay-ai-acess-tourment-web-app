@@ -1,32 +1,17 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import {
-    RotateCcw, DollarSign, TrendingUp, TrendingDown, Play, Pause, Send,
-    Plus, Trash2, Users, Calendar, Trophy, Save, XCircle,
-    CheckCircle2,
-} from 'lucide-react';
+    Trophy, } from 'lucide-react';
 import { Tournament, TournamentGroup, Match, Team, TournamentEarning } from '../../../../shared/types/types';
 import { formatCurrency, formatDate } from '../../../../shared/utils/utils';
 import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '../../../../shared/config/firebase';
+import { } from '../../../../shared/config/firebase';
 import { TournamentAdminTabProps } from './types';
 
 export const BracketsTab: React.FC<TournamentAdminTabProps> = (props) => {
     const {
-        tournament, tournamentEarning, participants, fetchingParticipants,
-        selectedGroup, selectedMatch, matchScore, newGroup, newMatchData,
-        gameStartGroupId, discordSending,
-        isCreateGroupModalOpen, isManageTeamsModalOpen,
-        isUpdateScoreModalOpen, isResultUploaderOpen, isAddMatchModalOpen,
-        setTournament, setParticipants, setSelectedMatch, setNewGroup, setSelectedGroup, setGameStartGroupId, setMatchScore, setNewMatchData,
-        setIsCreateGroupModalOpen, setIsManageTeamsModalOpen,
-        setIsUpdateScoreModalOpen, setIsResultUploaderOpen, setIsAddMatchModalOpen,
-        handleUpdateStatus, handleUpdateStage, handleAdvanceRound,
-        handleAutoGenerateGroups, handleCreateGroup, handleDeleteGroup,
-        handleAssignTeam, handleRemoveTeam, handleDiscord,
-        handleAddMatch, handleUpdateScore, handleGenerateBracket,
-        handleGenerateGroupMatches, getTeamName, showToast,
-    } = props;
+        tournament, setSelectedMatch, setMatchScore, setIsUpdateScoreModalOpen, handleGenerateBracket,
+        getTeamName, } = props;
     return (
                         <motion.div 
                             key="brackets"

@@ -8,21 +8,17 @@ import Modal from '../../../shared/components/Modal';
 import { useInvisibleImage } from '../../../shared/hooks/useInvisibleImage';
 import { ImageUploader } from '../../../shared/components/ImageUploader';
 import { MediaCategory } from '../../../shared/services/mediaService';
-import { DEFAULT_BANNER, NEXPLAY_LOGO, PRESET_TOURNAMENT_BANNERS } from '../../../shared/constants/constants';
+import { PRESET_TOURNAMENT_BANNERS } from '../../../shared/constants/constants';
 import { 
   Trophy, 
   Gamepad2, 
   Users, 
-  Calendar, 
   DollarSign, 
   FileText, 
   ChevronRight, 
   ChevronLeft,
   CheckCircle2,
-  Info,
-  Link,
-  Trash2,
-  Plus
+  Info
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import PrizeDistributionInput from './PrizeDistributionInput';
@@ -50,7 +46,8 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [games, setGames] = useState<any[]>([]);
-  const [isUploadingBanner, setIsUploadingBanner] = useState(false);
+  // ponytail: setter used by useInvisibleImage callbacks, getter intentionally unused
+  const [, setIsUploadingBanner] = useState(false);
   const [isGeneratingBanner, setIsGeneratingBanner] = useState(false);
 
   const { handlePaste, handleDrop, handleDragOver, processAndUpload } = useInvisibleImage({

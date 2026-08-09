@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { doc, getDoc, collection, query, where, getDocs, runTransaction, serverTimestamp, addDoc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, runTransaction, onSnapshot } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
-import { Tournament, UserProfile, Participant } from '../../../shared/types/types';
+import { Tournament, UserProfile } from '../../../shared/types/types';
 import { DEFAULT_BANNER } from '../../../shared/constants/constants';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { formatCurrency, formatDate, formatGameName, getYoutubeId, toDateSafe } from '../../../shared/utils/utils';
@@ -38,9 +38,6 @@ export default function TournamentDetails() {
     const [timeLeft, setTimeLeft] = useState<{ d: number; h: number; m: number; s: number } | null>(null);
     const [showJoinModal, setShowJoinModal] = useState(false);
     const [showRegistrationModal, setShowRegistrationModal] = useState(false);
-    const [teammate1, setTeammate1] = useState('');
-    const [teammate2, setTeammate2] = useState('');
-    const [teammate3, setTeammate3] = useState('');
     const [teamMembers, setTeamMembers] = useState<any[]>([]);
     const [showPassword, setShowPassword] = useState(false);
     const [hostProfile, setHostProfile] = useState<UserProfile | null>(null);
@@ -48,7 +45,6 @@ export default function TournamentDetails() {
     useEffect(() => {
         if (!id) return;
         setLoading(true);
-        const startTime = performance.now();
 
         // 1. Core Tournament Listener (Real-time & Self-healing)
         const unsubTournament = onSnapshot(doc(db, 'tournaments', id), (snapshot) => {

@@ -1,4 +1,4 @@
-import { Tournament, TournamentGroup, Match, Team, TournamentEarning } from '../../../../shared/types/types';
+import { Tournament, TournamentGroup, Match, TournamentEarning } from '../../../../shared/types/types';
 
 // ponytail: shared props type — all tabs get the full set, each destructures what it needs
 export interface TournamentAdminTabProps {

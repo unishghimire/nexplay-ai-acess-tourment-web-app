@@ -23,7 +23,6 @@ const Tournaments: React.FC = () => {
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
-            const startTime = performance.now();
             try {
                 const [tournamentsSnap, gamesSnap] = await Promise.all([
                     getDocs(collection(db, 'tournaments')),

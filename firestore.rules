@@ -234,7 +234,7 @@ service cloud.firestore {
 
     match /team_members/{memberId} {
       allow read:   if true;
-      allow create: if isVerified();
+      allow create: if isVerified() && isOwner(incoming().userId);
       allow delete: if isAdmin() || isOwner(existing().userId);
     }
 
@@ -252,7 +252,7 @@ service cloud.firestore {
 
     match /team_activity/{activityId} {
       allow read:  if true;
-      allow write: if isVerified();
+      allow write: if isAdmin() || isVerified();
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -362,8 +362,8 @@ service cloud.firestore {
     }
 
     match /audit_reports/{reportId} {
-      allow get, list: if true;
-      allow create:    if true;
+      allow get, list: if isAdmin() || (isSignedIn() && existing().createdBy == request.auth.uid);
+      allow create:    if isSignedIn();
       allow update:    if isAdmin() || (isSignedIn() && existing().createdBy == request.auth.uid);
       allow delete:    if isAdmin();
     }

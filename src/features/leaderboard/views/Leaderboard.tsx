@@ -32,7 +32,6 @@ const PodiumCard = ({ item, rank, type, navigate }: {
 }) => {
     const isFirst = rank === 1;
     const isSecond = rank === 2;
-    const isThird = rank === 3;
     
     const borderColor = isFirst ? 'border-amber-500' : isSecond ? 'border-gray-500' : 'border-amber-800';
     const bgColor = isFirst ? 'from-amber-500/10' : isSecond ? 'from-gray-500/10' : 'from-amber-800/10';
@@ -113,7 +112,6 @@ const Leaderboard: React.FC = () => {
 
     const fetchLeaderboard = async () => {
         setLoading(true);
-        const startTime = performance.now();
         try {
             if (view === 'players') {
                 const q = query(

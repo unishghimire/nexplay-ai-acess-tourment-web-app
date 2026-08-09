@@ -1,7 +1,7 @@
 import React from 'react';
-import { X, CreditCard, Layout, Info, Eye, Image as ImageIcon, Check } from 'lucide-react';
+import { X, CreditCard, Layout, Info, Eye, Image as ImageIcon } from 'lucide-react';
 import { Transaction } from '../../../shared/types/types';
-import { formatCurrency, formatDate } from '../../../shared/utils/utils';
+import { formatCurrency } from '../../../shared/utils/utils';
 
 interface TransactionDetailModalProps {
     selectedTx: Transaction;

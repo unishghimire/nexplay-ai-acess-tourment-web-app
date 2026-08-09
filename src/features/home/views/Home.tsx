@@ -12,15 +12,9 @@ import {
     Gamepad2, 
     Wallet, 
     Trophy, 
-    ShieldAlert, 
     CheckCircle2, 
-    TrendingUp, 
     Users, 
-    FileText,
-    Percent, 
-    Flame, 
-    Timer, 
-    Heart 
+    Flame 
 } from 'lucide-react';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { formatGameName } from '../../../shared/utils/utils';
@@ -65,7 +59,7 @@ const promoSlides: PromoSlide[] = [
 ];
 
 const Home: React.FC = () => {
-    const { user } = useAuth();
+    const { } = useAuth();
     const [featuredTournaments, setFeaturedTournaments] = useState<Tournament[]>([]);
     const [popularGames, setPopularGames] = useState<Game[]>([]);
     const [slides, setSlides] = useState<Slide[]>([]);
@@ -78,7 +72,6 @@ const Home: React.FC = () => {
         // Track Page View
 
         const fetchData = async () => {
-            const startPerf = performance.now();
             
             // Fetch active slides
             try {
@@ -147,7 +140,6 @@ const Home: React.FC = () => {
                 // fall back gracefully
             }
 
-            const endPerf = performance.now();
             setLoading(false);
         };
 

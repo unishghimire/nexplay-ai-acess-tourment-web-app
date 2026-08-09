@@ -5,11 +5,10 @@ import { doc, getDoc, collection, query, where, getDocs, addDoc, deleteDoc, serv
 import { db } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { UserProfile, Team, Tournament, OrgPost, MatchHistory } from '../../../shared/types/types';
-import { Shield, Trophy, Briefcase, Users, ArrowLeft, CheckCircle2, Copy, UserPlus, UserMinus, Calendar, Share2, Eye, MessageSquare, Plus, Star, Activity, Award, Zap, ChevronRight, Camera } from 'lucide-react';
+import {Trophy, Briefcase, Users, ArrowLeft, CheckCircle2, Copy, UserPlus, UserMinus, Calendar, Share2, Eye, MessageSquare, Plus, Star, Activity, Award, Zap, ChevronRight, Camera} from 'lucide-react';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import Modal from '../../../shared/components/Modal';
 import { formatDate, timeAgo, formatCurrency } from '../../../shared/utils/utils';
-import { motion } from 'motion/react';
 import { useInvisibleImage } from '../../../shared/hooks/useInvisibleImage';
 
 const PublicProfile: React.FC = () => {
@@ -20,7 +19,7 @@ const PublicProfile: React.FC = () => {
     
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [teams, setTeams] = useState<Team[]>([]);
-    const [tournaments, setTournaments] = useState<Tournament[]>([]);
+    const [, setTournaments] = useState<Tournament[]>([]);
     const [orgPosts, setOrgPosts] = useState<OrgPost[]>([]);
     const [matchHistory, setMatchHistory] = useState<MatchHistory[]>([]);
     const [loading, setLoading] = useState(true);

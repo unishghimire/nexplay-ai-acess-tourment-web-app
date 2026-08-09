@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion } from 'motion/react';
 import { Trophy, Medal, Award } from 'lucide-react';
 import { PrizeDistribution } from '../../../shared/types/types';

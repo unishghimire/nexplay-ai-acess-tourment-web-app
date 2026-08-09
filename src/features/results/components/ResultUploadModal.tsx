@@ -3,7 +3,7 @@ import { collection, query, where, getDocs, doc, updateDoc, serverTimestamp, wri
 import { db } from '../../../shared/config/firebase';
 import { Tournament, ManualResult, ResultTemplateConfig } from '../../../shared/types/types';
 import Modal from '../../../shared/components/Modal';
-import { Upload, User, Plus, Trash2, Save, Trophy, Users, DollarSign, CheckCircle2, AlertCircle, List } from 'lucide-react';
+import { Upload, Plus, Trash2, Save, Trophy, Users, DollarSign, CheckCircle2, AlertCircle, List } from 'lucide-react';
 import { NotificationService } from '../../../shared/services/NotificationService';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { motion, AnimatePresence } from 'motion/react';

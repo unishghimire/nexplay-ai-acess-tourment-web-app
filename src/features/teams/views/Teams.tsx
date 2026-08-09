@@ -3,15 +3,15 @@ import { collection, query, getDocs, addDoc, serverTimestamp, where, doc, setDoc
 import { db } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
-import { Team, TeamMember } from '../../../shared/types/types';
-import { Users, Plus, Search, Shield, ArrowRight, Image as ImageIcon, CheckCircle2 } from 'lucide-react';
+import { Team } from '../../../shared/types/types';
+import { Users, Plus, Search, ArrowRight, Image as ImageIcon, CheckCircle2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useInvisibleImage } from '../../../shared/hooks/useInvisibleImage';
 import { DEFAULT_TEAM_LOGO, NEXPLAY_LOGO, PRESET_TEAM_LOGOS } from '../../../shared/constants/constants';
 import Modal from '../../../shared/components/Modal';
 
 const Teams: React.FC = () => {
-    const { user, profile } = useAuth();
+    const { user } = useAuth();
     const { showToast } = useNotification();
     const navigate = useNavigate();
     
@@ -47,7 +47,6 @@ const Teams: React.FC = () => {
 
     const fetchTeams = async () => {
         setLoading(true);
-        const startTime = performance.now();
         try {
             // Fetch all teams
             const q = query(collection(db, 'teams'));
@@ -79,7 +78,6 @@ const Teams: React.FC = () => {
         }
 
         setCreating(true);
-        const startTime = performance.now();
         try {
             const teamData = {
                 name: newTeamName,

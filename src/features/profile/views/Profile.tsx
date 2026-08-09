@@ -5,18 +5,16 @@ import { db, auth } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { formatCurrency, formatDate, calculateLevel, getLevelProgress, getXPForNextLevel } from '../../../shared/utils/utils';
-import { useNavigate } from 'react-router-dom';
 import ConfirmModal from '../../../shared/components/ConfirmModal';
 import Modal from '../../../shared/components/Modal';
 import { useInvisibleImage } from '../../../shared/hooks/useInvisibleImage';
 import { DEFAULT_AVATAR, NEXPLAY_LOGO, PRESET_AVATARS, PRESET_PLAYER_BANNERS } from '../../../shared/constants/constants';
-import { User, Mail, Phone, Shield, Trophy, Wallet as WalletIcon, Camera, Save, Info, Briefcase, Users, Hash, Clock, ArrowDown, ArrowUp, Copy, CheckCircle2, Image as ImageIcon, Settings as SettingsIcon, X } from 'lucide-react';
+import { User, Mail, Phone, Shield, Trophy, Wallet as WalletIcon, Save, Info, Briefcase, Users, Hash, Clock, ArrowDown, ArrowUp, Copy, CheckCircle2, Image as ImageIcon, Settings as SettingsIcon, X } from 'lucide-react';
 import { Transaction, SiteSettings } from '../../../shared/types/types';
 
 const Profile: React.FC = () => {
     const { user, profile } = useAuth();
     const { showToast } = useNotification();
-    const navigate = useNavigate();
 
     const [activeTab, setActiveTab] = useState<'settings' | 'activity'>('settings');
     const [recentActivity, setRecentActivity] = useState<Transaction[]>([]);
@@ -57,7 +55,6 @@ const Profile: React.FC = () => {
         onUploadEnd: () => setIsUploading(false),
         onUploadSuccess: async (url) => {
             if (!user) return;
-            const startTime = performance.now();
             try {
                 await updateDoc(doc(db, 'users', user.uid), {
                     profilePicUrl: url
@@ -127,7 +124,6 @@ const Profile: React.FC = () => {
         if (activeTab === 'activity' && user) {
             const fetchActivity = async () => {
                 setLoadingActivity(true);
-                const startTime = performance.now();
                 try {
                     const q = query(
                         collection(db, 'transactions'),
@@ -169,7 +165,6 @@ const Profile: React.FC = () => {
         }
 
         setIsSaving(true);
-        const startTime = performance.now();
         try {
             const updateData: any = {
                 inGameId: inGameId.trim(),
@@ -213,7 +208,6 @@ const Profile: React.FC = () => {
             setShowSettingsModal(false);
         } catch (error: any) {
             console.error("Error updating profile:", error);
-            const errMsg = error?.message || 'Error saving profile';
             showToast('Error saving profile', 'error');
         } finally {
             setIsSaving(false);
@@ -226,7 +220,6 @@ const Profile: React.FC = () => {
         }
         
         setIsApplying(true);
-        const startTime = performance.now();
         try {
             const batch = writeBatch(db);
             
@@ -258,7 +251,6 @@ const Profile: React.FC = () => {
             setOrgProofLink('');
         } catch (error: any) {
             console.error("Error applying for organizer:", error);
-            const errMsg = error?.message || 'Failed to send application';
             showToast('Failed to send application', 'error');
         } finally {
             setIsApplying(false);
@@ -277,7 +269,6 @@ const Profile: React.FC = () => {
     const handleUpdateEmail = async () => {
         if (!auth.currentUser || !newEmail) return;
         setIsUpdatingEmail(true);
-        const startTime = performance.now();
         try {
             await updateEmail(auth.currentUser, newEmail);
             await updateDoc(doc(db, 'users', user!.uid), { email: newEmail });
@@ -298,7 +289,6 @@ const Profile: React.FC = () => {
 
     const handleBannerSelect = async (url: string) => {
         if (!user) return;
-        const startTime = performance.now();
         try {
             await updateDoc(doc(db, 'users', user.uid), {
                 bannerUrl: url
@@ -311,15 +301,6 @@ const Profile: React.FC = () => {
         }
     };
 
-    const getStatusColor = (s: string) => {
-        switch (s) {
-            case 'online': return 'bg-green-500';
-            case 'idle': return 'bg-yellow-500';
-            case 'dnd': return 'bg-red-500';
-            case 'offline': return 'bg-gray-500';
-            default: return 'bg-green-500';
-        }
-    };
 
     return (
         <div className="max-w-3xl mx-auto animate-fade-in pb-20">
@@ -584,7 +565,6 @@ const Profile: React.FC = () => {
                                 key={index}
                                 onClick={async () => {
                                     if (!user) return;
-                                    const startTime = performance.now();
                                     setShowPresetModal(false);
                                     setIsUploading(true);
                                     try {

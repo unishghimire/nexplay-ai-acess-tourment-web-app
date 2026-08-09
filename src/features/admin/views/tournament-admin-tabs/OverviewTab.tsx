@@ -6,19 +6,10 @@ import { TournamentAdminTabProps } from './types';
 
 export const OverviewTab: React.FC<TournamentAdminTabProps> = (props) => {
     const {
-        tournament, tournamentEarning, participants, fetchingParticipants,
-        selectedGroup, selectedMatch, matchScore, newGroup, newMatchData,
-        gameStartGroupId, discordSending,
-        isCreateGroupModalOpen, isManageTeamsModalOpen,
-        isUpdateScoreModalOpen, isResultUploaderOpen, isAddMatchModalOpen,
-        setTournament, setParticipants, setSelectedMatch, setNewGroup, setSelectedGroup, setGameStartGroupId, setMatchScore, setNewMatchData,
-        setIsCreateGroupModalOpen, setIsManageTeamsModalOpen,
-        setIsUpdateScoreModalOpen, setIsResultUploaderOpen, setIsAddMatchModalOpen,
-        handleUpdateStatus, handleUpdateStage, handleAdvanceRound,
-        handleAutoGenerateGroups, handleCreateGroup, handleDeleteGroup,
-        handleAssignTeam, handleRemoveTeam, handleDiscord,
-        handleAddMatch, handleUpdateScore, handleGenerateBracket,
-        handleGenerateGroupMatches, getTeamName, showToast,
+        tournament, tournamentEarning, gameStartGroupId, discordSending,
+        setGameStartGroupId, handleUpdateStatus, handleUpdateStage, handleAdvanceRound,
+        handleDiscord,
+        handleGenerateGroupMatches, showToast,
     } = props;
     return (
                         <motion.div 

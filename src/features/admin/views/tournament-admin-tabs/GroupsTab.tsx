@@ -9,20 +9,12 @@ import Modal from '../../../../shared/components/Modal';
 
 export const GroupsTab: React.FC<TournamentAdminTabProps> = (props) => {
     const {
-        tournament, tournamentEarning, participants, fetchingParticipants,
-        selectedGroup, selectedMatch, matchScore, newGroup, newMatchData,
-        gameStartGroupId, discordSending,
-        isCreateGroupModalOpen, isManageTeamsModalOpen,
-        isUpdateScoreModalOpen, isResultUploaderOpen, isAddMatchModalOpen,
-        setTournament, setParticipants, setSelectedMatch, setNewGroup, setSelectedGroup, setGameStartGroupId, setMatchScore, setNewMatchData,
-        setIsCreateGroupModalOpen, setIsManageTeamsModalOpen,
-        setIsUpdateScoreModalOpen, setIsResultUploaderOpen, setIsAddMatchModalOpen,
-        handleUpdateStatus, handleUpdateStage, handleAdvanceRound,
+        tournament, participants, fetchingParticipants,
+        selectedGroup, newGroup, isCreateGroupModalOpen, isManageTeamsModalOpen,
+        setNewGroup, setSelectedGroup, setIsCreateGroupModalOpen, setIsManageTeamsModalOpen,
+        setIsAddMatchModalOpen,
         handleAutoGenerateGroups, handleCreateGroup, handleDeleteGroup,
-        handleAssignTeam, handleRemoveTeam, handleDiscord,
-        handleAddMatch, handleUpdateScore, handleGenerateBracket,
-        handleGenerateGroupMatches, getTeamName, showToast,
-    } = props;
+        handleAssignTeam, handleRemoveTeam, handleGenerateGroupMatches, } = props;
 
     // ponytail: compute available teams locally — moved from main file with the modal
     const groupedParticipants = participants.reduce((acc: any, p) => {

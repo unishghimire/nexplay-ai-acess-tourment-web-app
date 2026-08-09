@@ -25,7 +25,6 @@ export default function ManualResultManager({ results, onChange, templateConfig,
     const [activeTab, setActiveTab] = useState<'edit' | 'preview' | 'settings'>('edit');
     const [autoRank, setAutoRank] = useState(true);
     const [presetName, setPresetName] = useState('');
-    const [isSavingPreset, setIsSavingPreset] = useState(false);
 
     const validateResults = () => {
         const errors: string[] = [];

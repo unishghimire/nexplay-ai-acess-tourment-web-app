@@ -7,7 +7,7 @@ const Footer: React.FC = () => {
         <footer className="bg-dark border-t border-gray-800 py-8 mt-auto">
             <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
                 <div className="text-gray-500 text-sm text-center md:text-left">
-                    <p>&copy; 2025 NexPlay.</p>
+                    <p>&copy; {new Date().getFullYear()} NexPlay.</p>
                 </div>
                 <div className="flex flex-wrap justify-center gap-6 text-sm font-medium">
                     <Link to="/about" className="text-gray-400 hover:text-white transition">About Us</Link>

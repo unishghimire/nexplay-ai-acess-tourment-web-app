@@ -72,7 +72,7 @@ const hasLocalMaintenanceBypass = () => {
 };
 
 const AppContent = ({ toasts, removeToast }: { toasts: ToastData[], removeToast: (id: number) => void }) => {
-  const { user, profile, loading: authLoading } = useAuth();
+  const { profile, loading: authLoading } = useAuth();
   const { settings, loading: settingsLoading } = useSiteSettings();
   const location = useLocation();
   const isHome = location.pathname === '/';
@@ -173,11 +173,6 @@ const AppContent = ({ toasts, removeToast }: { toasts: ToastData[], removeToast:
 
 export default function App() {
   const [toasts, setToasts] = useState<ToastData[]>([]);
-
-  const showToast = useCallback((message: string, type: ToastType = 'info') => {
-    const id = Date.now();
-    setToasts(prev => [...prev, { id, message, type }]);
-  }, []);
 
   const removeToast = useCallback((id: number) => {
     setToasts(prev => prev.filter(t => t.id !== id));

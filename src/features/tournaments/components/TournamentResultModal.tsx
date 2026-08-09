@@ -1,11 +1,10 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Trophy, X, Calendar, MapPin, Users, Target, Shield, Clock, Award, Star, Medal, ArrowUpRight, Copy, Share2, Download, CheckCircle2 } from 'lucide-react';
+import {Trophy, X, Calendar, Users, Target, Award, Star, Medal, ArrowUpRight, Share2, Download, CheckCircle2} from 'lucide-react';
 import { Tournament } from '../../../shared/types/types';
 import { formatCurrency, formatDate } from '../../../shared/utils/utils';
 import PrizeBoard from './PrizeBoard';
 import ResultBoard from '../../results/components/ResultBoard';
-import ProfileLink from '../../profile/components/ProfileLink';
 import { useNotification } from '../../../shared/context/NotificationContext';
 
 interface TournamentResultModalProps {

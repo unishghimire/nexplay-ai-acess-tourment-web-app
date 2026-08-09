@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { motion } from 'motion/react';
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, CheckCircle, XCircle, ShieldCheck, Phone, Hash } from 'lucide-react';
@@ -57,7 +56,6 @@ const Register: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
-        const startTime = performance.now();
 
         if (password !== confirmPassword) {
             setError('Passwords do not match');
@@ -136,10 +134,9 @@ const Register: React.FC = () => {
     const handleGoogleSignIn = async () => {
         setError('');
         setIsGoogleLoading(true);
-        const startTime = performance.now();
 
         try {
-            const result = await signInWithPopup(auth, googleProvider);
+            await signInWithPopup(auth, googleProvider);
             showToast('Welcome to Nexplay!', 'success');
             navigate('/dashboard');
         } catch (err: any) {

@@ -8,9 +8,11 @@ const Breadcrumbs: React.FC = () => {
 
     if (pathnames.length === 0) return null;
 
-    const breadcrumbNameMap: { [key: string]: string } = {
+    const breadcrumbNameMap: Record<string, string> = {
         'tournaments': 'Tournaments',
         'games': 'Games',
+        'scrims': 'Scrims',
+        'results': 'Results',
         'details': 'Tournament Details',
         'dashboard': 'Dashboard',
         'profile': 'Profile',
@@ -20,11 +22,16 @@ const Breadcrumbs: React.FC = () => {
         'leaderboard': 'Leaderboard',
         'admin': 'Admin Panel',
         'organizer': 'Organizer Panel',
+        'organizations': 'Organizations',
+        'organization': 'Organization',
+        'wallet': 'Wallet',
         'login': 'Login',
         'register': 'Register',
         'about': 'About',
         'contact': 'Contact',
         'privacy': 'Privacy',
+        'terms': 'Terms',
+        'complete-profile': 'Complete Profile',
     };
 
     return (

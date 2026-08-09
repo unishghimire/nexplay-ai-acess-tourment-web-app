@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { Game } from '../../../shared/types/types';
-import { Gamepad2, Layers, ChevronRight } from 'lucide-react';
+import { Gamepad2, ChevronRight } from 'lucide-react';
 import { formatGameModeLabel, formatGameName } from '../../../shared/utils/utils';
 
 const defaultImages = [

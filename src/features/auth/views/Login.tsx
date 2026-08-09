@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../../../shared/context/AuthContext';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { motion } from 'motion/react';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck } from 'lucide-react';
@@ -20,6 +19,7 @@ const Login: React.FC = () => {
 
     const { showToast } = useNotification();
     const navigate = useNavigate();
+    const location = useLocation();
 
     useEffect(() => {
     }, []);
@@ -34,12 +34,12 @@ const Login: React.FC = () => {
         }
 
         setIsLoading(true);
-        const startTime = performance.now();
 
         try {
             await signInWithEmailAndPassword(auth, email, password);
             showToast('Welcome back!', 'success');
-            navigate('/');
+            const redirectTo = (location.state as { from?: { pathname: string } })?.from?.pathname || '/';
+            navigate(redirectTo);
         } catch (err: any) {
             console.error('Login error:', err);
             const errMsg = err.message || 'Login failed';
@@ -53,12 +53,12 @@ const Login: React.FC = () => {
     const handleGoogleSignIn = async () => {
         setError('');
         setIsGoogleLoading(true);
-        const startTime = performance.now();
 
         try {
-            const result = await signInWithPopup(auth, googleProvider);
+            await signInWithPopup(auth, googleProvider);
             showToast('Welcome back!', 'success');
-            navigate('/');
+            const redirectTo = (location.state as { from?: { pathname: string } })?.from?.pathname || '/';
+            navigate(redirectTo);
         } catch (err: any) {
             console.error('Google Sign-In error:', err);
             const errMsg = err.message || 'Google Sign-In failed';

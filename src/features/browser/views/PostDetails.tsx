@@ -19,7 +19,7 @@ const PostDetails: React.FC = () => {
     const [post, setPost] = useState<OrgPost | null>(null);
     const [loading, setLoading] = useState(true);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-    const [isDeleting, setIsDeleting] = useState(false);
+    const [, setIsDeleting] = useState(false);
 
     useEffect(() => {
         const fetchPost = async () => {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Trash2, AlertTriangle, Key, Radio, ShieldAlert } from 'lucide-react';
+import { Trash2, Radio, ShieldAlert } from 'lucide-react';
 import Modal from '../../../shared/components/Modal';
 
 export type OverlayType =

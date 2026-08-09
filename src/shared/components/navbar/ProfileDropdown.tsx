@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { User, Settings, LogOut, ChevronDown, Users, Trophy, Plus } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { User, Settings, LogOut, ChevronDown, Plus } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 interface ProfileDropdownProps {
@@ -10,10 +10,9 @@ interface ProfileDropdownProps {
 }
 
 const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ username, avatarUrl, onLogout }) => {
-  const { user, profile } = useAuth();
+  const { profile } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {

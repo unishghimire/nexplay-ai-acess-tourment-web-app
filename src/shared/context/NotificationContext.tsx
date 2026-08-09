@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { collection, query, where, getDocs, onSnapshot, Timestamp, getDoc, doc } from 'firebase/firestore';
+import { collection, query, where, getDocs, onSnapshot, getDoc, doc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from './AuthContext';
 import { Tournament } from '../types/types';

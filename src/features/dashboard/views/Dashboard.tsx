@@ -12,8 +12,8 @@ import TournamentResultModal from '../../tournaments/components/TournamentResult
 const Dashboard: React.FC = () => {
     const { user, profile } = useAuth();
     const [myTournaments, setMyTournaments] = useState<(Tournament & { role: 'participant' | 'organizer'; registration?: any })[]>([]);
-    const [myTeams, setMyTeams] = useState<Team[]>([]);
-    const [settings, setSettings] = useState<SiteSettings | null>(null);
+    const [, setMyTeams] = useState<Team[]>([]);
+    const [, setSettings] = useState<SiteSettings | null>(null);
     const [loading, setLoading] = useState(true);
     const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
     const [isResultModalOpen, setIsResultModalOpen] = useState(false);
@@ -22,7 +22,6 @@ const Dashboard: React.FC = () => {
 
     const fetchAllData = async () => {
         if (!user) return;
-        const startTime = performance.now();
         try {
             // Fetch Joined Tournaments
             const partSnap = await getDocs(query(

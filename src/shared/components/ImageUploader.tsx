@@ -5,7 +5,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { motion } from "motion/react";
-import { Upload, X, Image as ImageIcon, RefreshCw, AlertCircle, CheckCircle } from "lucide-react";
+import { Upload, X, Image as RefreshCw, AlertCircle, CheckCircle } from "lucide-react";
 import { MediaCategory, uploadImage, ALLOWED_MIME_TYPES } from "../services/mediaService";
 
 interface ImageUploaderProps {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { doc, runTransaction, collection, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { Tournament, UserProfile } from '../../../shared/types/types';

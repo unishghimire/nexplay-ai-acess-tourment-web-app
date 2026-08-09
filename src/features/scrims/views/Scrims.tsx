@@ -17,7 +17,6 @@ const Scrims: React.FC = () => {
     useEffect(() => {
         const fetchScrims = async () => {
             setLoading(true);
-            const startTime = performance.now();
             try {
                 // In production, we'd use a server endpoint for better filtering/security
                 const response = await fetch('/api/scrims');

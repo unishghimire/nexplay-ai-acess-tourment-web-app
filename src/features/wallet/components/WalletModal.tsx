@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { X, ArrowDown, ArrowUp, Info, CheckCircle, CreditCard, AlertTriangle } from 'lucide-react';
-import { collection, query, where, getDocs, addDoc, serverTimestamp, doc, getDoc, writeBatch, increment, Timestamp } from 'firebase/firestore';
+import { X, ArrowDown, CreditCard, AlertTriangle } from 'lucide-react';
+import { collection, query, where, getDocs, addDoc, serverTimestamp, doc, getDoc, writeBatch, increment } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
-import { PaymentMethod, PaymentCategory, SiteSettings, Transaction } from '../../../shared/types/types';
+import { PaymentMethod, PaymentCategory, SiteSettings } from '../../../shared/types/types';
 import { formatCurrency } from '../../../shared/utils/utils';
 
 interface WalletModalProps {

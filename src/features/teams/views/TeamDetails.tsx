@@ -5,12 +5,11 @@ import { db } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { Team, TeamMember, UserProfile, TeamInvite, TeamActivity } from '../../../shared/types/types';
-import { Users, Shield, UserPlus, Settings, LogOut, Check, X, ArrowLeft, Crown, Activity, Image as ImageIcon, CheckCircle2, Globe, Calendar, Trophy, Zap, ChevronRight, Star, Camera } from 'lucide-react';
+import {Users, UserPlus, Settings, LogOut, X, ArrowLeft, Crown, Activity, Globe, Calendar, Trophy, Zap, ChevronRight, Star, Camera} from 'lucide-react';
 import { useInvisibleImage } from '../../../shared/hooks/useInvisibleImage';
 import { NEXPLAY_LOGO, PRESET_TEAM_LOGOS } from '../../../shared/constants/constants';
 import { timeAgo, formatDate, formatCurrency } from '../../../shared/utils/utils';
 import Modal from '../../../shared/components/Modal';
-import { motion } from 'motion/react';
 
 const TeamDetails: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -34,7 +33,6 @@ const TeamDetails: React.FC = () => {
     const [saving, setSaving] = useState(false);
     const [isUploadingLogo, setIsUploadingLogo] = useState(false);
     const [isUploadingBanner, setIsUploadingBanner] = useState(false);
-    const [showPresetModal, setShowPresetModal] = useState(false);
     const [confirmModal, setConfirmModal] = useState<{
         isOpen: boolean;
         title: string;
@@ -73,7 +71,6 @@ const TeamDetails: React.FC = () => {
 
     const fetchTeamData = async () => {
         setLoading(true);
-        const startTime = performance.now();
         try {
             if (!id) return;
             const teamDoc = await getDoc(doc(db, 'teams', id));
@@ -172,7 +169,6 @@ const TeamDetails: React.FC = () => {
     const handleSaveTeam = async () => {
         if (!team || !editName.trim()) return;
         setSaving(true);
-        const startTime = performance.now();
         try {
             await updateDoc(doc(db, 'teams', team.id), {
                 name: editName,
@@ -188,7 +184,6 @@ const TeamDetails: React.FC = () => {
             fetchTeamData();
         } catch (error: any) {
             console.error("Error updating team:", error);
-            const errMsg = error?.message || 'Failed to update team';
             showToast('Failed to update team', 'error');
         } finally {
             setSaving(false);
@@ -202,7 +197,6 @@ const TeamDetails: React.FC = () => {
             return;
         }
         setInviting(true);
-        const startTime = performance.now();
         try {
             const userDoc = await getDoc(doc(db, 'users_public', inviteUserId));
             if (!userDoc.exists()) {
@@ -243,52 +237,12 @@ const TeamDetails: React.FC = () => {
             fetchTeamData();
         } catch (error: any) {
             console.error("Error sending invite:", error);
-            const errMsg = error?.message || 'Failed to send invite';
             showToast('Failed to send invite', 'error');
         } finally {
             setInviting(false);
         }
     };
 
-    const handleAcceptInvite = async (inviteId: string) => {
-        if (!team || !user) return;
-        if (members.length >= 6) {
-            showToast('Team is full (max 6 players)', 'error');
-            return;
-        }
-        if (profile?.teamId && profile.teamId !== team.id) {
-            showToast('You are already in a team. Leave your current team first.', 'error');
-            return;
-        }
-        const startTime = performance.now();
-        try {
-            await updateDoc(doc(db, 'team_invites', inviteId), { status: 'accepted' });
-            await addDoc(collection(db, 'team_members'), {
-                teamId: team.id,
-                userId: user.uid,
-                role: 'member',
-                joinedAt: serverTimestamp()
-            });
-            await updateDoc(doc(db, 'users', user.uid), { teamName: team.name, teamId: team.id });
-            await setDoc(doc(db, 'users_public', user.uid), { teamName: team.name, teamId: team.id }, { merge: true });
-            await logActivity('joined_team', 'Joined the team via invitation');
-            showToast('Joined team successfully!', 'success');
-            fetchTeamData();
-        } catch (error: any) {
-            console.error("Error accepting invite:", error);
-            showToast('Failed to join team', 'error');
-        }
-    };
-
-    const handleDeclineInvite = async (inviteId: string) => {
-        try {
-            await updateDoc(doc(db, 'team_invites', inviteId), { status: 'declined' });
-            showToast('Invitation declined', 'info');
-            fetchTeamData();
-        } catch (error) {
-            console.error("Error declining invite:", error);
-        }
-    };
 
     const handleLeaveTeam = () => {
         if (!team || !user || !currentUserMember) return;
@@ -304,7 +258,6 @@ const TeamDetails: React.FC = () => {
     const executeLeaveTeam = async () => {
         if (!team || !user || !currentUserMember) return;
         setSaving(true);
-        const startTime = performance.now();
         try {
             await deleteDoc(doc(db, 'team_members', currentUserMember.id));
             if (profile?.teamId === team.id) {
@@ -337,7 +290,6 @@ const TeamDetails: React.FC = () => {
     const executeDeleteTeam = async () => {
         if (!team || !user || !isOwner) return;
         setSaving(true);
-        const startTime = performance.now();
         try {
             const membersQ = query(collection(db, 'team_members'), where('teamId', '==', team.id));
             const membersSnap = await getDocs(membersQ);
@@ -427,7 +379,6 @@ const TeamDetails: React.FC = () => {
     const currentUserMember = members.find(m => m.userId === user?.uid);
     const isAdmin = isOwner || currentUserMember?.role === 'admin';
     const isMember = !!currentUserMember;
-    const pendingInvite = invites.find(i => i.inviteeId === user?.uid);
 
     return (
         <div className="max-w-6xl mx-auto animate-fade-in pb-20 px-4">

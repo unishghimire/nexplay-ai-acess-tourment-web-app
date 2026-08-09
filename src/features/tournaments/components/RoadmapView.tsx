@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { Tournament } from '../../../shared/types/types';
-import { Calendar, Trophy, CheckCircle2, Circle, ArrowRight, Flag, Layers3, MapPinned } from 'lucide-react';
+import { CheckCircle2, Circle, ArrowRight, Flag, Layers3, MapPinned } from 'lucide-react';
 import { formatDate } from '../../../shared/utils/utils';
 
 interface RoadmapViewProps {

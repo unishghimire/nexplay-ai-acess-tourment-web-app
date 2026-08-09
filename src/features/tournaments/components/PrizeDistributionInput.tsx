@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { Plus, Trash2, GripVertical, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { PrizeDistribution } from '../../../shared/types/types';
