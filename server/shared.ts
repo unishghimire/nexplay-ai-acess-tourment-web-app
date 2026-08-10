@@ -23,7 +23,14 @@ export const __dirname = path.dirname(__filename);
 const configPath = path.join(process.cwd(), "firebase-applet-config.json");
 const firebaseConfig = JSON.parse(fs.readFileSync(configPath, "utf-8"));
 
+// Use service account from env on Vercel/serverless; fall back to ADC for local dev
+const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
+const credential = serviceAccountJson
+  ? admin.credential.cert(JSON.parse(serviceAccountJson))
+  : undefined;
+
 export const firebaseApp = admin.initializeApp({
+  credential,
   projectId: firebaseConfig.projectId,
   storageBucket: firebaseConfig.storageBucket,
 });
