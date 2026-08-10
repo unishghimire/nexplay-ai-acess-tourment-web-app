@@ -1,11 +1,5 @@
 import React from 'react';
 import {Users, Settings, Megaphone, AlertTriangle} from 'lucide-react';
-import { doc, updateDoc, deleteDoc, collection, query, where, getDocs, setDoc, serverTimestamp, increment, getDoc, writeBatch, orderBy, limit, Timestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from '../../../../shared/config/firebase';
-import { } from '../../../../shared/utils/utils';
-import { } from '../../../../shared/components/ImageUploader';
-import {} from '../../../../shared/services/mediaService';
 
 import { AdminPanelTabProps } from './types';
 

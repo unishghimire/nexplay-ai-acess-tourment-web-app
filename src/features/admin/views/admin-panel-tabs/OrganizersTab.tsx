@@ -1,16 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {Users, X, Trash, Edit, CheckCircle} from 'lucide-react';
-import { doc, updateDoc, deleteDoc, collection, query, where, getDocs, setDoc, serverTimestamp, increment, getDoc, writeBatch, orderBy, limit, Timestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from '../../../../shared/config/firebase';
-import {  } from '../../../../shared/utils/utils';
-import { } from '../../../../shared/components/ImageUploader';
-import {} from '../../../../shared/services/mediaService';
 
 import { AdminPanelTabProps } from './types';
 
 export const OrganizersTab: React.FC<AdminPanelTabProps> = (props) => {
     const { formatCurrency, handleSaveOrgDetails, handleSuspendOrg, isOrgEditModalOpen, orgDiscord, orgEmail, orgNameEdit, orgWhatsapp, orgYoutube, organizers, setIsOrgEditModalOpen, setOrgDiscord, setOrgEmail, setOrgNameEdit, setOrgWhatsapp, setOrgYoutube, togglePowerOrganizer, setEditingOrg } = props;
+    const [processingId, setProcessingId] = useState<string | null>(null);
     return (
                 <div className="bg-card p-6 rounded-xl border border-gray-800 space-y-6">
                     <div className="flex justify-between items-center border-b border-gray-700 pb-4">

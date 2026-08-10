@@ -21,7 +21,10 @@ const TEMPLATES = [
     { id: 'compact', name: 'Mobile Compact', icon: Medal },
 ];
 
+import { useNotification } from '../../../shared/context/NotificationContext';
+
 export default function ManualResultManager({ results, onChange, templateConfig, onTemplateChange, presets = [], onSavePreset }: ManualResultManagerProps) {
+    const { showToast } = useNotification();
     const [activeTab, setActiveTab] = useState<'edit' | 'preview' | 'settings'>('edit');
     const [autoRank, setAutoRank] = useState(true);
     const [presetName, setPresetName] = useState('');
@@ -395,6 +398,7 @@ export default function ManualResultManager({ results, onChange, templateConfig,
                                                 onClick={() => {
                                                     if (presetName.trim()) {
                                                         onSavePreset(presetName.trim(), templateConfig);
+                                                        showToast('Preset saved successfully', 'success');
                                                         setPresetName('');
                                                     }
                                                 }}

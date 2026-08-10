@@ -24,7 +24,18 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
-    if (allowedRoles && (!profile || !allowedRoles.includes(profile.role))) {
+    // Wait for profile to load before checking roles — prevents race condition
+    // where authorized users get redirected to /dashboard during initial load
+    if (allowedRoles && !profile) {
+        return (
+            <div className="min-h-[60vh] flex flex-col items-center justify-center">
+                <div className="w-12 h-12 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                <p className="text-xs text-gray-500 font-black uppercase tracking-widest">Loading profile...</p>
+            </div>
+        );
+    }
+
+    if (allowedRoles && profile && !allowedRoles.includes(profile.role)) {
         return <Navigate to="/dashboard" replace />;
     }
 

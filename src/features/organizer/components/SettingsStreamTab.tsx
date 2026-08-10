@@ -3,7 +3,6 @@ import { Settings, Radio, UserCog, Save, Link2, Youtube } from 'lucide-react';
 
 export interface SettingsStreamTabProps {
   profile: any;
-  isDemoMode: boolean;
   onSaveSettings: (settings: {
     orgName?: string;
     bio?: string;
@@ -15,7 +14,6 @@ export interface SettingsStreamTabProps {
 
 export const SettingsStreamTab: React.FC<SettingsStreamTabProps> = ({
   profile,
-  isDemoMode,
   onSaveSettings,
 }) => {
   // Section A State: Organization Profile
@@ -114,11 +112,6 @@ export const SettingsStreamTab: React.FC<SettingsStreamTabProps> = ({
           <div className="flex items-center gap-3">
             <Settings className="w-6 h-6 text-brand-500" />
             <h2 className="text-2xl font-bold text-white tracking-tight">Settings &amp; Stream</h2>
-            {isDemoMode && (
-              <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                Demo Mode
-              </span>
-            )}
           </div>
           <p className="text-xs text-gray-400 mt-1">
             Organization branding, stream configuration, and staff permissions

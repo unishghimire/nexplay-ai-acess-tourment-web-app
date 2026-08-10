@@ -1,4 +1,4 @@
-import { useState, useCallback, Suspense, lazy } from 'react';
+import { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider, useAuth } from './shared/context/AuthContext';
@@ -11,7 +11,6 @@ import Footer from './shared/components/Footer';
 import BackButton from './shared/components/BackButton';
 import ScrollToTop from './shared/components/ScrollToTop';
 import ProfileCompletionGuard from './features/auth/components/ProfileCompletionGuard';
-import Toast, { ToastType } from './shared/components/Toast';
 import ProtectedRoute from './shared/components/ProtectedRoute';
 
 // Lazy load views
@@ -44,12 +43,6 @@ const Login = lazy(() => import('./features/auth/views/Login'));
 const Register = lazy(() => import('./features/auth/views/Register'));
 const NotFound = lazy(() => import('./features/home/views/NotFound'));
 
-interface ToastData {
-  id: number;
-  message: string;
-  type: ToastType;
-}
-
 const LoadingFallback = () => (
   <div className="min-h-[60vh] flex flex-col items-center justify-center">
     <div className="w-12 h-12 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mb-4"></div>
@@ -71,7 +64,7 @@ const hasLocalMaintenanceBypass = () => {
   return window.localStorage.getItem('nexplay-maintenance-bypass') === 'true';
 };
 
-const AppContent = ({ toasts, removeToast }: { toasts: ToastData[], removeToast: (id: number) => void }) => {
+const AppContent = () => {
   const { profile, loading: authLoading } = useAuth();
   const { settings, loading: settingsLoading } = useSiteSettings();
   const location = useLocation();
@@ -162,22 +155,11 @@ const AppContent = ({ toasts, removeToast }: { toasts: ToastData[], removeToast:
         </ProfileCompletionGuard>
       </main>
       <Footer />
-      <div id="toast-container" className="fixed bottom-5 right-5 z-[100] pointer-events-none">
-        {toasts.map(t => (
-          <Toast key={t.id} message={t.message} type={t.type} onClose={() => removeToast(t.id)} />
-        ))}
-      </div>
     </div>
   );
 };
 
 export default function App() {
-  const [toasts, setToasts] = useState<ToastData[]>([]);
-
-  const removeToast = useCallback((id: number) => {
-    setToasts(prev => prev.filter(t => t.id !== id));
-  }, []);
-
   return (
     <ErrorBoundary>
       <HelmetProvider>
@@ -185,7 +167,7 @@ export default function App() {
           <SiteSettingsProvider>
             <NotificationProvider>
               <Router>
-                <AppContent toasts={toasts} removeToast={removeToast} />
+                <AppContent />
               </Router>
             </NotificationProvider>
           </SiteSettingsProvider>

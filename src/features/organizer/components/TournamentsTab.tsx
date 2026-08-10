@@ -29,7 +29,6 @@ export interface BracketMatch {
 
 export interface TournamentsTabProps {
   hostedTournaments: any[];
-  isDemoMode: boolean;
   onDelete: (id: string, title: string) => void;
   onUpdateStatus: (id: string, status: string) => void;
   onCreateTournament: () => void;
@@ -40,7 +39,6 @@ export interface TournamentsTabProps {
 
 const TournamentsTab: React.FC<TournamentsTabProps> = ({
   hostedTournaments,
-  isDemoMode,
   onDelete,
   onUpdateStatus,
   onCreateTournament,
@@ -205,11 +203,6 @@ const TournamentsTab: React.FC<TournamentsTabProps> = ({
           <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
             Tournaments
           </h2>
-          {isDemoMode && (
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
-              Demo Mode
-            </span>
-          )}
         </div>
 
         <button

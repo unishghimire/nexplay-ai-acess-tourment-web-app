@@ -286,6 +286,7 @@ export interface Transaction {
     accountDetails?: string;
     confirmedBy?: string;
     confirmedByUsername?: string;
+    transactionCode?: string;
     tournamentId?: string;
 }
 

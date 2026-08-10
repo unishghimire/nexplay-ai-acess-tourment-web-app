@@ -11,7 +11,9 @@
     "deploy:hosting": "npm run build && firebase deploy --only hosting",
     "deploy:firestore-rules": "firebase deploy --only firestore:rules",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "start": "NODE_ENV=production tsx server.ts",
+    "deploy:indexes": "firebase deploy --only firestore:indexes"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",

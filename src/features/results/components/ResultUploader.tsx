@@ -72,7 +72,12 @@ const ResultUploader: React.FC<ResultUploaderProps> = ({ isOpen, onClose, tourna
                         reader.onerror = error => reject(error);
                     });
                     
-                    const token = auth.currentUser ? await auth.currentUser.getIdToken() : localStorage.getItem('token');
+                    const currentUser = auth.currentUser;
+                    if (!currentUser) {
+                        console.error('No authenticated user for screenshot upload');
+                        return;
+                    }
+                    const token = await currentUser.getIdToken();
                     const response = await fetch('/api/process-image', {
                         method: 'POST',
                         headers: {

@@ -204,9 +204,9 @@ const Contact: React.FC = () => {
                                             <p className="text-xs text-gray-400 leading-relaxed">
                                                 Please download the official partnership contract from the link below, fill it out, and email it to <span className="text-brand-400 font-bold">partnerships.nexplayorg@gmail.com</span> with the subject "ORG APPLICATION - [Your Org Name]".
                                             </p>
-                                            <a href="#" className="inline-flex items-center gap-2 text-brand-500 hover:text-brand-400 text-[10px] font-black uppercase tracking-widest mt-2">
+                                            <button onClick={() => window.open("https://discord.com", "_blank")} className="inline-flex items-center gap-2 text-brand-500 hover:text-brand-400 text-[10px] font-black uppercase tracking-widest mt-2">
                                                 Download Contract Template <ExternalLink className="w-3 h-3" />
-                                            </a>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>

@@ -1,12 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
-import { collection, query, where, getDocs, doc, updateDoc, addDoc, deleteDoc, serverTimestamp, increment, writeBatch } from 'firebase/firestore';
-import { db } from '../../../shared/config/firebase';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { collection, query, where, getDocs, doc, updateDoc, deleteDoc, serverTimestamp, increment, writeBatch } from 'firebase/firestore';
+import { db, auth } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { Tournament, Participant, Transaction } from '../../../shared/types/types';
-import {
-  mockTournaments, mockTeams, mockScrims, mockMatchRooms,
-  mockDisputes, mockTransactions, mockKPIs, mockActivityFeed,
-} from '../data/orgMockData';
 
 export function useOrgData() {
   const { user, profile } = useAuth();
@@ -14,11 +10,9 @@ export function useOrgData() {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isDemoMode, setIsDemoMode] = useState(false);
 
   const fetchHostedTournaments = useCallback(async () => {
     if (!user) {
-      setIsDemoMode(true);
       setLoading(false);
       return;
     }
@@ -33,14 +27,33 @@ export function useOrgData() {
         return bTime - aTime;
       });
       setHostedTournaments(tours);
-      setIsDemoMode(tours.length === 0);
     } catch (err) {
       console.error('Error fetching hosted tournaments:', err);
-      setIsDemoMode(true);
     } finally {
       setLoading(false);
     }
   }, [user]);
+
+  // Compute KPIs from real tournament data
+  const kpis = useMemo(() => {
+    const active = hostedTournaments.filter(t => t.status === 'live' || t.status === 'upcoming' || t.status === 'published').length;
+    const prizePool = hostedTournaments.reduce((sum, t) => sum + (t.prizePool || 0), 0);
+    const filledSlots = hostedTournaments.reduce((sum, t) => sum + (t.currentPlayers || 0), 0);
+    const totalSlots = hostedTournaments.reduce((sum, t) => sum + (t.slots || 0), 0);
+    const pendingPayouts = transactions.filter(t => t.type === 'withdrawal' && t.status === 'pending').reduce((sum, t) => sum + Math.abs(t.amount || 0), 0);
+    return {
+      activeTournaments: active,
+      liveScrims: 0,
+      totalTeams: 0,
+      totalSlots,
+      filledSlots,
+      prizePool,
+      monthlyRevenue: 0,
+      pendingPayouts,
+      orgWalletBalance: profile?.orgWalletBalance || 0,
+      escrowBalance: 0,
+    };
+  }, [hostedTournaments, transactions, profile]);
 
   const fetchParticipants = useCallback(async (tournamentId: string) => {
     if (!tournamentId || !user) {
@@ -79,7 +92,7 @@ export function useOrgData() {
     }
   }, [user]);
 
-  // --- Write operations (Firestore only, no demo mode for writes) ---
+  // --- Write operations ---
 
   const deleteTournament = useCallback(async (id: string) => {
     await deleteDoc(doc(db, 'tournaments', id));
@@ -105,22 +118,16 @@ export function useOrgData() {
 
   const requestWithdrawal = useCallback(async (amount: number, method: string, details: string) => {
     if (!user) throw new Error('Not authenticated');
-    const txData = {
-      userId: user.uid,
-      username: profile?.username || 'Organizer',
-      userEmail: user.email || '',
-      type: 'withdraw',
-      amount,
-      method,
-      refId: `WTH-${Date.now().toString().slice(-6)}`,
-      status: 'pending',
-      accountDetails: details,
-      desc: `Withdrawal of Rs. ${amount} via ${method}`,
-      timestamp: serverTimestamp(),
-    };
-    await addDoc(collection(db, 'transactions'), txData);
-    await updateDoc(doc(db, 'users', user.uid), { orgWalletBalance: increment(-amount) });
-  }, [user, profile]);
+    const token = await auth.currentUser?.getIdToken();
+    if (!token) throw new Error('Authentication required');
+    const res = await fetch('/api/wallet/withdraw', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ amount, method, accountDetails: details }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Withdrawal failed');
+  }, [user]);
 
   const broadcastAnnouncement = useCallback(async (tournamentId: string, message: string, tournamentTitle: string) => {
     const pQuery = query(collection(db, 'participants'), where('tournamentId', '==', tournamentId));
@@ -154,20 +161,11 @@ export function useOrgData() {
   }, [fetchHostedTournaments]);
 
   return {
-    // Data
-    hostedTournaments: isDemoMode ? mockTournaments as unknown as Tournament[] : hostedTournaments,
+    hostedTournaments,
     participants,
-    transactions: isDemoMode ? mockTransactions as unknown as Transaction[] : transactions,
+    transactions,
     loading,
-    isDemoMode,
-    // Demo data (always available for reference)
-    demoTeams: mockTeams,
-    demoScrims: mockScrims,
-    demoMatchRooms: mockMatchRooms,
-    demoDisputes: mockDisputes,
-    demoKPIs: mockKPIs,
-    demoActivity: mockActivityFeed,
-    demoTransactions: mockTransactions,
+    kpis,
     // Actions
     fetchHostedTournaments,
     fetchParticipants,

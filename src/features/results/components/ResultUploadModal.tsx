@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, getDocs, doc, updateDoc, serverTimestamp, writeBatch, increment } from 'firebase/firestore';
-import { db } from '../../../shared/config/firebase';
+import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { db, auth } from '../../../shared/config/firebase';
 import { Tournament, ManualResult, ResultTemplateConfig } from '../../../shared/types/types';
 import Modal from '../../../shared/components/Modal';
 import { Upload, Plus, Trash2, Save, Trophy, Users, DollarSign, CheckCircle2, AlertCircle, List } from 'lucide-react';
@@ -149,48 +149,23 @@ const ResultUploadModal: React.FC<ResultUploadModalProps> = ({ isOpen, onClose, 
 
         setLoading(true);
         try {
-            const batch = writeBatch(db);
-            const tRef = doc(db, 'tournaments', tournament.id);
-            
             const validWinners = winners.filter(w => w.uid !== '').map(({ uid, amount, rank, username }) => ({ userId: uid, prize: amount, rank, username }));
 
-            batch.update(tRef, {
-                status: 'completed',
-                resultUrl: resultUrl,
-                winners: validWinners,
-                manualResults: manualResults,
-                resultTemplate: templateConfig,
-                completedAt: serverTimestamp()
+            const token = await auth.currentUser?.getIdToken();
+            if (!token) throw new Error('Authentication required');
+
+            const res = await fetch('/api/wallet/distribute-prizes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({
+                    tournamentId: tournament.id,
+                    winners: validWinners,
+                    resultsData: { manualResults, resultTemplate: templateConfig }
+                }),
             });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Failed to distribute prizes');
 
-            for (const winner of validWinners) {
-                const userRef = doc(db, 'users', winner.userId);
-                const publicRef = doc(db, 'users_public', winner.userId);
-                
-                batch.update(userRef, {
-                    totalEarnings: increment(winner.prize),
-                    balance: increment(winner.prize)
-                });
-                
-                batch.set(publicRef, {
-                    totalEarnings: increment(winner.prize),
-                    updatedAt: serverTimestamp()
-                }, { merge: true });
-
-                const txRef = doc(collection(db, 'transactions'));
-                batch.set(txRef, {
-                    userId: winner.userId,
-                    amount: winner.prize,
-                    type: 'prize',
-                    description: `Prize for ${tournament.title} (Rank ${winner.rank})`,
-                    status: 'success',
-                    timestamp: serverTimestamp(),
-                    tournamentId: tournament.id
-                });
-            }
-
-            await batch.commit();
-            
             await NotificationService.notifyParticipants(
                 tournament.id,
                 'Results Uploaded!',
@@ -202,9 +177,9 @@ const ResultUploadModal: React.FC<ResultUploadModalProps> = ({ isOpen, onClose, 
             showToast('Results finalized and winners paid!', 'success');
             onSuccess();
             onClose();
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error uploading results:", error);
-            showToast("Failed to upload results. Please try again.", "error");
+            showToast(error.message || "Failed to upload results. Please try again.", "error");
         } finally {
             setLoading(false);
         }

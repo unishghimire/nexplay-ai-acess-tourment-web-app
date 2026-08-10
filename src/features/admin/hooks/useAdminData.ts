@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { collection, query, where, getDocs, doc, updateDoc, deleteDoc, orderBy, limit, setDoc, serverTimestamp, getDoc, writeBatch, increment, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, updateDoc, deleteDoc, orderBy, limit, setDoc, serverTimestamp, getDoc, writeBatch, increment, Timestamp, runTransaction } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db } from '../../../shared/config/firebase';
+import { db, auth } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { Transaction, UserProfile, Slide, PromoCode, Game, PaymentMethod, PaymentCategory, SiteSettings, OrgApplication, Tournament, TournamentEarning, SubscriptionPlan } from '../../../shared/types/types';
 import { formatCurrency, formatDate, formatGameName } from '../../../shared/utils/utils';
@@ -337,7 +337,6 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
                 setStats({ totalBalance: totalBal, todayDep: dep, todayWith: withdr });
             } catch (error) {
                 console.error("Error fetching admin data:", error);
-            } finally {
             }
         };
 
@@ -350,19 +349,26 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
 
     const handleApproveTx = async (tx: Transaction) => {
         try {
-            const batch = writeBatch(db);
             const txRef = doc(db, 'transactions', tx.id);
             const userRef = doc(db, 'users', tx.userId);
 
-            if (tx.type === 'deposit') {
-                batch.update(userRef, { balance: increment(tx.amount) });
-            }
-            batch.update(txRef, { 
-                status: 'success',
-                confirmedBy: profile?.uid,
-                confirmedByUsername: profile?.username
+            // ponytail: runTransaction — checks tx.status to prevent double-approve on retry
+            await runTransaction(db, async (transaction) => {
+                const txDoc = await transaction.get(txRef);
+                if (!txDoc.exists()) throw new Error('Transaction not found');
+                const txData = txDoc.data();
+                if (txData.status === 'success') throw new Error('Transaction already approved');
+                if (txData.status === 'rejected') throw new Error('Transaction already rejected');
+
+                if (tx.type === 'deposit') {
+                    transaction.update(userRef, { balance: increment(tx.amount) });
+                }
+                transaction.update(txRef, { 
+                    status: 'success',
+                    confirmedBy: profile?.uid,
+                    confirmedByUsername: profile?.username
+                });
             });
-            await batch.commit();
 
             // Send Notification
             await NotificationService.create(
@@ -380,9 +386,9 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
             if (selectedTx && selectedTx.id === tx.id) {
                 setSelectedTx({ ...selectedTx, status: 'success', confirmedByUsername: profile?.username });
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error approving transaction:", error);
-            showToast('Failed to approve transaction', 'error');
+            showToast(error.message || 'Failed to approve transaction', 'error');
         }
     };
 
@@ -395,24 +401,23 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
             message: `Are you sure you want to refund ${formatCurrency(Math.abs(tx.amount))} to ${tx.username}? This will add the amount back to their wallet balance.`,
             onConfirm: async () => {
                 try {
-                    const batch = writeBatch(db);
                     const txRef = doc(db, 'transactions', tx.id);
                     const userRef = doc(db, 'users', tx.userId);
 
-                    // 1. Update user balance
-                    batch.update(userRef, { balance: increment(Math.abs(tx.amount)) });
+                    // ponytail: runTransaction — checks tx.status to prevent double-refund
+                    await runTransaction(db, async (transaction) => {
+                        const txDoc = await transaction.get(txRef);
+                        if (!txDoc.exists()) throw new Error('Transaction not found');
+                        const txData = txDoc.data();
+                        if (txData.status === 'refunded') throw new Error('Transaction already refunded');
 
-                    // 2. Update transaction status
-                    batch.update(txRef, { 
-                        status: 'refunded',
-                        confirmedBy: profile?.uid,
-                        confirmedByUsername: profile?.username
+                        transaction.update(userRef, { balance: increment(Math.abs(tx.amount)) });
+                        transaction.update(txRef, { 
+                            status: 'refunded',
+                            confirmedBy: profile?.uid,
+                            confirmedByUsername: profile?.username
+                        });
                     });
-
-                    // 3. Create a new refund record for clarity if needed, 
-                    // but usually updating the original is enough for manual override.
-                    
-                    await batch.commit();
 
                     // Send Notification
                     await NotificationService.create(
@@ -429,7 +434,6 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
                 } catch (error) {
                     console.error("Error refunding transaction:", error);
                     showToast('Failed to refund transaction', 'error');
-                } finally {
                 }
             }
         });
@@ -437,20 +441,27 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
 
     const executeRejectTx = async (tx: Transaction, reason: string) => {
         try {
-            const batch = writeBatch(db);
             const txRef = doc(db, 'transactions', tx.id);
             const userRef = doc(db, 'users', tx.userId);
 
-            if (tx.type === 'withdrawal') {
-                batch.update(userRef, { balance: increment(Math.abs(tx.amount)) });
-            }
-            batch.update(txRef, { 
-                status: 'rejected',
-                rejectionReason: reason || 'No reason provided',
-                confirmedBy: profile?.uid,
-                confirmedByUsername: profile?.username
+            // ponytail: runTransaction — checks tx.status to prevent double-reject
+            await runTransaction(db, async (transaction) => {
+                const txDoc = await transaction.get(txRef);
+                if (!txDoc.exists()) throw new Error('Transaction not found');
+                const txData = txDoc.data();
+                if (txData.status === 'rejected') throw new Error('Transaction already rejected');
+                if (txData.status === 'success') throw new Error('Transaction already approved');
+
+                if (tx.type === 'withdrawal') {
+                    transaction.update(userRef, { balance: increment(Math.abs(tx.amount)) });
+                }
+                transaction.update(txRef, { 
+                    status: 'rejected',
+                    rejectionReason: reason || 'No reason provided',
+                    confirmedBy: profile?.uid,
+                    confirmedByUsername: profile?.username
+                });
             });
-            await batch.commit();
 
             // Send Notification
             await NotificationService.create(
@@ -488,24 +499,36 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
     const handleAdjustBalance = async () => {
         if (!selectedUser || !adjustmentAmount) return;
         const amount = parseFloat(adjustmentAmount);
-        if (isNaN(amount)) return showToast('Invalid amount', 'error');
+        if (isNaN(amount) || amount <= 0) return showToast('Invalid amount', 'error');
 
         try {
             const finalAmount = adjustmentType === 'add' ? amount : -amount;
-            await updateDoc(doc(db, 'users', selectedUser.uid), {
-                balance: increment(finalAmount)
-            });
+            const userRef = doc(db, 'users', selectedUser.uid);
 
-            // Create a manual adjustment transaction
-            const txRef = doc(collection(db, 'transactions'));
-            await setDoc(txRef, {
-                userId: selectedUser.uid,
-                amount: finalAmount,
-                type: 'prize', // Using prize as a generic adjustment type or add 'adjustment'
-                method: 'Manual Adjustment',
-                status: 'success',
-                timestamp: serverTimestamp(),
-                desc: `Admin Adjustment: ${adjustmentType === 'add' ? 'Added' : 'Subtracted'} ${amount}`
+            // ponytail: runTransaction — balance update + ledger entry must be atomic
+            await runTransaction(db, async (transaction) => {
+                const userDoc = await transaction.get(userRef);
+                if (!userDoc.exists()) throw new Error('User not found');
+                const currentBalance = userDoc.data()?.balance || 0;
+                if (adjustmentType === 'subtract' && currentBalance < amount) {
+                    throw new Error('Insufficient balance');
+                }
+
+                transaction.update(userRef, { balance: increment(finalAmount) });
+
+                const txRef = doc(collection(db, 'transactions'));
+                transaction.set(txRef, {
+                    userId: selectedUser.uid,
+                    username: selectedUser.username || '',
+                    amount: Math.abs(finalAmount),
+                    type: 'adjustment',
+                    method: 'Admin Adjustment',
+                    status: 'success',
+                    timestamp: serverTimestamp(),
+                    desc: `Admin Adjustment: ${adjustmentType === 'add' ? 'Added' : 'Subtracted'} ${amount}`,
+                    confirmedBy: profile?.uid,
+                    confirmedByUsername: profile?.username
+                });
             });
 
             showToast('Balance Adjusted', 'success');
@@ -514,7 +537,7 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
             setAdjustmentAmount('');
         } catch (error) {
             console.error("Error adjusting balance:", error);
-            showToast('Failed to adjust balance', 'error');
+            showToast(error.message || 'Failed to adjust balance', 'error');
         }
     };
 
@@ -533,6 +556,20 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
             batch.update(appRef, { status: 'approved' });
             
             await batch.commit();
+
+            // Sync custom claims to Firebase Auth
+            try {
+                const token = await auth.currentUser?.getIdToken();
+                if (token) {
+                    await fetch('/api/admin/set-claims', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ uid: app.userId, role: 'organizer' }),
+                    });
+                }
+            } catch (claimsErr) {
+                console.error('Failed to sync custom claims for org approval:', claimsErr);
+            }
 
             await NotificationService.create(
                 app.userId,
@@ -659,6 +696,20 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
             batch.update(appRef, { status: 'rejected' });
             
             await batch.commit();
+
+            // Sync custom claims to Firebase Auth
+            try {
+                const token = await auth.currentUser?.getIdToken();
+                if (token) {
+                    await fetch('/api/admin/set-claims', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ uid: app.userId, role: 'organizer' }),
+                    });
+                }
+            } catch (claimsErr) {
+                console.error('Failed to sync custom claims for org approval:', claimsErr);
+            }
 
             await NotificationService.create(
                 app.userId,
@@ -1106,7 +1157,22 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
 
     const handleUpdateUserRole = async (uid: string, newRole: 'player' | 'organizer' | 'admin') => {
         try {
+            // Update Firestore doc
             await updateDoc(doc(db, 'users', uid), { role: newRole });
+            // Sync custom claims to Firebase Auth (server-side admin call)
+            try {
+                const token = await auth.currentUser?.getIdToken();
+                if (token) {
+                    await fetch('/api/admin/set-claims', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ uid, role: newRole }),
+                    });
+                }
+            } catch (claimsErr) {
+                console.error('Failed to sync custom claims:', claimsErr);
+                // ponytail: Firestore doc is source of truth during migration — claims sync is best-effort
+            }
             setUsers(prev => prev.map(u => u.uid === uid ? { ...u, role: newRole } : u));
             setOrganizers(prev => {
                 const updated = prev.map(u => u.uid === uid ? { ...u, role: newRole } : u);
@@ -1201,40 +1267,43 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
             isDestructive: false,
             onConfirm: async () => {
                 try {
-                    const batch = writeBatch(db);
-                    
-                    // Update earning status
                     const earningRef = doc(db, 'tournamentEarnings', earning.id);
-                    batch.update(earningRef, {
-                        status: 'released',
-                        releasedAt: serverTimestamp()
-                    });
-                    
-                    // Update org wallet
                     const orgRef = doc(db, 'users', earning.orgId);
-                    batch.update(orgRef, {
-                        orgPendingEarnings: increment(-earning.orgShare),
-                        orgWalletBalance: increment(earning.orgShare)
-                    });
-                    
-                    // Add transaction record for the org
                     const txRef = doc(collection(db, 'transactions'));
-                    batch.set(txRef, {
-                        userId: earning.orgId,
-                        username: earning.orgName,
-                        type: 'prize', // Using prize type for earnings
-                        amount: earning.orgShare,
-                        method: 'Tournament Earnings',
-                        refId: `EARN-${earning.tournamentId.slice(0, 8)}`,
-                        status: 'success',
-                        timestamp: serverTimestamp(),
-                        desc: `Earnings released for tournament: ${earning.tournamentName}`,
-                        tournamentId: earning.tournamentId,
-                        confirmedBy: profile?.uid,
-                        confirmedByUsername: profile?.username
+
+                    // ponytail: atomic transaction — reads earning status to prevent double-release on retry
+                    await runTransaction(db, async (transaction) => {
+                        const earningDoc = await transaction.get(earningRef);
+                        if (!earningDoc.exists()) throw new Error('Earnings record not found');
+                        const earningData = earningDoc.data();
+                        if (earningData.status === 'released') throw new Error('Earnings already released');
+                        if (earningData.status !== 'pending') throw new Error(`Earnings status is ${earningData.status}, cannot release`);
+
+                        transaction.update(earningRef, {
+                            status: 'released',
+                            releasedAt: serverTimestamp()
+                        });
+
+                        transaction.update(orgRef, {
+                            orgPendingEarnings: increment(-earning.orgShare),
+                            orgWalletBalance: increment(earning.orgShare)
+                        });
+
+                        transaction.set(txRef, {
+                            userId: earning.orgId,
+                            username: earning.orgName,
+                            type: 'prize',
+                            amount: earning.orgShare,
+                            method: 'Tournament Earnings',
+                            refId: `EARN-${earning.tournamentId.slice(0, 8)}`,
+                            status: 'success',
+                            timestamp: serverTimestamp(),
+                            desc: `Earnings released for tournament: ${earning.tournamentName}`,
+                            tournamentId: earning.tournamentId,
+                            confirmedBy: profile?.uid,
+                            confirmedByUsername: profile?.username
+                        });
                     });
-                    
-                    await batch.commit();
                     
                     await NotificationService.create(
                         earning.orgId,
@@ -1248,9 +1317,9 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
                     
                     setTournamentEarnings(prev => prev.map(e => e.id === earning.id ? { ...e, status: 'released' } : e));
                     showToast('Earnings released successfully', 'success');
-                } catch (error) {
+                } catch (error: any) {
                     console.error("Error releasing earnings:", error);
-                    showToast('Failed to release earnings', 'error');
+                    showToast(error.message || 'Failed to release earnings', 'error');
                 } finally {
                     closeConfirmModal();
                 }

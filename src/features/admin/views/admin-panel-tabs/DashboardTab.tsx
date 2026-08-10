@@ -1,11 +1,6 @@
 import React from 'react';
 import {Users, ArrowDown, ArrowUp, Check, X, Trash, Edit, Eye, Plus, Bell, Info} from 'lucide-react';
-import { doc, updateDoc, deleteDoc, collection, query, where, getDocs, setDoc, serverTimestamp, increment, getDoc, writeBatch, orderBy, limit, Timestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from '../../../../shared/config/firebase';
 import { formatCurrency, formatDate } from '../../../../shared/utils/utils';
-import { } from '../../../../shared/components/ImageUploader';
-import {} from '../../../../shared/services/mediaService';
 import { DEFAULT_BANNER, NEXPLAY_LOGO } from '../../../../shared/constants/constants';
 
 import { AdminPanelTabProps } from './types';

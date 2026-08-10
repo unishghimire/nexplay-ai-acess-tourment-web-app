@@ -3,7 +3,6 @@ import { Gamepad2, RefreshCw, Clock, DollarSign, Trophy, Plus } from 'lucide-rea
 
 export interface ScrimsHubTabProps {
   scrims: any[];
-  isDemoMode: boolean;
   onOpenSlotGrid: (scrim: any) => void;
   onToggleSlot: (scrimId: any, slotNumber?: any) => void;
   onViewDetails?: (id: string) => void;
@@ -11,7 +10,6 @@ export interface ScrimsHubTabProps {
 
 export const ScrimsHubTab: React.FC<ScrimsHubTabProps> = ({
   scrims,
-  isDemoMode,
   onOpenSlotGrid,
   onToggleSlot,
   onViewDetails,
@@ -28,8 +26,9 @@ export const ScrimsHubTab: React.FC<ScrimsHubTabProps> = ({
         minute: '2-digit',
         hour12: true,
       });
-    } catch {
-      return timeStr;
+    } catch (e) {
+      console.warn('Date formatting failed, using raw value', e);
+      return timeStr || 'TBD';
     }
   };
 
@@ -60,11 +59,6 @@ export const ScrimsHubTab: React.FC<ScrimsHubTabProps> = ({
         <div>
           <div className="flex items-center gap-3">
             <h2 className="text-2xl font-black text-white tracking-tight">Scrims Hub</h2>
-            {isDemoMode && (
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                Demo Mode
-              </span>
-            )}
           </div>
           <p className="text-sm text-gray-400 mt-1">
             Manage Free Fire scrim schedules and slot reservations

@@ -58,6 +58,7 @@ export const mapCategoryToFolder = (category: string): string => {
     case "PRODUCT_IMAGE": return "products";
     case "NEWS_IMAGE": return "news";
     case "SPONSOR_LOGO": return "sponsors";
+    case "PAYMENT_PROOF": case "payments": return "payments";
     case "OVERLAY_GRAPHIC": return "system";
     default: return "system";
   }
@@ -163,15 +164,20 @@ export const authenticateToken = async (req: any, res: any, next: any) => {
     try {
       const decodedIdToken = await admin.auth().verifyIdToken(token);
       if (decodedIdToken) {
-        let role = "player";
+        // Prefer custom claims for role (set via admin.auth().setCustomUserClaims)
+        // Fall back to Firestore doc only during migration period
+        // ponytail: dual-check during migration from doc-based to claims-based roles
+        let role = decodedIdToken.role || "player";
         let username = decodedIdToken.name || decodedIdToken.email?.split("@")[0] || "User";
-        try {
-          const userDoc = await db.collection("users").doc(decodedIdToken.uid).get();
-          if (userDoc.exists) {
-            const userData = userDoc.data();
-            if (userData) { role = userData.role || "player"; username = userData.username || username; }
-          }
-        } catch (e) { console.error("Firestore user fetch error in auth middleware", e); }
+        if (!decodedIdToken.role) {
+          try {
+            const userDoc = await db.collection("users").doc(decodedIdToken.uid).get();
+            if (userDoc.exists) {
+              const userData = userDoc.data();
+              if (userData) { role = userData.role || "player"; username = userData.username || username; }
+            }
+          } catch (e) { console.error("Firestore user fetch error in auth middleware", e); }
+        }
         req.user = { userId: decodedIdToken.uid, email: decodedIdToken.email, username, role };
         return next();
       }
@@ -188,3 +194,29 @@ export const authenticateToken = async (req: any, res: any, next: any) => {
     return res.status(401).json({ success: false, message: "Invalid token" });
   }
 };
+
+
+// ═══════════════════════════════════════════════════════════════
+// RATE LIMITER — simple in-memory, no dependency
+// ponytail: single-instance rate limiting; for multi-instance, use Redis-backed limiter
+// ═══════════════════════════════════════════════════════════════
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+
+export function rateLimit(maxRequests: number = 10, windowMs: number = 15 * 60 * 1000) {
+  return (req: any, res: any, next: any) => {
+    const key = req.ip || req.connection?.remoteAddress || 'unknown';
+    const now = Date.now();
+    const entry = rateLimitMap.get(key);
+
+    if (!entry || now > entry.resetTime) {
+      rateLimitMap.set(key, { count: 1, resetTime: now + windowMs });
+      return next();
+    }
+
+    entry.count++;
+    if (entry.count > maxRequests) {
+      return res.status(429).json({ success: false, message: "Too many requests. Please try again later." });
+    }
+    next();
+  };
+}

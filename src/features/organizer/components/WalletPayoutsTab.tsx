@@ -16,7 +16,6 @@ export interface WalletPayoutsTabProps {
     pendingPayouts: number;
   };
   transactions: any[];
-  isDemoMode: boolean;
   onRequestWithdraw: (amount: number, method: string, details: string) => void;
 }
 
@@ -34,7 +33,6 @@ const formatCurrency = (amount: number): string => {
 export const WalletPayoutsTab: React.FC<WalletPayoutsTabProps> = ({
   kpis = { orgWalletBalance: 0, escrowBalance: 0, pendingPayouts: 0 },
   transactions = [],
-  isDemoMode = false,
   onRequestWithdraw,
 }) => {
   const [withdrawAmount, setWithdrawAmount] = useState<string>('');
@@ -153,11 +151,6 @@ export const WalletPayoutsTab: React.FC<WalletPayoutsTabProps> = ({
         <div>
           <div className="flex items-center gap-3">
             <h2 className="text-2xl font-bold text-white tracking-tight">Wallet & Payouts</h2>
-            {isDemoMode && (
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30">
-                Demo Mode
-              </span>
-            )}
           </div>
           <p className="text-sm text-gray-400 mt-1">
             Escrow balances, prize distribution, and transaction history

@@ -3,11 +3,11 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // ═══════════════════════════════════════════════════════════════
-    // ADMIN BYPASS — wildcard rule for the platform super-admin only
-    // Placed first so it takes precedence on any collection.
+    // ADMIN BYPASS — uses Firebase Auth Custom Claims, not hardcoded UID.
+    // To set admin: admin.auth().setCustomUserClaims(uid, { role: 'admin' })
     // ═══════════════════════════════════════════════════════════════
     match /{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == 'aTt2C1QxgJM6dIYgobOQmHS1f3I3';
+      allow read, write: if isSignedIn() && request.auth.token.role == 'admin';
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -27,14 +27,20 @@ service cloud.firestore {
         request.auth.token.firebase.sign_in_provider == 'password'
       );
     }
+    // Role checks — prefer Custom Claims, fall back to Firestore doc for migration period
+    // ponytail: dual-check during migration from doc-based to claims-based roles.
+    // Upgrade path: remove the get() fallback once all users have custom claims set.
     function isAdmin() {
-      return isSignedIn() &&
-             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      return isSignedIn() && (
+        request.auth.token.role == 'admin' ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+      );
     }
     function isOrganizer() {
       return isSignedIn() && (
         isAdmin() ||
+        request.auth.token.role == 'organizer' ||
         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'organizer')
       );
@@ -68,6 +74,23 @@ service cloud.firestore {
              isValidId(data.hostUid);
     }
 
+    // Validates a transaction record on creation — prevents amount/type manipulation
+    function isValidTransaction(data) {
+      return data.userId is string && data.userId == request.auth.uid &&
+             data.amount is number &&
+             data.type in ['deposit', 'withdrawal'] &&
+             data.status == 'pending' &&
+             data.method is string && data.method.size() <= 50;
+    }
+
+    // Validates users_public fields — prevents injection of arbitrary metadata
+    function isValidPublicProfile(data) {
+      return data.keys().hasOnly([
+        'uid', 'username', 'inGameId', 'inGameName', 'role',
+        'profilePicUrl', 'bannerUrl', 'teamName', 'orgName', 'updatedAt'
+      ]);
+    }
+
     // ═══════════════════════════════════════════════════════════════
     // SITE SETTINGS — public read, admin write
     // ═══════════════════════════════════════════════════════════════
@@ -98,12 +121,14 @@ service cloud.firestore {
             'contactInfo', 'inGameId', 'inGameName', 'teamName', 'teamId',
             'whatsapp', 'discord', 'youtube', 'status', 'customActivity',
             'lastActive', 'updatedAt', 'skills', 'orgName', 'email',
-            'orgStatus', 'orgWalletBalance'
+            'orgStatus', 'resultPresets'
           ]) &&
           incoming().uid == existing().uid &&
           incoming().role == existing().role &&
           incoming().balance == existing().balance &&
-          incoming().totalEarnings == existing().totalEarnings
+          incoming().totalEarnings == existing().totalEarnings &&
+          incoming().orgWalletBalance == existing().orgWalletBalance &&
+          incoming().orgPendingEarnings == existing().orgPendingEarnings
         ) || isAdmin()
       );
     }
@@ -111,8 +136,10 @@ service cloud.firestore {
     match /users_public/{userId} {
       allow get:    if true && isValidId(userId);
       allow list:   if true;
-      allow create: if isSignedIn() && isValidId(userId) && isOwner(userId);
-      allow update: if (isOwner(userId) || isAdmin()) && isValidId(userId);
+      allow create: if isSignedIn() && isValidId(userId) && isOwner(userId) &&
+                       isValidPublicProfile(incoming());
+      allow update: if (isOwner(userId) || isAdmin()) && isValidId(userId) &&
+                       isValidPublicProfile(incoming());
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -203,7 +230,7 @@ service cloud.firestore {
     // ═══════════════════════════════════════════════════════════════
     match /notifications/{notificationId} {
       allow get:    if isOwner(existing().userId) && isValidId(notificationId);
-      allow list:   if isSignedIn();
+      allow list:   if isSignedIn() && resource.data.userId == request.auth.uid;
       allow create: if isAdmin() || isOrganizer();
       allow update: if isOwner(existing().userId) &&
                        incoming().diff(existing()).affectedKeys().hasOnly(['read']);
@@ -211,14 +238,16 @@ service cloud.firestore {
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // TRANSACTIONS — users create pending, admin manages
+    // TRANSACTIONS — server-only writes via /api/wallet/* endpoints
+    // Clients can only read their own transactions; all creates/updates
+    // go through the server (Admin SDK bypasses rules)
     // ═══════════════════════════════════════════════════════════════
     match /transactions/{transactionId} {
       allow get:    if (isOwner(existing().userId) || isAdmin()) && isValidId(transactionId);
-      allow list:   if isSignedIn();
-      allow create: if isVerified() &&
-                       incoming().userId == request.auth.uid &&
-                       incoming().status == 'pending';
+      allow list:   if isSignedIn() && resource.data.userId == request.auth.uid;
+      // Client creates blocked — server-only via /api/wallet/* (Admin SDK bypasses rules)
+      // Admin can create adjustment/refund transactions from the admin panel
+      allow create: if isAdmin() && isValidId(transactionId) && incoming().userId is string;
       allow update, delete: if isAdmin();
     }
 
@@ -244,15 +273,20 @@ service cloud.firestore {
                        isOwner(existing().inviterId) ||
                        isAdmin()
                     );
-      allow create: if isVerified();
+      allow create: if isVerified() && incoming().inviterId == request.auth.uid;
       allow update: if isOwner(existing().inviteeId) &&
                        incoming().diff(existing()).affectedKeys().hasOnly(['status']);
-      allow delete: if isSignedIn();
+      allow delete: if isSignedIn() && (
+                       isOwner(existing().inviteeId) ||
+                       isOwner(existing().inviterId) ||
+                       isAdmin()
+                    );
     }
 
     match /team_activity/{activityId} {
-      allow read:  if true;
-      allow write: if isAdmin() || isVerified();
+      // Team activity logs — require auth (client filters by teamId)
+      allow read:  if isSignedIn();
+      allow write: if isAdmin() || isOwner(incoming().userId);
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -300,7 +334,9 @@ service cloud.firestore {
     }
 
     match /tournamentEarnings/{earningId} {
-      allow read:  if true;
+      // Financial data — only org owner and admins can read
+      allow get:  if isAdmin() || (isSignedIn() && existing().orgId == request.auth.uid);
+      allow list: if isAdmin();
       allow write: if isAdmin();
     }
 
@@ -336,7 +372,8 @@ service cloud.firestore {
     }
 
     match /promocodes/{promoId} {
-      allow read:  if isVerified();
+      allow get:  if isVerified();
+      allow list: if isAdmin();
       allow write: if isAdmin();
     }
 

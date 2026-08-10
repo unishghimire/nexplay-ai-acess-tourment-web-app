@@ -1,16 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {ArrowUp, Check, Eye} from 'lucide-react';
-import { doc, updateDoc, deleteDoc, collection, query, where, getDocs, setDoc, serverTimestamp, increment, getDoc, writeBatch, orderBy, limit, Timestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from '../../../../shared/config/firebase';
-import {  } from '../../../../shared/utils/utils';
-import { } from '../../../../shared/components/ImageUploader';
-import {} from '../../../../shared/services/mediaService';
 
 import { AdminPanelTabProps } from './types';
 
 export const PendingWithdrawalsTab: React.FC<AdminPanelTabProps> = (props) => {
     const { allTransactions, closeConfirmModal, formatCurrency, getRelativeTime, handleApproveTx, setConfirmModal, setSelectedTx } = props;
+    const [processingId, setProcessingId] = useState<string | null>(null);
     return (
                     <div className="bg-card p-6 rounded-xl border border-gray-800 space-y-6">
                         <div className="flex justify-between items-center border-b border-gray-700 pb-4">
@@ -32,7 +27,12 @@ export const PendingWithdrawalsTab: React.FC<AdminPanelTabProps> = (props) => {
                                             onConfirm: async () => {
                                                 const pending = allTransactions.filter(t => t.type === 'withdrawal' && t.status === 'pending');
                                                 for (const t of pending) {
-                                                    await handleApproveTx(t);
+                                                    setProcessingId(t.id);
+                                                    try {
+                                                        await handleApproveTx(t);
+                                                    } finally {
+                                                        setProcessingId(null);
+                                                    }
                                                 }
                                                 closeConfirmModal();
                                             }
@@ -72,7 +72,7 @@ export const PendingWithdrawalsTab: React.FC<AdminPanelTabProps> = (props) => {
                                             )}
                                         </div>
                                         <div className="grid grid-cols-2 gap-3">
-                                            <button onClick={() => handleApproveTx(t)} className="bg-green-600/20 hover:bg-green-600 text-green-400 hover:text-white border border-green-500/30 hover:border-green-500 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all">
+                                            <button onClick={() => handleApproveTx(t)} disabled={processingId === t.id} className="bg-green-600/20 hover:bg-green-600 text-green-400 hover:text-white border border-green-500/30 hover:border-green-500 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all">
                                                 <Check className="w-4 h-4" /> Approve
                                             </button>
                                             <button onClick={() => setSelectedTx(t)} className="bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30 hover:border-blue-500 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all">

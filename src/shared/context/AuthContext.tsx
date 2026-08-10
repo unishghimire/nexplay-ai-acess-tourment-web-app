@@ -132,9 +132,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     const data = snapshot.data() as UserProfile;
                     setProfile(data);
                     // Update user role if it changes in profile
-                    if (data.role !== user.role) {
-                        setUser(prev => prev ? { ...prev, role: data.role } : null);
-                    }
+                    setUser(prev => (prev && prev.role !== data.role) ? { ...prev, role: data.role } : prev);
                 }
             }, (error) => {
                 console.error("Error in user profile snapshot:", error);
@@ -178,7 +176,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 window.removeEventListener('beforeunload', handleBeforeUnload);
             };
         }
-    }, [user]);
+    }, [user?.uid]);
 
     return (
         <AuthContext.Provider value={{ user, profile, loading, logout }}>

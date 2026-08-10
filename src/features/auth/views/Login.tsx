@@ -42,9 +42,17 @@ const Login: React.FC = () => {
             navigate(redirectTo);
         } catch (err: any) {
             console.error('Login error:', err);
-            const errMsg = err.message || 'Login failed';
+            const firebaseErrMap: Record<string, string> = {
+                'auth/invalid-credential': 'Invalid email or password',
+                'auth/user-not-found': 'Invalid email or password',
+                'auth/wrong-password': 'Invalid email or password',
+                'auth/too-many-requests': 'Too many attempts. Try again later.',
+                'auth/user-disabled': 'This account has been disabled.',
+                'auth/network-request-failed': 'Network error. Check your connection.'
+            };
+            const errMsg = firebaseErrMap[err.code] || 'Login failed. Please try again.';
             setError(errMsg);
-            showToast('Login failed', 'error');
+            showToast(errMsg, 'error');
         } finally {
             setIsLoading(false);
         }
@@ -61,9 +69,9 @@ const Login: React.FC = () => {
             navigate(redirectTo);
         } catch (err: any) {
             console.error('Google Sign-In error:', err);
-            const errMsg = err.message || 'Google Sign-In failed';
+            const errMsg = 'Google Sign-In failed. Please try again.';
             setError(errMsg);
-            showToast('Google Sign-In failed', 'error');
+            showToast(errMsg, 'error');
         } finally {
             setIsGoogleLoading(false);
         }

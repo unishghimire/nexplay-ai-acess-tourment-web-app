@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { doc, runTransaction, collection, serverTimestamp } from 'firebase/firestore';
-import { db } from '../../../shared/config/firebase';
+import { auth } from '../../../shared/config/firebase';
 import { Tournament, UserProfile } from '../../../shared/types/types';
 import Modal from '../../../shared/components/Modal';
 import { useNotification } from '../../../shared/context/NotificationContext';
@@ -34,49 +33,17 @@ const RegistrationModal: React.FC<RegistrationModalProps> = ({
         if (!user || !tournament || !profile) return;
 
         setLoading(true);
-        const tRef = doc(db, 'tournaments', tournament.id);
-        const userRef = doc(db, 'users', user.uid);
-        const partRef = doc(collection(db, 'participants'));
-
         try {
-            await runTransaction(db, async (transaction) => {
-                const tDoc = await transaction.get(tRef);
-                const uDoc = await transaction.get(userRef);
-                
-                if (!tDoc.exists()) throw new Error("Tournament does not exist!");
-                const tData = tDoc.data() as Tournament;
-                const uData = uDoc.data() as UserProfile;
+            const token = await auth.currentUser?.getIdToken();
+            if (!token) throw new Error('Authentication required');
 
-                if (tData.currentPlayers >= tData.slots) throw new Error("Tournament is Full!");
-                if (uData.balance < tData.entryFee) throw new Error("Insufficient Balance!");
-
-                // Update user balance and XP
-                const currentXP = uData.xp || 0;
-                const newXP = currentXP + 50; // Award 50 XP for joining
-                const newLevel = Math.floor(newXP / 500) + 1;
-
-                transaction.update(userRef, { 
-                    balance: uData.balance - tData.entryFee,
-                    xp: newXP,
-                    level: newLevel
-                });
-                transaction.update(tRef, { currentPlayers: tData.currentPlayers + 1 });
-                
-                const participantData: any = {
-                    userId: user.uid,
-                    tournamentId: tournament.id,
-                    inGameId: uData.inGameId,
-                    inGameName: uData.inGameName || '',
-                    teamName: uData.teamName || '',
-                    teamId: uData.teamId || '',
-                    username: uData.username,
-                    logoUrl: uData.profilePicUrl || '',
-                    status: tournament.registrationType === 'manual' ? 'pending' : 'approved',
-                    timestamp: serverTimestamp()
-                };
-
-                transaction.set(partRef, participantData);
+            const res = await fetch('/api/wallet/join-tournament', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ tournamentId: tournament.id }),
             });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Failed to join tournament');
 
             await NotificationService.create(
                 user.uid,

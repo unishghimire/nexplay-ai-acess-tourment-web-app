@@ -123,9 +123,15 @@ const Register: React.FC = () => {
             navigate('/dashboard');
         } catch (err: any) {
             console.error('Registration error:', err);
-            const errMsg = err.message || 'Registration failed';
+            const firebaseErrMap: Record<string, string> = {
+                'auth/email-already-in-use': 'This email is already registered',
+                'auth/invalid-email': 'Please enter a valid email address',
+                'auth/weak-password': 'Password should be at least 6 characters',
+                'auth/network-request-failed': 'Network error. Check your connection.'
+            };
+            const errMsg = firebaseErrMap[err.code] || 'Registration failed. Please try again.';
             setError(errMsg);
-            showToast('Registration failed', 'error');
+            showToast(errMsg, 'error');
         } finally {
             setIsLoading(false);
         }
@@ -141,9 +147,9 @@ const Register: React.FC = () => {
             navigate('/dashboard');
         } catch (err: any) {
             console.error('Google Sign-In error:', err);
-            const errMsg = err.message || 'Google Sign-In failed';
+            const errMsg = 'Google Sign-In failed. Please try again.';
             setError(errMsg);
-            showToast('Google Sign-In failed', 'error');
+            showToast(errMsg, "error");
         } finally {
             setIsGoogleLoading(false);
         }

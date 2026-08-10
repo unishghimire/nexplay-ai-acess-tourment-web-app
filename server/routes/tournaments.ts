@@ -54,6 +54,10 @@ router.post("/api/tournaments/:id/results/upload", authenticateToken, async (req
     const tourneySnap = await tourneyRef.get();
     const tourneyData = tourneySnap.data();
     if (!tourneySnap.exists || !tourneyData) return res.status(404).json({ success: false, message: "Tournament not found" });
+    // Authorization: only tournament host or admin can upload results
+    if (tourneyData?.hostUid !== req.user.userId && req.user.role !== "admin") {
+      return res.status(403).json({ success: false, message: "Unauthorized — only tournament host can upload results" });
+    }
 
     const pointSystem = tourneyData.pointSystem || { killPoints: 1, placement: { 1: 15, 2: 12, 3: 10, 4: 8, 5: 6 } };
     const processedResults = teamResults.map((r: any) => {
@@ -85,6 +89,10 @@ router.post("/api/tournaments/:id/advance", authenticateToken, async (req: any, 
     const tourneySnap = await tourneyRef.get();
     const tourneyData = tourneySnap.data();
     if (!tourneySnap.exists || !tourneyData) return res.status(404).json({ success: false, message: "Tournament not found" });
+    // Authorization: only tournament host or admin can advance rounds
+    if (tourneyData?.hostUid !== req.user.userId && req.user.role !== "admin") {
+      return res.status(403).json({ success: false, message: "Unauthorized" });
+    }
 
     const currentRound = tourneyData.currentRound || 1;
     const roadmap = tourneyData.roadmap || [];

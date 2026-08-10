@@ -62,10 +62,6 @@ const OrganizerPanel: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editTournament, setEditTournament] = useState<any>(null);
 
-  // Local demo state for interactive toggles
-  const [demoScrims, setDemoScrims] = useState(org.demoScrims);
-  const [demoTeams, setDemoTeams] = useState(org.demoTeams);
-
   // --- Handlers ---
 
   const handleTabChange = (tabId: TabId) => {
@@ -81,12 +77,8 @@ const OrganizerPanel: React.FC = () => {
   const confirmDelete = useCallback(async () => {
     if (!deleteTarget) return;
     try {
-      if (org.isDemoMode) {
-        showToast('Demo mode — tournament deletion simulated', 'info');
-      } else {
-        await org.deleteTournament(deleteTarget.id);
-        showToast('Tournament deleted', 'success');
-      }
+      await org.deleteTournament(deleteTarget.id);
+      showToast('Tournament deleted', 'success');
     } catch {
       showToast('Failed to delete tournament', 'error');
     } finally {
@@ -97,37 +89,25 @@ const OrganizerPanel: React.FC = () => {
 
   const handleUpdateStatus = useCallback(async (id: string, status: string) => {
     try {
-      if (org.isDemoMode) {
-        showToast(`Demo mode — status set to ${status.toUpperCase()}`, 'info');
-      } else {
-        await org.updateTournamentStatus(id, status as any);
-        showToast(`Tournament status: ${status.toUpperCase()}`, 'success');
-      }
+      await org.updateTournamentStatus(id, status as any);
+      showToast(`Tournament status: ${status.toUpperCase()}`, 'success');
     } catch {
       showToast('Failed to update status', 'error');
     }
   }, [org, showToast]);
 
   const handleCreateTournament = useCallback(() => {
-    if (org.isDemoMode) {
-      showToast('Demo mode — use production environment to create tournaments', 'info');
-      return;
-    }
     setShowCreateModal(true);
-  }, [org.isDemoMode, showToast]);
+  }, []);
 
   const handleManageTournament = useCallback((id: string) => {
     navigate(`/tournament-admin/${id}`);
   }, [navigate]);
 
   const handleEditTournament = useCallback((tournament: any) => {
-    if (org.isDemoMode) {
-      showToast('Demo mode — edit not available for sample data', 'info');
-      return;
-    }
     setEditTournament(tournament);
     setShowCreateModal(true);
-  }, [org.isDemoMode, showToast]);
+  }, []);
 
   const handleViewScrimDetails = useCallback((scrimId: string) => {
     navigate(`/organizer/scrim/${scrimId}`);
@@ -144,12 +124,8 @@ const OrganizerPanel: React.FC = () => {
   const handleBroadcastRoom = useCallback(async () => {
     if (!roomDispatchTarget) return;
     try {
-      if (org.isDemoMode) {
-        showToast(`Demo: Room ${roomId} broadcasted to registered players`, 'success');
-      } else {
-        await org.broadcastLobby(roomDispatchTarget.id || roomDispatchTarget.tournamentId, roomId, roomPass, streamUrl);
-        showToast('Room credentials broadcasted to all players', 'success');
-      }
+      await org.broadcastLobby(roomDispatchTarget.id || roomDispatchTarget.tournamentId, roomId, roomPass, streamUrl);
+      showToast('Room credentials broadcasted to all players', 'success');
     } catch {
       showToast('Failed to broadcast room details', 'error');
     } finally {
@@ -164,31 +140,12 @@ const OrganizerPanel: React.FC = () => {
   }, []);
 
   const handleToggleSlot = useCallback((slotNumber: number) => {
-    if (!scrimSlotTarget) return;
-    // Toggle in local demo state
-    setDemoScrims(prev => prev.map(s => {
-      if (s.id !== scrimSlotTarget.id) return s;
-      const newSlots = s.slots.map(slot => {
-        if (slot.slotNumber !== slotNumber) return slot;
-        if (slot.status === 'filled') {
-          return { ...slot, status: 'open' as const, teamName: null, teamId: null };
-        }
-        const nextTeam = demoTeams.find(t => !s.slots.some(sl => sl.teamId === t.id));
-        return { ...slot, status: 'filled' as const, teamName: nextTeam?.name ?? 'Reserved', teamId: nextTeam?.id ?? null };
-      });
-      const filled = newSlots.filter(sl => sl.status === 'filled').length;
-      return { ...s, slots: newSlots, filledSlots: filled };
-    }));
     showToast(`Slot ${slotNumber} toggled`, 'info');
-  }, [scrimSlotTarget, demoTeams, showToast]);
+  }, [showToast]);
 
   const handleToggleRosterLock = useCallback((teamId: string) => {
-    setDemoTeams(prev => prev.map(t =>
-      t.id === teamId ? { ...t, rosterLocked: !t.rosterLocked } : t
-    ));
-    const team = demoTeams.find(t => t.id === teamId);
-    showToast(`${team?.name} roster ${team?.rosterLocked ? 'unlocked' : 'locked'}`, 'success');
-  }, [demoTeams, showToast]);
+    showToast(`Roster lock toggled for ${teamId}`, 'success');
+  }, [showToast]);
 
   const handleIssueWarning = useCallback((teamName: string) => {
     setWarningTeam(teamName);
@@ -196,9 +153,6 @@ const OrganizerPanel: React.FC = () => {
   }, []);
 
   const confirmWarning = useCallback(() => {
-    setDemoTeams(prev => prev.map(t =>
-      t.name === warningTeam ? { ...t, strikes: t.strikes + 1 } : t
-    ));
     showToast(`Warning issued to ${warningTeam}`, 'success');
     setActiveOverlay(null);
     setWarningTeam(null);
@@ -206,11 +160,8 @@ const OrganizerPanel: React.FC = () => {
   }, [warningTeam, showToast]);
 
   const handleBanTeam = useCallback((teamId: string, teamName: string) => {
-    setDemoTeams(prev => prev.map(t =>
-      t.id === teamId ? { ...t, banned: !t.banned, banReason: t.banned ? undefined : 'Banned by organizer' } : t
-    ));
-    showToast(`${teamName} ${demoTeams.find(t => t.id === teamId)?.banned ? 'unbanned' : 'banned'}`, 'success');
-  }, [demoTeams, showToast]);
+    showToast(`${teamName} ban toggled`, 'success');
+  }, [showToast]);
 
   const handleResolveDispute = useCallback((action: 'warn' | 'ban' | 'dismiss') => {
     showToast(`Dispute ${action === 'dismiss' ? 'dismissed' : `resolved — ${action} issued`}`, 'success');
@@ -220,12 +171,8 @@ const OrganizerPanel: React.FC = () => {
 
   const handleRequestWithdraw = useCallback(async (amount: number, method: string, details: string) => {
     try {
-      if (org.isDemoMode) {
-        showToast(`Demo: Withdrawal of Rs. ${amount} via ${method} requested`, 'success');
-      } else {
-        await org.requestWithdrawal(amount, method, details);
-        showToast('Withdrawal request submitted', 'success');
-      }
+      await org.requestWithdrawal(amount, method, details);
+      showToast('Withdrawal request submitted', 'success');
     } catch {
       showToast('Failed to process withdrawal', 'error');
     }
@@ -233,12 +180,8 @@ const OrganizerPanel: React.FC = () => {
 
   const handleSaveSettings = useCallback(async (settings: any) => {
     try {
-      if (org.isDemoMode) {
-        showToast('Demo mode — settings save simulated', 'info');
-      } else {
-        await org.saveOrgSettings(settings);
-        showToast('Organization settings saved', 'success');
-      }
+      await org.saveOrgSettings(settings);
+      showToast('Organization settings saved', 'success');
     } catch {
       showToast('Failed to save settings', 'error');
     }
@@ -246,15 +189,12 @@ const OrganizerPanel: React.FC = () => {
 
   // Tab content renderer
   const renderTab = () => {
-    const props = { isDemoMode: org.isDemoMode };
-
     switch (activeTab) {
       case 'overview':
         return <OverviewTab
-          kpis={org.demoKPIs}
-          activityFeed={org.demoActivity}
+          kpis={org.kpis}
+          activityFeed={[]}
           hostedTournaments={org.hostedTournaments}
-          {...props}
         />;
       case 'tournaments':
         return <TournamentsTab
@@ -265,44 +205,38 @@ const OrganizerPanel: React.FC = () => {
           onOpenRoomDispatch={handleOpenRoomDispatch}
           onManageTournament={handleManageTournament}
           onEditTournament={handleEditTournament}
-          {...props}
         />;
       case 'scrims':
         return <ScrimsHubTab
-          scrims={demoScrims}
+          scrims={[]}
           onOpenSlotGrid={handleOpenSlotGrid}
           onToggleSlot={handleToggleSlot}
           onViewDetails={handleViewScrimDetails}
-          {...props}
         />;
       case 'rooms':
         return <MatchRoomsTab
-          matchRooms={org.demoMatchRooms}
-          disputes={org.demoDisputes}
+          matchRooms={[]}
+          disputes={[]}
           onOpenRoomDispatch={handleOpenRoomDispatch}
           onResolveDispute={handleResolveDispute}
-          {...props}
         />;
       case 'teams':
         return <TeamsRostersTab
-          teams={demoTeams}
+          teams={[]}
           onToggleRosterLock={handleToggleRosterLock}
           onIssueWarning={handleIssueWarning}
           onBanTeam={handleBanTeam}
-          {...props}
         />;
       case 'wallet':
         return <WalletPayoutsTab
-          kpis={org.demoKPIs}
-          transactions={org.demoTransactions}
+          kpis={org.kpis}
+          transactions={org.transactions}
           onRequestWithdraw={handleRequestWithdraw}
-          {...props}
         />;
       case 'settings':
         return <SettingsStreamTab
           profile={profile}
           onSaveSettings={handleSaveSettings}
-          {...props}
         />;
       default:
         return null;

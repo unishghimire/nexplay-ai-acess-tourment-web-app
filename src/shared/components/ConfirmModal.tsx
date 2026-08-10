@@ -2,6 +2,7 @@ import React from 'react';
 import Modal from './Modal';
 
 interface ConfirmModalProps {
+    isLoading?: boolean;
     isOpen: boolean;
     title: string;
     message: string;

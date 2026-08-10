@@ -13,7 +13,6 @@ import {
 
 export interface TeamsRostersTabProps {
   teams: any[];
-  isDemoMode: boolean;
   onToggleRosterLock: (teamId: string) => void;
   onIssueWarning: (teamName: string) => void;
   onBanTeam: (teamId: string, teamName: string) => void;
@@ -21,7 +20,6 @@ export interface TeamsRostersTabProps {
 
 export const TeamsRostersTab: React.FC<TeamsRostersTabProps> = ({
   teams,
-  isDemoMode,
   onToggleRosterLock,
   onIssueWarning,
   onBanTeam,
@@ -72,12 +70,6 @@ export const TeamsRostersTab: React.FC<TeamsRostersTabProps> = ({
         <div>
           <div className="flex items-center gap-3">
             <h2 className="text-2xl font-bold tracking-tight text-white">Teams & Rosters</h2>
-            {isDemoMode && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30">
-                <Shield className="w-3.5 h-3.5" />
-                Demo Mode
-              </span>
-            )}
           </div>
           <p className="text-sm text-gray-400 mt-1">
             Team registry, Free Fire IGIDs, roster locks, and disciplinary actions

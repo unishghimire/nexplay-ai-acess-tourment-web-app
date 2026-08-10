@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { doc, getDoc, collection, query, where, getDocs, runTransaction, onSnapshot } from 'firebase/firestore';
-import { db } from '../../../shared/config/firebase';
+import { doc, getDoc, collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
+import { db, auth } from '../../../shared/config/firebase';
 import { Tournament, UserProfile } from '../../../shared/types/types';
 import { DEFAULT_BANNER } from '../../../shared/constants/constants';
 import { useAuth } from '../../../shared/context/AuthContext';
@@ -35,6 +35,7 @@ export default function TournamentDetails() {
     const [participants, setParticipants] = useState<any[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [relatedTournaments, setRelatedTournaments] = useState<Tournament[]>([]);
+    const [metaError, setMetaError] = useState<string | null>(null);
     const [timeLeft, setTimeLeft] = useState<{ d: number; h: number; m: number; s: number } | null>(null);
     const [showJoinModal, setShowJoinModal] = useState(false);
     const [showRegistrationModal, setShowRegistrationModal] = useState(false);
@@ -97,6 +98,7 @@ export default function TournamentDetails() {
                 }
             } catch (err) {
                 console.warn("Meta data fetch failed", err);
+                setMetaError("Failed to load some tournament details.");
             }
         };
         fetchMeta();
@@ -264,33 +266,17 @@ export default function TournamentDetails() {
         }
         if (!window.confirm('Are you sure you want to leave this tournament? Your entry fee will be refunded.')) return;
 
-        const tRef = doc(db, 'tournaments', tournament.id);
-        const userRef = doc(db, 'users', user.uid);
-
         try {
-            await runTransaction(db, async (transaction) => {
-                const tDoc = await transaction.get(tRef);
-                const uDoc = await transaction.get(userRef);
-                if (!tDoc.exists()) throw new Error("Tournament does not exist!");
-                const tData = tDoc.data() as Tournament;
-                const uData = uDoc.data() as UserProfile;
+            const token = await auth.currentUser?.getIdToken();
+            if (!token) throw new Error('Authentication required');
 
-                // Find the participant record
-                const partQ = query(
-                    collection(db, 'participants'),
-                    where('tournamentId', '==', tournament.id),
-                    where('userId', '==', user.uid)
-                );
-                const pSnap = await getDocs(partQ);
-                if (pSnap.empty) throw new Error("Participant record not found!");
-
-                // Refund entry fee
-                transaction.update(userRef, { balance: uData.balance + tData.entryFee });
-                // Decrement players
-                transaction.update(tRef, { currentPlayers: Math.max(0, tData.currentPlayers - 1) });
-                // Delete participant record
-                transaction.delete(doc(db, 'participants', pSnap.docs[0].id));
+            const res = await fetch('/api/wallet/leave-tournament', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ tournamentId: tournament.id }),
             });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Failed to leave tournament');
 
             setIsJoined(false);
             await NotificationService.create(
@@ -678,6 +664,12 @@ export default function TournamentDetails() {
                         )}
                     </AnimatePresence>
                 </div>
+                    {metaError && (
+                        <div className="mt-4 p-3 bg-yellow-900/20 border border-yellow-500/30 rounded-lg text-xs text-yellow-400 font-medium">
+                            {metaError}
+                        </div>
+                    )}
+
                     {/* Related Tournaments */}
                     {false && relatedTournaments.length > 0 && (
                         <div className="space-y-6 pt-8 border-t border-gray-800/50">

@@ -1,16 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {Users, Search, Trash, Edit, CheckCircle} from 'lucide-react';
-import { doc, updateDoc, deleteDoc, collection, query, where, getDocs, setDoc, serverTimestamp, increment, getDoc, writeBatch, orderBy, limit, Timestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from '../../../../shared/config/firebase';
-import {  } from '../../../../shared/utils/utils';
-import { } from '../../../../shared/components/ImageUploader';
-import {} from '../../../../shared/services/mediaService';
 
 import { AdminPanelTabProps } from './types';
 
 export const UsersTab: React.FC<AdminPanelTabProps> = (props) => {
     const { formatCurrency, handleSuspendOrg, handleUpdateUserRole, searchQuery, setSearchQuery, users, setSelectedUser } = props;
+    const [processingId, setProcessingId] = useState<string | null>(null);
     return (
                 <div className="bg-card p-6 rounded-xl border border-gray-800 space-y-6">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-700 pb-4">

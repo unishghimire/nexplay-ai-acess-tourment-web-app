@@ -1,16 +1,11 @@
-import React from 'react';
-import {ArrowDown, Check, Eye} from 'lucide-react';
-import { doc, updateDoc, deleteDoc, collection, query, where, getDocs, setDoc, serverTimestamp, increment, getDoc, writeBatch, orderBy, limit, Timestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from '../../../../shared/config/firebase';
-import {  } from '../../../../shared/utils/utils';
-import { } from '../../../../shared/components/ImageUploader';
-import {} from '../../../../shared/services/mediaService';
+import React, { useState } from 'react';
+import {ArrowDown, Check, Eye, Image as ImageIcon} from 'lucide-react';
 
 import { AdminPanelTabProps } from './types';
 
 export const PendingDepositsTab: React.FC<AdminPanelTabProps> = (props) => {
     const { allTransactions, closeConfirmModal, formatCurrency, getRelativeTime, handleApproveTx, setConfirmModal, setSelectedTx } = props;
+    const [processingId, setProcessingId] = useState<string | null>(null);
     return (
                     <div className="bg-card p-6 rounded-xl border border-gray-800 space-y-6">
                         <div className="flex justify-between items-center border-b border-gray-700 pb-4">
@@ -32,7 +27,12 @@ export const PendingDepositsTab: React.FC<AdminPanelTabProps> = (props) => {
                                             onConfirm: async () => {
                                                 const pending = allTransactions.filter(t => t.type === 'deposit' && t.status === 'pending');
                                                 for (const t of pending) {
-                                                    await handleApproveTx(t);
+                                                    setProcessingId(t.id);
+                                                    try {
+                                                        await handleApproveTx(t);
+                                                    } finally {
+                                                        setProcessingId(null);
+                                                    }
                                                 }
                                                 closeConfirmModal();
                                             }
@@ -59,11 +59,17 @@ export const PendingDepositsTab: React.FC<AdminPanelTabProps> = (props) => {
                                             </div>
                                             <div className="text-xl font-black text-white tracking-tight">{formatCurrency(Math.abs(t.amount))}</div>
                                         </div>
-                                        <div className="text-[11px] text-gray-400 mb-5 space-y-2">
+                                        <div className="text-[11px] text-gray-400 mb-3 space-y-2">
                                             <div className="bg-black/30 p-2 rounded-lg border border-gray-800/50 font-mono flex justify-between items-center">
                                                 <span className="text-gray-600">REF:</span> 
                                                 <span className="text-brand-300 select-all">{t.refId}</span>
                                             </div>
+                                            {t.transactionCode && (
+                                                <div className="bg-black/30 p-2 rounded-lg border border-gray-800/50 font-mono flex justify-between items-center">
+                                                    <span className="text-gray-600">TX CODE:</span> 
+                                                    <span className="text-brand-300 select-all">{t.transactionCode}</span>
+                                                </div>
+                                            )}
                                             {t.accountDetails && (
                                                 <div className="bg-black/30 p-2 rounded-lg border border-gray-800/50 font-mono flex justify-between items-center">
                                                     <span className="text-gray-600">ACC:</span> 
@@ -71,8 +77,23 @@ export const PendingDepositsTab: React.FC<AdminPanelTabProps> = (props) => {
                                                 </div>
                                             )}
                                         </div>
+                                        {/* Payment Screenshot Thumbnail */}
+                                        {t.proofUrl && (
+                                            <div className="mb-3">
+                                                <a href={t.proofUrl} target="_blank" rel="noreferrer" className="block group/img">
+                                                    <div className="relative rounded-xl overflow-hidden border border-gray-800 hover:border-brand-500 transition">
+                                                        <img src={t.proofUrl} alt="Payment proof" className="w-full max-h-32 object-cover" referrerPolicy="no-referrer" />
+                                                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/img:opacity-100 transition flex items-center justify-center">
+                                                            <span className="text-white text-xs font-bold uppercase tracking-wider flex items-center gap-1">
+                                                                <Eye className="w-3 h-3" /> View Full
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </a>
+                                            </div>
+                                        )}
                                         <div className="grid grid-cols-2 gap-3">
-                                            <button onClick={() => handleApproveTx(t)} className="bg-green-600/20 hover:bg-green-600 text-green-400 hover:text-white border border-green-500/30 hover:border-green-500 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all">
+                                            <button onClick={() => handleApproveTx(t)} disabled={processingId === t.id} className="bg-green-600/20 hover:bg-green-600 text-green-400 hover:text-white border border-green-500/30 hover:border-green-500 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all">
                                                 <Check className="w-4 h-4" /> Approve
                                             </button>
                                             <button onClick={() => setSelectedTx(t)} className="bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30 hover:border-blue-500 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all">

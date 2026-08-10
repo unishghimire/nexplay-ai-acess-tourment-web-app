@@ -4,7 +4,6 @@ import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
-import { mockScrims } from '../data/orgMockData';
 import {
   ChevronLeft, Save, Radio, Users, DollarSign, Calendar,
   Gamepad2, Edit2, Check, X, Lock, Unlock, Copy, Trophy,
@@ -33,18 +32,6 @@ export default function ScrimDetailPage() {
   useEffect(() => {
     if (!id) return;
 
-    // Demo mode: mock scrim IDs start with "scrim-"
-    if (id.startsWith('scrim-')) {
-      const found = mockScrims.find(s => s.id === id);
-      if (found) {
-        setScrim(found);
-        setRoomId((found as any).roomId || '');
-        setRoomPass((found as any).roomPass || '');
-      }
-      setLoading(false);
-      return;
-    }
-
     // Real Firestore
     if (!user) { setLoading(false); return; }
 
@@ -67,12 +54,6 @@ export default function ScrimDetailPage() {
 
   // --- Handlers ---
   const handleSaveEdit = useCallback(async () => {
-    if (!id || id.startsWith('scrim-')) {
-      setScrim((prev: any) => ({ ...prev, ...editForm }));
-      setIsEditing(false);
-      showToast('Demo mode — scrim edit simulated', 'info');
-      return;
-    }
     try {
       await updateDoc(doc(db, SCRIM_COLLECTION, id), {
         title: editForm.title,
@@ -92,22 +73,6 @@ export default function ScrimDetailPage() {
   const handleToggleSlot = useCallback(async (slotNumber: number) => {
     if (!scrim) return;
 
-    if (id?.startsWith('scrim-')) {
-      // Demo: toggle in local state
-      setScrim((prev: any) => {
-        if (!prev) return prev;
-        const newSlots = prev.slots?.map((s: any) => {
-          if (s.slotNumber !== slotNumber) return s;
-          if (s.status === 'filled') return { ...s, status: 'open', teamName: null, teamId: null };
-          return { ...s, status: 'filled', teamName: 'Reserved', teamId: null };
-        });
-        const filled = newSlots?.filter((s: any) => s.status === 'filled').length || 0;
-        return { ...prev, slots: newSlots, filledSlots: filled };
-      });
-      return;
-    }
-
-    // Real: update Firestore slots array
     try {
       const newSlots = scrim.slots?.map((s: any) => {
         if (s.slotNumber !== slotNumber) return s;
@@ -124,10 +89,6 @@ export default function ScrimDetailPage() {
 
   const handleBroadcast = useCallback(async () => {
     if (!id) return;
-    if (id.startsWith('scrim-')) {
-      showToast(`Demo: Room ${roomId} broadcasted`, 'success');
-      return;
-    }
     try {
       await updateDoc(doc(db, SCRIM_COLLECTION, id), { roomId, roomPass, ytLink: streamUrl });
       showToast('Room credentials broadcasted', 'success');
@@ -137,11 +98,6 @@ export default function ScrimDetailPage() {
   }, [id, roomId, roomPass, streamUrl, showToast]);
 
   const handleStatusChange = useCallback(async (newStatus: string) => {
-    if (id?.startsWith('scrim-')) {
-      setScrim((prev: any) => ({ ...prev, status: newStatus }));
-      showToast(`Demo: status → ${newStatus}`, 'info');
-      return;
-    }
     try {
       await updateDoc(doc(db, SCRIM_COLLECTION, id!), { status: newStatus });
       showToast(`Scrim status: ${newStatus.toUpperCase()}`, 'success');
@@ -176,7 +132,6 @@ export default function ScrimDetailPage() {
     );
   }
 
-  const isDemo = id?.startsWith('scrim-') ?? false;
   const slots = scrim.slots || [];
   const filledCount = slots.filter((s: any) => s.status === 'filled').length;
   const totalCount = slots.length || scrim.totalSlots || 0;
@@ -193,7 +148,7 @@ export default function ScrimDetailPage() {
           <div>
             <h1 className="text-2xl font-bold text-white tracking-tight">{scrim.title}</h1>
             <p className="text-sm text-gray-500 mt-1">
-              {scrim.game || 'Free Fire'} · {scrim.format === '5v5' ? '5v5' : 'Battle Royale'} · {isDemo && 'Demo Mode'}
+              {scrim.game || 'Free Fire'} · {scrim.format === '5v5' ? '5v5' : 'Battle Royale'}
             </p>
           </div>
         </div>

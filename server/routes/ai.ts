@@ -72,7 +72,7 @@ Context: title=${cleanTitle}; game=${cleanGame}; type=${typeof type === "string"
 });
 
 // Web Page Auditor
-router.post("/api/audit", async (req: any, res: any) => {
+router.post("/api/audit", authenticateToken, async (req: any, res: any) => {
   try {
     const { url, htmlContents } = req.body;
     let finalHtml = "";
@@ -168,7 +168,7 @@ Be direct, detailed, and highly technical. Never generate fake boilerplate findi
 });
 
 // Audit Discussion
-router.post("/api/audit/discuss", async (req: any, res: any) => {
+router.post("/api/audit/discuss", authenticateToken, async (req: any, res: any) => {
   try {
     const { message, context } = req.body;
     if (!message) return res.status(400).json({ success: false, message: "Message is required." });

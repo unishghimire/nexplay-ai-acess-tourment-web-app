@@ -31,7 +31,6 @@ export interface OverviewTabProps {
     type: string;
   }[];
   hostedTournaments: Tournament[] | any[];
-  isDemoMode: boolean;
 }
 
 const formatRupees = (amount: number = 0): string => {
@@ -109,7 +108,6 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
   },
   activityFeed = [],
   hostedTournaments = [],
-  isDemoMode = false,
 }) => {
   return (
     <div className="space-y-6 bg-[#09090b] text-gray-200 text-sm p-2 sm:p-4 rounded-lg">
@@ -121,11 +119,6 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
             Key metrics and real-time activity for your esports organization.
           </p>
         </div>
-        {isDemoMode && (
-          <span className="bg-amber-500/10 text-amber-500 text-xs px-2 py-1 rounded-full font-medium">
-            Demo Mode
-          </span>
-        )}
       </div>
 
       {/* 1. KPI Grid */}

@@ -16,7 +16,6 @@ import {
     Users, 
     Flame 
 } from 'lucide-react';
-import { useAuth } from '../../../shared/context/AuthContext';
 import { formatGameName } from '../../../shared/utils/utils';
 
 
@@ -59,7 +58,7 @@ const promoSlides: PromoSlide[] = [
 ];
 
 const Home: React.FC = () => {
-    const { } = useAuth();
+    
     const [featuredTournaments, setFeaturedTournaments] = useState<Tournament[]>([]);
     const [popularGames, setPopularGames] = useState<Game[]>([]);
     const [slides, setSlides] = useState<Slide[]>([]);
@@ -137,7 +136,7 @@ const Home: React.FC = () => {
                     setTotalPlayersCount(Math.max(1350, usersSnap.size * 12));
                 }
             } catch (e) {
-                // fall back gracefully
+                console.warn("Analytics fetch failed, using fallback values", e);
             }
 
             setLoading(false);

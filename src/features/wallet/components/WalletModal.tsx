@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { X, ArrowDown, CreditCard, AlertTriangle } from 'lucide-react';
-import { collection, query, where, getDocs, addDoc, serverTimestamp, doc, getDoc, writeBatch, increment } from 'firebase/firestore';
-import { db } from '../../../shared/config/firebase';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, ArrowDown, CreditCard, AlertTriangle, Upload, Image as ImageIcon } from 'lucide-react';
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import { db, auth } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { PaymentMethod, PaymentCategory, SiteSettings } from '../../../shared/types/types';
@@ -28,7 +28,11 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
   const [depositAmount, setDepositAmount] = useState('');
   const [senderNumber, setSenderNumber] = useState('');
   const [transactionCode, setTransactionCode] = useState('');
+  const [proofUrl, setProofUrl] = useState('');
+  const [proofPreview, setProofPreview] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Withdrawal State
   const [withdrawAmount, setWithdrawAmount] = useState('');
@@ -68,9 +72,60 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
     }
   };
 
+  const handleScreenshotUpload = async (file: File) => {
+    if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      showToast('Only JPG, PNG, or WEBP images allowed', 'error');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('Image must be under 5MB', 'error');
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      // Preview
+      setProofPreview(URL.createObjectURL(file));
+
+      // Upload via server
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) {
+        showToast('Authentication required', 'error');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('image', file);
+      formData.append('category', 'payments');
+
+      const res = await fetch('/api/upload/image', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error('Upload failed');
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message || 'Upload failed');
+
+      setProofUrl(data.url);
+      showToast('Screenshot uploaded', 'success');
+    } catch (error) {
+      console.error('Screenshot upload error:', error);
+      showToast('Failed to upload screenshot', 'error');
+      setProofPreview('');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleDepositSubmit = async () => {
     if (!user || !selectedMethod || !depositAmount || !senderNumber || !transactionCode) {
       return showToast('Please fill all fields', 'error');
+    }
+    if (!proofUrl) {
+      return showToast('Payment screenshot is required', 'error');
     }
 
     const amount = parseFloat(depositAmount);
@@ -78,20 +133,39 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
 
     setIsSubmitting(true);
     try {
-      await addDoc(collection(db, 'transactions'), {
-        userId: user.uid,
-        username: profile?.username || 'Unknown',
-        userEmail: user.email || '',
-        type: 'deposit',
-        amount: amount,
-        method: selectedMethod.name,
-        status: 'pending',
-        timestamp: serverTimestamp(),
-        accountDetails: `Sender Number: ${senderNumber}\nTransaction Code/Name: ${transactionCode}`,
-        refId: `DEP-${Date.now()}`
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) {
+        showToast('Authentication required', 'error');
+        return;
+      }
+
+      const res = await fetch('/api/wallet/deposit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({
+          amount,
+          method: selectedMethod.name,
+          senderNumber,
+          transactionCode,
+          proofUrl,
+        }),
       });
 
+      const data = await res.json();
+      if (!res.ok) {
+        showToast(data.message || 'Failed to submit deposit', 'error');
+        return;
+      }
+
       showToast('Deposit request submitted!', 'success');
+      // Reset form
+      setDepositAmount('');
+      setSenderNumber('');
+      setTransactionCode('');
+      setProofUrl('');
+      setProofPreview('');
+      setSelectedMethod(null);
+      setSelectedCategory(null);
       onClose();
     } catch (error) {
       console.error("Error submitting deposit:", error);
@@ -115,28 +189,32 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
 
     setIsSubmitting(true);
     try {
-      const batch = writeBatch(db);
-      const txRef = doc(collection(db, 'transactions'));
-      batch.set(txRef, {
-        userId: user.uid,
-        username: profile?.username || 'Unknown',
-        userEmail: user.email || '',
-        type: 'withdrawal',
-        amount: -amount,
-        method: withdrawMethod,
-        status: 'pending',
-        timestamp: serverTimestamp(),
-        accountDetails: accountDetails,
-        refId: `WIT-${Date.now()}`
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) {
+        showToast('Authentication required', 'error');
+        return;
+      }
+
+      const res = await fetch('/api/wallet/withdraw', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({
+          amount,
+          method: withdrawMethod,
+          accountDetails,
+        }),
       });
 
-      const userRef = doc(db, 'users', user.uid);
-      batch.update(userRef, {
-        balance: increment(-amount)
-      });
+      const data = await res.json();
+      if (!res.ok) {
+        showToast(data.message || 'Failed to withdraw', 'error');
+        return;
+      }
 
-      await batch.commit();
       showToast('Withdrawal request submitted!', 'success');
+      setWithdrawAmount('');
+      setWithdrawMethod('');
+      setAccountDetails('');
       onClose();
     } catch (error) {
       console.error("Error submitting withdrawal:", error);
@@ -255,10 +333,76 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
                       onChange={(e) => setTransactionCode(e.target.value)}
                       className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 outline-none font-bold"
                     />
+                    
+                    {/* Screenshot Upload */}
+                    <div>
+                      <label className="text-[10px] text-gray-500 uppercase font-black mb-2 block">Payment Screenshot (Required)</label>
+                      {proofPreview ? (
+                        <div className="relative">
+                          <img src={proofPreview} alt="Payment screenshot" className="w-full max-h-48 object-contain rounded-xl border border-gray-700" />
+                          <button 
+                            onClick={() => { setProofPreview(''); setProofUrl(''); }}
+                            className="absolute top-2 right-2 bg-black/80 rounded-full p-1 text-white hover:bg-red-500 transition"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div
+                          onClick={() => !isUploading && fileInputRef.current?.click()}
+                          onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const file = e.dataTransfer.files?.[0];
+                            if (file) handleScreenshotUpload(file);
+                          }}
+                          onPaste={(e) => {
+                            const items = e.clipboardData?.items;
+                            if (!items) return;
+                            for (const item of items) {
+                              if (item.type.startsWith('image/')) {
+                                const file = item.getAsFile();
+                                if (file) handleScreenshotUpload(file);
+                                break;
+                              }
+                            }
+                          }}
+                          tabIndex={0}
+                          className="w-full bg-dark border-2 border-dashed border-gray-700 rounded-xl py-8 flex flex-col items-center gap-3 hover:border-brand-500 transition group cursor-pointer focus:outline-none focus:border-brand-500"
+                        >
+                          {isUploading ? (
+                            <>
+                              <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+                              <p className="text-xs text-gray-500">Uploading...</p>
+                            </>
+                          ) : (
+                            <>
+                              <div className="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center group-hover:bg-brand-500/10 transition">
+                                <Upload className="w-5 h-5 text-gray-500 group-hover:text-brand-500" />
+                              </div>
+                              <p className="text-xs text-gray-400 font-medium">Upload payment screenshot</p>
+                              <p className="text-[10px] text-gray-600">Click, drag-and-drop, or paste — JPG, PNG, WEBP max 5MB</p>
+                            </>
+                          )}
+                        </div>
+                      )}
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleScreenshotUpload(file);
+                        }}
+                      />
+                    </div>
+
                     <button 
                       onClick={handleDepositSubmit}
-                      disabled={isSubmitting}
-                      className="w-full bg-brand-600 hover:bg-brand-500 text-white py-4 rounded-xl font-black uppercase tracking-widest transition shadow-lg"
+                      disabled={isSubmitting || isUploading || !proofUrl}
+                      className="w-full bg-brand-600 hover:bg-brand-500 text-white py-4 rounded-xl font-black uppercase tracking-widest transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isSubmitting ? 'Processing...' : 'Submit Deposit'}
                     </button>
@@ -306,7 +450,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
                 <button 
                   onClick={handleWithdrawSubmit}
                   disabled={isSubmitting}
-                  className="w-full bg-brand-600 hover:bg-brand-500 text-white py-4 rounded-xl font-black uppercase tracking-widest transition shadow-lg"
+                  className="w-full bg-brand-600 hover:bg-brand-500 text-white py-4 rounded-xl font-black uppercase tracking-widest transition shadow-lg disabled:opacity-50"
                 >
                   {isSubmitting ? 'Processing...' : 'Request Withdrawal'}
                 </button>

@@ -14,7 +14,6 @@ import {
 export interface MatchRoomsTabProps {
   matchRooms: any[];
   disputes: any[];
-  isDemoMode: boolean;
   onOpenRoomDispatch: (room: any) => void;
   onResolveDispute: (disputeId: string, action: string) => void;
 }
@@ -22,7 +21,6 @@ export interface MatchRoomsTabProps {
 const MatchRoomsTab: React.FC<MatchRoomsTabProps> = ({
   matchRooms = [],
   disputes = [],
-  isDemoMode,
   onOpenRoomDispatch,
   onResolveDispute,
 }) => {
@@ -98,11 +96,6 @@ const MatchRoomsTab: React.FC<MatchRoomsTabProps> = ({
         <div>
           <div className="flex items-center gap-3">
             <h2 className="text-2xl font-bold tracking-tight text-white">Match Rooms</h2>
-            {isDemoMode && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                <AlertTriangle className="w-3.5 h-3.5" /> Demo Mode
-              </span>
-            )}
           </div>
           <p className="text-sm text-gray-400 mt-1">Live lobby dispatch and dispute resolution</p>
         </div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../../shared/context/AuthContext';
-import { collection, query, where, getDocs, orderBy, limit, doc, increment, addDoc, serverTimestamp, writeBatch, startAfter, QueryDocumentSnapshot } from 'firebase/firestore';
-import { db } from '../../../shared/config/firebase';
+import { collection, query, where, getDocs, orderBy, limit, doc, addDoc, serverTimestamp, startAfter, QueryDocumentSnapshot } from 'firebase/firestore';
+import { db, auth } from '../../../shared/config/firebase';
 import { Transaction, PromoCode } from '../../../shared/types/types';
 import { formatCurrency, formatDate } from '../../../shared/utils/utils';
 import { ArrowUpRight, ArrowDownRight, CheckCircle2, Wallet as WalletIcon, Gift, AlertTriangle, X, ShieldCheck, Download, TrendingUp, ChevronRight } from 'lucide-react';
@@ -19,6 +19,7 @@ const Wallet: React.FC = () => {
     const [hasMore, setHasMore] = useState(true);
     const [activeModal, setActiveModal] = useState<'deposit' | 'withdraw' | null>(null);
     const [fallbackMode, setFallbackMode] = useState(false);
+    const [txError, setTxError] = useState<string | null>(null);
     
     // Promo Code State
     const [isPromoModalOpen, setIsPromoModalOpen] = useState(false);
@@ -105,6 +106,7 @@ const Wallet: React.FC = () => {
                 } catch (err: any) {
                     if (err.message && err.message.includes('index')) {
                         console.warn("Missing index, switching to fallback mode (client-side pagination)");
+                        setTxError("Loading transactions in compatibility mode.");
                         setFallbackMode(true);
                         // Rerun fetch in fallback mode
                         const fallbackQ = query(collection(db, 'transactions'), where('userId', '==', user.uid));
@@ -168,71 +170,19 @@ const Wallet: React.FC = () => {
     const handleRedeemPromo = async () => {
         if (!promoCode.trim() || !user) return;
         setIsRedeeming(true);
-        const code = promoCode.trim().toUpperCase();
         try {
-            const q = query(collection(db, 'promocodes'), where('code', '==', code));
-            const snap = await getDocs(q);
-            
-            if (snap.empty) {
-                showToast('Invalid promo code', 'error');
-                setIsRedeeming(false);
-                return;
-            }
+            const token = await auth.currentUser?.getIdToken();
+            if (!token) throw new Error('Authentication required');
 
-            const promoDoc = snap.docs[0];
-            const promoData = promoDoc.data() as PromoCode;
-
-            if (!promoData.isActive) {
-                showToast('This promo code is no longer active', 'error');
-                setIsRedeeming(false);
-                return;
-            }
-
-            if (promoData.currentUses >= promoData.maxUses) {
-                showToast('This promo code has reached its maximum uses', 'error');
-                setIsRedeeming(false);
-                return;
-            }
-
-            const txQuery = query(
-                collection(db, 'transactions'),
-                where('userId', '==', user.uid),
-                where('type', '==', 'promo'),
-                where('method', '==', `PROMO:${promoData.code}`)
-            );
-            const txSnap = await getDocs(txQuery);
-            if (!txSnap.empty) {
-                showToast('You have already used this promo code', 'error');
-                setIsRedeeming(false);
-                return;
-            }
-
-            const batch = writeBatch(db);
-            const userRef = doc(db, 'users', user.uid);
-            batch.update(userRef, {
-                balance: increment(promoData.amount)
+            const res = await fetch('/api/wallet/redeem-promo', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ code: promoCode.trim() }),
             });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Failed to redeem promo code');
 
-            batch.update(promoDoc.ref, {
-                currentUses: increment(1)
-            });
-
-            const newTxRef = doc(collection(db, 'transactions'));
-            batch.set(newTxRef, {
-                userId: user.uid,
-                username: profile?.username || 'Unknown',
-                userEmail: user.email || '',
-                type: 'promo',
-                amount: promoData.amount,
-                method: `PROMO:${promoData.code}`,
-                status: 'completed',
-                timestamp: serverTimestamp(),
-                accountDetails: 'Promo Code Redemption',
-                refId: `PRM-${Date.now()}`
-            });
-
-            await batch.commit();
-            showToast(`Successfully redeemed ${formatCurrency(promoData.amount)}!`, 'success');
+            showToast(`Successfully redeemed ${formatCurrency(data.amount || 0)}!`, 'success');
             setPromoCode('');
             setIsPromoModalOpen(false);
             
@@ -240,8 +190,7 @@ const Wallet: React.FC = () => {
             setLastDoc(null);
             fetchTransactions();
         } catch (error: any) {
-            console.error("Error redeeming promo code:", error);
-            showToast('Failed to redeem promo code', 'error');
+            showToast(error.message || 'Failed to redeem promo code', 'error');
         } finally {
             setIsRedeeming(false);
         }
