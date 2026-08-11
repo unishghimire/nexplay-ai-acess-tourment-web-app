@@ -95,7 +95,7 @@ const PostDetails: React.FC = () => {
                     description: post.content?.substring(0, 150),
                     author: { "@type": "Organization", name: "NexPlay" },
                     publisher: { "@type": "Organization", name: "NexPlay" },
-                    url: `https://nexplayorg.app/post/${id}`,
+                    url: `https://www.nexplayorg.app/post/${id}`,
                 }}
             />
 

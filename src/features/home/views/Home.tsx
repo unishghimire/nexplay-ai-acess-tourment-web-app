@@ -195,13 +195,13 @@ const Home: React.FC = () => {
                 "@context": "https://schema.org",
                 "@type": "Organization",
                 name: "NexPlay",
-                url: "https://nexplayorg.app",
+                url: "https://www.nexplayorg.app",
                 description: "Nepal-focused esports tournament and scrim platform",
             }, {
                 "@context": "https://schema.org",
                 "@type": "WebSite",
                 name: "NexPlay",
-                url: "https://nexplayorg.app",
+                url: "https://www.nexplayorg.app",
             }]}
         />
         <div className="animate-fade-in space-y-16 pb-20 relative">

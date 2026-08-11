@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 
 export async function generateSitemapXml(db: any): Promise<string> {
-  const baseUrl = "https://nexplayorg.app";
+  const baseUrl = "https://www.nexplayorg.app";
 
   interface SitemapUrl {
     loc: string;
@@ -164,19 +164,19 @@ export async function handleIndexNow(req: Request, res: Response): Promise<any> 
   }
 
   const validUrls = urls.filter(
-    (url: any) => typeof url === "string" && url.startsWith("https://nexplayorg.app")
+    (url: any) => typeof url === "string" && url.startsWith("https://www.nexplayorg.app")
   );
 
   if (validUrls.length === 0) {
     return res.status(400).json({
-      error: "No valid URLs provided. All URLs must start with 'https://nexplayorg.app'."
+      error: "No valid URLs provided. All URLs must start with 'https://www.nexplayorg.app'."
     });
   }
 
   const payload = {
     host: "nexplayorg.app",
     key: apiKey,
-    keyLocation: `https://nexplayorg.app/${apiKey}.txt`,
+    keyLocation: `https://www.nexplayorg.app/${apiKey}.txt`,
     urlList: validUrls
   };
 
