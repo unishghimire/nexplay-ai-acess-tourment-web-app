@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /wallet
+Disallow: /organizer
+Disallow: /profile
+Disallow: /login
+Disallow: /register
+Disallow: /complete-profile
+Disallow: /tournament-admin/
+Disallow: /api/
+
+User-agent: GPTBot
+Allow: /
+
+Sitemap: https://nexplay.gg/sitemap.xml

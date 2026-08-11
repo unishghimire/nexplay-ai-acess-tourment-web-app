@@ -1,3 +1,4 @@
+import Seo from '../../../shared/components/Seo';
 import React, { useState, useEffect } from 'react';
 import { collection, query, getDocs, where, addDoc, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
@@ -91,6 +92,12 @@ const OrgBrowser: React.FC = () => {
     const rest = filteredOrgs.slice(3);
 
     return (
+        <>
+        <Seo
+            title="Esports Organizers in Nepal | NexPlay"
+            description="Browse esports tournament organizers in Nepal on NexPlay."
+            canonicalPath="/organizations"
+        />
         <div className="max-w-6xl mx-auto animate-fade-in pb-20">
             {/* Header */}
             <div className="mb-12 border-b border-gray-800 pb-10">
@@ -289,6 +296,7 @@ const OrgBrowser: React.FC = () => {
                 </>
             )}
         </div>
+        </>
     );
 };
 

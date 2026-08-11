@@ -1,3 +1,4 @@
+import Seo from '../../../shared/components/Seo';
 import React, { useEffect, useState } from 'react';
 import { collection, query, getDocs, limit } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
@@ -63,10 +64,17 @@ const Results: React.FC = () => {
 
     if (loading) {
         return (
+        <>
+        <Seo
+            title="Tournament Results | NexPlay — Esports Nepal"
+            description="View completed esports tournament results, winners, and leaderboards on NexPlay."
+            canonicalPath="/results"
+        />
             <div className="flex flex-col items-center justify-center min-h-[60vh]">
                 <div className="w-12 h-12 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mb-4"></div>
                 <p className="text-brand-500 text-xs font-black uppercase tracking-widest animate-pulse">Fetching Hall of Fame...</p>
             </div>
+        </>
         );
     }
 

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { Game } from '../../../shared/types/types';
+import Seo from '../../../shared/components/Seo';
 import { Gamepad2, ChevronRight } from 'lucide-react';
 import { formatGameModeLabel, formatGameName } from '../../../shared/utils/utils';
 
@@ -88,6 +89,12 @@ const GameModesBrowser: React.FC = () => {
     const gameLabel = formatGameName(game.name);
 
     return (
+        <>
+        <Seo
+            title={`${gameLabel} Tournaments & Scrims in Nepal | NexPlay`}
+            description={`Find ${gameLabel} tournaments and scrims in Nepal on NexPlay.`}
+            canonicalPath={`/games/${id}`}
+        />
         <div className="animate-fade-in max-w-5xl mx-auto p-4 md:p-8">
             <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6 border-b border-gray-800 pb-8">
                 <div className="space-y-2">
@@ -142,6 +149,7 @@ const GameModesBrowser: React.FC = () => {
                 )}
             </div>
         </div>
+        </>
     );
 };
 

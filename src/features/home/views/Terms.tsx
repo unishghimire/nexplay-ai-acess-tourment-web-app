@@ -1,8 +1,16 @@
+import Seo from '../../../shared/components/Seo';
 import React from 'react';
 import { FileText } from 'lucide-react';
 
 const Terms: React.FC = () => {
     return (
+        <>
+        <Seo
+            title="Terms of Service | NexPlay"
+            description="Read NexPlay's terms of service for using Nepal's esports tournament platform."
+            canonicalPath="/terms"
+            noindex
+        />
         <div className="animate-fade-in max-w-4xl mx-auto">
             <div className="bg-card p-8 rounded-xl border border-gray-800 shadow-2xl">
                 <h1 className="text-3xl font-bold text-white mb-6 border-b border-gray-700 pb-4 flex items-center">
@@ -31,6 +39,7 @@ const Terms: React.FC = () => {
                 </div>
             </div>
         </div>
+        </>
     );
 };
 

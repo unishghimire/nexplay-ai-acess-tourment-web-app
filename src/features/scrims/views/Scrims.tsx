@@ -1,3 +1,5 @@
+import Seo from '../../../shared/components/Seo';
+import Faq from '../../../shared/components/Faq';
 import React, { useEffect, useState } from 'react';
 import { Scrim } from '../../../shared/types/types';
 import { Trophy, Search, Filter, Calendar, Gamepad2 } from 'lucide-react';
@@ -5,6 +7,23 @@ import { motion } from 'motion/react';
 import { formatCurrency, formatDate, formatGameName } from '../../../shared/utils/utils';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { useNavigate } from 'react-router-dom';
+
+
+const scrimFaqs = [
+    {
+        question: 'What are esports scrims?',
+        answer: 'Scrims (scrimmages) are practice matches where teams compete in a competitive but non-tournament setting to improve their skills.',
+    },
+    {
+        question: 'How do I join a scrim in Nepal?',
+        answer: 'Browse available scrims on NexPlay Scrims page, find one for your game, and register your team. Most scrims are free to join.',
+    },
+    {
+        question: 'What is the difference between scrims and tournaments?',
+        answer: 'Tournaments are formal competitions with prizes and rankings. Scrims are practice matches focused on skill development without the pressure of a tournament bracket.',
+    },
+];
+
 
 const Scrims: React.FC = () => {
     const [scrims, setScrims] = useState<Scrim[]>([]);
@@ -43,6 +62,12 @@ const Scrims: React.FC = () => {
     });
 
     return (
+        <>
+        <Seo
+            title="Esports Scrims in Nepal | NexPlay"
+            description="Find and join esports scrims in Nepal. Practice matches for PUBG Mobile, Free Fire, Valorant and more on NexPlay."
+            canonicalPath="/scrims"
+        />
         <div className="animate-fade-in max-w-5xl mx-auto p-4 md:p-8">
             <header className="mb-12 border-b border-gray-800 pb-8">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-6">
@@ -177,7 +202,10 @@ const Scrims: React.FC = () => {
                     </button>
                 </div>
             )}
+            {/* ponytail: FAQ section for Scrims page */}
+            <Faq items={scrimFaqs} />
         </div>
+        </>
     );
 
 };

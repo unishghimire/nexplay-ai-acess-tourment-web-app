@@ -12,6 +12,7 @@ import JoinTournamentModal from '../components/JoinTournamentModal';
 import { motion, AnimatePresence } from 'motion/react';
 import { NotificationService } from '../../../shared/services/NotificationService';
 import { useNotification } from '../../../shared/context/NotificationContext';
+import Seo from '../../../shared/components/Seo';
 import { Helmet } from 'react-helmet-async';
 import ProfileLink from '../../profile/components/ProfileLink';
 import PrizeBoard from '../components/PrizeBoard';
@@ -325,10 +326,29 @@ export default function TournamentDetails() {
     return (
         <div className="animate-fade-in max-w-6xl mx-auto px-4 py-6">
             {tournament && (
-                <Helmet>
-                    <title>{tournament.title} | NexPlay</title>
-                    <meta name="description" content={`Join ${tournament.title} on NexPlay. Prize Pool: ${formatCurrency(tournament.prizePool)}.`} />
-                </Helmet>
+                <Seo
+                    title={`${tournament.title} | ${formatGameName(tournament.game)} Tournament Nepal | NexPlay`}
+                    description={`Join ${tournament.title} on NexPlay. View tournament details, registration, prize pool, schedule, and results for this ${formatGameName(tournament.game)} esports competition in Nepal.`}
+                    canonicalPath={`/details/${id}`}
+                    jsonLd={{
+                        "@context": "https://schema.org",
+                        "@type": "Event",
+                        name: tournament.title,
+                        description: `${formatGameName(tournament.game)} tournament on NexPlay — Nepal esports platform.`,
+                        startDate: tournament.startTime?.toDate?.()?.toISOString(),
+                        endDate: tournament.startTime?.toDate?.()?.toISOString(),
+                        eventStatus: tournament.status === 'completed' ? "https://schema.org/EventCompleted" : "https://schema.org/EventScheduled",
+                        url: `https://nexplay.gg/details/${id}`,
+                        organizer: {
+                            "@type": "Organization",
+                            name: tournament.hostName || "NexPlay",
+                        },
+                        location: {
+                            "@type": "Place",
+                            name: "Online",
+                        },
+                    }}
+                />
             )}
             {/* Hero Section */}
             <div className="relative h-[400px] md:h-[500px] rounded-[2rem] overflow-hidden mb-12 shadow-2xl group border border-gray-800">

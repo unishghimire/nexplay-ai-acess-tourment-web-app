@@ -1,9 +1,35 @@
+import Seo from '../../../shared/components/Seo';
 import React from 'react';
 import { Info, Users, Trophy, Zap } from 'lucide-react';
+import Faq from '../../../shared/components/Faq';
+
+const aboutFaqs = [
+    {
+        question: 'Who created NexPlay?',
+        answer: 'NexPlay was created to provide a dedicated esports tournament platform for Nepal growing gaming community.',
+    },
+    {
+        question: 'Is NexPlay only for Nepal?',
+        answer: 'NexPlay is focused on Nepal esports ecosystem, but players from other regions can also participate in tournaments where permitted.',
+    },
+];
 
 const About: React.FC = () => {
     return (
-        <div className="animate-fade-in max-w-4xl mx-auto">
+        <>
+        <Seo
+            title="About NexPlay — Nepal Esports Tournament Platform"
+            description="NexPlay is a Nepal-focused esports tournament and scrim platform. Learn about our mission to grow Nepal's esports ecosystem."
+            canonicalPath="/about"
+            jsonLd={{
+                "@context": "https://schema.org",
+                "@type": "WebPage",
+                name: "About NexPlay",
+                description: "NexPlay is a Nepal-focused esports tournament and scrim platform.",
+                url: "https://nexplay.gg/about",
+            }}
+        />
+        <div className="animate-fade-in max-w-4xl mx-auto space-y-8">
             <div className="bg-card p-8 rounded-xl border border-gray-800 shadow-2xl">
                 <h1 className="text-3xl font-bold text-white mb-6 border-b border-gray-700 pb-4 flex items-center">
                     <Info className="mr-3 text-brand-500 w-8 h-8" /> About NexPlay
@@ -30,7 +56,11 @@ const About: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            {/* ponytail: FAQ section for About page */}
+            <Faq items={aboutFaqs} />
         </div>
+        </>
     );
 };
 

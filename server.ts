@@ -9,6 +9,7 @@ import mediaRoutes from "./server/routes/media.js";
 import aiRoutes from "./server/routes/ai.js";
 import discordRoutes from "./server/routes/discord.js";
 import walletRoutes from "./server/routes/wallet.js";
+import { generateSitemapXml, handleIndexNow } from "./server/seo.js";
 
 async function startServer() {
   const app = express();
@@ -22,29 +23,24 @@ async function startServer() {
   app.use(tournamentRoutes);
   app.use(mediaRoutes);
   app.use(aiRoutes);
-app.use(walletRoutes);
+  app.use(walletRoutes);
   app.use(discordRoutes);
 
   // Dynamic Sitemap for SEO
   app.get("/sitemap.xml", async (req, res) => {
     res.header("Content-Type", "application/xml");
-    const staticUrls = ["", "/tournaments", "/scrims", "/games", "/results", "/organizations", "/teams", "/leaderboard", "/about", "/contact", "/privacy", "/terms"];
-    let dynamicUrls: string[] = [];
     try {
-      const tournamentsSnap = await db.collection("tournaments").limit(50).get();
-      tournamentsSnap.forEach(doc => { dynamicUrls.push(`/details/${doc.id}`); });
-    } catch (e) { console.error("Sitemap dynamic fetch failed:", e); }
+      const xml = await generateSitemapXml(db);
+      res.send(xml);
+    } catch (e) {
+      console.error("Sitemap generation error:", e);
+      res.status(500).send("Error generating sitemap");
+    }
+  });
 
-    const allPaths = [...staticUrls, ...dynamicUrls];
-    const baseUrl = "https://nexplay.gg";
-    const xmlItems = allPaths.map(p => `
-    <url>
-      <loc>${baseUrl}${p}</loc>
-      <changefreq>daily</changefreq>
-      <priority>${p === "" ? "1.0" : p.startsWith("/details") ? "0.8" : "0.6"}</priority>
-    </url>`).join("");
-
-    res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${xmlItems}\n</urlset>`.trim());
+  // IndexNow Endpoint for SEO
+  app.post("/api/indexnow", async (req, res) => {
+    await handleIndexNow(req, res);
   });
 
   // Vite Middleware

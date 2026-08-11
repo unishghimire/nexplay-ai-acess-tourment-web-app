@@ -1,3 +1,5 @@
+import Seo from '../../../shared/components/Seo';
+import Faq from '../../../shared/components/Faq';
 import React, { useEffect, useState } from 'react';
 import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
@@ -56,6 +58,31 @@ const promoSlides: PromoSlide[] = [
         link: "/tournaments"
     }
 ];
+
+
+const homeFaqs = [
+    {
+        question: 'What is NexPlay?',
+        answer: 'NexPlay is a Nepal-focused esports tournament and scrim platform that allows players and teams to discover, register for, and participate in gaming competitions.',
+    },
+    {
+        question: 'How do I join a NexPlay tournament?',
+        answer: 'Create a free NexPlay account, browse available tournaments, and click Register on any tournament that fits your skill level and game.',
+    },
+    {
+        question: 'What games does NexPlay support?',
+        answer: 'NexPlay supports popular esports titles including PUBG Mobile, Free Fire, and Valorant. New games are added based on community demand.',
+    },
+    {
+        question: 'Are NexPlay tournaments free to join?',
+        answer: 'Many NexPlay tournaments are free to enter. Some premium tournaments may have an entry fee, which is clearly displayed on each tournament page.',
+    },
+    {
+        question: 'How do NexPlay scrims work?',
+        answer: 'Scrims are practice matches organized through NexPlay. Organizers create scrim events, and teams can register to participate in competitive practice sessions.',
+    },
+];
+
 
 const Home: React.FC = () => {
     
@@ -159,6 +186,24 @@ const Home: React.FC = () => {
     }
 
     return (
+        <>
+        <Seo
+            title="NexPlay | Esports Tournaments & Scrims in Nepal"
+            description="Join esports tournaments and scrims in Nepal on NexPlay. Register for PUBG Mobile, Free Fire, Valorant and more. Secure wallets, live brackets, and national rankings."
+            canonicalPath="/"
+            jsonLd={[{
+                "@context": "https://schema.org",
+                "@type": "Organization",
+                name: "NexPlay",
+                url: "https://nexplay.gg",
+                description: "Nepal-focused esports tournament and scrim platform",
+            }, {
+                "@context": "https://schema.org",
+                "@type": "WebSite",
+                name: "NexPlay",
+                url: "https://nexplay.gg",
+            }]}
+        />
         <div className="animate-fade-in space-y-16 pb-20 relative">
             
             {/* Real-time Status and Security Badges Banner */}
@@ -344,8 +389,12 @@ const Home: React.FC = () => {
                     </div>
                 </section>
             )}
+            {/* ponytail: FAQ section for Home page */}
+            <Faq items={homeFaqs} />
         </div>
+        </>
     );
 };
+
 
 export default Home;

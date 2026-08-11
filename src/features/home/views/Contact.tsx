@@ -1,3 +1,4 @@
+import Seo from '../../../shared/components/Seo';
 import React, { useState } from 'react';
 import { Headset, Mail, Briefcase, MessageCircle, Facebook, Instagram, Music2, Building2, ExternalLink, CheckCircle2, FileText, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../../../shared/context/AuthContext';
@@ -55,6 +56,12 @@ const Contact: React.FC = () => {
     };
 
     return (
+        <>
+        <Seo
+            title="Contact NexPlay — Esports Platform Nepal"
+            description="Get in touch with the NexPlay team for support, partnerships, and esports tournament inquiries in Nepal."
+            canonicalPath="/contact"
+        />
         <div className="animate-fade-in max-w-4xl mx-auto space-y-8">
             <div className="bg-card p-8 rounded-2xl border border-gray-800 shadow-2xl">
                 <h1 className="text-3xl font-black text-white mb-6 border-b border-gray-800 pb-4 flex items-center gap-4">
@@ -265,6 +272,7 @@ const Contact: React.FC = () => {
                 </div>
             )}
         </div>
+        </>
     );
 };
 

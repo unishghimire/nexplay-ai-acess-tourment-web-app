@@ -1,9 +1,16 @@
+import Seo from '../../../shared/components/Seo';
 import { Link } from 'react-router-dom';
 import { Home } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 
 export default function NotFound() {
     return (
+        <>
+        <Seo
+            title="404 - Page Not Found | NexPlay"
+            description="The page you are looking for does not exist."
+            noindex
+        />
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4 animate-fade-in">
             <Helmet>
                 <title>404 - Page Not Found | NexPlay</title>
@@ -18,5 +25,6 @@ export default function NotFound() {
                 <Home className="w-5 h-5" /> Back to Home
             </Link>
         </div>
+        </>
     );
 }

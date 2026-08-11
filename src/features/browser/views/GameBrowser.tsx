@@ -1,3 +1,4 @@
+import Seo from '../../../shared/components/Seo';
 import { useEffect, useState } from 'react';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
@@ -48,10 +49,17 @@ export default function GameBrowser() {
 
     if (loading) {
         return (
+        <>
+        <Seo
+            title="Games | NexPlay — Esports Tournaments in Nepal"
+            description="Explore esports games on NexPlay — PUBG Mobile, Free Fire, Valorant and more. Find tournaments and scrims for your favorite games."
+            canonicalPath="/games"
+        />
             <div className="flex flex-col items-center justify-center min-h-[60vh]">
                 <div className="w-12 h-12 border-4 border-brand-500/20 border-t-brand-500 rounded-full animate-spin mb-4"></div>
                 <p className="text-brand-500 text-xs font-black tracking-widest uppercase">Loading Games...</p>
             </div>
+        </>
         );
     }
 

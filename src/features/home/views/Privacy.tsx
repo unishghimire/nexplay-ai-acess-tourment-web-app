@@ -1,8 +1,16 @@
+import Seo from '../../../shared/components/Seo';
 import React from 'react';
 import { ShieldCheck } from 'lucide-react';
 
 const Privacy: React.FC = () => {
     return (
+        <>
+        <Seo
+            title="Privacy Policy | NexPlay"
+            description="Read NexPlay's privacy policy. Learn how we handle your data on Nepal's esports tournament platform."
+            canonicalPath="/privacy"
+            noindex
+        />
         <div className="animate-fade-in max-w-4xl mx-auto">
             <div className="bg-card p-8 rounded-xl border border-gray-800 shadow-2xl">
                 <h1 className="text-3xl font-bold text-white mb-6 border-b border-gray-700 pb-4 flex items-center">
@@ -31,6 +39,7 @@ const Privacy: React.FC = () => {
                 </div>
             </div>
         </div>
+        </>
     );
 };
 

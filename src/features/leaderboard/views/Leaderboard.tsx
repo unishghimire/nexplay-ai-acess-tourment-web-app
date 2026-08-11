@@ -1,3 +1,4 @@
+import Seo from '../../../shared/components/Seo';
 import React, { useState, useEffect } from 'react';
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
@@ -11,10 +12,17 @@ import { formatCurrency } from '../../../shared/utils/utils';
 const RankIndicator = ({ change }: { change?: number }) => {
     if (change === undefined || change === 0) return <Minus className="w-3 h-3 text-gray-600" />;
     if (change > 0) return (
+        <>
+        <Seo
+            title="Leaderboard | NexPlay — Nepal Esports Rankings"
+            description="Check NexPlay's national esports leaderboard. See top players and teams in Nepal's competitive gaming scene."
+            canonicalPath="/leaderboard"
+        />
         <div className="flex items-center text-green-500 gap-0.5">
             <ArrowUp className="w-3 h-3" />
             <span className="text-[10px] font-bold">{change}</span>
         </div>
+        </>
     );
     return (
         <div className="flex items-center text-red-500 gap-0.5">

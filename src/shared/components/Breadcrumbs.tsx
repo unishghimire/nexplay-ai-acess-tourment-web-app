@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
 
 const Breadcrumbs: React.FC = () => {
     const location = useLocation();
@@ -34,26 +35,60 @@ const Breadcrumbs: React.FC = () => {
         'complete-profile': 'Complete Profile',
     };
 
-    return (
-        <nav className="container mx-auto px-4 py-2 text-xs flex items-center gap-2 text-gray-500 font-bold uppercase tracking-widest">
-            <Link to="/" className="hover:text-brand-400 transition">Home</Link>
-            {pathnames.map((value, index) => {
-                const last = index === pathnames.length - 1;
-                const to = `/${pathnames.slice(0, index + 1).join('/')}`;
-                const label = breadcrumbNameMap[value] || value.replace(/-/g, ' ');
+    const baseUrl = 'https://nexplay.gg';
 
-                return last ? (
-                    <span key={to} className="text-white flex items-center gap-2">
-                        <ChevronRight className="w-3 h-3" /> {label}
-                    </span>
-                ) : (
-                    <span key={to} className="flex items-center gap-2">
-                        <ChevronRight className="w-3 h-3" />
-                        <Link to={to} className="hover:text-brand-400 transition">{label}</Link>
-                    </span>
-                );
-            })}
-        </nav>
+    const schemaItemList = [
+        {
+            '@type': 'ListItem',
+            position: 1,
+            name: 'Home',
+            item: `${baseUrl}/`,
+        },
+        ...pathnames.map((value, index) => {
+            const to = `/${pathnames.slice(0, index + 1).join('/')}`;
+            const label = breadcrumbNameMap[value] || value.replace(/-/g, ' ');
+            return {
+                '@type': 'ListItem',
+                position: index + 2,
+                name: label,
+                item: `${baseUrl}${to}`,
+            };
+        }),
+    ];
+
+    const breadcrumbSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: schemaItemList,
+    };
+
+    return (
+        <>
+            <Helmet>
+                <script type="application/ld+json">
+                    {JSON.stringify(breadcrumbSchema)}
+                </script>
+            </Helmet>
+            <nav className="container mx-auto px-4 py-2 text-xs flex items-center gap-2 text-gray-500 font-bold uppercase tracking-widest">
+                <Link to="/" className="hover:text-brand-400 transition">Home</Link>
+                {pathnames.map((value, index) => {
+                    const last = index === pathnames.length - 1;
+                    const to = `/${pathnames.slice(0, index + 1).join('/')}`;
+                    const label = breadcrumbNameMap[value] || value.replace(/-/g, ' ');
+
+                    return last ? (
+                        <span key={to} className="text-white flex items-center gap-2">
+                            <ChevronRight className="w-3 h-3" /> {label}
+                        </span>
+                    ) : (
+                        <span key={to} className="flex items-center gap-2">
+                            <ChevronRight className="w-3 h-3" />
+                            <Link to={to} className="hover:text-brand-400 transition">{label}</Link>
+                        </span>
+                    );
+                })}
+            </nav>
+        </>
     );
 };
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import Seo from '../../../shared/components/Seo';
 import { Helmet } from 'react-helmet-async';
 import { doc, getDoc, collection, query, where, getDocs, addDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
@@ -240,9 +241,11 @@ const PublicProfile: React.FC = () => {
 
     return (
         <div className="max-w-5xl mx-auto animate-fade-in pb-20 px-4">
-            <Helmet>
-                <title>{profile.username} | NexPlay Profile</title>
-            </Helmet>
+            <Seo
+                title={`${profile.username} | NexPlay Profile`}
+                description={`${profile.username} on NexPlay — Nepal esports platform. View profile, stats, and tournament history.`}
+                canonicalPath={`/user/${id}`}
+            />
 
             {/* Breadcrumbs & Back Button */}
             <div className="flex items-center justify-between mb-8">

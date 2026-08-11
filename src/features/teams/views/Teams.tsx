@@ -1,3 +1,4 @@
+import Seo from '../../../shared/components/Seo';
 import React, { useState, useEffect } from 'react';
 import { collection, query, getDocs, addDoc, serverTimestamp, where, doc, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
@@ -125,6 +126,12 @@ const Teams: React.FC = () => {
     const filteredTeams = teams.filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
     return (
+        <>
+        <Seo
+            title="Esports Teams | NexPlay — Nepal"
+            description="Discover esports teams in Nepal on NexPlay. View team profiles, rosters, and achievements."
+            canonicalPath="/teams"
+        />
         <div className="animate-fade-in max-w-5xl mx-auto p-4 md:p-8">
             <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6 border-b border-gray-800 pb-8">
                 <div>
@@ -344,6 +351,7 @@ const Teams: React.FC = () => {
                 )}
             </div>
         </div>
+        </>
     );
 };
 

@@ -5,6 +5,7 @@ import { db } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { OrgPost } from '../../../shared/types/types';
+import Seo from '../../../shared/components/Seo';
 import { Helmet } from 'react-helmet-async';
 import { ArrowLeft, Calendar, Trash2 } from 'lucide-react';
 import { formatDate } from '../../../shared/utils/utils';
@@ -82,10 +83,21 @@ const PostDetails: React.FC = () => {
 
     return (
         <div className="max-w-3xl mx-auto animate-fade-in pb-20">
-            <Helmet>
-                <title>{post.title} | NexPlay</title>
-                <meta name="description" content={post.content.substring(0, 150)} />
-            </Helmet>
+            <Seo
+                title={`${post.title} | NexPlay`}
+                description={post.content?.substring(0, 150) || 'NexPlay article'}
+                canonicalPath={`/post/${id}`}
+                ogType="article"
+                jsonLd={{
+                    "@context": "https://schema.org",
+                    "@type": "Article",
+                    headline: post.title,
+                    description: post.content?.substring(0, 150),
+                    author: { "@type": "Organization", name: "NexPlay" },
+                    publisher: { "@type": "Organization", name: "NexPlay" },
+                    url: `https://nexplay.gg/post/${id}`,
+                }}
+            />
 
             <Link to={`/user/${post.orgId}`} className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition mb-6 font-bold text-sm">
                 <ArrowLeft className="w-4 h-4" /> Back to Profile

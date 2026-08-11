@@ -1,3 +1,5 @@
+import Seo from '../../../shared/components/Seo';
+import Faq from '../../../shared/components/Faq';
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { collection, getDocs, query, where } from 'firebase/firestore';
@@ -6,6 +8,23 @@ import { Tournament, Game } from '../../../shared/types/types';
 import TournamentCard from '../components/TournamentCard';
 import { Filter, Search } from 'lucide-react';
 import { formatGameModeLabel, formatGameName, toDateSafe } from '../../../shared/utils/utils';
+
+
+const tournamentFaqs = [
+    {
+        question: 'How do I join an esports tournament in Nepal?',
+        answer: 'Browse tournaments on NexPlay, choose one that matches your game and skill level, and click Register. You will need a free NexPlay account.',
+    },
+    {
+        question: 'What types of tournaments are available?',
+        answer: 'NexPlay hosts both free and paid tournaments across games like PUBG Mobile, Free Fire, and Valorant. Formats include solo, duo, and squad competitions.',
+    },
+    {
+        question: 'Can I see tournament results?',
+        answer: 'Yes, completed tournament results, winners, and leaderboards are publicly available on NexPlay Results page.',
+    },
+];
+
 
 const Tournaments: React.FC = () => {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -36,6 +55,11 @@ const Tournaments: React.FC = () => {
                     if (a.status === 'live' && b.status !== 'live') return -1;
                     if (b.status === 'live' && a.status !== 'live') return 1;
                     return (toDateSafe(a.startTime)?.getTime() || 0) - (toDateSafe(b.startTime)?.getTime() || 0);
+        <Seo
+            title="Esports Tournaments in Nepal | NexPlay"
+            description="Browse and join upcoming esports tournaments in Nepal. PUBG Mobile, Free Fire, Valorant and more on NexPlay."
+            canonicalPath="/tournaments"
+        />
                 });
 
                 setTournaments(tours);
@@ -206,6 +230,8 @@ const Tournaments: React.FC = () => {
                     </div>
                 )}
             </div>
+            {/* ponytail: FAQ section for Tournaments page */}
+            <Faq items={tournamentFaqs} />
         </div>
     );
 };

@@ -1,3 +1,4 @@
+import Seo from '../../../shared/components/Seo';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useNotification } from '../../../shared/context/NotificationContext';
@@ -93,6 +94,13 @@ const Login: React.FC = () => {
     };
 
     return (
+        <>
+        <Seo
+            title="Login | NexPlay"
+            description="Log in to your NexPlay account."
+            canonicalPath="/login"
+            noindex
+        />
         <div className="min-h-screen flex items-center justify-center p-4 md:p-8 bg-black">
             <motion.div 
                 initial={{ opacity: 0, y: 20 }}
@@ -249,6 +257,7 @@ const Login: React.FC = () => {
                 </div>
             </motion.div>
         </div>
+        </>
     );
 };
 

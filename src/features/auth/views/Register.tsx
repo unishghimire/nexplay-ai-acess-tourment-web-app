@@ -1,3 +1,4 @@
+import Seo from '../../../shared/components/Seo';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useNotification } from '../../../shared/context/NotificationContext';
@@ -156,6 +157,13 @@ const Register: React.FC = () => {
     };
 
     return (
+        <>
+        <Seo
+            title="Register | NexPlay"
+            description="Create a NexPlay account to join esports tournaments and scrims in Nepal."
+            canonicalPath="/register"
+            noindex
+        />
         <div className="min-h-screen flex items-center justify-center p-4 md:p-8 bg-black">
             <motion.div 
                 initial={{ opacity: 0, y: 20 }}
@@ -441,6 +449,7 @@ const Register: React.FC = () => {
                 </div>
             </motion.div>
         </div>
+        </>
     );
 };
 
