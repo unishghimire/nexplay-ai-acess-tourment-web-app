@@ -1,10 +1,10 @@
 import { Router } from "express";
-import { db, admin, bucket, authenticateToken, upload, getCloudinary, mapCategoryToFolder, uploadToCloudinary, uploadBase64ToCloudinary } from "../shared.js";
+import { db, admin, bucket, authenticateToken, rateLimit, upload, getCloudinary, mapCategoryToFolder, uploadToCloudinary, uploadBase64ToCloudinary } from "../shared.js";
 
 const router = Router();
 
 // Upload Image (legacy endpoint)
-router.post("/api/upload-image", authenticateToken, upload.single("image"), async (req: any, res) => {
+router.post("/api/upload-image", authenticateToken, rateLimit(10, 15 * 60 * 1000), upload.single("image"), async (req: any, res) => {
   try {
     const uid = req.user.userId;
     const category = req.body.category || "OTHER";
@@ -47,7 +47,7 @@ router.post("/api/upload-image", authenticateToken, upload.single("image"), asyn
 });
 
 // Dedicated Universal Upload Endpoint
-router.post("/api/upload/image", authenticateToken, upload.single("image"), async (req: any, res) => {
+router.post("/api/upload/image", authenticateToken, rateLimit(10, 15 * 60 * 1000), upload.single("image"), async (req: any, res) => {
   try {
     const uid = req.user.userId;
     const category = req.body.category || "OTHER";
@@ -94,6 +94,13 @@ router.post("/api/media/delete", authenticateToken, async (req: any, res) => {
   try {
     const { mediaId, publicId } = req.body;
     if (!publicId) return res.status(400).json({ success: false, message: "Missing publicId" });
+    // Authorization: admin can delete any, others can only delete their own uploads
+    if (req.user.role !== 'admin' && mediaId) {
+      const mediaDoc = await db.collection('media').doc(mediaId).get();
+      if (mediaDoc.exists && mediaDoc.data()?.userId !== req.user.userId) {
+        return res.status(403).json({ success: false, message: "Unauthorized — can only delete your own media" });
+      }
+    }
     try {
       if (publicId.includes("/") && !publicId.includes("avatars/") && !publicId.includes("teams/") && !publicId.includes("organizations/") && !publicId.includes("tournaments/") && !publicId.includes("scrims/") && !publicId.includes("products/") && !publicId.includes("news/") && !publicId.includes("sponsors/")) {
         const file = bucket.file(publicId);
@@ -113,10 +120,15 @@ router.post("/api/media/delete", authenticateToken, async (req: any, res) => {
   }
 });
 
-// Get All Media
-router.get("/api/media", async (req, res) => {
+// Get All Media (admin: all, user: own only)
+router.get("/api/media", authenticateToken, async (req: any, res) => {
   try {
-    const mediaSnap = await db.collection("media").orderBy("createdAt", "desc").get();
+    let q = db.collection("media").orderBy("createdAt", "desc");
+    // ponytail: non-admins only see their own media — avoids leaking other users' assets
+    if (req.user.role !== 'admin') {
+      q = db.collection("media").where('userId', '==', req.user.userId).orderBy("createdAt", "desc");
+    }
+    const mediaSnap = await q.get();
     res.json({ success: true, media: mediaSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) });
   } catch (error: any) {
     console.error("Fetch media error:", error);

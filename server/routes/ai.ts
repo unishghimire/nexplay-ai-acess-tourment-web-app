@@ -1,11 +1,15 @@
 import { Router } from "express";
-import { db, admin, ai, Type, authenticateToken, sanitizeHexColor, buildTournamentBannerSvg, uploadBase64ToCloudinary } from "../shared.js";
+import { db, admin, ai, Type, authenticateToken, rateLimit, sanitizeHexColor, buildTournamentBannerSvg, uploadBase64ToCloudinary } from "../shared.js";
 
 const router = Router();
 
 // Generate Banner
-router.post("/api/generate-banner", authenticateToken, async (req: any, res: any) => {
+router.post("/api/generate-banner", authenticateToken, rateLimit(5, 15 * 60 * 1000), async (req: any, res: any) => {
   try {
+    // ponytail: AI endpoints cost money (Gemini API) — restrict to organizers+admins
+    if (req.user.role !== 'admin' && req.user.role !== 'organizer') {
+      return res.status(403).json({ success: false, message: "Organizer or admin access required" });
+    }
     const { title, game, type, tournamentType, entryFee, prizePool, theme, mood } = req.body || {};
     const cleanTitle = typeof title === "string" ? title.trim() : "";
     const cleanGame = typeof game === "string" ? game.trim() : "";
@@ -72,8 +76,11 @@ Context: title=${cleanTitle}; game=${cleanGame}; type=${typeof type === "string"
 });
 
 // Web Page Auditor
-router.post("/api/audit", authenticateToken, async (req: any, res: any) => {
+router.post("/api/audit", authenticateToken, rateLimit(3, 15 * 60 * 1000), async (req: any, res: any) => {
   try {
+    if (req.user.role !== 'admin' && req.user.role !== 'organizer') {
+      return res.status(403).json({ success: false, message: "Organizer or admin access required" });
+    }
     const { url, htmlContents } = req.body;
     let finalHtml = "";
     let targetUrl = url || "Direct Paste";
@@ -168,8 +175,11 @@ Be direct, detailed, and highly technical. Never generate fake boilerplate findi
 });
 
 // Audit Discussion
-router.post("/api/audit/discuss", authenticateToken, async (req: any, res: any) => {
+router.post("/api/audit/discuss", authenticateToken, rateLimit(5, 15 * 60 * 1000), async (req: any, res: any) => {
   try {
+    if (req.user.role !== 'admin' && req.user.role !== 'organizer') {
+      return res.status(403).json({ success: false, message: "Organizer or admin access required" });
+    }
     const { message, context } = req.body;
     if (!message) return res.status(400).json({ success: false, message: "Message is required." });
 

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, admin, authenticateToken } from "../shared.js";
+import { db, admin, authenticateToken, rateLimit } from "../shared.js";
 
 const router = Router();
 
@@ -108,7 +108,7 @@ async function sendDiscordWebhook(webhookUrl: string, embed: object, content?: s
   }
 }
 
-router.post('/api/discord/announce', authenticateToken, async (req: any, res) => {
+router.post('/api/discord/announce', authenticateToken, rateLimit(10, 15 * 60 * 1000), async (req: any, res) => {
   const { type, data, channel } = req.body as {
     type: DiscordAnnouncementType;
     data: Record<string, any>;

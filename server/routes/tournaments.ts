@@ -1,10 +1,10 @@
 import { Router } from "express";
-import { db, admin, authenticateToken } from "../shared.js";
+import { db, admin, authenticateToken, rateLimit } from "../shared.js";
 
 const router = Router();
 
 // Generate Groups
-router.post("/api/tournaments/:id/groups/generate", authenticateToken, async (req: any, res) => {
+router.post("/api/tournaments/:id/groups/generate", authenticateToken, rateLimit(5, 15 * 60 * 1000), async (req: any, res) => {
   try {
     const { id } = req.params;
     const { teamsPerGroup } = req.body;
@@ -44,7 +44,7 @@ router.post("/api/tournaments/:id/groups/generate", authenticateToken, async (re
 });
 
 // Upload Result & Calculate Points
-router.post("/api/tournaments/:id/results/upload", authenticateToken, async (req: any, res) => {
+router.post("/api/tournaments/:id/results/upload", authenticateToken, rateLimit(10, 15 * 60 * 1000), async (req: any, res) => {
   try {
     const { id } = req.params;
     const { groupId, teamResults, screenshotUrl } = req.body;
@@ -82,7 +82,7 @@ router.post("/api/tournaments/:id/results/upload", authenticateToken, async (req
 });
 
 // Advance Round
-router.post("/api/tournaments/:id/advance", authenticateToken, async (req: any, res) => {
+router.post("/api/tournaments/:id/advance", authenticateToken, rateLimit(10, 15 * 60 * 1000), async (req: any, res) => {
   try {
     const { id } = req.params;
     const tourneyRef = db.collection("tournaments").doc(id);
