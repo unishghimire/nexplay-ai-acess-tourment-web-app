@@ -338,7 +338,7 @@ export default function TournamentDetails() {
                         startDate: tournament.startTime?.toDate?.()?.toISOString(),
                         endDate: tournament.startTime?.toDate?.()?.toISOString(),
                         eventStatus: tournament.status === 'completed' ? "https://schema.org/EventCompleted" : "https://schema.org/EventScheduled",
-                        url: `https://nexplay.gg/details/${id}`,
+                        url: `https://www.nexplayorg.app/details/${id}`,
                         organizer: {
                             "@type": "Organization",
                             name: tournament.hostName || "NexPlay",

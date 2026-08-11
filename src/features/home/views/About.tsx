@@ -26,7 +26,7 @@ const About: React.FC = () => {
                 "@type": "WebPage",
                 name: "About NexPlay",
                 description: "NexPlay is a Nepal-focused esports tournament and scrim platform.",
-                url: "https://nexplay.gg/about",
+                url: "https://www.nexplayorg.app/about",
             }}
         />
         <div className="animate-fade-in max-w-4xl mx-auto space-y-8">

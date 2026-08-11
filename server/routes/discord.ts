@@ -15,7 +15,7 @@ function buildDiscordEmbed(type: DiscordAnnouncementType, data: Record<string, a
     scrim_published: 0x8b5cf6, scrim_live: 0xef4444, scrim_completed: 0x10b981,
   };
 
-  const tournyUrl = data.tournamentId ? `https://nexplay.gg/details/${data.tournamentId}` : 'https://nexplay.gg';
+  const tournyUrl = data.tournamentId ? `https://www.nexplayorg.app/details/${data.tournamentId}` : 'https://www.nexplayorg.app';
 
   const embedMap: Record<DiscordAnnouncementType, object> = {
     tournament_published: {

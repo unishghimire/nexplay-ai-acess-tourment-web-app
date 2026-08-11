@@ -52,8 +52,8 @@ export function validateSeoRules(pages: SeoPageData[]): SeoTestResult[] {
         // Canonical URL check
         if (!page.canonicalUrl) {
             errors.push('Canonical URL is missing');
-        } else if (!page.canonicalUrl.startsWith('https://nexplay.gg')) {
-            errors.push(`Canonical URL "${page.canonicalUrl}" must start with https://nexplay.gg`);
+        } else if (!page.canonicalUrl.startsWith('https://www.nexplayorg.app')) {
+            errors.push(`Canonical URL "${page.canonicalUrl}" must start with https://www.nexplayorg.app`);
         }
 
         // Noindex check on important pages
@@ -75,42 +75,42 @@ export function runSeoTests(): boolean {
             path: '/',
             title: 'NexPlay - Esports Tournaments & Scrims Nepal',
             description: 'NexPlay is Nepal leading esports platform for PUBG Mobile, Free Fire, and Valorant tournaments, scrims, and competitive gaming leaderboards.',
-            canonicalUrl: 'https://nexplay.gg/',
+            canonicalUrl: 'https://www.nexplayorg.app/',
             noindex: false,
         },
         {
             path: '/tournaments',
             title: 'Esports Tournaments in Nepal | NexPlay Esports',
             description: 'Discover and register for top esports tournaments in Nepal on NexPlay. Compete in PUBG Mobile, Free Fire, and Valorant for cash prize pools.',
-            canonicalUrl: 'https://nexplay.gg/tournaments',
+            canonicalUrl: 'https://www.nexplayorg.app/tournaments',
             noindex: false,
         },
         {
             path: '/scrims',
             title: 'Esports Scrims & Practice Matches | NexPlay Nepal',
             description: 'Join daily esports scrims and competitive practice matches in Nepal on NexPlay. Practice PUBG Mobile, Free Fire, and Valorant with top teams.',
-            canonicalUrl: 'https://nexplay.gg/scrims',
+            canonicalUrl: 'https://www.nexplayorg.app/scrims',
             noindex: false,
         },
         {
             path: '/games',
             title: 'Supported Esports Games & Rules | NexPlay Gaming',
             description: 'Explore supported esports titles including PUBG Mobile, Free Fire, and Valorant on NexPlay Nepal. View tournament formats and rules.',
-            canonicalUrl: 'https://nexplay.gg/games',
+            canonicalUrl: 'https://www.nexplayorg.app/games',
             noindex: false,
         },
         {
             path: '/results',
             title: 'Esports Tournament Results & Rankings | NexPlay',
             description: 'Check official esports tournament results, match standings, leaderboards, and champion rosters across competitive games on NexPlay.',
-            canonicalUrl: 'https://nexplay.gg/results',
+            canonicalUrl: 'https://www.nexplayorg.app/results',
             noindex: false,
         },
         {
             path: '/about',
             title: 'About NexPlay - Nepal Esports Platform & Team',
             description: 'Learn about NexPlay, Nepal premier gaming platform dedicated to empowering esports players, organizers, and competitive communities.',
-            canonicalUrl: 'https://nexplay.gg/about',
+            canonicalUrl: 'https://www.nexplayorg.app/about',
             noindex: false,
         },
     ];

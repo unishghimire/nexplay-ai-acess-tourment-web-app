@@ -4,7 +4,7 @@ import { Helmet } from 'react-helmet-async';
 // ponytail: One reusable SEO component — covers title, meta, canonical, OG, Twitter, JSON-LD
 // No abstraction beyond what every public page needs.
 
-const BASE_URL = 'https://nexplay.gg';
+const BASE_URL = 'https://www.nexplayorg.app';
 const SITE_NAME = 'NexPlay';
 const DEFAULT_OG_IMAGE = `${BASE_URL}/og-default.jpg`;
 

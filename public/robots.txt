@@ -14,4 +14,4 @@ Disallow: /api/
 User-agent: GPTBot
 Allow: /
 
-Sitemap: https://nexplay.gg/sitemap.xml
+Sitemap: https://www.nexplayorg.app/sitemap.xml
