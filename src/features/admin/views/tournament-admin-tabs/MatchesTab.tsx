@@ -22,23 +22,23 @@ export const MatchesTab: React.FC<TournamentAdminTabProps> = (props) => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="space-y-6"
+                className="space-y-4 sm:space-y-6"
             >
-                <div className="flex justify-between items-center border-b border-gray-800 pb-4">
-                    <h2 className="text-lg font-black uppercase tracking-widest text-white">Match Schedule</h2>
+                <div className="flex justify-between items-center border-b border-gray-800 pb-3 sm:pb-4">
+                    <h2 className="text-base sm:text-lg font-black uppercase tracking-widest text-white">Match Schedule</h2>
                 </div>
 
                 {tournament.groups && tournament.groups.some(g => g.matches.length > 0) ? (
                     <div className="space-y-8">
                         {tournament.groups.map(group => group.matches.length > 0 && (
                             <div key={group.id} className="space-y-4">
-                                <h3 className="text-md font-black text-brand-500 uppercase tracking-widest">{group.name} Matches</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                <h3 className="text-sm font-black text-brand-500 uppercase tracking-widest">{group.name} Matches</h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
                                     {group.matches.map(match => {
                                         const team1 = group.teams.find(t => t.id === match.team1Id);
                                         const team2 = group.teams.find(t => t.id === match.team2Id);
                                         return (
-                                            <div key={match.id} className="bg-surface border border-gray-800 rounded-xl p-4 shadow-lg hover:border-brand-500/20 transition-all flex flex-col justify-between">
+                                            <div key={match.id} className="bg-surface border border-gray-800 rounded-xl p-3 sm:p-4 shadow-lg hover:border-brand-500/20 transition-all flex flex-col justify-between">
                                                 <div className="flex justify-between items-center mb-4">
                                                     <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">R{match.round}</span>
                                                     {match.map && (
@@ -49,11 +49,11 @@ export const MatchesTab: React.FC<TournamentAdminTabProps> = (props) => {
                                                 </div>
                                                 <div className="space-y-3 mb-4">
                                                     <div className="flex justify-between items-center bg-dark p-2 rounded-lg border border-gray-800">
-                                                        <span className="text-[11px] font-bold text-white truncate max-w-[120px] uppercase tracking-tight">{team1?.name || 'TBD'}</span>
+                                                        <span className="text-[11px] font-bold text-white truncate max-w-[80px] sm:max-w-[120px] uppercase tracking-tight">{team1?.name || 'TBD'}</span>
                                                         <span className="text-md font-black text-brand-500">{match.score1}</span>
                                                     </div>
                                                     <div className="flex justify-between items-center bg-dark p-2 rounded-lg border border-gray-800">
-                                                        <span className="text-[11px] font-bold text-white truncate max-w-[120px] uppercase tracking-tight">{team2?.name || 'TBD'}</span>
+                                                        <span className="text-[11px] font-bold text-white truncate max-w-[80px] sm:max-w-[120px] uppercase tracking-tight">{team2?.name || 'TBD'}</span>
                                                         <span className="text-md font-black text-brand-500">{match.score2}</span>
                                                     </div>
                                                 </div>
@@ -101,8 +101,8 @@ export const MatchesTab: React.FC<TournamentAdminTabProps> = (props) => {
             {/* Update Score Modal */}
             <Modal isOpen={isUpdateScoreModalOpen} onClose={() => setIsUpdateScoreModalOpen(false)} title="Update Match Score">
                 {selectedMatch && (
-                    <div className="space-y-6">
-                        <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-4 sm:space-y-6">
+                        <div className="grid grid-cols-2 gap-3 sm:gap-4">
                             <div className="bg-dark p-4 rounded-xl border border-gray-800 text-center">
                                 <p className="text-xs font-bold text-gray-500 uppercase mb-2">
                                     {getTeamName(selectedMatch.match.team1Id || 'TBD')}
@@ -185,7 +185,7 @@ export const MatchesTab: React.FC<TournamentAdminTabProps> = (props) => {
             <Modal isOpen={isAddMatchModalOpen} onClose={() => setIsAddMatchModalOpen(false)} title={`Add Match to ${selectedGroup?.name}`}>
                 {selectedGroup && (
                     <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-3 sm:gap-4">
                             <div>
                                 <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Team 1</label>
                                 <select
@@ -216,7 +216,7 @@ export const MatchesTab: React.FC<TournamentAdminTabProps> = (props) => {
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-3 sm:gap-4">
                             <div>
                                 <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Round</label>
                                 <input

@@ -17,7 +17,7 @@ export const OverviewTab: React.FC<TournamentAdminTabProps> = (props) => {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
-                            className="space-y-6"
+                            className="space-y-4 sm:space-y-6"
                         >
                              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
                                  <h2 className="text-xl font-black uppercase tracking-tighter text-white">Tournament Controls</h2>
@@ -30,11 +30,11 @@ export const OverviewTab: React.FC<TournamentAdminTabProps> = (props) => {
                              </div>
                              
                              {tournamentEarning && (
-                                 <div className="bg-gray-900/50 border border-brand-500/10 rounded-[2rem] p-8 mb-8">
+                                 <div className="bg-gray-900/50 border border-brand-500/10 rounded-2xl sm:rounded-[2rem] p-4 sm:p-8 mb-6 sm:mb-8">
                                      <h3 className="text-xs font-black text-brand-400 uppercase tracking-widest mb-6 flex items-center gap-3">
                                          <DollarSign className="w-4 h-4" /> Tournament Financials
                                      </h3>
-                                     <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-8">
+                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8">
                                          <div>
                                              <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-2">Total Entry Fees</p>
                                              <p className="text-2xl font-black text-white font-mono">{formatCurrency(tournamentEarning.entryFeeTotal)}</p>
@@ -65,8 +65,8 @@ export const OverviewTab: React.FC<TournamentAdminTabProps> = (props) => {
                                  </div>
                              )}
 
-                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                 <div className="bg-gray-900/50 p-6 rounded-[2rem] border border-gray-800">
+                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                                 <div className="bg-gray-900/50 p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border border-gray-800">
                                      <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-6">Status Control</h3>
                                      <div className="flex gap-3">
                                          <button 
@@ -85,7 +85,7 @@ export const OverviewTab: React.FC<TournamentAdminTabProps> = (props) => {
                                          </button>
                                      </div>
                                  </div>
-                                 <div className="bg-gray-900/50 p-6 rounded-[2rem] border border-gray-800">
+                                 <div className="bg-gray-900/50 p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border border-gray-800">
                                      <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-6">Stage Progression</h3>
                                      <select 
                                          value={tournament.stage || 'registration'}
@@ -98,7 +98,7 @@ export const OverviewTab: React.FC<TournamentAdminTabProps> = (props) => {
                                          <option value="completed">Completed</option>
                                      </select>
                                  </div>
-                                 <div className="bg-gray-900/50 p-6 rounded-[2rem] border border-gray-800 sm:col-span-2 lg:col-span-1">
+                                 <div className="bg-gray-900/50 p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border border-gray-800 sm:col-span-2 lg:col-span-1">
                                      <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-6">Quick Actions</h3>
                                      <div className="flex flex-col sm:flex-row lg:flex-col gap-3">
                                          <button 
@@ -124,7 +124,7 @@ export const OverviewTab: React.FC<TournamentAdminTabProps> = (props) => {
                              </div>
 
                              {/* ── Discord Announcements ── */}
-                             <div className="bg-gray-900/50 p-8 rounded-[2rem] border border-[#5865F2]/20">
+                             <div className="bg-gray-900/50 p-4 sm:p-8 rounded-2xl sm:rounded-[2rem] border border-[#5865F2]/20">
                                  <div className="flex items-center gap-3 mb-6">
                                      <div className="p-2 bg-[#5865F2]/10 rounded-xl border border-[#5865F2]/20">
                                          <Send className="w-4 h-4 text-[#5865F2]" />

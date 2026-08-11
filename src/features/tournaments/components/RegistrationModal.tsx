@@ -78,7 +78,7 @@ const RegistrationModal: React.FC<RegistrationModalProps> = ({
                         </div>
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="bg-dark/50 p-3 rounded-xl border border-white/5">
                             <div className="text-[9px] text-gray-500 font-black uppercase tracking-widest mb-1 flex items-center gap-1">
                                 <DollarSign className="w-3 h-3" /> Entry Fee

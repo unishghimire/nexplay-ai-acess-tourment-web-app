@@ -40,7 +40,7 @@ export const GroupsTab: React.FC<TournamentAdminTabProps> = (props) => {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
-                            className="space-y-6"
+                            className="space-y-4 sm:space-y-6"
                         >
                             <div className="flex justify-between items-center border-b border-gray-800 pb-4">
                                 <h2 className="text-lg font-black uppercase tracking-widest text-white">Groups Management</h2>
@@ -61,9 +61,9 @@ export const GroupsTab: React.FC<TournamentAdminTabProps> = (props) => {
                             </div>
                             
                             {tournament.groups && tournament.groups.length > 0 ? (
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
                                     {tournament.groups.map(group => (
-                                        <div key={group.id} className="bg-surface border border-gray-800 rounded-2xl p-5 hover:border-brand-500/20 transition-all shadow-xl">
+                                        <div key={group.id} className="bg-surface border border-gray-800 rounded-2xl p-4 sm:p-5 hover:border-brand-500/20 transition-all shadow-xl">
                                             <div className="flex justify-between items-start mb-4">
                                                 <div>
                                                     <h3 className="text-md font-black text-white uppercase tracking-tight">{group.name}</h3>
@@ -207,7 +207,7 @@ export const GroupsTab: React.FC<TournamentAdminTabProps> = (props) => {
             {/* Manage Teams Modal */}
             <Modal isOpen={isManageTeamsModalOpen} onClose={() => setIsManageTeamsModalOpen(false)} title={`Manage Teams: ${selectedGroup?.name}`} maxWidth="max-w-4xl">
                 {selectedGroup && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-[60vh]">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 h-[50vh] sm:h-[60vh]">
                         {/* Assigned Teams */}
                         <div className="flex flex-col h-full bg-dark rounded-xl border border-gray-800 overflow-hidden">
                             <div className="p-4 border-b border-gray-800 bg-surface flex justify-between items-center">

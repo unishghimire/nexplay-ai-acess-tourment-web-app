@@ -17,7 +17,7 @@ const GameCard: React.FC<GameCardProps> = ({ game }) => {
             whileHover={{ scale: 1.02 }}
             className="bg-card rounded-xl overflow-hidden border border-gray-800 hover:border-brand-500/50 transition-all group shadow-lg"
         >
-            <div className="relative h-48 overflow-hidden">
+            <div className="relative h-36 sm:h-48 overflow-hidden">
                 <img 
                     src={game.logoUrl || 'https://picsum.photos/seed/gaming/400/300' || undefined} 
                     alt={formatGameName(game.name)} 

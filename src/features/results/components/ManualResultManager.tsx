@@ -309,7 +309,7 @@ export default function ManualResultManager({ results, onChange, templateConfig,
                             {presets.length > 0 && (
                                 <div className="mb-8">
                                     <h4 className="text-xs font-black text-gray-500 uppercase tracking-widest mb-3">Your Saved Presets</h4>
-                                    <div className="flex gap-3 overflow-x-auto custom-scrollbar pb-2">
+                                    <div className="flex gap-3 overflow-x-auto custom-scrollbar pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
                                         {presets.map(preset => (
                                             <button
                                                 key={preset.id}
@@ -323,7 +323,7 @@ export default function ManualResultManager({ results, onChange, templateConfig,
                                 </div>
                             )}
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6 sm:mb-8">
                                 {TEMPLATES.map(t => (
                                     <button
                                         key={t.id}

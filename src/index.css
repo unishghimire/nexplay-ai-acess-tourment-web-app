@@ -20,26 +20,29 @@
   input, textarea, select {
     @apply focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors;
   }
+  /* ponytail: global text overflow safety — prevents long names/IDs from breaking layouts */
+  body {
+    -webkit-text-size-adjust: 100%;
+    text-wrap: pretty;
+  }
 }
 
 body {
   background-color: #0b1120;
   color: #e2e8f0;
   font-family: 'Segoe UI', 'Roboto', sans-serif;
+  overflow-x: hidden;
 }
 
-::-webkit-scrollbar {
-  width: 6px;
-}
+/* Safe area support for notched devices */
+.safe-top { padding-top: env(safe-area-inset-top); }
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+.safe-left { padding-left: env(safe-area-inset-left); }
+.safe-right { padding-right: env(safe-area-inset-right); }
 
-::-webkit-scrollbar-track {
-  background: #0f172a;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #475569;
-  border-radius: 4px;
-}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #0f172a; }
+::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
 
 .glass-panel {
   background: rgba(15, 23, 42, 0.9);
@@ -47,9 +50,7 @@ body {
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.neon-text {
-  text-shadow: 0 0 15px rgba(139, 92, 246, 0.6);
-}
+.neon-text { text-shadow: 0 0 15px rgba(139, 92, 246, 0.6); }
 
 .loader {
   border: 3px solid #1e293b;
@@ -60,14 +61,11 @@ body {
   animation: spin 0.8s linear infinite;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
 .toast {
   pointer-events: auto;
-  min-width: 300px;
+  min-width: min(300px, calc(100vw - 2rem));
   animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -76,45 +74,58 @@ body {
   to { transform: translateX(0) scale(1); opacity: 1; }
 }
 
-@keyframes slideUp {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
-}
-
-.animate-slide-up {
-  animation: slideUp 0.3s ease-out forwards;
-}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.animate-slide-up { animation: slideUp 0.3s ease-out forwards; }
 
 .modal-backdrop {
   background-color: rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(4px);
 }
 
-.slide {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  transition: opacity 1s ease-in-out;
+.slide { position: absolute; inset: 0; opacity: 0; transition: opacity 1s ease-in-out; }
+.slide.active { opacity: 1; }
+
+.custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 2px; }
+
+@keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+.animate-shimmer { animation: shimmer 2s infinite linear; }
+
+/* ponytail: Responsive table → card transformation for mobile */
+@media (max-width: 640px) {
+  .responsive-table thead { display: none; }
+  .responsive-table tr {
+    display: block;
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+    border: 1px solid #1e293b;
+    margin-bottom: 0.75rem;
+    background: #0f172a;
+  }
+  .responsive-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border: none;
+    text-align: right;
+  }
+  .responsive-table td::before {
+    content: attr(data-label);
+    font-weight: 700;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #64748b;
+    text-align: left;
+    padding-right: 1rem;
+  }
+  .responsive-table td:empty { display: none; }
 }
 
-.slide.active {
-  opacity: 1;
-}
+/* ponytail: Prevent layout shift from long unbroken strings */
+.break-anywhere { overflow-wrap: anywhere; word-break: break-word; }
 
-.custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #475569;
-  border-radius: 2px;
-}
-
-@keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-
-.animate-shimmer {
-  animation: shimmer 2s infinite linear;
-}
+/* ponytail: Touch-friendly tap target minimum */
+.touch-target { min-height: 44px; min-width: 44px; }

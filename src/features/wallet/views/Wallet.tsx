@@ -196,7 +196,7 @@ const Wallet: React.FC = () => {
                         </p>
                         
                         {isOrg && (
-                            <div className="grid grid-cols-2 gap-8 pt-8 border-t border-gray-800">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8 pt-6 sm:pt-8 border-t border-gray-800">
                                 <div>
                                     <h3 className="text-xs font-black text-gray-500 uppercase tracking-widest mb-2">Org Wallet</h3>
                                     <p className="text-3xl font-black text-white tracking-tight">{formatCurrency(profile.orgWalletBalance || 0)}</p>
@@ -226,7 +226,7 @@ const Wallet: React.FC = () => {
                             onClick={() => {
                                 setActiveModal('withdraw');
                             }}
-                            className="flex-1 bg-gray-900 hover:bg-gray-800 text-white p-8 rounded-3xl font-black uppercase tracking-widest text-xs transition-all border border-gray-800 flex flex-col items-center justify-center gap-3 hover:-translate-y-1"
+                            className="flex-1 bg-gray-900 hover:bg-gray-800 text-white p-5 sm:p-8 rounded-2xl sm:rounded-3xl font-black uppercase tracking-widest text-xs transition-all border border-gray-800 flex flex-col items-center justify-center gap-3 hover:-translate-y-1"
                         >
                             <ArrowUpRight className="w-8 h-8 text-red-400" />
                             Withdraw
@@ -235,7 +235,7 @@ const Wallet: React.FC = () => {
                             onClick={() => {
                                 setIsPromoModalOpen(true);
                             }}
-                            className="flex-1 bg-gray-900 hover:bg-gray-800 text-white p-8 rounded-3xl font-black uppercase tracking-widest text-xs transition-all border border-gray-800 flex flex-col items-center justify-center gap-3 hover:-translate-y-1"
+                            className="flex-1 bg-gray-900 hover:bg-gray-800 text-white p-5 sm:p-8 rounded-2xl sm:rounded-3xl font-black uppercase tracking-widest text-xs transition-all border border-gray-800 flex flex-col items-center justify-center gap-3 hover:-translate-y-1"
                         >
                             <Gift className="w-8 h-8 text-brand-400" />
                             Redeem
@@ -275,7 +275,7 @@ const Wallet: React.FC = () => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
                 {/* Professional Transactions Ledger */}
                 <div className="xl:col-span-2 bg-gray-900/50 rounded-3xl border border-gray-800 overflow-hidden">
                     <div className="p-8 border-b border-gray-800 flex justify-between items-center">
@@ -430,7 +430,7 @@ const Wallet: React.FC = () => {
                     </div>
 
                     {/* Security Module */}
-                    <div className="bg-black rounded-3xl border border-gray-800 p-8 overflow-hidden relative">
+                    <div className="bg-black rounded-2xl sm:rounded-3xl border border-gray-800 p-5 sm:p-8 overflow-hidden relative">
                         <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-green-500/10 rounded-full blur-2xl"></div>
                         <h3 className="text-xs font-black text-gray-500 uppercase tracking-widest mb-6 flex items-center gap-3">
                             <ShieldCheck className="w-5 h-5 text-green-500" /> Wallet Security

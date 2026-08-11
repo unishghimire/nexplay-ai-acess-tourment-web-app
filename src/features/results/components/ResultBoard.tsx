@@ -103,7 +103,7 @@ export default function ResultBoard({ results, config }: ResultBoardProps) {
                         </div>
                     </div>
                 )}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     {others.map(res => (
                         <div key={res.id} className="bg-dark-800 p-4 rounded-2xl border border-gray-800 flex justify-between items-center">
                             <div>

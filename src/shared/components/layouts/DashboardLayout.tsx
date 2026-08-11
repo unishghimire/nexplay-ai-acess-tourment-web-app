@@ -26,23 +26,23 @@ export default function DashboardLayout({ children, title, description, backUrl 
                 <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mb-6">
                     <Shield className="w-10 h-10 text-red-500" />
                 </div>
-                <h2 className="text-2xl font-bold text-white mb-2">Access Denied</h2>
-                <p className="text-gray-400 max-w-md">You do not have the necessary permissions to access the Organizer Dashboard.</p>
+                <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">Access Denied</h2>
+                <p className="text-gray-400 max-w-md text-sm sm:text-base">You do not have the necessary permissions to access the Organizer Dashboard.</p>
             </div>
         );
     }
 
     return (
-        <div className="flex flex-col min-h-[90vh] bg-black rounded-[2rem] border border-gray-800 overflow-hidden shadow-2xl relative">
-            <main className="flex-1 flex flex-col min-w-0 bg-black overflow-y-auto custom-scrollbar h-full lg:h-[90vh]">
-                <header className="px-6 py-6 md:px-10 md:py-8 border-b border-gray-800 bg-black/80 sticky top-0 backdrop-blur-md z-10">
+        <div className="flex flex-col min-h-[70vh] lg:min-h-[90vh] bg-black rounded-2xl sm:rounded-[2rem] border border-gray-800 overflow-hidden shadow-2xl relative">
+            <main className="flex-1 flex flex-col min-w-0 bg-black overflow-y-auto custom-scrollbar">
+                <header className="px-4 sm:px-6 py-5 md:px-10 md:py-8 border-b border-gray-800 bg-black/80 sticky top-0 backdrop-blur-md z-10">
                     {backUrl && (
-                        <button onClick={() => navigate(backUrl)} className="text-brand-500 text-xs font-black uppercase tracking-widest flex items-center gap-2 hover:text-brand-400 mb-4 transition-colors">
+                        <button onClick={() => navigate(backUrl)} className="text-brand-500 text-xs font-black uppercase tracking-widest flex items-center gap-2 hover:text-brand-400 mb-4 transition-colors touch-target">
                             <ChevronLeft className="w-4 h-4" /> Back
                         </button>
                     )}
-                    <h1 className="text-2xl md:text-3xl font-black text-white tracking-tighter uppercase">{title}</h1>
-                    {description && <p className="text-sm text-gray-500 font-bold mt-2 tracking-widest uppercase">{description}</p>}
+                    <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tighter uppercase">{title}</h1>
+                    {description && <p className="text-xs sm:text-sm text-gray-500 font-bold mt-2 tracking-widest uppercase">{description}</p>}
                 </header>
 
                 <div className="p-4 sm:p-6 md:p-10 flex-1 min-w-0">

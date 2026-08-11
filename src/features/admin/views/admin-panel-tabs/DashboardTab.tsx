@@ -9,8 +9,8 @@ export const DashboardTab: React.FC<AdminPanelTabProps> = (props) => {
     const { DEFAULT_BANNER, NEXPLAY_LOGO, activityLogs, closeConfirmModal, editingSlide, executeRejectTx, formatCurrency, formatDate, getRelativeTime, handleApproveTx, handleDeleteSlide, handleSaveSlide, isSlideModalOpen, pendingTransactions, setEditingSlide, setIsSlideModalOpen, setSlideBtnText, setSlideDescription, setSlideImage, setSlideIsActive, setSlideLink, setSlideTitle, slideBtnText, slideDescription, slideImage, slideIsActive, slideLink, slideTitle, slides, stats, uploading, users, setConfirmModal, setSelectedTx, handlePasteSlide, handleDropSlide, handleDragOverSlide, processAndUploadSlide } = props;
     return (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
-                    <div className="col-span-full grid grid-cols-1 md:grid-cols-4 gap-6 mb-2">
-                        <div className="relative overflow-hidden bg-gradient-to-br from-blue-900/40 to-blue-900/10 p-6 rounded-2xl border border-blue-500/20 flex items-center gap-5 group">
+                    <div className="col-span-full grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-2">
+                        <div className="relative overflow-hidden bg-gradient-to-br from-blue-900/40 to-blue-900/10 p-4 sm:p-6 rounded-2xl border border-blue-500/20 flex items-center gap-3 sm:gap-5 group">
                             <div className="absolute -right-6 -top-6 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-all"></div>
                             <div className="w-14 h-14 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center text-xl border border-blue-500/30 shadow-lg shadow-blue-500/20">
                                 <Users className="w-7 h-7" />
@@ -20,7 +20,7 @@ export const DashboardTab: React.FC<AdminPanelTabProps> = (props) => {
                                 <div className="text-3xl font-black text-white tracking-tight">{formatCurrency(stats.totalBalance)}</div>
                             </div>
                         </div>
-                        <div className="relative overflow-hidden bg-gradient-to-br from-green-900/40 to-green-900/10 p-6 rounded-2xl border border-green-500/20 flex items-center gap-5 group">
+                        <div className="relative overflow-hidden bg-gradient-to-br from-green-900/40 to-green-900/10 p-4 sm:p-6 rounded-2xl border border-green-500/20 flex items-center gap-3 sm:gap-5 group">
                             <div className="absolute -right-6 -top-6 w-24 h-24 bg-green-500/10 rounded-full blur-2xl group-hover:bg-green-500/20 transition-all"></div>
                             <div className="w-14 h-14 rounded-2xl bg-green-500/20 text-green-400 flex items-center justify-center text-xl border border-green-500/30 shadow-lg shadow-green-500/20">
                                 <ArrowDown className="w-7 h-7" />
@@ -30,7 +30,7 @@ export const DashboardTab: React.FC<AdminPanelTabProps> = (props) => {
                                 <div className="text-3xl font-black text-white tracking-tight">{formatCurrency(stats.todayDep)}</div>
                             </div>
                         </div>
-                        <div className="relative overflow-hidden bg-gradient-to-br from-red-900/40 to-red-900/10 p-6 rounded-2xl border border-red-500/20 flex items-center gap-5 group">
+                        <div className="relative overflow-hidden bg-gradient-to-br from-red-900/40 to-red-900/10 p-4 sm:p-6 rounded-2xl border border-red-500/20 flex items-center gap-3 sm:gap-5 group">
                             <div className="absolute -right-6 -top-6 w-24 h-24 bg-red-500/10 rounded-full blur-2xl group-hover:bg-red-500/20 transition-all"></div>
                             <div className="w-14 h-14 rounded-2xl bg-red-500/20 text-red-400 flex items-center justify-center text-xl border border-red-500/30 shadow-lg shadow-red-500/20">
                                 <ArrowUp className="w-7 h-7" />
@@ -40,7 +40,7 @@ export const DashboardTab: React.FC<AdminPanelTabProps> = (props) => {
                                 <div className="text-3xl font-black text-white tracking-tight">{formatCurrency(stats.todayWith)}</div>
                             </div>
                         </div>
-                        <div className="relative overflow-hidden bg-gradient-to-br from-purple-900/40 to-purple-900/10 p-6 rounded-2xl border border-purple-500/20 flex items-center gap-5 group">
+                        <div className="relative overflow-hidden bg-gradient-to-br from-purple-900/40 to-purple-900/10 p-4 sm:p-6 rounded-2xl border border-purple-500/20 flex items-center gap-3 sm:gap-5 group">
                             <div className="absolute -right-6 -top-6 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl group-hover:bg-purple-500/20 transition-all"></div>
                             <div className="w-14 h-14 rounded-2xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-xl border border-purple-500/30 shadow-lg shadow-purple-500/20">
                                 <Users className="w-7 h-7" />
@@ -53,7 +53,7 @@ export const DashboardTab: React.FC<AdminPanelTabProps> = (props) => {
                     </div>
 
                     <div className="col-span-full grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div className="bg-card p-6 rounded-2xl border border-gray-800 lg:col-span-2 shadow-xl">
+                        <div className="bg-card p-4 sm:p-6 rounded-2xl border border-gray-800 lg:col-span-2 shadow-xl">
                             <div className="flex justify-between items-center mb-6 border-b border-gray-800 pb-4">
                                 <h2 className="font-bold text-white text-lg flex items-center gap-2">
                                     <Bell className="w-5 h-5 text-brand-400" /> Pending Transactions
@@ -62,7 +62,7 @@ export const DashboardTab: React.FC<AdminPanelTabProps> = (props) => {
                                     {pendingTransactions.length} Pending
                                 </span>
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-[400px] overflow-y-auto custom-scrollbar content-start pr-2">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-[300px] sm:h-[400px] overflow-y-auto custom-scrollbar content-start pr-2">
                                 {pendingTransactions.length > 0 ? (
                                     pendingTransactions.map(t => (
                                         <div key={t.id} className="bg-dark/50 hover:bg-dark p-5 rounded-2xl border border-gray-800 hover:border-gray-700 transition-all shadow-md group">
@@ -117,7 +117,7 @@ export const DashboardTab: React.FC<AdminPanelTabProps> = (props) => {
                             </div>
                         </div>
 
-                        <div className="bg-card p-6 rounded-2xl border border-gray-800 shadow-xl h-[490px] flex flex-col">
+                        <div className="bg-card p-4 sm:p-6 rounded-2xl border border-gray-800 shadow-xl h-[400px] sm:h-[490px] flex flex-col">
                             <div className="flex justify-between items-center mb-6 border-b border-gray-800 pb-4">
                                 <h2 className="font-bold text-white text-lg flex items-center gap-2">
                                     <Info className="w-5 h-5 text-brand-400" /> Activity Feed

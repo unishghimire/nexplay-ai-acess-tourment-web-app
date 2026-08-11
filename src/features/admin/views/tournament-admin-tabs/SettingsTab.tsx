@@ -19,14 +19,14 @@ export const SettingsTab: React.FC<TournamentAdminTabProps> = (props) => {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
-                            className="bg-surface p-8 rounded-3xl border border-gray-800 space-y-8"
+                            className="bg-surface p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 space-y-6 sm:space-y-8"
                         >
                             <div>
                                 <h2 className="text-xl font-black uppercase tracking-tighter text-white mb-2">Automated Point System</h2>
                                 <p className="text-gray-500 text-sm font-medium">Configure how points are calculated for uploaded match results.</p>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
                                 <div className="space-y-6">
                                     <h3 className="text-xs font-black uppercase tracking-widest text-brand-500 border-b border-gray-800 pb-2">Scoring Rules</h3>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -154,9 +154,9 @@ export const SettingsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                     <p className="text-gray-500 text-sm font-medium">Define the timeline and stages of the tournament for the public roadmap view.</p>
                                 </div>
                                 
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                                     {(tournament.roadmap || []).map((step, idx) => (
-                                        <div key={idx} className="bg-dark p-6 rounded-2xl border border-gray-800 space-y-4 group relative shadow-2xl hover:border-brand-500/30 transition-all">
+                                        <div key={idx} className="bg-dark p-4 sm:p-6 rounded-2xl border border-gray-800 space-y-3 sm:space-y-4 group relative shadow-2xl hover:border-brand-500/30 transition-all">
                                             <button 
                                                 onClick={() => {
                                                     const newList = (tournament.roadmap || []).filter((_, i) => i !== idx);

@@ -50,7 +50,7 @@ export default function PrizeBoard({ prizes, currency = 'NPR', totalPrizePool }:
 
     return (
         <div className="bg-dark-800 rounded-2xl border border-dark-700 overflow-hidden">
-            <div className="bg-dark-900/50 p-4 border-b border-dark-700 flex justify-between items-center">
+            <div className="bg-dark-900/50 p-3 sm:p-4 border-b border-dark-700 flex justify-between items-center">
                 <h3 className="text-lg font-black text-white flex items-center gap-2">
                     <Trophy className="w-5 h-5 text-brand-500" />
                     Prize Pool Distribution
@@ -63,7 +63,7 @@ export default function PrizeBoard({ prizes, currency = 'NPR', totalPrizePool }:
                 )}
             </div>
 
-            <div className="p-4 space-y-3">
+            <div className="p-3 sm:p-4 space-y-3">
                 {prizes.map((prize, index) => (
                     <motion.div
                         key={prize.id || index}
@@ -72,7 +72,7 @@ export default function PrizeBoard({ prizes, currency = 'NPR', totalPrizePool }:
                         transition={{ delay: index * 0.1 }}
                         className={`flex items-center justify-between p-4 rounded-xl border transition-all duration-300 hover:scale-[1.01] ${getRankStyle(prize.rank)}`}
                     >
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                             <div className="flex items-center justify-center w-10 h-10 rounded-full bg-dark-900/50 border border-dark-600/50">
                                 {getRankIcon(prize.rank)}
                             </div>

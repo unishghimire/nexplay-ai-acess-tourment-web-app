@@ -85,7 +85,7 @@ const Scrims: React.FC = () => {
             </header>
 
             {/* Filters */}
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-12 bg-gray-900/50 p-8 rounded-3xl border border-gray-800">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-12 bg-gray-900/50 p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-800">
                 <div className="md:col-span-8 relative">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                     <input 
@@ -159,7 +159,7 @@ const Scrims: React.FC = () => {
                             </div>
 
                             <div className="p-6 space-y-6">
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                     <div className="bg-black p-3 rounded-2xl border border-gray-800">
                                         <div className="text-[9px] text-gray-500 uppercase font-black mb-1">Entry</div>
                                         <div className="text-white font-black">{scrim.entryFee === 0 ? 'FREE' : formatCurrency(scrim.entryFee || 0)}</div>

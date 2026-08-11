@@ -155,7 +155,7 @@ const Teams: React.FC = () => {
             </header>
 
             {isCreating && (
-                <div className="bg-gray-900/50 p-8 rounded-3xl border border-gray-800 shadow-2xl mb-12 animate-fade-in">
+                <div className="bg-gray-900/50 p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 shadow-2xl mb-6 sm:mb-12 animate-fade-in">
                     <h3 className="text-xl font-black text-white uppercase tracking-widest mb-8">Create New Team</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-6">
@@ -249,7 +249,7 @@ const Teams: React.FC = () => {
 
             <Modal isOpen={showPresetModal} onClose={() => setShowPresetModal(false)} title="Choose Preset Team Logo">
                 <div className="p-6">
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                         {PRESET_TEAM_LOGOS.map((url, index) => (
                             <button
                                 key={index}
@@ -274,7 +274,7 @@ const Teams: React.FC = () => {
                     <h2 className="text-2xl font-black text-white uppercase tracking-tighter mb-8 border-b border-gray-800 pb-4">My Teams</h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {myTeams.map(team => (
-                            <Link to={`/team/${team.id}`} key={team.id} className="bg-gray-900/50 rounded-3xl border border-gray-800 p-8 hover:border-brand-500/50 transition group hover:bg-gray-900">
+                            <Link to={`/team/${team.id}`} key={team.id} className="bg-gray-900/50 rounded-2xl sm:rounded-3xl border border-gray-800 p-5 sm:p-8 hover:border-brand-500/50 transition group hover:bg-gray-900">
                                 <div className="flex items-center gap-6 mb-6">
                                     <div className="w-20 h-20 rounded-2xl bg-black border border-gray-800 overflow-hidden flex items-center justify-center shrink-0">
                                         <img 
@@ -329,7 +329,7 @@ const Teams: React.FC = () => {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredTeams.map(team => (
-                            <Link to={`/team/${team.id}`} key={team.id} className="bg-gray-900/50 rounded-3xl border border-gray-800 p-8 hover:border-brand-500/50 transition group hover:bg-gray-900 flex flex-col h-full">
+                            <Link to={`/team/${team.id}`} key={team.id} className="bg-gray-900/50 rounded-2xl sm:rounded-3xl border border-gray-800 p-5 sm:p-8 hover:border-brand-500/50 transition group hover:bg-gray-900 flex flex-col h-full">
                                 <div className="flex items-center gap-6 mb-6">
                                     <div className="w-20 h-20 rounded-2xl bg-black border border-gray-800 overflow-hidden flex items-center justify-center shrink-0">
                                         <img 

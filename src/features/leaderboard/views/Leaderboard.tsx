@@ -62,7 +62,7 @@ const PodiumCard = ({ item, rank, type, navigate }: {
             onClick={() => {
                 navigate(isPlayer ? `/user/${itemId}` : `/team/${itemId}`);
             }}
-            className={`relative flex flex-col items-center p-8 rounded-3xl border ${borderColor} bg-gradient-to-b ${bgColor} to-black ${shadowColor} shadow-2xl cursor-pointer group hover:border-brand-500/50 transition-all duration-300 hover:-translate-y-2`}
+            className={`relative flex flex-col items-center p-4 sm:p-8 rounded-2xl sm:rounded-3xl border ${borderColor} bg-gradient-to-b ${bgColor} to-black ${shadowColor} shadow-2xl cursor-pointer group hover:border-brand-500/50 transition-all duration-300 hover:-translate-y-2`}
         >
             {isFirst && (
                 <div className="absolute -top-4 bg-amber-500 text-black p-2 rounded-full shadow-lg">
@@ -168,7 +168,7 @@ const Leaderboard: React.FC = () => {
     return (
         <div className="max-w-6xl mx-auto px-4 py-12 animate-fade-in">
             {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-8 mb-8 sm:mb-12">
                 <div>
                     <h1 className="text-4xl font-black text-white uppercase tracking-tighter mb-4">Leaderboard</h1>
                     <p className="text-gray-400 font-bold">The elite of NexPlay. Updated in real-time.</p>
@@ -234,7 +234,7 @@ const Leaderboard: React.FC = () => {
                 <>
                     {/* Podium Section */}
                     {currentList.length > 0 && (
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16 items-end">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-8 mb-8 sm:mb-16 items-end">
                             {/* 2nd Place */}
                             {podium[1] && <PodiumCard item={podium[1]} rank={2} type={view === 'players' ? 'player' : 'team'} navigate={navigate} />}
                             {/* 1st Place */}
@@ -270,9 +270,9 @@ const Leaderboard: React.FC = () => {
                                     onClick={() => {
                                         navigate(isPlayerView ? `/user/${itemId}` : `/team/${itemId}`);
                                     }}
-                                    className={`flex items-center justify-between p-6 rounded-3xl border transition cursor-pointer group ${isUser ? 'bg-brand-500/10 border-brand-500/50' : 'bg-gray-900/50 border-gray-800 hover:border-gray-700 hover:bg-gray-900'}`}
+                                    className={`flex items-center justify-between p-4 sm:p-6 rounded-2xl sm:rounded-3xl border transition cursor-pointer group ${isUser ? 'bg-brand-500/10 border-brand-500/50' : 'bg-gray-900/50 border-gray-800 hover:border-gray-700 hover:bg-gray-900'}`}
                                 >
-                                    <div className="flex items-center gap-6">
+                                    <div className="flex items-center gap-3 sm:gap-6">
                                         <div className="w-12 text-center">
                                             <span className={`font-black text-xl ${isUser ? 'text-brand-400' : 'text-gray-500'}`}>{rank}</span>
                                         </div>

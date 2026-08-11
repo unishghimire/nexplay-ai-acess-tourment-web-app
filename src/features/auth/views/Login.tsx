@@ -115,7 +115,7 @@ const Login: React.FC = () => {
                     <p className="text-gray-400 font-bold">Login to access your NexPlay account</p>
                 </div>
 
-                <div className="bg-gray-900/50 border border-gray-800 rounded-3xl p-8 md:p-10 shadow-2xl">
+                <div className="bg-gray-900/50 border border-gray-800 rounded-2xl sm:rounded-3xl p-5 sm:p-8 md:p-10 shadow-2xl">
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
                             <label htmlFor="email" className="block text-xs font-black text-gray-500 uppercase tracking-widest mb-2 ml-1">Email Address</label>

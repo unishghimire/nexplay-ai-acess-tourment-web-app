@@ -13,7 +13,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import { NotificationService } from '../../../shared/services/NotificationService';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import Seo from '../../../shared/components/Seo';
-import { Helmet } from 'react-helmet-async';
 import ProfileLink from '../../profile/components/ProfileLink';
 import PrizeBoard from '../components/PrizeBoard';
 import TournamentResultModal from '../components/TournamentResultModal';
@@ -218,7 +217,6 @@ export default function TournamentDetails() {
         }
         if (!tournament || !profile) return;
 
-
         // Requirement: In-game ID is compulsory for all games
         if (!profile.inGameId) {
             showToast("In-Game ID is required for all tournaments!", "warning");
@@ -246,7 +244,6 @@ export default function TournamentDetails() {
             navigate('/teams');
             return;
         }
-
 
         if (tournament.teamType === 'duo' || tournament.teamType === 'squad') {
             setShowJoinModal(true);
@@ -320,11 +317,10 @@ export default function TournamentDetails() {
     const bannerUrl = tournament.bannerUrl || DEFAULT_BANNER;
     const bannerStyle = { backgroundImage: `url('${bannerUrl}')`, backgroundSize: 'cover', backgroundPosition: 'center' };
     const showRoom = tournament.matchType === 'scrims' && isJoined && (tournament.status === 'live' || (tournament.roomId && tournament.status === 'upcoming'));
-    // No-op
     const ytId = getYoutubeId(tournament.ytLink);
 
     return (
-        <div className="animate-fade-in max-w-6xl mx-auto px-4 py-6">
+        <div className="animate-fade-in w-full max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6 overflow-x-hidden">
             {tournament && (
                 <Seo
                     title={`${tournament.title} | ${formatGameName(tournament.game)} Tournament Nepal | NexPlay`}
@@ -351,15 +347,15 @@ export default function TournamentDetails() {
                 />
             )}
             {/* Hero Section */}
-            <div className="relative h-[400px] md:h-[500px] rounded-[2rem] overflow-hidden mb-12 shadow-2xl group border border-gray-800">
+            <div className="relative h-48 sm:h-72 md:h-[400px] lg:h-[500px] rounded-2xl sm:rounded-[2rem] overflow-hidden mb-6 sm:mb-12 shadow-2xl group border border-gray-800 w-full">
                 <div className="absolute inset-0 bg-gray-950 transition-transform duration-700 group-hover:scale-105" style={{...bannerStyle, opacity: 0.6}}></div>
                 <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/60 to-transparent"></div>
                 
-                <div className="absolute top-8 left-8 flex flex-wrap gap-3">
-                    <span className="bg-white/10 backdrop-blur-md text-white text-xs font-black px-4 py-2 rounded-full uppercase tracking-widest border border-white/10 shadow-xl">
+                <div className="absolute top-3 left-3 sm:top-8 sm:left-8 flex flex-wrap gap-1.5 sm:gap-3 z-10 max-w-[calc(100%-4rem)]">
+                    <span className="bg-white/10 backdrop-blur-md text-white text-[10px] sm:text-xs font-black px-2.5 sm:px-4 py-1 sm:py-2 rounded-full uppercase tracking-widest border border-white/10 shadow-xl truncate">
                         {formatGameName(tournament.game)}
                     </span>
-                    <span className={`backdrop-blur-md text-white text-xs font-black px-4 py-2 rounded-full uppercase tracking-widest shadow-xl border ${
+                    <span className={`backdrop-blur-md text-white text-[10px] sm:text-xs font-black px-2.5 sm:px-4 py-1 sm:py-2 rounded-full uppercase tracking-widest shadow-xl border ${
                         tournament.status === 'live' ? 'bg-red-600/90 border-red-500/30' : 
                         tournament.status === 'completed' ? 'bg-blue-600/90 border-blue-500/30' : 
                         'bg-green-600/90 border-green-500/30'
@@ -367,8 +363,8 @@ export default function TournamentDetails() {
                         {tournament.status}
                     </span>
                     {tournament.ytLink && tournament.status === 'live' && (
-                        <span className="bg-red-600 animate-pulse text-white text-xs font-black px-4 py-2 rounded-full uppercase tracking-widest shadow-xl flex items-center gap-2">
-                            <Play className="w-4 h-4 fill-current" /> LIVE STREAM
+                        <span className="bg-red-600 animate-pulse text-white text-[10px] sm:text-xs font-black px-2.5 sm:px-4 py-1 sm:py-2 rounded-full uppercase tracking-widest shadow-xl flex items-center gap-1.5 sm:gap-2">
+                            <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current shrink-0" /> LIVE STREAM
                         </span>
                     )}
                 </div>
@@ -376,45 +372,45 @@ export default function TournamentDetails() {
                 <button 
                     onClick={handleShare}
                     aria-label="Share Tournament"
-                    className="absolute top-8 right-8 p-4 bg-white/5 backdrop-blur-md hover:bg-white/10 text-white rounded-full transition-all border border-white/10 active:scale-95 z-20 shadow-xl"
+                    className="absolute top-3 right-3 sm:top-8 sm:right-8 p-2.5 sm:p-4 bg-white/5 backdrop-blur-md hover:bg-white/10 text-white rounded-full transition-all border border-white/10 active:scale-95 z-20 shadow-xl"
                 >
-                    <Share2 className="w-6 h-6" />
+                    <Share2 className="w-4 h-4 sm:w-6 sm:h-6" />
                 </button>
 
-                <div className="absolute bottom-12 left-12 right-12">
+                <div className="absolute bottom-3 left-3 right-3 sm:bottom-8 sm:left-8 sm:right-8 lg:bottom-12 lg:left-12 lg:right-12 z-10">
                     <motion.h1 
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="text-5xl md:text-7xl font-black text-white mb-6 tracking-tighter leading-none"
+                        className="text-xl sm:text-3xl md:text-5xl lg:text-7xl font-black text-white mb-2 sm:mb-4 lg:mb-6 tracking-tighter leading-tight sm:leading-none break-words [overflow-wrap:anywhere] line-clamp-2 sm:line-clamp-none"
                     >
                         {tournament.title}
                     </motion.h1>
-                    <div className="text-gray-300 font-bold text-sm mb-6 uppercase tracking-widest flex items-center gap-2">
+                    <div className="text-gray-300 font-bold text-xs sm:text-sm mb-2 sm:mb-4 lg:mb-6 uppercase tracking-widest flex items-center gap-2 truncate">
                         Organized by: {tournament.hostUid ? <ProfileLink to={`/organization/${tournament.hostUid}`} name={tournament.hostName || 'Official Host'} /> : <span className="text-gray-500">Official Host</span>}
                     </div>
                     
-                    <div className="flex flex-wrap items-center gap-8 text-gray-200 font-bold text-sm uppercase tracking-widest">
-                        <div className="flex items-center gap-3">
-                            <Calendar className="w-5 h-5 text-brand-500" />
-                            {formatDate(tournament.startTime)}
+                    <div className="flex flex-wrap items-center gap-3 sm:gap-6 lg:gap-8 text-gray-200 font-bold text-[10px] sm:text-xs md:text-sm uppercase tracking-widest">
+                        <div className="flex items-center gap-1.5 sm:gap-3">
+                            <Calendar className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-brand-500 shrink-0" />
+                            <span className="truncate">{formatDate(tournament.startTime)}</span>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <MapPin className="w-5 h-5 text-brand-500" />
-                            {tournament.map || 'TBD'}
+                        <div className="flex items-center gap-1.5 sm:gap-3">
+                            <MapPin className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-brand-500 shrink-0" />
+                            <span className="truncate">{tournament.map || 'TBD'}</span>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <Users className="w-5 h-5 text-brand-500" />
-                            {tournament.teamType} • {tournament.type}
+                        <div className="flex items-center gap-1.5 sm:gap-3">
+                            <Users className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-brand-500 shrink-0" />
+                            <span className="truncate">{tournament.teamType} • {tournament.type}</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
                 {/* Main Content */}
-                <div className="lg:col-span-8 space-y-8">
+                <div className="lg:col-span-8 space-y-6 sm:space-y-8 min-w-0">
                     {/* Tabs Navigation */}
-                    <div className="flex p-2 bg-gray-900/50 rounded-full border border-gray-800 sticky top-20 sm:top-24 z-10 backdrop-blur-xl overflow-x-auto custom-scrollbar">
+                    <div className="flex p-1.5 sm:p-2 bg-gray-900/50 rounded-2xl sm:rounded-full border border-gray-800 sticky top-16 sm:top-24 z-10 backdrop-blur-xl overflow-x-auto custom-scrollbar gap-2 max-w-full">
                         {[
                             { id: 'overview', label: 'Overview', icon: Info },
                             { id: 'description', label: 'Description', icon: Info },
@@ -432,13 +428,13 @@ export default function TournamentDetails() {
                                         setActiveTab(tab.id as any);
                                     }
                                 }}
-                                className={`flex-1 flex items-center justify-center gap-3 py-4 px-6 rounded-full text-xs font-black transition-all uppercase tracking-wider ${
+                                className={`flex-1 min-w-max flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 rounded-xl sm:rounded-full text-[10px] sm:text-xs font-black transition-all uppercase tracking-wider whitespace-nowrap ${
                                     (activeTab === tab.id && tab.id !== 'results') 
                                     ? 'bg-brand-500 text-white shadow-xl shadow-brand-500/20' 
                                     : 'text-gray-500 hover:text-white hover:bg-gray-800/50'
                                 }`}
                             >
-                                <tab.icon className="w-4 h-4" />
+                                <tab.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                                 {tab.label}
                             </button>
                         ))}
@@ -451,10 +447,10 @@ export default function TournamentDetails() {
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -10 }}
-                                className="space-y-8"
+                                className="space-y-6 sm:space-y-8"
                             >
                                 {ytId && (
-                                    <div className="rounded-3xl overflow-hidden border border-gray-800 shadow-2xl aspect-video bg-black">
+                                    <div className="rounded-2xl sm:rounded-3xl overflow-hidden border border-gray-800 shadow-2xl aspect-video bg-black w-full">
                                         <iframe 
                                             src={`https://www.youtube.com/embed/${ytId}`} 
                                             frameBorder="0" 
@@ -470,66 +466,75 @@ export default function TournamentDetails() {
                                             href={tournament.ytLink} 
                                             target="_blank" 
                                             rel="noopener noreferrer"
-                                            className="flex items-center gap-2 text-brand-500 hover:text-brand-400 font-bold text-sm transition"
+                                            className="flex items-center gap-2 text-brand-500 hover:text-brand-400 font-bold text-xs sm:text-sm transition"
                                         >
                                             <Play className="w-4 h-4 fill-current" /> Visit YouTube Channel
                                         </a>
                                     </div>
                                 )}
 
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
                                     {[
                                         { label: 'Prize Pool', value: formatCurrency(tournament.prizePool), icon: Trophy, color: 'text-yellow-500' },
                                         { label: 'Entry Fee', value: tournament.entryFee > 0 ? formatCurrency(tournament.entryFee) : 'FREE', icon: Medal, color: 'text-brand-500' },
                                         { label: 'Slots', value: `${tournament.currentPlayers}/${tournament.slots}`, icon: Users, color: 'text-blue-500' },
                                         { label: 'Game Mode', value: tournament.type, icon: Play, color: 'text-red-500' },
                                     ].map((stat, i) => (
-                                        <div key={i} className="bg-gray-900/50 p-6 rounded-3xl border border-gray-800 hover:border-gray-700 transition-all hover:bg-gray-800/50">
-                                            <stat.icon className={`w-6 h-6 ${stat.color} mb-4`} />
-                                            <div className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1">{stat.label}</div>
-                                            <div className="text-white font-black text-xl">{stat.value}</div>
+                                        <div key={i} className="bg-gray-900/50 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-gray-700 transition-all hover:bg-gray-800/50 min-w-0">
+                                            <stat.icon className={`w-5 h-5 sm:w-6 sm:h-6 ${stat.color} mb-2 sm:mb-4`} />
+                                            <div className="text-[9px] sm:text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1 truncate">{stat.label}</div>
+                                            <div className="text-white font-black text-sm sm:text-xl truncate">{stat.value}</div>
                                         </div>
                                     ))}
                                 </div>
 
                                 {showRoom && (
-                                    <div className="bg-brand-500/10 border border-brand-500/20 p-8 rounded-3xl relative overflow-hidden group">
+                                    <div className="bg-brand-500/10 border border-brand-500/20 p-4 sm:p-8 rounded-2xl sm:rounded-3xl relative overflow-hidden group">
                                         <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:scale-110 transition-transform">
-                                            <Play className="w-32 h-32 text-brand-500" />
+                                            <Trophy className="w-32 h-32 text-brand-500" />
                                         </div>
-                                        <h3 className="text-brand-400 font-black text-xs uppercase tracking-widest mb-6 flex items-center gap-3">
-                                            <Lock className="w-5 h-5" /> Match Credentials
-                                        </h3>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <div className="bg-black/50 p-6 rounded-2xl border border-white/5">
-                                                <div className="text-[10px] text-gray-500 uppercase font-black mb-2 tracking-widest">Room ID</div>
-                                                <div className="text-white font-mono text-2xl flex justify-between items-center tracking-tight">
-                                                    {tournament.roomId || 'WAITING...'}
-                                                    <button onClick={() => {
-                                                        navigator.clipboard.writeText(tournament.roomId || '');
-                                                        showToast("Copied!", "success");
-                                                    }} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
-                                                        <ExternalLink className="w-5 h-5 text-gray-500" />
-                                                    </button>
-                                                </div>
+                                        <div className="relative z-10">
+                                            <div className="flex items-center gap-2 mb-4 sm:mb-6">
+                                                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
+                                                <span className="text-emerald-400 text-xs font-black uppercase tracking-widest">Match Room Live</span>
                                             </div>
-                                            <div className="bg-black/50 p-6 rounded-2xl border border-white/5">
-                                                <div className="text-[10px] text-gray-500 uppercase font-black mb-2 tracking-widest">Password</div>
-                                                <div className="text-white font-mono text-2xl flex justify-between items-center tracking-tight">
-                                                    {showPassword ? (tournament.roomPass || '---') : '••••••'}
-                                                    <div className="flex items-center gap-1">
-                                                        <button 
-                                                            onClick={() => setShowPassword(!showPassword)} 
-                                                            className="p-2 hover:bg-white/10 rounded-xl transition-colors relative z-20"
-                                                        >
-                                                            {showPassword ? <EyeOff className="w-5 h-5 text-gray-500" /> : <Eye className="w-5 h-5 text-gray-500" />}
-                                                        </button>
+                                            
+                                            <h3 className="text-lg sm:text-2xl font-black text-white mb-4 sm:mb-6 tracking-tight">Room Information</h3>
+
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                <div className="bg-gray-900/80 p-4 rounded-2xl border border-gray-800">
+                                                    <div className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1">Room ID</div>
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-lg sm:text-xl font-mono font-bold text-white tracking-wider">{tournament.roomId || 'Waiting...'}</span>
                                                         <button onClick={() => {
-                                                            navigator.clipboard.writeText(tournament.roomPass || '');
+                                                            navigator.clipboard.writeText(tournament.roomId || '');
                                                             showToast("Copied!", "success");
                                                         }} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
                                                             <ExternalLink className="w-5 h-5 text-gray-500" />
                                                         </button>
+                                                    </div>
+                                                </div>
+
+                                                <div className="bg-gray-900/80 p-4 rounded-2xl border border-gray-800">
+                                                    <div className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1">Password</div>
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-lg sm:text-xl font-mono font-bold text-white tracking-wider">
+                                                            {showPassword ? (tournament.roomPass || 'None') : '••••••••'}
+                                                        </span>
+                                                        <div className="flex items-center gap-1">
+                                                            <button 
+                                                                onClick={() => setShowPassword(!showPassword)} 
+                                                                className="p-2 hover:bg-white/10 rounded-xl transition-colors relative z-20"
+                                                            >
+                                                                {showPassword ? <EyeOff className="w-5 h-5 text-gray-500" /> : <Eye className="w-5 h-5 text-gray-500" />}
+                                                            </button>
+                                                            <button onClick={() => {
+                                                                navigator.clipboard.writeText(tournament.roomPass || '');
+                                                                showToast("Copied!", "success");
+                                                            }} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
+                                                                <ExternalLink className="w-5 h-5 text-gray-500" />
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -545,26 +550,26 @@ export default function TournamentDetails() {
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -10 }}
-                                className="space-y-8"
+                                className="space-y-6 sm:space-y-8"
                             >
-                                <div className="bg-gray-900/50 p-8 rounded-3xl border border-gray-800">
-                                    <h3 className="text-white font-black text-xs uppercase tracking-widest mb-6 flex items-center gap-3">
-                                        <Building2 className="w-5 h-5 text-brand-500" /> Organization
+                                <div className="bg-gray-900/50 p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-800">
+                                    <h3 className="text-white font-black text-xs uppercase tracking-widest mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
+                                        <Building2 className="w-4 h-4 sm:w-5 sm:h-5 text-brand-500 shrink-0" /> Organization
                                     </h3>
                                     {hostProfile ? (
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-16 h-16 rounded-2xl bg-dark border border-gray-700 overflow-hidden flex items-center justify-center">
+                                        <div className="flex items-center gap-3 sm:gap-4">
+                                            <div className="w-12 h-12 sm:w-16 sm:h-16 shrink-0 rounded-2xl bg-dark border border-gray-700 overflow-hidden flex items-center justify-center">
                                                 {hostProfile.profilePicUrl ? (
                                                     <img src={hostProfile.profilePicUrl || undefined} alt={hostProfile.username} className="w-full h-full object-cover" />
                                                 ) : (
-                                                    <Building2 className="w-8 h-8 text-gray-600" />
+                                                    <Building2 className="w-6 h-6 sm:w-8 sm:h-8 text-gray-600" />
                                                 )}
                                             </div>
-                                            <div>
-                                                <div className="text-white font-black text-lg">
+                                            <div className="min-w-0">
+                                                <div className="text-white font-black text-base sm:text-lg truncate">
                                                     <ProfileLink to={`/organization/${tournament.hostUid}`} name={hostProfile.username} />
                                                 </div>
-                                                <p className="text-gray-400 text-xs mt-1 line-clamp-2">{hostProfile.bio || 'No bio available.'}</p>
+                                                <p className="text-gray-400 text-xs sm:text-sm mt-1 line-clamp-2 [overflow-wrap:anywhere]">{hostProfile.bio || 'No bio available.'}</p>
                                             </div>
                                         </div>
                                     ) : (
@@ -572,7 +577,7 @@ export default function TournamentDetails() {
                                     )}
                                 </div>
                                 {tournament.prizeDistribution && tournament.prizeDistribution.length > 0 && (
-                                    <div className="mb-8">
+                                    <div className="mb-6 sm:mb-8">
                                         <PrizeBoard 
                                             prizes={tournament.prizeDistribution} 
                                             currency={tournament.currency} 
@@ -580,12 +585,12 @@ export default function TournamentDetails() {
                                         />
                                     </div>
                                 )}
-                                <div className="bg-gray-900/50 p-8 rounded-3xl border border-gray-800">
-                                    <h3 className="text-white font-black text-xs uppercase tracking-widest mb-6 flex items-center gap-3">
-                                        <Lock className="w-5 h-5 text-brand-500" /> Rules & Regulations
+                                <div className="bg-gray-900/50 p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-800">
+                                    <h3 className="text-white font-black text-xs uppercase tracking-widest mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
+                                        <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-brand-500 shrink-0" /> Rules & Regulations
                                     </h3>
                                     <div className="prose prose-invert max-w-none">
-                                        <div className="text-gray-400 text-sm leading-relaxed whitespace-pre-wrap font-medium">
+                                        <div className="text-gray-400 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap font-medium [overflow-wrap:anywhere]">
                                             {tournament.rules || 'No specific rules provided. Play fair and respect other players.'}
                                         </div>
                                     </div>
@@ -602,7 +607,7 @@ export default function TournamentDetails() {
                                 className="space-y-4"
                             >
                                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                                    <h3 className="text-white font-black text-xl uppercase tracking-tighter">Registered Players</h3>
+                                    <h3 className="text-white font-black text-lg sm:text-xl uppercase tracking-tighter">Registered Players</h3>
                                     <div className="relative w-full sm:w-64">
                                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                                         <input 
@@ -610,44 +615,44 @@ export default function TournamentDetails() {
                                             placeholder="Search player or ID..."
                                             value={searchTerm}
                                             onChange={(e) => setSearchTerm(e.target.value)}
-                                            className="w-full bg-surface border border-gray-800 rounded-xl py-2 pl-10 pr-4 text-sm text-white focus:border-brand-500 outline-none transition"
+                                            className="w-full bg-surface border border-gray-800 rounded-xl py-2 pl-10 pr-4 text-xs sm:text-sm text-white focus:border-brand-500 outline-none transition"
                                         />
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                     {filteredParticipants.length > 0 ? filteredParticipants.map((p, i) => (
-                                        <div key={i} className="bg-surface p-5 rounded-2xl border border-gray-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 group hover:border-brand-500/30 transition-all shadow-lg hover:shadow-brand-500/5">
-                                            <div className="flex items-start sm:items-center gap-4">
-                                                <div className="w-12 h-12 shrink-0 bg-brand-600/10 rounded-2xl flex items-center justify-center text-brand-500 font-black border border-brand-500/20">
+                                        <div key={i} className="bg-surface p-4 sm:p-5 rounded-2xl border border-gray-800 flex flex-col justify-between gap-4 group hover:border-brand-500/30 transition-all shadow-lg hover:shadow-brand-500/5 min-w-0">
+                                            <div className="flex items-start gap-3">
+                                                <div className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 bg-brand-600/10 rounded-2xl flex items-center justify-center text-brand-500 font-black border border-brand-500/20 text-sm sm:text-base">
                                                     {i + 1}
                                                 </div>
-                                                <div className="flex flex-col gap-2">
-                                                    <div className="text-white font-black text-lg leading-none">
+                                                <div className="flex flex-col gap-2 min-w-0 flex-1">
+                                                    <div className="text-white font-black text-base sm:text-lg leading-tight truncate">
                                                         <ProfileLink to={`/profile/${p.userId}`} name={p.username} />
                                                     </div>
-                                                    <div className="flex flex-wrap items-center gap-2">
-                                                        <div className="flex items-center gap-1.5 bg-dark px-2 py-1 rounded-lg border border-gray-800">
-                                                            <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest">UID:</span>
-                                                            <span className="text-xs text-brand-400 font-mono font-bold">{p.inGameId}</span>
+                                                    <div className="flex flex-wrap items-center gap-1.5">
+                                                        <div className="flex items-center gap-1 bg-dark px-2 py-1 rounded-lg border border-gray-800 max-w-full">
+                                                            <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest shrink-0">UID:</span>
+                                                            <span className="text-xs text-brand-400 font-mono font-bold truncate">{p.inGameId}</span>
                                                         </div>
                                                         {p.inGameName && (
-                                                            <div className="flex items-center gap-1.5 bg-dark px-2 py-1 rounded-lg border border-gray-800">
-                                                                <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest">IGN:</span>
-                                                                <span className="text-xs text-brand-400 font-mono font-bold">{p.inGameName}</span>
+                                                            <div className="flex items-center gap-1 bg-dark px-2 py-1 rounded-lg border border-gray-800 max-w-full">
+                                                                <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest shrink-0">IGN:</span>
+                                                                <span className="text-xs text-brand-400 font-mono font-bold truncate">{p.inGameName}</span>
                                                             </div>
                                                         )}
                                                         {p.teammates && p.teammates.map((tm: string, idx: number) => (
-                                                            <div key={idx} className="flex items-center gap-1.5 bg-dark px-2 py-1 rounded-lg border border-gray-800">
-                                                                <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest">T{idx + 1}:</span>
-                                                                <span className="text-xs text-brand-400 font-mono font-bold">{tm}</span>
+                                                            <div key={idx} className="flex items-center gap-1 bg-dark px-2 py-1 rounded-lg border border-gray-800 max-w-full">
+                                                                <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest shrink-0">T{idx + 1}:</span>
+                                                                <span className="text-xs text-brand-400 font-mono font-bold truncate">{tm}</span>
                                                             </div>
                                                         ))}
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div className="text-left sm:text-right bg-dark sm:bg-transparent p-3 sm:p-0 rounded-xl sm:rounded-none border border-gray-800 sm:border-none">
+                                            <div className="bg-dark p-3 rounded-xl border border-gray-800">
                                                 <div className="text-[9px] text-gray-500 uppercase font-black tracking-widest mb-1">Team Name</div>
-                                                <div className={`inline-block px-3 py-1 rounded-lg text-xs font-black uppercase tracking-tight ${p.teamName ? 'bg-brand-600/20 text-brand-400 border border-brand-500/20' : 'bg-gray-800 text-gray-500'}`}>
+                                                <div className={`inline-block px-3 py-1 rounded-lg text-xs font-black uppercase tracking-tight truncate max-w-full ${p.teamName ? 'bg-brand-600/20 text-brand-400 border border-brand-500/20' : 'bg-gray-800 text-gray-500'}`}>
                                                     {p.teamId ? <ProfileLink to={`/team/${p.teamId}`} name={p.teamName || 'TEAM'} /> : (p.teamName || 'SOLO PLAYER')}
                                                 </div>
                                             </div>
@@ -655,7 +660,7 @@ export default function TournamentDetails() {
                                     )) : (
                                         <div className="col-span-full py-12 text-center bg-surface rounded-3xl border border-gray-800 border-dashed">
                                             <Users className="w-12 h-12 text-gray-700 mx-auto mb-4" />
-                                            <p className="text-gray-500 font-bold">No participants yet. Be the first to join!</p>
+                                            <p className="text-gray-500 font-bold text-sm sm:text-base">No participants yet. Be the first to join!</p>
                                         </div>
                                     )}
                                 </div>
@@ -683,7 +688,7 @@ export default function TournamentDetails() {
                             </motion.div>
                         )}
                     </AnimatePresence>
-                </div>
+
                     {metaError && (
                         <div className="mt-4 p-3 bg-yellow-900/20 border border-yellow-500/30 rounded-lg text-xs text-yellow-400 font-medium">
                             {metaError}
@@ -694,7 +699,6 @@ export default function TournamentDetails() {
                     {false && relatedTournaments.length > 0 && (
                         <div className="space-y-6 pt-8 border-t border-gray-800/50">
                             <div className="flex justify-between items-center">
-                                {/* <h3 className="text-xl font-black text-white uppercase tracking-tighter">Other {tournament.game} Events</h3> */}
                                 <button onClick={() => navigate('/tournaments')} className="text-xs font-black text-brand-500 uppercase tracking-widest hover:text-brand-400 transition-colors flex items-center gap-1">
                                     View All <ChevronRight className="w-4 h-4" />
                                 </button>
@@ -726,17 +730,18 @@ export default function TournamentDetails() {
                             </div>
                         </div>
                     )}
+                </div>
 
                 {/* Sidebar */}
                 <div className="lg:col-span-4 space-y-6">
                     {/* Join Card */}
-                    <div className="bg-surface p-8 rounded-3xl border border-gray-800 shadow-2xl sticky top-20 sm:top-24">
+                    <div className="bg-surface p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 shadow-2xl lg:sticky lg:top-24">
                         {timeLeft && (
-                            <div className="mb-8 text-center">
+                            <div className="mb-6 sm:mb-8 text-center">
                                 <div className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-3 flex items-center justify-center gap-2">
-                                    <Clock className="w-3 h-3" /> Starts In
+                                    <Clock className="w-3.5 h-3.5" /> Starts In
                                 </div>
-                                <div className="flex justify-center gap-3">
+                                <div className="flex justify-center gap-2 sm:gap-3">
                                     {[
                                         { label: 'D', value: timeLeft.d },
                                         { label: 'H', value: timeLeft.h },
@@ -744,24 +749,24 @@ export default function TournamentDetails() {
                                         { label: 'S', value: timeLeft.s },
                                     ].map((t, i) => (
                                         <div key={i} className="flex flex-col items-center">
-                                            <div className="w-12 h-12 bg-dark rounded-xl border border-gray-800 flex items-center justify-center text-xl font-black text-white shadow-inner">
+                                            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-dark rounded-xl border border-gray-800 flex items-center justify-center text-base sm:text-xl font-black text-white shadow-inner">
                                                 {t.value.toString().padStart(2, '0')}
                                             </div>
-                                            <span className="text-[10px] text-gray-600 font-black mt-1">{t.label}</span>
+                                            <span className="text-[9px] sm:text-[10px] text-gray-600 font-black mt-1">{t.label}</span>
                                         </div>
                                     ))}
                                 </div>
                             </div>
                         )}
 
-                        <div className="space-y-4 mb-8">
-                            <div className="flex justify-between items-center p-4 bg-dark rounded-2xl border border-gray-800">
+                        <div className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
+                            <div className="flex justify-between items-center p-3 sm:p-4 bg-dark rounded-2xl border border-gray-800">
                                 <span className="text-xs text-gray-500 font-black uppercase tracking-widest">Entry Fee</span>
-                                <span className="text-xl font-black text-white">
+                                <span className="text-lg sm:text-xl font-black text-white">
                                     {tournament.entryFee > 0 ? formatCurrency(tournament.entryFee) : 'FREE'}
                                 </span>
                             </div>
-                            <div className="p-4 bg-dark rounded-2xl border border-gray-800">
+                            <div className="p-3 sm:p-4 bg-dark rounded-2xl border border-gray-800">
                                 <div className="flex justify-between items-center mb-2">
                                     <span className="text-xs text-gray-500 font-black uppercase tracking-widest">Slots Filled</span>
                                     <span className="text-xs text-white font-black">{tournament.currentPlayers} / {tournament.slots}</span>
@@ -779,14 +784,14 @@ export default function TournamentDetails() {
                         {tournament.status === 'completed' ? (
                             <button 
                                 onClick={() => setIsResultModalOpen(true)}
-                                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-5 rounded-2xl font-black uppercase tracking-widest shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all active:scale-95 flex items-center justify-center gap-3 group"
+                                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-4 sm:py-5 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-widest shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all active:scale-95 flex items-center justify-center gap-3 group"
                             >
-                                <Trophy className="w-6 h-6 group-hover:scale-110 transition-transform" /> View Results
+                                <Trophy className="w-5 h-5 sm:w-6 sm:h-6 group-hover:scale-110 transition-transform" /> View Results
                             </button>
                         ) : !user ? (
                             <button 
                                 onClick={() => navigate('/profile')}
-                                className="w-full bg-gray-800 hover:bg-gray-700 text-white py-5 rounded-2xl font-black uppercase tracking-widest transition-all active:scale-95"
+                                className="w-full bg-gray-800 hover:bg-gray-700 text-white py-4 sm:py-5 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-widest transition-all active:scale-95"
                             >
                                 Login to Join
                             </button>
@@ -842,17 +847,17 @@ export default function TournamentDetails() {
                                 )}
                             </div>
                         ) : tournament.currentPlayers >= tournament.slots ? (
-                            <button disabled className="w-full bg-red-900/20 text-red-500 border border-red-900/50 py-5 rounded-2xl font-black uppercase tracking-widest cursor-not-allowed">
+                            <button disabled className="w-full bg-red-900/20 text-red-500 border border-red-900/50 py-4 sm:py-5 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-widest cursor-not-allowed">
                                 Tournament Full
                             </button>
                         ) : tournament.status !== 'upcoming' ? (
-                            <button disabled className="w-full bg-gray-900 text-gray-600 py-5 rounded-2xl font-black uppercase tracking-widest cursor-not-allowed border border-gray-800">
+                            <button disabled className="w-full bg-gray-900 text-gray-600 py-4 sm:py-5 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-widest cursor-not-allowed border border-gray-800">
                                 Registration Closed
                             </button>
                         ) : (
                             <button 
                                 onClick={handleJoinClick}
-                                className="w-full bg-brand-600 hover:bg-brand-500 text-white py-5 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-brand-600/20 transition-all active:scale-95 flex items-center justify-center gap-3 group"
+                                className="w-full bg-brand-600 hover:bg-brand-500 text-white py-4 sm:py-5 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-widest shadow-xl shadow-brand-600/20 transition-all active:scale-95 flex items-center justify-center gap-3 group"
                             >
                                 Join Tournament <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                             </button>

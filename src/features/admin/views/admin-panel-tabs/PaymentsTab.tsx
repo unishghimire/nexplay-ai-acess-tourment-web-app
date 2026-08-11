@@ -116,7 +116,7 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
 
                     {isCategoryModalOpen && (
                         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                            <div className="bg-card w-full max-w-lg rounded-2xl border border-gray-800 p-8 space-y-6 shadow-2xl">
+                            <div className="bg-card w-full max-w-lg rounded-2xl border border-gray-800 p-5 sm:p-8 space-y-6 shadow-2xl">
                                 <h3 className="text-xl font-bold text-white uppercase tracking-widest border-b border-gray-800 pb-4">
                                     {editingCategory ? 'Edit Category' : 'Add Category'}
                                 </h3>
@@ -173,7 +173,7 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
 
                     {isPaymentModalOpen && (
                         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                            <div className="bg-card w-full max-w-lg rounded-2xl border border-gray-800 p-8 space-y-6 shadow-2xl overflow-y-auto max-h-[90vh] custom-scrollbar">
+                            <div className="bg-card w-full max-w-lg rounded-2xl border border-gray-800 p-5 sm:p-8 space-y-6 shadow-2xl overflow-y-auto max-h-[90vh] custom-scrollbar">
                                 <h3 className="text-xl font-bold text-white uppercase tracking-widest border-b border-gray-800 pb-4">
                                     {editingPayment ? 'Edit Payment Method' : 'Add Payment Method'}
                                 </h3>

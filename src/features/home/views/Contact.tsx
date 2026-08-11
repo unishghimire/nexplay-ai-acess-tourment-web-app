@@ -63,7 +63,7 @@ const Contact: React.FC = () => {
             canonicalPath="/contact"
         />
         <div className="animate-fade-in max-w-4xl mx-auto space-y-8">
-            <div className="bg-card p-8 rounded-2xl border border-gray-800 shadow-2xl">
+            <div className="bg-card p-5 sm:p-8 rounded-2xl border border-gray-800 shadow-2xl">
                 <h1 className="text-3xl font-black text-white mb-6 border-b border-gray-800 pb-4 flex items-center gap-4">
                     <Headset className="text-brand-500 w-10 h-10" /> Contact Us
                 </h1>
@@ -93,7 +93,7 @@ const Contact: React.FC = () => {
 
                     <div className="bg-dark/30 p-6 rounded-2xl border border-gray-800 text-center">
                         <h3 className="text-white font-black uppercase tracking-widest text-xs mb-6">Follow Our Community</h3>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <a href="https://discord.gg/D3M3AqAe5U" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 bg-[#5865F2] hover:bg-[#4752C4] text-white py-3 rounded-xl font-bold transition-all text-xs">
                                 <MessageCircle className="w-4 h-4" /> Discord
                             </a>
@@ -116,7 +116,7 @@ const Contact: React.FC = () => {
 
             {/* Organization Application Section */}
             {settings?.isOrgFormOpen ? (
-                <div className="bg-gradient-to-br from-brand-900/20 to-dark p-8 rounded-2xl border border-brand-500/20 shadow-2xl relative overflow-hidden group">
+                <div className="bg-gradient-to-br from-brand-900/20 to-dark p-5 sm:p-8 rounded-2xl border border-brand-500/20 shadow-2xl relative overflow-hidden group">
                     <div className="absolute -right-20 -top-20 w-64 h-64 bg-brand-500/5 rounded-full blur-3xl group-hover:bg-brand-500/10 transition-all"></div>
                     
                     <div className="relative z-10">
@@ -140,7 +140,7 @@ const Contact: React.FC = () => {
                         </div>
 
                         {isApplying ? (
-                            <form onSubmit={handleSubmit} className="bg-dark/50 p-8 rounded-3xl border border-gray-800 space-y-6 animate-slide-up">
+                            <form onSubmit={handleSubmit} className="bg-dark/50 p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 space-y-6 animate-slide-up">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
                                         <label className="text-[10px] text-gray-500 uppercase font-bold tracking-widest ml-1">Full Name</label>
@@ -265,7 +265,7 @@ const Contact: React.FC = () => {
                     </div>
                 </div>
             ) : (
-                <div className="bg-dark/50 p-8 rounded-2xl border border-gray-800 text-center">
+                <div className="bg-dark/50 p-5 sm:p-8 rounded-2xl border border-gray-800 text-center">
                     <AlertTriangle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
                     <h3 className="text-lg font-bold text-white uppercase tracking-widest mb-2">Applications Closed</h3>
                     <p className="text-gray-400 text-sm max-w-md mx-auto">We are not accepting organizer applications at this time. Please check back later.</p>

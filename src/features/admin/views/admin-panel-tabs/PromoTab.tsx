@@ -44,7 +44,7 @@ export const PromoTab: React.FC<AdminPanelTabProps> = (props) => {
                                         <button onClick={() => handleDeletePromo(p.id)} className="text-red-400 hover:text-white"><Trash className="w-4 h-4" /></button>
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-2 gap-2 mb-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
                                     <div className="bg-dark p-2 rounded border border-gray-700">
                                         <div className="text-[10px] text-gray-500 uppercase font-bold">Amount</div>
                                         <div className="text-sm text-white font-bold">{formatCurrency(p.amount)}</div>

@@ -18,7 +18,7 @@ export const BracketsTab: React.FC<TournamentAdminTabProps> = (props) => {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
-                            className="space-y-6"
+                            className="space-y-4 sm:space-y-6"
                         >
                             <div className="flex justify-between items-center border-b border-gray-800 pb-4">
                                 <h2 className="text-lg font-black uppercase tracking-widest text-white">Knockout Brackets</h2>
@@ -32,7 +32,7 @@ export const BracketsTab: React.FC<TournamentAdminTabProps> = (props) => {
                             </div>
                             
                             {tournament.bracketMatches && tournament.bracketMatches.length > 0 ? (
-                                <div className="overflow-x-auto pb-8 custom-scrollbar">
+                                <div className="overflow-x-auto pb-4 sm:pb-8 custom-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
                                     <div className="flex gap-12 min-w-max">
                                         {/* Group matches by round */}
                                         {Array.from(new Set(tournament.bracketMatches.map(m => m.round))).sort().map(round => {
@@ -53,11 +53,11 @@ export const BracketsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                                                 {/* Connector lines could be added here using pseudo-elements or SVGs */}
                                                                 <div className="space-y-2">
                                                                     <div className="flex justify-between items-center bg-dark p-2 rounded-lg border border-gray-800">
-                                                                        <span className="text-sm font-bold text-white truncate max-w-[150px]">{team1Name}</span>
+                                                                        <span className="text-sm font-bold text-white truncate max-w-[100px] sm:max-w-[150px]">{team1Name}</span>
                                                                         <span className="text-lg font-black text-brand-500">{match.score1}</span>
                                                                     </div>
                                                                     <div className="flex justify-between items-center bg-dark p-2 rounded-lg border border-gray-800">
-                                                                        <span className="text-sm font-bold text-white truncate max-w-[150px]">{team2Name}</span>
+                                                                        <span className="text-sm font-bold text-white truncate max-w-[100px] sm:max-w-[150px]">{team2Name}</span>
                                                                         <span className="text-lg font-black text-brand-500">{match.score2}</span>
                                                                     </div>
                                                                 </div>

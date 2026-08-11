@@ -28,25 +28,29 @@ export default function TournamentAdminPanel() {
     };
 
     return (
-        <div className="min-h-screen pt-24 pb-12 px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="min-h-screen pt-20 sm:pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
             {/* Header */}
-            <div className="flex items-center justify-between mb-12">
-                <div className="flex items-center gap-6">
+            <div className="flex flex-col gap-4 mb-6 sm:mb-8">
+                {/* Top row: back button + title */}
+                <div className="flex items-center gap-3 sm:gap-6">
                     <button 
                         onClick={() => navigate(`/details/${tournament.id}`)}
-                        className="p-3 bg-gray-950 border border-gray-800 rounded-full text-gray-400 hover:text-white hover:border-brand-500 transition-all hover:bg-gray-900"
+                        className="p-2.5 sm:p-3 bg-gray-950 border border-gray-800 rounded-full text-gray-400 hover:text-white hover:border-brand-500 transition-all hover:bg-gray-900 shrink-0 touch-target"
+                        aria-label="Back to tournament"
                     >
-                        <ArrowLeft className="w-5 h-5" />
+                        <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
-                    <div>
-                        <h1 className="text-3xl font-black uppercase tracking-tighter text-white flex items-center gap-4">
-                            <Settings className="w-8 h-8 text-brand-500" />
-                            Admin Panel
+                    <div className="min-w-0 flex-1">
+                        <h1 className="text-xl sm:text-2xl lg:text-3xl font-black uppercase tracking-tighter text-white flex items-center gap-2 sm:gap-4">
+                            <Settings className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-brand-500 shrink-0" />
+                            <span className="truncate">Admin Panel</span>
                         </h1>
-                        <p className="text-sm text-gray-500 font-bold tracking-wide uppercase mt-1">{tournament.title}</p>
+                        <p className="text-xs sm:text-sm text-gray-500 font-bold tracking-wide uppercase mt-1 truncate">{tournament.title}</p>
                     </div>
                 </div>
-                <div className="flex items-center gap-4">
+
+                {/* Bottom row: status badges + export — wraps on mobile */}
+                <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
                     <button 
                         onClick={() => {
                             const csvContent = "data:text/csv;charset=utf-8," 
@@ -61,26 +65,27 @@ export default function TournamentAdminPanel() {
                             link.click();
                             document.body.removeChild(link);
                         }}
-                        className="bg-gray-950 border border-gray-800 hover:border-brand-500 text-gray-500 hover:text-white p-3 rounded-full transition-all"
+                        className="bg-gray-950 border border-gray-800 hover:border-brand-500 text-gray-500 hover:text-white p-2.5 sm:p-3 rounded-full transition-all touch-target flex items-center justify-center"
                         title="Export Participants"
+                        aria-label="Export participants"
                     >
-                        <Download className="w-5 h-5" />
+                        <Download className="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
-                    <span className={`px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                    <span className={`px-3 sm:px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest ${
                         tournament.status === 'live' ? 'bg-green-500/10 text-green-500 border border-green-500/30' :
                         tournament.status === 'completed' ? 'bg-blue-500/10 text-blue-500 border border-blue-500/30' :
                         'bg-yellow-500/10 text-yellow-500 border border-yellow-500/30'
                     }`}>
                         {tournament.status}
                     </span>
-                    <span className="px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest bg-brand-500/10 text-brand-400 border border-brand-500/30">
+                    <span className="px-3 sm:px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest bg-brand-500/10 text-brand-400 border border-brand-500/30">
                         {tournament.stage || 'registration'}
                     </span>
                 </div>
             </div>
 
-            {/* Navigation Tabs */}
-            <div className="flex overflow-x-auto gap-3 mb-12 pb-2 custom-scrollbar">
+            {/* Navigation Tabs — scrollable on mobile, wrap on desktop */}
+            <div className="flex overflow-x-auto gap-2 sm:gap-3 mb-6 sm:mb-8 pb-2 custom-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
                 {[
                     { id: 'overview', label: 'Overview', icon: Settings },
                     { id: 'groups', label: 'Groups & Teams', icon: Users },
@@ -92,7 +97,7 @@ export default function TournamentAdminPanel() {
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as any)}
-                        className={`flex items-center gap-3 px-8 py-4 rounded-full text-xs font-black uppercase tracking-widest whitespace-nowrap transition-all ${
+                        className={`flex items-center gap-2 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-widest whitespace-nowrap transition-all shrink-0 ${
                             activeTab === tab.id 
                                 ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/20' 
                                 : 'bg-gray-950/50 border border-gray-800 text-gray-400 hover:text-white hover:border-gray-700'
@@ -104,7 +109,7 @@ export default function TournamentAdminPanel() {
             </div>
 
             {/* ponytail: shared tabProps — built once, spread to each tab */}
-            <div className="bg-gray-950/50 rounded-[2rem] border border-gray-800 p-8">
+            <div className="bg-gray-950/50 rounded-2xl sm:rounded-[2rem] border border-gray-800 p-4 sm:p-6 lg:p-8">
                 <AnimatePresence mode="wait">
                     {activeTab === 'overview' && <OverviewTab {...tabProps} />}
                     {activeTab === 'groups' && <GroupsTab {...tabProps} />}

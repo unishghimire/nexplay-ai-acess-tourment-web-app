@@ -146,7 +146,7 @@ const Dashboard: React.FC = () => {
                 <h2 className="text-4xl font-black text-white uppercase tracking-tighter">My Dashboard</h2>
             </header>
             
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-8 sm:mb-12">
                 {[
                     { title: 'Profile', icon: User, path: '/profile', interaction: 'ClickProfileIcon' },
                     { title: 'Teams', icon: Users, path: '/teams', interaction: 'ClickTeamsIcon' },
@@ -160,7 +160,7 @@ const Dashboard: React.FC = () => {
                         <Component 
                             key={idx}
                             {...props}
-                            className="bg-gray-900/50 p-8 rounded-3xl border border-gray-800 hover:border-brand-500/50 transition-all hover:-translate-y-1 cursor-pointer group shadow-2xl flex flex-col items-center text-center gap-5"
+                            className="bg-gray-900/50 p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-brand-500/50 transition-all hover:-translate-y-1 cursor-pointer group shadow-2xl flex flex-col items-center text-center gap-5"
                         >
                             <div className="w-16 h-16 rounded-2xl bg-black flex items-center justify-center border border-gray-800 group-hover:bg-brand-500/10 group-hover:border-brand-500/50 transition duration-300">
                                 <item.icon className="w-7 h-7 text-brand-500" />
@@ -180,7 +180,7 @@ const Dashboard: React.FC = () => {
                         const showRoom = isLive || (t.status === 'upcoming' && t.roomId);
 
                         return (
-                            <div key={t.id} className="bg-black border border-gray-800 p-8 rounded-3xl transition duration-300 hover:border-gray-700 hover:bg-gray-900/50 group">
+                            <div key={t.id} className="bg-black border border-gray-800 p-4 sm:p-8 rounded-2xl sm:rounded-3xl transition duration-300 hover:border-gray-700 hover:bg-gray-900/50 group">
                                 <div className="flex justify-between items-start gap-6">
                                     <div className="flex-1">
                                         <div className="flex items-center gap-3 mb-4 flex-wrap">
@@ -223,7 +223,7 @@ const Dashboard: React.FC = () => {
                                     </div>
                                 </div>
                                 {showRoom && (
-                                    <div className="mt-8 bg-gray-900/50 p-6 rounded-2xl border border-gray-800 flex gap-8 text-sm font-mono items-center justify-center">
+                                    <div className="mt-4 sm:mt-8 bg-gray-900/50 p-4 sm:p-6 rounded-2xl border border-gray-800 flex flex-wrap sm:flex-nowrap gap-4 sm:gap-8 text-sm font-mono items-center justify-center">
                                         <div>
                                             <span className="text-gray-500 uppercase text-xs font-black tracking-widest">Room ID:</span> <span className="text-white font-black select-all ml-3">{t.roomId || 'Wait'}</span>
                                         </div>
@@ -233,7 +233,7 @@ const Dashboard: React.FC = () => {
                                         </div>
                                     </div>
                                 )}
-                                <div className="mt-8 flex gap-6 border-t border-gray-800 pt-8">
+                                <div className="mt-6 sm:mt-8 flex flex-wrap gap-4 sm:gap-6 border-t border-gray-800 pt-6 sm:pt-8">
                                     <button onClick={() => {
                                             navigate(`/details/${t.id}`);
                                         }} className="flex items-center gap-3 text-xs font-black uppercase tracking-widest text-gray-400 hover:text-white transition">

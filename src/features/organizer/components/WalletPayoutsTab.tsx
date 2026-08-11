@@ -167,7 +167,7 @@ export const WalletPayoutsTab: React.FC<WalletPayoutsTabProps> = ({
       </div>
 
       {/* 2. Balance cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         {/* Wallet Balance */}
         <div className="bg-gray-950/50 border border-gray-800 rounded-lg p-5">
           <div className="flex items-center justify-between text-gray-400">
@@ -329,7 +329,7 @@ export const WalletPayoutsTab: React.FC<WalletPayoutsTabProps> = ({
         ) : (
           <>
             {/* Desktop Table View */}
-            <div className="hidden sm:block overflow-x-auto">
+            <div className="hidden sm:block overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-gray-800 text-xs font-semibold uppercase tracking-wider text-gray-400">

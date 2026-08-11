@@ -265,7 +265,7 @@ const OrganizerPanel: React.FC = () => {
         {mobileNavOpen ? 'Close' : 'Menu'}
       </button>
 
-      <div className="flex flex-col lg:flex-row gap-6">
+      <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
         {/* Sidebar Navigation */}
         <aside className={`w-full lg:w-56 flex-shrink-0 ${mobileNavOpen ? 'block' : 'hidden lg:block'}`}>
           <nav className="space-y-1 flex flex-row lg:flex-col overflow-x-auto lg:overflow-visible gap-2 lg:gap-1 pb-2 lg:pb-0">

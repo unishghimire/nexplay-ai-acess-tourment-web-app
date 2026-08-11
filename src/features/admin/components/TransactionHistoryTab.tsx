@@ -87,7 +87,7 @@ const TransactionHistoryTab: React.FC<TransactionHistoryTabProps> = ({
                     </div>
                 </div>
             </div>
-            <div className="overflow-x-auto custom-scrollbar">
+            <div className="overflow-x-auto custom-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
                 <table className="w-full text-left border-collapse">
                     <thead>
                         <tr className="text-[10px] text-gray-500 uppercase tracking-widest border-b border-gray-800">

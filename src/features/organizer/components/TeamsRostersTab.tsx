@@ -105,7 +105,7 @@ export const TeamsRostersTab: React.FC<TeamsRostersTabProps> = ({
       ) : (
         <>
           {/* Desktop Table (hidden sm:block) */}
-          <div className="hidden sm:block overflow-x-auto rounded-xl border border-gray-800 bg-black/40">
+          <div className="hidden sm:block overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 rounded-xl border border-gray-800 bg-black/40">
             <table className="w-full text-left text-sm border-collapse">
               <thead>
                 <tr className="bg-gray-900/80 border-b border-gray-800 text-xs font-semibold uppercase tracking-wider text-gray-400">
@@ -265,7 +265,7 @@ export const TeamsRostersTab: React.FC<TeamsRostersTabProps> = ({
                                   No players added to this roster.
                                 </p>
                               ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                                   {players.map((player: any, idx: number) => {
                                     const isLeader =
                                       player.role === 'leader' || player.role === 'Leader';

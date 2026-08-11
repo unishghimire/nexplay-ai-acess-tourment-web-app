@@ -213,7 +213,7 @@ export default function ScrimDetailPage() {
                   <label className="block text-xs text-gray-500 uppercase tracking-wider mb-1.5">Title</label>
                   <input value={editForm.title || ''} onChange={e => setEditForm({ ...editForm, title: e.target.value })} className="w-full bg-black border border-gray-800 rounded-lg p-2.5 text-sm text-white outline-none focus:border-brand-500" />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs text-gray-500 uppercase tracking-wider mb-1.5">Start Time</label>
                     <input value={editForm.startTime || ''} onChange={e => setEditForm({ ...editForm, startTime: e.target.value })} className="w-full bg-black border border-gray-800 rounded-lg p-2.5 text-sm text-white outline-none focus:border-brand-500" />
@@ -223,7 +223,7 @@ export default function ScrimDetailPage() {
                     <input value={editForm.map || ''} onChange={e => setEditForm({ ...editForm, map: e.target.value })} placeholder="Bermuda" className="w-full bg-black border border-gray-800 rounded-lg p-2.5 text-sm text-white outline-none focus:border-brand-500" />
                   </div>
                 </div>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   <div>
                     <label className="block text-xs text-gray-500 uppercase tracking-wider mb-1.5">Entry Fee</label>
                     <input type="number" value={editForm.entryFee || 0} onChange={e => setEditForm({ ...editForm, entryFee: e.target.value })} className="w-full bg-black border border-gray-800 rounded-lg p-2.5 text-sm text-white outline-none focus:border-brand-500" />
@@ -239,7 +239,7 @@ export default function ScrimDetailPage() {
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <p className="text-xs text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-1.5"><Calendar className="w-3 h-3" /> Start Time</p>
                   <p className="text-sm text-white">{scrim.startTime || 'TBD'}</p>

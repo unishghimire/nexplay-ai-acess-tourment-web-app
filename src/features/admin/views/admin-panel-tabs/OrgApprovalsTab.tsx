@@ -23,7 +23,7 @@ export const OrgApprovalsTab: React.FC<AdminPanelTabProps> = (props) => {
                                             Pending
                                         </span>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-4 text-xs">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                                         <div className="bg-black/30 p-3 rounded-xl border border-gray-800">
                                             <div className="text-gray-500 uppercase font-bold text-[9px] mb-1">WhatsApp</div>
                                             <div className="text-white">{app.whatsapp}</div>

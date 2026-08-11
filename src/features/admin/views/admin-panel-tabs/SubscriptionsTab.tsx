@@ -88,7 +88,7 @@ export const SubscriptionsTab: React.FC<AdminPanelTabProps> = (props) => {
                                     {editingPlan ? 'Edit Plan' : 'Add Plan'}
                                 </h3>
                                 <div className="space-y-4">
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
                                             <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Plan Name</label>
                                             <input type="text" value={planName} onChange={e => setPlanName(e.target.value)} className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" placeholder="e.g. Pro Plan" />
@@ -110,7 +110,7 @@ export const SubscriptionsTab: React.FC<AdminPanelTabProps> = (props) => {
                                         <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Features (Comma separated)</label>
                                         <textarea value={planFeatures} onChange={e => setPlanFeatures(e.target.value)} className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none h-24" placeholder="Feature 1, Feature 2..." />
                                     </div>
-                                    <div className="grid grid-cols-2 gap-4 pt-2">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                                         <label className="flex items-center gap-3 cursor-pointer bg-dark/50 p-3 rounded-xl border border-gray-800">
                                             <input type="checkbox" checked={planIsActive} onChange={e => setPlanIsActive(e.target.checked)} className="accent-brand-500 w-4 h-4" />
                                             <span className="text-xs text-gray-300 font-bold uppercase">Is Active</span>

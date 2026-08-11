@@ -402,7 +402,7 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
             animate={{ opacity: 1, x: 0 }} 
             className="space-y-4"
           >
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Team Type</label>
                 <select 
@@ -443,7 +443,7 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
             </div>
 
             {formData.matchType === 'scrims' && (
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Single Lobby Room ID</label>
                   <input 
@@ -467,7 +467,7 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {formData.matchType !== 'scrims' && (
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Tournament Format</label>
@@ -500,7 +500,7 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
 
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Registration Control</label>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <button 
                   onClick={() => setFormData({...formData, registrationType: 'auto'})}
                   className={`py-3 rounded-xl border font-black uppercase tracking-widest text-[10px] transition-all ${formData.registrationType === 'auto' ? 'bg-brand-600 border-brand-500 text-white' : 'bg-dark border-gray-800 text-gray-500 hover:border-gray-700'}`}
@@ -516,7 +516,7 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
               </div>
               <p className="text-[10px] text-gray-600 mt-2 italic">Manual review allows you to approve/reject participants before they join the groups.</p>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Map (Optional)</label>
                 <input 
@@ -546,7 +546,7 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
             animate={{ opacity: 1, x: 0 }} 
             className="space-y-4"
           >
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Total Prize Pool</label>
                 <div className="relative">
@@ -622,7 +622,7 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
           >
             <div className="bg-surface p-6 rounded-2xl border border-gray-800">
               <h4 className="text-lg font-black text-white mb-4 uppercase tracking-tight">Tournament Summary</h4>
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div className="space-y-3">
                   <div>
                     <p className="text-[10px] text-gray-500 font-bold uppercase">Title</p>
@@ -708,7 +708,7 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
         </div>
       </div>
 
-      <div className="min-h-[350px]">
+      <div className="min-h-[300px] sm:min-h-[350px]">
         <AnimatePresence mode="wait">
           {renderStep()}
         </AnimatePresence>

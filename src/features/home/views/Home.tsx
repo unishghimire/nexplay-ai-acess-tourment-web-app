@@ -207,7 +207,7 @@ const Home: React.FC = () => {
         <div className="animate-fade-in space-y-16 pb-20 relative">
             
             {/* Real-time Status and Security Badges Banner */}
-            <div className="bg-gradient-to-br from-gray-900 to-black border border-gray-800 rounded-3xl p-8 flex flex-col md:flex-row justify-between items-center gap-6 shadow-2xl">
+            <div className="bg-gradient-to-br from-gray-900 to-black border border-gray-800 rounded-2xl sm:rounded-3xl p-5 sm:p-8 flex flex-col md:flex-row justify-between items-center gap-4 sm:gap-6 shadow-2xl">
                 <div className="flex items-center gap-4">
                     <div className="bg-brand-500/10 p-3 rounded-2xl">
                         <CheckCircle2 className="text-brand-400 w-8 h-8" />
@@ -239,28 +239,28 @@ const Home: React.FC = () => {
 
             {/* Value Highlights (Conversion Funnel Indicators) */}
             <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="bg-gray-900/50 p-8 rounded-3xl border border-gray-800 hover:border-brand-500/50 transition-all hover:-translate-y-1">
+                <div className="bg-gray-900/50 p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-brand-500/50 transition-all hover:-translate-y-1">
                     <div className="bg-brand-500/10 p-4 rounded-2xl text-brand-500 mb-6 inline-block">
                         <Trophy className="w-8 h-8" />
                     </div>
                     <h4 className="text-white font-black uppercase text-lg mb-2">Tournaments</h4>
                     <p className="text-sm text-gray-500">Compete in verified, admin-refereed ladders.</p>
                 </div>
-                <div className="bg-gray-900/50 p-8 rounded-3xl border border-gray-800 hover:border-emerald-500/50 transition-all hover:-translate-y-1">
+                <div className="bg-gray-900/50 p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-emerald-500/50 transition-all hover:-translate-y-1">
                     <div className="bg-emerald-500/10 p-4 rounded-2xl text-emerald-500 mb-6 inline-block">
                         <Flame className="w-8 h-8" />
                     </div>
                     <h4 className="text-white font-black uppercase text-lg mb-2">Daily Scrims</h4>
                     <p className="text-sm text-gray-500">Train with top competitive squads daily.</p>
                 </div>
-                <div className="bg-gray-900/50 p-8 rounded-3xl border border-gray-800 hover:border-yellow-500/50 transition-all hover:-translate-y-1">
+                <div className="bg-gray-900/50 p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-yellow-500/50 transition-all hover:-translate-y-1">
                     <div className="bg-yellow-500/10 p-4 rounded-2xl text-yellow-500 mb-6 inline-block">
                         <Wallet className="w-8 h-8" />
                     </div>
                     <h4 className="text-white font-black uppercase text-lg mb-2">Secure Wallet</h4>
                     <p className="text-sm text-gray-500">Double-guarded entry escrows and fast logs.</p>
                 </div>
-                <div className="bg-gray-900/50 p-8 rounded-3xl border border-gray-800 hover:border-purple-500/50 transition-all hover:-translate-y-1">
+                <div className="bg-gray-900/50 p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-purple-500/50 transition-all hover:-translate-y-1">
                     <div className="bg-purple-500/10 p-4 rounded-2xl text-purple-500 mb-6 inline-block">
                         <Users className="w-8 h-8" />
                     </div>
@@ -287,7 +287,7 @@ const Home: React.FC = () => {
                         View All <ChevronRight className="w-4 h-4" />
                     </button>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
                     {featuredTournaments.length > 0 ? (
                         featuredTournaments.map((t, idx) => <TournamentCard key={t.id || `feat-${idx}`} tournament={t} />)
                     ) : (
@@ -318,7 +318,7 @@ const Home: React.FC = () => {
                         Explore <ChevronRight className="w-4 h-4" />
                     </button>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-8">
                     {popularGames.length > 0 ? (
                         popularGames.map((g, idx) => <GameCard key={g.id || `game-${idx}`} game={g} />)
                     ) : (
@@ -348,14 +348,14 @@ const Home: React.FC = () => {
                             View All <ChevronRight className="w-4 h-4" />
                         </button>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                         {recentResults.map((t, idx) => (
                             <div 
                                 key={t.id || `result-${idx}`} 
                                 onClick={() => handleCtaClick(`/details/${t.id}`, `ConcludedTournament_${t.id}`)}
-                                className="bg-surface p-6 rounded-3xl border border-gray-800 hover:border-brand-500/30 transition-all cursor-pointer group"
+                                className="bg-surface p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-brand-500/30 transition-all cursor-pointer group"
                             >
-                                <div className="flex gap-6">
+                                <div className="flex gap-4 sm:gap-6 min-w-0">
                                     <div className="w-24 h-24 rounded-2xl bg-dark overflow-hidden shrink-0 border border-gray-800">
                                         <img src={t.bannerUrl || `https://api.dicebear.com/7.x/identicon/svg?seed=${t.title}`} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                                     </div>

@@ -32,7 +32,7 @@ const AdminPanel: React.FC = () => {
             </button>
 
             {/* Sidebar Navigation */}
-            <div className={`w-full md:w-72 shrink-0 space-y-8 bg-gray-950/50 p-6 rounded-[2rem] border border-gray-800 h-fit md:sticky md:top-24 ${isSidebarOpen ? 'block' : 'hidden md:block'}`}>
+            <div className={`w-full md:w-72 shrink-0 space-y-6 sm:space-y-8 bg-gray-950/50 p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border border-gray-800 h-fit md:sticky md:top-24 ${isSidebarOpen ? 'block' : 'hidden md:block'}`}>
                 <div>
                     <div className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-6 px-3">Main</div>
                     <div className="space-y-2">
@@ -204,7 +204,7 @@ const AdminPanel: React.FC = () => {
             </div>
 
             {/* Main Content Area */}
-            <div className="flex-1 bg-gray-950/50 rounded-[2rem] border border-gray-800 p-8 min-h-[600px] w-full overflow-hidden">
+            <div className="flex-1 bg-gray-950/50 rounded-2xl sm:rounded-[2rem] border border-gray-800 p-4 sm:p-6 lg:p-8 min-h-[500px] sm:min-h-[600px] w-full overflow-hidden">
                 <header className="mb-10 pb-8 border-b border-gray-800">
                     <h1 className="text-4xl font-black text-white uppercase tracking-tighter">Admin Panel</h1>
                 </header>

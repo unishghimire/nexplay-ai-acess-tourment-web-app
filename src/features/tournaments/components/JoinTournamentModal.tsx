@@ -163,7 +163,7 @@ const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
                     </>
                 )}
 
-                <div className="pt-4 flex gap-3">
+                <div className="pt-4 flex flex-col sm:flex-row gap-3">
                     <button 
                         onClick={onClose} 
                         disabled={loading}

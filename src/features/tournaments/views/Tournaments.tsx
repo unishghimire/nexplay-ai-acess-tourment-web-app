@@ -55,11 +55,6 @@ const Tournaments: React.FC = () => {
                     if (a.status === 'live' && b.status !== 'live') return -1;
                     if (b.status === 'live' && a.status !== 'live') return 1;
                     return (toDateSafe(a.startTime)?.getTime() || 0) - (toDateSafe(b.startTime)?.getTime() || 0);
-        <Seo
-            title="Esports Tournaments in Nepal | NexPlay"
-            description="Browse and join upcoming esports tournaments in Nepal. PUBG Mobile, Free Fire, Valorant and more on NexPlay."
-            canonicalPath="/tournaments"
-        />
                 });
 
                 setTournaments(tours);
@@ -106,40 +101,46 @@ const Tournaments: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[60vh]">
-                <div className="w-12 h-12 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mb-6"></div>
+            <div className="flex flex-col items-center justify-center min-h-[60vh] p-4 text-center">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mb-4 sm:mb-6"></div>
                 <p className="text-brand-500 text-xs font-black uppercase tracking-widest animate-pulse">Establishing Uplink...</p>
             </div>
         );
     }
 
     return (
-        <div className="animate-fade-in max-w-7xl mx-auto p-4 md:p-8">
-            <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6 border-b border-gray-800 pb-8">
-                <h1 className="text-4xl font-black text-white uppercase tracking-tighter">Tournament Browser</h1>
-                <div className="flex items-center gap-3 text-xs font-black text-gray-500 uppercase tracking-widest">
+        <div className="animate-fade-in max-w-7xl mx-auto p-4 sm:p-6 md:p-8 w-full min-w-0">
+            <Seo
+                title="Esports Tournaments in Nepal | NexPlay"
+                description="Browse and join upcoming esports tournaments in Nepal. PUBG Mobile, Free Fire, Valorant and more on NexPlay."
+                canonicalPath="/tournaments"
+            />
+
+            <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 sm:mb-12 gap-4 sm:gap-6 border-b border-gray-800 pb-6 sm:pb-8 w-full">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white uppercase tracking-tighter break-words">Tournament Browser</h1>
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs font-black text-gray-500 uppercase tracking-widest">
                     <span>{filteredTournaments.length} tournament{filteredTournaments.length !== 1 ? 's' : ''}</span>
                     {tournaments.filter(t => t.status === 'live').length > 0 && (
-                        <span className="bg-red-500/10 text-red-400 border border-red-500/20 px-3 py-1.5 rounded-full flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse inline-block" />
+                        <span className="bg-red-500/10 text-red-400 border border-red-500/20 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full flex items-center gap-1.5 sm:gap-2 min-h-[32px]">
+                            <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse inline-block shrink-0" />
                             {tournaments.filter(t => t.status === 'live').length} Live
                         </span>
                     )}
                 </div>
             </header>
 
-            <div className="flex items-center gap-1 border-b border-gray-800 mb-10 overflow-x-auto">
+            <div className="flex items-center gap-1 sm:gap-2 border-b border-gray-800 mb-8 sm:mb-10 overflow-x-auto py-1 w-full no-scrollbar">
                 {statusTabs.map(s => (
                     <button
                         key={s.id}
                         onClick={() => setStatusFilter(s.id)}
-                        className={`flex items-center gap-2 px-6 py-4 text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap ${
+                        className={`min-h-[44px] flex items-center gap-2 px-4 sm:px-6 py-3 sm:py-4 text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap shrink-0 ${
                             statusFilter === s.id
                                 ? 'text-white border-b-2 border-brand-500'
                                 : 'text-gray-500 hover:text-white'
                         }`}
                     >
-                        {s.label}
+                        <span>{s.label}</span>
                         <span className={`text-[10px] px-2 py-0.5 rounded-full font-black tabular-nums ${
                             statusFilter === s.id
                                 ? s.id === 'live' ? 'bg-red-500/20 text-red-400' : 'bg-brand-500/20 text-brand-400'
@@ -151,15 +152,16 @@ const Tournaments: React.FC = () => {
                 ))}
             </div>
 
-            <div className="bg-gray-900/50 p-8 rounded-3xl border border-gray-800 mb-12">
-                <div className="flex items-center gap-3 mb-8">
-                    <Filter className="w-5 h-5 text-brand-500" />
+            {/* Filter Bar: Stacks on mobile, 2 columns on tablet, 4 columns on desktop */}
+            <div className="bg-gray-900/50 p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 mb-8 sm:mb-12 w-full">
+                <div className="flex items-center gap-2 sm:gap-3 mb-6 sm:mb-8">
+                    <Filter className="w-4 h-4 sm:w-5 sm:h-5 text-brand-500 shrink-0" />
                     <h3 className="text-xs font-black text-white uppercase tracking-widest">Filter Options</h3>
                 </div>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6">
-                    <div>
-                        <label className="block text-[10px] font-black text-gray-500 uppercase mb-3 tracking-widest">Game</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                    <div className="min-w-0">
+                        <label className="block text-[10px] font-black text-gray-500 uppercase mb-2 sm:mb-3 tracking-widest">Game</label>
                         <select 
                             aria-label="Filter tournaments by game"
                             value={gameFilter}
@@ -167,20 +169,20 @@ const Tournaments: React.FC = () => {
                                 setGameFilter(e.target.value);
                                 setModeFilter('all');
                             }}
-                            className="w-full bg-black border border-gray-800 rounded-2xl p-4 text-white focus:border-brand-500 outline-none transition text-sm font-bold"
+                            className="w-full min-h-[44px] bg-black border border-gray-800 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white focus:border-brand-500 outline-none transition text-sm font-bold cursor-pointer"
                         >
                             <option value="all">All Games</option>
                             {games.map(g => <option key={g.id} value={g.name}>{formatGameName(g.name)}</option>)}
                         </select>
                     </div>
 
-                    <div>
-                        <label className="block text-[10px] font-black text-gray-500 uppercase mb-3 tracking-widest">Mode</label>
+                    <div className="min-w-0">
+                        <label className="block text-[10px] font-black text-gray-500 uppercase mb-2 sm:mb-3 tracking-widest">Mode</label>
                         <select 
                             aria-label="Filter tournaments by mode"
                             value={modeFilter}
                             onChange={(e) => setModeFilter(e.target.value)}
-                            className="w-full bg-black border border-gray-800 rounded-2xl p-4 text-white focus:border-brand-500 outline-none transition text-sm font-bold"
+                            className="w-full min-h-[44px] bg-black border border-gray-800 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white focus:border-brand-500 outline-none transition text-sm font-bold cursor-pointer"
                             disabled={gameFilter === 'all' && availableModes.length === 0}
                         >
                             <option value="all">All Modes</option>
@@ -188,13 +190,13 @@ const Tournaments: React.FC = () => {
                         </select>
                     </div>
 
-                    <div>
-                        <label className="block text-[10px] font-black text-gray-500 uppercase mb-3 tracking-widest">Entry</label>
+                    <div className="min-w-0">
+                        <label className="block text-[10px] font-black text-gray-500 uppercase mb-2 sm:mb-3 tracking-widest">Entry</label>
                         <select 
                             aria-label="Filter tournaments by entry type"
                             value={entryFilter}
                             onChange={(e) => setEntryFilter(e.target.value)}
-                            className="w-full bg-black border border-gray-800 rounded-2xl p-4 text-white focus:border-brand-500 outline-none transition text-sm font-bold"
+                            className="w-full min-h-[44px] bg-black border border-gray-800 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white focus:border-brand-500 outline-none transition text-sm font-bold cursor-pointer"
                         >
                             <option value="all">All Types</option>
                             <option value="free">Free Entry</option>
@@ -202,13 +204,13 @@ const Tournaments: React.FC = () => {
                         </select>
                     </div>
 
-                    <div>
-                        <label className="block text-[10px] font-black text-gray-500 uppercase mb-3 tracking-widest">Player Size</label>
+                    <div className="min-w-0">
+                        <label className="block text-[10px] font-black text-gray-500 uppercase mb-2 sm:mb-3 tracking-widest">Player Size</label>
                         <select 
                             aria-label="Filter tournaments by player size"
                             value={teamTypeFilter}
                             onChange={(e) => setTeamTypeFilter(e.target.value)}
-                            className="w-full bg-black border border-gray-800 rounded-2xl p-4 text-white focus:border-brand-500 outline-none transition text-sm font-bold"
+                            className="w-full min-h-[44px] bg-black border border-gray-800 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white focus:border-brand-500 outline-none transition text-sm font-bold cursor-pointer"
                         >
                             <option value="all">All Sizes</option>
                             <option value="solo">Solo</option>
@@ -219,18 +221,19 @@ const Tournaments: React.FC = () => {
                 </div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 min-h-[50vh]">
+            {/* Tournaments Grid: 1 col on mobile, 2 cols on tablet, 3 cols on desktop */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8 min-h-[50vh] w-full">
                 {filteredTournaments.length > 0 ? (
                     filteredTournaments.map(t => <TournamentCard key={t.id} tournament={t} />)
                 ) : (
-                    <div className="col-span-full py-20 bg-gray-900/50 rounded-3xl border border-gray-800 text-center">
-                        <Search className="w-16 h-16 text-gray-700 mx-auto mb-6" />
-                        <h3 className="text-xl font-black text-white uppercase tracking-widest">No Matches Found</h3>
-                        <p className="text-gray-500 font-bold mt-2">Adjust your filters to see more tournaments.</p>
+                    <div className="col-span-full py-12 sm:py-20 bg-gray-900/50 rounded-2xl sm:rounded-3xl border border-gray-800 text-center p-4 sm:p-8">
+                        <Search className="w-12 h-12 sm:w-16 sm:h-16 text-gray-700 mx-auto mb-4 sm:mb-6" />
+                        <h3 className="text-base sm:text-xl font-black text-white uppercase tracking-widest">No Matches Found</h3>
+                        <p className="text-xs sm:text-sm text-gray-500 font-bold mt-2">Adjust your filters to see more tournaments.</p>
                     </div>
                 )}
             </div>
-            {/* ponytail: FAQ section for Tournaments page */}
+
             <Faq items={tournamentFaqs} />
         </div>
     );

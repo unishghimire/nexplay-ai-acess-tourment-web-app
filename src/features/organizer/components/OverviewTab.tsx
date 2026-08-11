@@ -173,7 +173,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
             <h3 className="text-base font-semibold text-white">Live Tournaments</h3>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-gray-800 text-xs text-gray-500 uppercase tracking-wider">

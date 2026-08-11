@@ -80,14 +80,14 @@ const Results: React.FC = () => {
 
     return (
         <div className="max-w-7xl mx-auto space-y-12 pb-20">
-            <div className="relative overflow-hidden rounded-[2rem] border border-gray-800 bg-surface shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
+            <div className="relative overflow-hidden rounded-2xl sm:rounded-[2rem] border border-gray-800 bg-surface shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
                 <div className="absolute inset-0">
                     <img src={featuredBanner} alt="Featured tournament banner" className="h-full w-full object-cover opacity-30" />
                     <div className="absolute inset-0 bg-gradient-to-r from-gray-950 via-gray-950/90 to-gray-950/40" />
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(250,204,21,0.15),transparent_35%),radial-gradient(circle_at_bottom_left,rgba(96,165,250,0.12),transparent_32%)]" />
                 </div>
 
-                <div className="relative grid gap-8 px-6 py-8 md:grid-cols-[1.3fr_0.7fr] md:px-10 md:py-10">
+                <div className="relative grid gap-4 sm:gap-8 px-4 py-6 sm:px-6 sm:py-8 md:grid-cols-[1.3fr_0.7fr] md:px-10 md:py-10">
                     <div className="space-y-6">
                         <div className="inline-flex items-center gap-2 rounded-full border border-brand-500/30 bg-brand-500/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.35em] text-brand-200">
                             <Trophy className="h-4 w-4" /> Public Results
@@ -165,7 +165,7 @@ const Results: React.FC = () => {
                 />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
                 {filteredResults.length > 0 ? (
                     filteredResults.map(t => (
                         <div 
@@ -184,7 +184,7 @@ const Results: React.FC = () => {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="p-8 flex-1 flex flex-col justify-between">
+                                <div className="p-5 sm:p-8 flex-1 flex flex-col justify-between">
                                     <div>
                                         <div className="flex justify-between items-start mb-4">
                                             <div>

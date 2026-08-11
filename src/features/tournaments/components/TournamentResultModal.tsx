@@ -66,7 +66,7 @@ const TournamentResultModal: React.FC<TournamentResultModalProps> = ({ isOpen, o
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 100, scale: 0.95 }}
                     transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-                    className="relative w-full max-w-5xl max-h-[90vh] sm:max-h-full bg-[#0f172a] rounded-t-[2rem] sm:rounded-[2rem] border border-gray-800 shadow-2xl overflow-hidden flex flex-col"
+                    className="relative w-full max-w-5xl max-h-[100vh] sm:max-h-[90vh] bg-[#0f172a] rounded-t-[2rem] sm:rounded-[2rem] border border-gray-800 shadow-2xl overflow-hidden flex flex-col"
                 >
                     {/* Mobile Handle */}
                     <div className="w-full flex justify-center pt-3 pb-1 sm:hidden absolute top-0 left-0 z-30 pointer-events-none">
@@ -103,10 +103,10 @@ const TournamentResultModal: React.FC<TournamentResultModalProps> = ({ isOpen, o
                     </div>
 
                     {/* Scrollable Content */}
-                    <div className="overflow-y-auto custom-scrollbar flex-1 p-6 sm:p-8 space-y-8">
+                    <div className="overflow-y-auto custom-scrollbar flex-1 p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
                         
                         {/* Winner Spotlight Hero */}
-                        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-indigo-900/40 via-[#0f172a] to-[#0f172a] border border-indigo-500/20 p-8 sm:p-12 text-center group">
+                        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-indigo-900/40 via-[#0f172a] to-[#0f172a] border border-indigo-500/20 p-5 sm:p-8 lg:p-12 text-center group">
                             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-lg h-64 bg-indigo-500/20 blur-[100px] pointer-events-none"></div>
                             
                             <Trophy className="w-20 h-20 text-yellow-500 mx-auto mb-6 filter drop-shadow-[0_0_15px_rgba(234,179,8,0.5)] transform group-hover:scale-110 transition-transform duration-500" />
@@ -181,7 +181,7 @@ const TournamentResultModal: React.FC<TournamentResultModalProps> = ({ isOpen, o
                                 <h4 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
                                     <Award className="w-5 h-5 text-amber-500" /> Prize Distribution
                                 </h4>
-                                <div className="bg-[#1e293b]/30 rounded-3xl border border-gray-800 overflow-hidden shadow-xl p-6">
+                                <div className="bg-[#1e293b]/30 rounded-2xl sm:rounded-3xl border border-gray-800 overflow-hidden shadow-xl p-4 sm:p-6">
                                     <PrizeBoard prizes={tournament.prizeDistribution} currency={tournament.currency} totalPrizePool={tournament.prizePool} />
                                 </div>
                             </div>
@@ -207,7 +207,7 @@ const TournamentResultModal: React.FC<TournamentResultModalProps> = ({ isOpen, o
                     </div>
 
                     {/* Action Footer */}
-                    <div className="bg-[#0b1120] border-t border-gray-800 p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0">
+                    <div className="bg-[#0b1120] border-t border-gray-800 p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0">
                         <button 
                             onClick={onClose}
                             className="w-full sm:w-auto px-8 py-3 rounded-xl font-bold uppercase tracking-widest text-xs text-gray-400 bg-gray-900 border border-gray-800 hover:bg-gray-800 hover:text-white transition-colors"

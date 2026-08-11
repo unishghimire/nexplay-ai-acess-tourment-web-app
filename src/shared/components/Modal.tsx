@@ -11,22 +11,16 @@ interface ModalProps {
 }
 
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, maxWidth = 'sm:max-w-lg' }) => {
-
     useEffect(() => {
         if (!isOpen) return;
-        const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') onClose();
-        };
+        const handleEscape = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
         document.addEventListener('keydown', handleEscape);
         return () => document.removeEventListener('keydown', handleEscape);
     }, [isOpen, onClose]);
 
     const location = useLocation();
     // ponytail: only close on actual route path change, not on mount.
-    // The old effect fired onClose() immediately when the modal opened
-    // because it ran on mount with isOpen=true.
     const prevPath = useRef(location.pathname);
-
     useEffect(() => {
         if (isOpen && prevPath.current !== location.pathname) {
             onClose();
@@ -38,19 +32,18 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, maxWidt
 
     return (
         <div className="fixed inset-0 z-[70] overflow-y-auto" role="dialog" aria-modal="true">
-            <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                <div className="fixed inset-0 modal-backdrop transition-opacity" onClick={onClose}></div>
-                <span className="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
-                <div className={`relative inline-block align-bottom bg-card rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle ${maxWidth} sm:w-full border border-gray-700`}>
+            <div className="flex min-h-screen items-center justify-center p-0 sm:p-4 sm:pt-8 sm:pb-20">
+                <div className="fixed inset-0 modal-backdrop transition-opacity" onClick={onClose} aria-hidden="true"></div>
+                <div className={`relative w-full ${maxWidth} max-w-[calc(100vw-0px)] sm:max-w-[calc(100vw-2rem)] bg-card rounded-t-2xl sm:rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 border border-gray-700 max-h-[100vh] sm:max-h-[90vh] flex flex-col`}>
                     {title && (
-                        <div className="bg-gray-800 px-6 py-4 border-b border-gray-700 flex justify-between items-center">
-                            <h3 className="text-lg font-bold text-white">{title}</h3>
-                            <button onClick={onClose} className="text-gray-400 hover:text-white transition">
+                        <div className="bg-gray-800 px-4 sm:px-6 py-4 border-b border-gray-700 flex justify-between items-center shrink-0">
+                            <h3 className="text-base sm:text-lg font-bold text-white break-anywhere">{title}</h3>
+                            <button onClick={onClose} className="text-gray-400 hover:text-white transition shrink-0 touch-target flex items-center justify-center" aria-label="Close">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
                     )}
-                    <div className="p-6 max-h-[75vh] overflow-y-auto custom-scrollbar">
+                    <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar flex-1">
                         {children}
                     </div>
                 </div>

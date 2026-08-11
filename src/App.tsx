@@ -99,7 +99,7 @@ const AppContent = () => {
       <Navbar />
       
       {settings?.isNoticeActive && settings.notice && (
-        <div className="bg-brand-900/40 border-b border-brand-500/30 p-2 sm:p-3 relative z-40 relative backdrop-blur-md">
+        <div className="bg-brand-900/40 border-b border-brand-500/30 p-2 sm:p-3 relative z-40 backdrop-blur-md">
           <div className="container mx-auto px-4 flex items-center justify-center gap-3">
             <AlertTriangle className="text-brand-400 w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
             <p className="text-xs sm:text-sm text-brand-200 font-bold tracking-wide text-center">
@@ -111,7 +111,7 @@ const AppContent = () => {
       
       <Breadcrumbs />
       <ScrollToTop />
-      <main id="main-content" className="flex-grow container mx-auto px-4 pt-8 pb-24 relative min-h-[80vh]">
+      <main id="main-content" className="flex-grow container mx-auto px-4 pt-6 sm:pt-8 pb-20 sm:pb-24 relative min-h-[80vh]">
         {!isHome && (
           <div className="mb-6">
             <BackButton />

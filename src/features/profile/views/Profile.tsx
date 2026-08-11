@@ -443,7 +443,7 @@ const Profile: React.FC = () => {
             {activeTab === 'settings' ? (
                 <div className="space-y-6">
                     {/* Stats Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                         <div className="bg-card p-6 rounded-2xl border border-gray-800 shadow-lg">
                             <div className="flex items-center gap-3 mb-3">
                                 <div className="p-2 bg-green-500/10 rounded-lg border border-green-500/20 text-green-400">
@@ -480,7 +480,7 @@ const Profile: React.FC = () => {
                     </div>
 
                     {/* Bio & Skills */}
-                    <div className="bg-card p-8 rounded-2xl border border-gray-800 shadow-2xl space-y-6">
+                    <div className="bg-card p-4 sm:p-8 rounded-2xl border border-gray-800 shadow-2xl space-y-6">
                         <div>
                             <h3 className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-3 flex items-center gap-2">
                                 <Info className="w-3 h-3" /> About Me
@@ -507,7 +507,7 @@ const Profile: React.FC = () => {
                     </div>
                 </div>
             ) : (
-                <div className="bg-card rounded-2xl border border-gray-800 p-8 shadow-2xl">
+                <div className="bg-card rounded-2xl border border-gray-800 p-4 sm:p-8 shadow-2xl">
                     <div className="flex items-center gap-2 border-b border-gray-800 pb-4 mb-6">
                         <Clock className="text-brand-500" />
                         <h3 className="font-black text-white uppercase tracking-widest">Recent Activity</h3>
@@ -559,7 +559,7 @@ const Profile: React.FC = () => {
 
             <Modal isOpen={showPresetModal} onClose={() => setShowPresetModal(false)} title="Choose Preset Avatar">
                 <div className="p-6">
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                         {PRESET_AVATARS.map((url, index) => (
                             <button
                                 key={index}
@@ -600,7 +600,7 @@ const Profile: React.FC = () => {
                             <h3 className="font-black text-white uppercase tracking-widest">Profile Details</h3>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                             <div className="space-y-4">
                                 <div>
                                     <label htmlFor="profileInGameId" className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 block flex items-center gap-1">

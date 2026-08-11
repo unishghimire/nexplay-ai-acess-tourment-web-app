@@ -64,7 +64,7 @@ export const OrganizersTab: React.FC<AdminPanelTabProps> = (props) => {
                                         </button>
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-2 gap-2 text-[10px]">
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px]">
                                     <div className="bg-black/30 p-2 rounded-lg border border-gray-800">
                                         <div className="text-gray-600 uppercase font-bold mb-0.5">Email</div>
                                         <div className="text-gray-300 truncate">{org.email}</div>

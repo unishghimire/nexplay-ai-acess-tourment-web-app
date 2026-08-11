@@ -47,7 +47,7 @@ const RoadmapView: React.FC<RoadmapViewProps> = ({ tournament }) => {
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:min-w-[34rem]">
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 w-full lg:w-auto lg:min-w-[34rem]">
                         <div className="rounded-2xl border border-gray-800 bg-black/30 p-4">
                             <div className="text-[10px] font-black uppercase tracking-widest text-gray-500">Stages</div>
                             <div className="mt-2 text-2xl font-black text-white">{totalSteps}</div>

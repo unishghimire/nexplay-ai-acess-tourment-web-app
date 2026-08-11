@@ -114,7 +114,7 @@ const HotPromotionsSlider: React.FC<HotPromotionsSliderProps> = ({ slides, varia
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
                         
-                        <div className="absolute bottom-0 left-0 p-6 md:p-12 w-full md:w-3/4 space-y-3 md:space-y-4">
+                        <div className="absolute bottom-0 left-0 p-4 sm:p-6 md:p-12 w-full md:w-3/4 space-y-3 md:space-y-4">
                             <motion.h2 
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}

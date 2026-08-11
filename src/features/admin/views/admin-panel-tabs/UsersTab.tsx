@@ -24,8 +24,8 @@ export const UsersTab: React.FC<AdminPanelTabProps> = (props) => {
                         </div>
                     </div>
 
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
+                    <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+                        <table className="w-full text-left border-collapse min-w-[600px] sm:min-w-0">
                             <thead>
                                 <tr className="text-[10px] text-gray-500 uppercase font-black tracking-widest border-b border-gray-800">
                                     <th className="px-4 py-4">User</th>

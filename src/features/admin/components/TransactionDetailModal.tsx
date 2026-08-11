@@ -42,7 +42,7 @@ const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
 
     return (
         <div className="fixed inset-0 bg-black/95 backdrop-blur-sm z-[110] flex items-center justify-center p-4 animate-fade-in">
-            <div className="bg-card w-full max-w-2xl rounded-3xl border border-gray-800 p-8 space-y-8 shadow-2xl overflow-y-auto max-h-[90vh]">
+            <div className="bg-card w-full max-w-2xl rounded-3xl border border-gray-800 p-4 sm:p-8 space-y-6 sm:space-y-8 shadow-2xl overflow-y-auto max-h-[90vh]">
                 <div className="flex justify-between items-center border-b border-gray-800 pb-5">
                     <div className="flex items-center gap-4">
                         <h3 className="text-2xl font-black text-white uppercase tracking-tight flex items-center gap-3">

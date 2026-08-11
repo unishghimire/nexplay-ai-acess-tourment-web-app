@@ -118,7 +118,7 @@ const TournamentsTab: React.FC<TournamentsTabProps> = ({
           </span>
         </div>
 
-        <div className="overflow-x-auto pb-2 scrollbar-thin">
+        <div className="overflow-x-auto pb-2 scrollbar-thin -mx-4 px-4 sm:mx-0 sm:px-0">
           <div className="flex gap-4 min-w-max p-1">
             {rounds.map((roundNum) => {
               const roundMatches = matches.filter((m) => m.round === roundNum);
