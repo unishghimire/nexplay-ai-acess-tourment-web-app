@@ -38,7 +38,7 @@ const Navbar: React.FC = () => {
                 <div className="relative flex items-center justify-between h-16 sm:h-20">
                     {/* Logo */}
                     <Link to="/" className="flex items-center gap-3 shrink-0 group z-10">
-                        <img src="https://github.com/unishghimire/nexplay-logo/blob/main/nexplay.jpg?raw=true" alt="Nexplay Logo" className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg shadow-md group-hover:scale-105 transition-transform" />
+                        <img src="/logo.png" alt="Nexplay Logo" className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg shadow-md group-hover:scale-105 transition-transform" />
                         <span className="text-xl sm:text-2xl font-black tracking-widest text-white leading-none">NEX<span className="text-brand-500">PLAY</span></span>
                     </Link>
 
