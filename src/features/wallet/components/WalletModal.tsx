@@ -66,7 +66,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
         setSettings(settingsSnap.data() as SiteSettings);
       }
     } catch (error) {
-      console.error("Error fetching wallet data:", error);
+      // Error fetching wallet data
     } finally {
       setLoading(false);
     }
@@ -112,7 +112,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
       setProofUrl(data.url);
       showToast('Screenshot uploaded', 'success');
     } catch (error) {
-      console.error('Screenshot upload error:', error);
+      // Screenshot upload error
       showToast('Failed to upload screenshot', 'error');
       setProofPreview('');
     } finally {
@@ -168,7 +168,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
       setSelectedCategory(null);
       onClose();
     } catch (error) {
-      console.error("Error submitting deposit:", error);
+      // Error submitting deposit
       showToast('Failed to submit deposit request', 'error');
     } finally {
       setIsSubmitting(false);
@@ -217,7 +217,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
       setAccountDetails('');
       onClose();
     } catch (error) {
-      console.error("Error submitting withdrawal:", error);
+      // Error submitting withdrawal
       showToast('Failed to submit withdrawal request', 'error');
     } finally {
       setIsSubmitting(false);

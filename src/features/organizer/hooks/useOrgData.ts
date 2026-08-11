@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { collection, query, where, getDocs, doc, updateDoc, deleteDoc, serverTimestamp, increment, writeBatch } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, updateDoc, deleteDoc, serverTimestamp, increment, writeBatch, orderBy, limit } from 'firebase/firestore';
 import { db, auth } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { Tournament, Participant, Transaction } from '../../../shared/types/types';
@@ -28,7 +28,7 @@ export function useOrgData() {
       });
       setHostedTournaments(tours);
     } catch (err) {
-      console.error('Error fetching hosted tournaments:', err);
+      // Error fetching hosted tournaments
     } finally {
       setLoading(false);
     }
@@ -71,24 +71,25 @@ export function useOrgData() {
       });
       setParticipants(list);
     } catch (err) {
-      console.error('Error fetching participants:', err);
+      // Error fetching participants
     }
   }, [user]);
 
   const fetchTransactions = useCallback(async () => {
     if (!user) return;
     try {
-      const q = query(collection(db, 'transactions'), where('userId', '==', user.uid));
+      // ponytail: was fetching ALL transactions without limit/orderBy — now uses indexed query with limit
+      const q = query(
+        collection(db, 'transactions'),
+        where('userId', '==', user.uid),
+        orderBy('timestamp', 'desc'),
+        limit(50)
+      );
       const snap = await getDocs(q);
       const txs = snap.docs.map(d => ({ id: d.id, ...d.data() } as Transaction));
-      txs.sort((a, b) => {
-        const aTime = a.timestamp?.toMillis ? a.timestamp.toMillis() : 0;
-        const bTime = b.timestamp?.toMillis ? b.timestamp.toMillis() : 0;
-        return bTime - aTime;
-      });
       setTransactions(txs);
     } catch (err) {
-      console.error('Error fetching transactions:', err);
+      // Error fetching transactions
     }
   }, [user]);
 

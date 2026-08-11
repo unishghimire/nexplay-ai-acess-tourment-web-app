@@ -40,13 +40,15 @@ export const WalletPayoutsTab: React.FC<WalletPayoutsTabProps> = ({
   const [accountDetails, setAccountDetails] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const walletBalance = kpis?.orgWalletBalance ?? 0;
   const escrowBalance = kpis?.escrowBalance ?? 0;
   const pendingPayouts = kpis?.pendingPayouts ?? 0;
 
-  const handleWithdrawSubmit = (e: React.FormEvent) => {
+  const handleWithdrawSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setError(null);
     setSuccessMessage(null);
 
@@ -68,12 +70,18 @@ export const WalletPayoutsTab: React.FC<WalletPayoutsTabProps> = ({
     }
 
     if (onRequestWithdraw) {
-      onRequestWithdraw(numAmount, withdrawMethod, accountDetails.trim());
+      setIsSubmitting(true);
+      try {
+        await onRequestWithdraw(numAmount, withdrawMethod, accountDetails.trim());
+        setSuccessMessage(`Withdrawal request for ${formatCurrency(numAmount)} submitted successfully!`);
+        setWithdrawAmount('');
+        setAccountDetails('');
+      } catch (err: any) {
+        setError(err?.message || 'Failed to submit withdrawal request.');
+      } finally {
+        setIsSubmitting(false);
+      }
     }
-
-    setSuccessMessage(`Withdrawal request for ${formatCurrency(numAmount)} submitted successfully!`);
-    setWithdrawAmount('');
-    setAccountDetails('');
   };
 
   const getTypeBadge = (type: string) => {

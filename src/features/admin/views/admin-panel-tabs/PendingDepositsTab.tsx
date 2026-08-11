@@ -93,7 +93,7 @@ export const PendingDepositsTab: React.FC<AdminPanelTabProps> = (props) => {
                                             </div>
                                         )}
                                         <div className="grid grid-cols-2 gap-3">
-                                            <button onClick={() => handleApproveTx(t)} disabled={processingId === t.id} className="bg-green-600/20 hover:bg-green-600 text-green-400 hover:text-white border border-green-500/30 hover:border-green-500 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all">
+                                            <button onClick={async () => { setProcessingId(t.id); try { await handleApproveTx(t); } finally { setProcessingId(null); } }} disabled={processingId === t.id} className="bg-green-600/20 hover:bg-green-600 text-green-400 hover:text-white border border-green-500/30 hover:border-green-500 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all">
                                                 <Check className="w-4 h-4" /> Approve
                                             </button>
                                             <button onClick={() => setSelectedTx(t)} className="bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30 hover:border-blue-500 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all">

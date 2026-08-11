@@ -24,8 +24,9 @@ const Tournaments: React.FC = () => {
         const fetchData = async () => {
             setLoading(true);
             try {
+                // Fetch visible tournaments only — excludes draft/cancelled to reduce reads
                 const [tournamentsSnap, gamesSnap] = await Promise.all([
-                    getDocs(collection(db, 'tournaments')),
+                    getDocs(query(collection(db, 'tournaments'), where('status', 'in', ['upcoming', 'published', 'live', 'completed']))),
                     getDocs(query(collection(db, 'games'), where('isPublished', '==', true)))
                 ]);
                 
@@ -40,7 +41,7 @@ const Tournaments: React.FC = () => {
                 setTournaments(tours);
                 setGames(gamesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Game)));
             } catch (error: any) {
-                console.error("Error fetching data:", error);
+                // Error fetching tournament data
             } finally {
                 setLoading(false);
             }

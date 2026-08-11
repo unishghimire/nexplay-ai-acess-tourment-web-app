@@ -33,7 +33,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     lastActive: serverTimestamp()
                 });
             } catch (e) {
-                console.error("Failed to update status on logout", e);
+                // Failed to update status on logout
             }
         }
         await signOut(auth);
@@ -50,7 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     try {
                         userSnap = await getDoc(userRef);
                     } catch (e) {
-                        console.error("[AUTH] Failed to getDoc userRef", e);
+                        // [AUTH] Failed to getDoc userRef
                         throw e;
                     }
                     
@@ -74,7 +74,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         try {
                             await setDoc(userRef, newUser);
                         } catch (e) {
-                            console.error("[AUTH] Failed to setDoc userRef", e);
+                            // [AUTH] Failed to setDoc userRef
                             throw e;
                         }
                         
@@ -90,7 +90,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                                 updatedAt: serverTimestamp(),
                             });
                         } catch (e) {
-                            console.error("[AUTH] Failed to setDoc users_public", e);
+                            // [AUTH] Failed to setDoc users_public
                             throw e;
                         }
                         
@@ -106,7 +106,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     setProfile(null);
                 }
             } catch (error) {
-                console.error("Error in auth state change:", error, "failed during user check or creation", firebaseUser?.uid);
+                // Error in auth state change
                 // If there's an error (e.g., permission denied), we should still stop loading
                 // and potentially clear the user state to prevent infinite loading
                 setUser(null);
@@ -135,25 +135,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     setUser(prev => (prev && prev.role !== data.role) ? { ...prev, role: data.role } : prev);
                 }
             }, (error) => {
-                console.error("Error in user profile snapshot:", error);
+                // Error in user profile snapshot
             });
 
-            // Presence Management
+            // Presence Management — debounced to avoid excessive Firestore writes
+            // ponytail: was writing on every visibilitychange event; now debounced 5s
+            let presenceTimer: ReturnType<typeof setTimeout> | null = null;
             const updatePresence = async (status: 'online' | 'idle' | 'offline' | 'dnd') => {
-                // Don't override DND if they set it manually
                 if (statusRef.current === 'dnd' && status !== 'offline') return;
                 
-                try {
-                    await updateDoc(userRef, {
-                        status,
-                        lastActive: serverTimestamp()
-                    });
-                } catch (e) {
-                    console.error("Failed to update presence", e);
-                }
+                if (presenceTimer) clearTimeout(presenceTimer);
+                presenceTimer = setTimeout(async () => {
+                    try {
+                        await updateDoc(userRef, {
+                            status,
+                            lastActive: serverTimestamp()
+                        });
+                    } catch (e) {
+                        // Presence update failed — non-critical
+                    }
+                }, 5000);
             };
 
-            updatePresence('online');
+            // Immediate online on mount, but skip the debounce for initial
+            updateDoc(userRef, { status: 'online', lastActive: serverTimestamp() }).catch(() => {});
 
             const handleVisibilityChange = () => {
                 if (document.visibilityState === 'visible') {
@@ -164,7 +169,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             };
 
             const handleBeforeUnload = () => {
-                updatePresence('offline');
+                // Can't debounce beforeunload — fire immediately
+                if (presenceTimer) clearTimeout(presenceTimer);
+                updateDoc(userRef, { status: 'offline', lastActive: serverTimestamp() }).catch(() => {});
             };
 
             document.addEventListener('visibilitychange', handleVisibilityChange);

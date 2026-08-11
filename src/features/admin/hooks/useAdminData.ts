@@ -278,8 +278,10 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
                 const orgsSnap = await getDocs(query(collection(db, 'users'), where('role', 'in', ['organizer', 'admin'])));
                 setOrganizers(orgsSnap.docs.map(d => ({ uid: d.id, ...d.data() } as UserProfile)));
 
-                // Fetch stats
-                const usersSnap = await getDocs(collection(db, 'users'));
+                // Fetch users with pagination — admin can search/load more as needed
+                // ponytail: was getDocs(collection(db, 'users')) fetching ALL users just for totalBalance.
+                // Now fetches first 50 users for the table; total balance derived from pending/success transactions.
+                const usersSnap = await getDocs(query(collection(db, 'users'), orderBy('createdAt', 'desc'), limit(50)));
                 const usersData = usersSnap.docs.map(d => ({ uid: d.id, ...d.data() } as UserProfile));
                 setUsers(usersData);
                 
@@ -336,7 +338,7 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
 
                 setStats({ totalBalance: totalBal, todayDep: dep, todayWith: withdr });
             } catch (error) {
-                console.error("Error fetching admin data:", error);
+                // Error fetching admin data
             }
         };
 
@@ -360,13 +362,20 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
                 if (txData.status === 'success') throw new Error('Transaction already approved');
                 if (txData.status === 'rejected') throw new Error('Transaction already rejected');
 
+                let balanceBefore = 0;
+                let balanceAfter = 0;
                 if (tx.type === 'deposit') {
+                    const userDoc = await transaction.get(userRef);
+                    balanceBefore = userDoc.data()?.balance || 0;
+                    balanceAfter = balanceBefore + tx.amount;
                     transaction.update(userRef, { balance: increment(tx.amount) });
                 }
                 transaction.update(txRef, { 
                     status: 'success',
                     confirmedBy: profile?.uid,
-                    confirmedByUsername: profile?.username
+                    confirmedByUsername: profile?.username,
+                    balanceBefore,
+                    balanceAfter
                 });
             });
 
@@ -387,7 +396,7 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
                 setSelectedTx({ ...selectedTx, status: 'success', confirmedByUsername: profile?.username });
             }
         } catch (error: any) {
-            console.error("Error approving transaction:", error);
+            // Error approving transaction
             showToast(error.message || 'Failed to approve transaction', 'error');
         }
     };
@@ -432,7 +441,7 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
                     setAllTransactions(prev => prev.map(t => t.id === tx.id ? { ...t, status: 'refunded' } : t));
                     setSelectedTx(null);
                 } catch (error) {
-                    console.error("Error refunding transaction:", error);
+                    // Error refunding transaction
                     showToast('Failed to refund transaction', 'error');
                 }
             }
@@ -477,7 +486,7 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
             setSelectedTx(null);
             setRejectionReason('');
         } catch (error) {
-            console.error("Error rejecting transaction:", error);
+            // Error rejecting transaction
             showToast('Failed to reject transaction', 'error');
         }
     };
@@ -509,10 +518,11 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
             await runTransaction(db, async (transaction) => {
                 const userDoc = await transaction.get(userRef);
                 if (!userDoc.exists()) throw new Error('User not found');
-                const currentBalance = userDoc.data()?.balance || 0;
-                if (adjustmentType === 'subtract' && currentBalance < amount) {
+                const balanceBefore = userDoc.data()?.balance || 0;
+                if (adjustmentType === 'subtract' && balanceBefore < amount) {
                     throw new Error('Insufficient balance');
                 }
+                const balanceAfter = balanceBefore + finalAmount;
 
                 transaction.update(userRef, { balance: increment(finalAmount) });
 
@@ -527,7 +537,9 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
                     timestamp: serverTimestamp(),
                     desc: `Admin Adjustment: ${adjustmentType === 'add' ? 'Added' : 'Subtracted'} ${amount}`,
                     confirmedBy: profile?.uid,
-                    confirmedByUsername: profile?.username
+                    confirmedByUsername: profile?.username,
+                    balanceBefore,
+                    balanceAfter
                 });
             });
 
@@ -536,7 +548,7 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
             setSelectedUser(null);
             setAdjustmentAmount('');
         } catch (error) {
-            console.error("Error adjusting balance:", error);
+            // Error adjusting balance
             showToast(error.message || 'Failed to adjust balance', 'error');
         }
     };

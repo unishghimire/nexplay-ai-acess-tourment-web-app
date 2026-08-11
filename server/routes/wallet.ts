@@ -5,21 +5,24 @@ const router = Router();
 
 // ═══════════════════════════════════════════════════════════════
 // WALLET SECURITY
-// ponytail: all wallet writes go through server endpoints — clients
-// cannot write to transactions collection directly (enforced by Firestore rules)
+// All wallet writes go through server endpoints — clients cannot write
+// to transactions collection directly (enforced by Firestore rules).
 // Duplicate detection: same transactionCode + same amount within 24h = blocked
 // ═══════════════════════════════════════════════════════════════
+
+// Revenue split — mirrors src/shared/constants/finance.ts
+// ponytail: duplicated because server and client are separate build targets
+const REVENUE_SPLIT = { ORGANIZER: 0.85, PLATFORM: 0.15 } as const;
 
 // POST /api/wallet/deposit — create a pending deposit request
 router.post("/api/wallet/deposit",
   authenticateToken,
-  rateLimit(5, 15 * 60 * 1000), // 5 deposits per 15 min
+  rateLimit(5, 15 * 60 * 1000),
   async (req: any, res) => {
     try {
       const { amount, method, senderNumber, transactionCode, proofUrl } = req.body;
       const uid = req.user.userId;
 
-      // --- Validation ---
       const numAmount = Number(amount);
       if (!numAmount || isNaN(numAmount) || numAmount <= 0) {
         return res.status(400).json({ success: false, message: "Invalid amount" });
@@ -39,7 +42,6 @@ router.post("/api/wallet/deposit",
       if (!proofUrl || typeof proofUrl !== 'string') {
         return res.status(400).json({ success: false, message: "Payment screenshot is required" });
       }
-      // Validate URL format
       try {
         const url = new URL(proofUrl);
         if (!['http:', 'https:'].includes(url.protocol)) throw new Error();
@@ -47,7 +49,7 @@ router.post("/api/wallet/deposit",
         return res.status(400).json({ success: false, message: "Invalid screenshot URL" });
       }
 
-      // --- Duplicate detection: same transactionCode + amount within 24h ---
+      // Duplicate detection: same transactionCode + amount within 24h
       const dupQuery = db.collection('transactions')
         .where('userId', '==', uid)
         .where('transactionCode', '==', transactionCode)
@@ -62,9 +64,9 @@ router.post("/api/wallet/deposit",
         }
       }
 
-      // --- Create pending deposit ---
+      // Deposit is pending — balance credited when admin approves (atomic in useAdminData handleApproveTx)
       const txRef = db.collection('transactions').doc();
-      const txData = {
+      await txRef.set({
         id: txRef.id,
         userId: uid,
         type: 'deposit',
@@ -76,33 +78,30 @@ router.post("/api/wallet/deposit",
         transactionCode,
         proofUrl,
         refId: `DEP-${Date.now()}`,
-      };
-      await txRef.set(txData);
+      });
 
       return res.status(201).json({ success: true, message: "Deposit request submitted", transactionId: txRef.id });
     } catch (error: any) {
-      console.error("Deposit error:", error);
       return res.status(500).json({ success: false, message: "Failed to submit deposit request" });
     }
   }
 );
 
-// POST /api/wallet/withdraw — create a pending withdrawal + lock funds
+// POST /api/wallet/withdraw — create a pending withdrawal + lock funds atomically
 router.post("/api/wallet/withdraw",
   authenticateToken,
-  rateLimit(3, 15 * 60 * 1000), // 3 withdrawals per 15 min
+  rateLimit(3, 15 * 60 * 1000),
   async (req: any, res) => {
     try {
       const { amount, method, accountDetails } = req.body;
       const uid = req.user.userId;
 
-      // --- Validation ---
       const numAmount = Number(amount);
       if (!numAmount || isNaN(numAmount) || numAmount <= 0) {
         return res.status(400).json({ success: false, message: "Invalid amount" });
       }
-      if (numAmount > 100000) {
-        return res.status(400).json({ success: false, message: "Amount exceeds maximum withdrawal limit (Rs. 100,000)" });
+      if (numAmount > 50000) {
+        return res.status(400).json({ success: false, message: "Amount exceeds maximum withdrawal limit (Rs. 50,000)" });
       }
       if (!method || typeof method !== 'string' || method.length > 100) {
         return res.status(400).json({ success: false, message: "Invalid withdrawal method" });
@@ -111,18 +110,30 @@ router.post("/api/wallet/withdraw",
         return res.status(400).json({ success: false, message: "Invalid account details" });
       }
 
-      // --- Atomic balance check + debit using Firestore transaction ---
-      const userRef = db.collection('users').doc(uid);
       const result = await db.runTransaction(async (tx) => {
+        const userRef = db.collection('users').doc(uid);
         const userDoc = await tx.get(userRef);
         if (!userDoc.exists) throw new Error("User not found");
 
-        const balance = userDoc.data()?.balance || 0;
-        if (numAmount > balance) {
-          throw new Error("Insufficient balance");
+        const balanceBefore = userDoc.data()?.balance || 0;
+        if (numAmount > balanceBefore) throw new Error("Insufficient balance");
+
+        // Idempotency: block duplicate pending withdrawals with same amount + method within 5 min
+        const dupSnap = await db.collection('transactions')
+          .where('userId', '==', uid)
+          .where('type', '==', 'withdrawal')
+          .where('amount', '==', -numAmount)
+          .where('method', '==', method)
+          .where('status', '==', 'pending')
+          .limit(1)
+          .get();
+        if (!dupSnap.empty) {
+          const age = Date.now() - (dupSnap.docs[0].data().timestamp?.toMillis?.() || 0);
+          if (age < 5 * 60 * 1000) throw new Error("Duplicate withdrawal request. Please wait a few minutes before trying again.");
         }
 
-        // Create pending withdrawal
+        const balanceAfter = balanceBefore - numAmount;
+
         const txRef = db.collection('transactions').doc();
         tx.set(txRef, {
           id: txRef.id,
@@ -134,22 +145,25 @@ router.post("/api/wallet/withdraw",
           timestamp: admin.firestore.FieldValue.serverTimestamp(),
           accountDetails,
           refId: `WIT-${Date.now()}`,
+          balanceBefore,
+          balanceAfter,
         });
 
-        // Debit balance immediately (refunded if admin rejects)
         tx.update(userRef, {
           balance: admin.firestore.FieldValue.increment(-numAmount),
         });
 
-        return { transactionId: txRef.id };
+        return { transactionId: txRef.id, newBalance: balanceAfter };
       });
 
-      return res.status(201).json({ success: true, message: "Withdrawal request submitted", transactionId: result.transactionId });
+      return res.status(201).json({ success: true, message: "Withdrawal request submitted", transactionId: result.transactionId, newBalance: result.newBalance });
     } catch (error: any) {
       if (error.message === "Insufficient balance") {
         return res.status(400).json({ success: false, message: "Insufficient balance" });
       }
-      console.error("Withdraw error:", error);
+      if (error.message?.includes("Duplicate withdrawal")) {
+        return res.status(409).json({ success: false, message: error.message });
+      }
       return res.status(500).json({ success: false, message: "Failed to submit withdrawal request" });
     }
   }
@@ -162,26 +176,25 @@ router.get("/api/wallet/transactions",
   async (req: any, res) => {
     try {
       const uid = req.user.userId;
-      const limit = Math.min(Number(req.query.limit) || 20, 50);
+      const pageLimit = Math.min(Number(req.query.limit) || 20, 50);
       const lastDocId = req.query.lastDoc as string;
 
-      let query = db.collection('transactions')
+      let q = db.collection('transactions')
         .where('userId', '==', uid)
         .orderBy('timestamp', 'desc')
-        .limit(limit);
+        .limit(pageLimit);
 
       if (lastDocId) {
         const lastDoc = await db.collection('transactions').doc(lastDocId).get();
-        if (lastDoc.exists) query = query.startAfter(lastDoc);
+        if (lastDoc.exists) q = q.startAfter(lastDoc);
       }
 
-      const snap = await query.get();
+      const snap = await q.get();
       const transactions = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      const hasMore = snap.size === limit;
+      const hasMore = snap.size === pageLimit;
 
       return res.json({ success: true, transactions, hasMore });
     } catch (error: any) {
-      console.error("Fetch transactions error:", error);
       return res.status(500).json({ success: false, message: "Failed to fetch transactions" });
     }
   }
@@ -191,8 +204,6 @@ export default router;
 
 // ═══════════════════════════════════════════════════════════════
 // TOURNAMENT ENTRY FEE — server-side atomic deduction
-// ponytail: client cannot change balance (firestore rules), so all
-// balance-changing operations go through server endpoints
 // ═══════════════════════════════════════════════════════════════
 
 // POST /api/wallet/join-tournament — atomic entry fee deduction + participant create + ledger
@@ -208,47 +219,38 @@ router.post("/api/wallet/join-tournament",
         return res.status(400).json({ success: false, message: "Invalid tournament ID" });
       }
 
+      // Deterministic participant doc ID for atomic duplicate check
+      const partRef = db.collection('participants').doc(`${tournamentId}_${uid}`);
+
       const result = await db.runTransaction(async (tx) => {
         const tRef = db.collection('tournaments').doc(tournamentId);
         const uRef = db.collection('users').doc(uid);
 
         const tDoc = await tx.get(tRef);
         const uDoc = await tx.get(uRef);
+        const partDoc = await tx.get(partRef);
+
         if (!tDoc.exists) throw new Error("Tournament does not exist");
         if (!uDoc.exists) throw new Error("User not found");
+        if (partDoc.exists) throw new Error("Already registered for this tournament");
 
         const tData = tDoc.data()!;
         const uData = uDoc.data()!;
 
+        if (!['upcoming', 'published', 'live'].includes(tData.status)) throw new Error("Tournament is not open for registration");
         if (tData.currentPlayers >= tData.slots) throw new Error("Tournament is full");
         if (uData.balance < (tData.entryFee || 0)) throw new Error("Insufficient balance");
 
-        // Check for duplicate registration
-        const partSnap = await db.collection('participants')
-          .where('tournamentId', '==', tournamentId)
-          .where('userId', '==', uid)
-          .limit(1)
-          .get();
-        if (!partSnap.empty) throw new Error("Already registered for this tournament");
-
-        // Deduct entry fee
-        const newBalance = uData.balance - (tData.entryFee || 0);
+        const entryFee = tData.entryFee || 0;
+        const balanceBefore = uData.balance;
+        const balanceAfter = balanceBefore - entryFee;
         const currentXP = uData.xp || 0;
         const newXP = currentXP + 50;
         const newLevel = Math.floor(newXP / 500) + 1;
 
-        tx.update(uRef, {
-          balance: newBalance,
-          xp: newXP,
-          level: newLevel
-        });
+        tx.update(uRef, { balance: balanceAfter, xp: newXP, level: newLevel });
+        tx.update(tRef, { currentPlayers: (tData.currentPlayers || 0) + 1 });
 
-        tx.update(tRef, {
-          currentPlayers: (tData.currentPlayers || 0) + 1
-        });
-
-        // Create participant record
-        const partRef = db.collection('participants').doc();
         const participantData: any = {
           userId: uid,
           tournamentId,
@@ -266,24 +268,25 @@ router.post("/api/wallet/join-tournament",
         }
         tx.set(partRef, participantData);
 
-        // Create audit ledger entry
-        if ((tData.entryFee || 0) > 0) {
+        if (entryFee > 0) {
           const txRef = db.collection('transactions').doc();
           tx.set(txRef, {
             userId: uid,
             username: uData.username || '',
             type: 'entry_fee',
-            amount: tData.entryFee,
+            amount: entryFee,
             method: 'Tournament Entry',
             refId: `ENTRY-${tournamentId.slice(0, 8)}-${Date.now().toString().slice(-4)}`,
             status: 'success',
             timestamp: admin.firestore.FieldValue.serverTimestamp(),
             desc: `Entry fee for ${tData.title}`,
-            tournamentId
+            tournamentId,
+            balanceBefore,
+            balanceAfter,
           });
         }
 
-        return { newBalance, participantId: partRef.id };
+        return { newBalance: balanceAfter, participantId: partRef.id };
       });
 
       return res.status(200).json({
@@ -312,44 +315,34 @@ router.post("/api/wallet/leave-tournament",
         return res.status(400).json({ success: false, message: "Invalid tournament ID" });
       }
 
+      // Deterministic participant doc ID — matches join-tournament
+      const partRef = db.collection('participants').doc(`${tournamentId}_${uid}`);
+
       const result = await db.runTransaction(async (tx) => {
         const tRef = db.collection('tournaments').doc(tournamentId);
         const uRef = db.collection('users').doc(uid);
 
         const tDoc = await tx.get(tRef);
         const uDoc = await tx.get(uRef);
+        const partDoc = await tx.get(partRef);
+
         if (!tDoc.exists) throw new Error("Tournament does not exist");
         if (!uDoc.exists) throw new Error("User not found");
+        if (!partDoc.exists) throw new Error("Not registered for this tournament");
 
         const tData = tDoc.data()!;
         const uData = uDoc.data()!;
 
-        // Find participant record
-        const partSnap = await db.collection('participants')
-          .where('tournamentId', '==', tournamentId)
-          .where('userId', '==', uid)
-          .limit(1)
-          .get();
-        if (partSnap.empty) throw new Error("Not registered for this tournament");
-        const partDoc = partSnap.docs[0];
         if (partDoc.data().status === 'refunded') throw new Error("Already refunded");
-
+        if (['completed', 'cancelled'].includes(tData.status)) throw new Error("Cannot leave a completed tournament");
         const refundAmount = tData.entryFee || 0;
+        const balanceBefore = uData.balance;
+        const balanceAfter = balanceBefore + refundAmount;
 
-        // Refund balance
-        tx.update(uRef, {
-          balance: uData.balance + refundAmount
-        });
+        tx.update(uRef, { balance: balanceAfter });
+        tx.update(tRef, { currentPlayers: Math.max(0, (tData.currentPlayers || 0) - 1) });
+        tx.delete(partRef);
 
-        // Decrement player count
-        tx.update(tRef, {
-          currentPlayers: Math.max(0, (tData.currentPlayers || 0) - 1)
-        });
-
-        // Delete participant
-        tx.delete(partDoc.ref);
-
-        // Audit ledger entry
         if (refundAmount > 0) {
           const txRef = db.collection('transactions').doc();
           tx.set(txRef, {
@@ -362,11 +355,13 @@ router.post("/api/wallet/leave-tournament",
             status: 'success',
             timestamp: admin.firestore.FieldValue.serverTimestamp(),
             desc: `Refund for leaving ${tData.title}`,
-            tournamentId
+            tournamentId,
+            balanceBefore,
+            balanceAfter,
           });
         }
 
-        return { newBalance: uData.balance + refundAmount };
+        return { newBalance: balanceAfter };
       });
 
       return res.status(200).json({
@@ -376,7 +371,8 @@ router.post("/api/wallet/leave-tournament",
       });
     } catch (error: any) {
       const msg = error.message || "Failed to leave tournament";
-      return res.status(500).json({ success: false, message: msg });
+      const code = ["Not registered", "Already refunded"].includes(msg) ? 400 : 500;
+      return res.status(code).json({ success: false, message: msg });
     }
   }
 );
@@ -398,57 +394,52 @@ router.post("/api/wallet/redeem-promo",
       const result = await db.runTransaction(async (tx) => {
         const uRef = db.collection('users').doc(uid);
 
-        // Find promo code
+        // Find promo code (untracked query for lookup, then tracked read for atomicity)
         const promoSnap = await db.collection('promocodes')
           .where('code', '==', upperCode)
           .limit(1)
           .get();
         if (promoSnap.empty) throw new Error("Invalid promo code");
-        const promoDoc = promoSnap.docs[0];
+        const promoRef = promoSnap.docs[0].ref;
+        // Tracked read — ensures promo state is locked for the transaction
+        const promoDoc = await tx.get(promoRef);
+        if (!promoDoc.exists) throw new Error("Invalid promo code");
         const promoData = promoDoc.data()!;
 
         if (!promoData.isActive) throw new Error("This promo code is no longer active");
         if ((promoData.currentUses || 0) >= (promoData.maxUses || 0)) throw new Error("Promo code has reached maximum uses");
 
-        // Check if user already used this promo
-        const usedSnap = await db.collection('transactions')
-          .where('userId', '==', uid)
-          .where('type', '==', 'promo')
-          .where('method', '==', `PROMO:${upperCode}`)
-          .limit(1)
-          .get();
-        if (!usedSnap.empty) throw new Error("You have already used this promo code");
+        // Idempotency: deterministic transaction doc ID prevents duplicate redemption
+        // Two concurrent requests will conflict on this doc, and the retry will see it exists
+        const promoTxRef = db.collection('transactions').doc(`${uid}_PROMO_${upperCode}`);
+        const existingTx = await tx.get(promoTxRef);
+        if (existingTx.exists) throw new Error("You have already used this promo code");
 
         const uDoc = await tx.get(uRef);
         if (!uDoc.exists) throw new Error("User not found");
         const uData = uDoc.data()!;
 
-        // Credit balance
-        tx.update(uRef, {
-          balance: admin.firestore.FieldValue.increment(promoData.amount)
-        });
+        const balanceBefore = uData.balance || 0;
+        const balanceAfter = balanceBefore + promoData.amount;
 
-        // Increment promo usage
-        tx.update(promoDoc.ref, {
-          currentUses: admin.firestore.FieldValue.increment(1)
-        });
+        tx.update(uRef, { balance: admin.firestore.FieldValue.increment(promoData.amount) });
+        tx.update(promoRef, { currentUses: admin.firestore.FieldValue.increment(1) });
 
-        // Create audit ledger entry
-        const txRef = db.collection('transactions').doc();
-        tx.set(txRef, {
+        tx.set(promoTxRef, {
           userId: uid,
           username: uData.username || 'Unknown',
-          userEmail: '',
           type: 'promo',
           amount: promoData.amount,
           method: `PROMO:${upperCode}`,
           status: 'completed',
           timestamp: admin.firestore.FieldValue.serverTimestamp(),
           accountDetails: 'Promo Code Redemption',
-          refId: `PRM-${Date.now()}`
+          refId: `PRM-${Date.now()}`,
+          balanceBefore,
+          balanceAfter,
         });
 
-        return { amount: promoData.amount, newBalance: (uData.balance || 0) + promoData.amount };
+        return { amount: promoData.amount, newBalance: balanceAfter };
       });
 
       return res.status(200).json({
@@ -465,9 +456,7 @@ router.post("/api/wallet/redeem-promo",
 );
 
 // ═══════════════════════════════════════════════════════════════
-// PRIZE DISTRIBUTION — server-side atomic prize distribution
-// ponytail: organizer cannot write to user balances or transactions
-// from client (firestore rules), so prize distribution goes through server
+// PRIZE DISTRIBUTION — server-side atomic, idempotent via tournament status check
 // ═══════════════════════════════════════════════════════════════
 
 // POST /api/wallet/distribute-prizes — atomically distribute prizes to winners
@@ -485,7 +474,6 @@ router.post("/api/wallet/distribute-prizes",
       if (!Array.isArray(winners) || winners.length === 0) {
         return res.status(400).json({ success: false, message: "Winners array is required" });
       }
-      // Validate each winner
       for (const w of winners) {
         if (!w.userId || typeof w.userId !== 'string') {
           return res.status(400).json({ success: false, message: "Invalid winner data" });
@@ -506,9 +494,13 @@ router.post("/api/wallet/distribute-prizes",
         if (tData.hostUid !== uid && req.user.role !== 'admin') {
           throw new Error("Not authorized — only tournament host can distribute prizes");
         }
+        // Idempotency: tournament status prevents double distribution
         if (tData.status === 'completed') throw new Error("Tournament already completed");
+        // Validate total prizes don't exceed prize pool
+        const totalPrizes = winners.reduce((sum: number, w: any) => sum + (w.prize || 0), 0);
+        const prizePool = tData.prizePool || 0;
+        if (totalPrizes > prizePool) throw new Error(`Total prizes (${totalPrizes}) exceed prize pool (${prizePool})`);
 
-        // Update tournament status
         tx.update(tRef, { status: 'completed', completedAt: admin.firestore.FieldValue.serverTimestamp() });
 
         // Create results document
@@ -529,9 +521,13 @@ router.post("/api/wallet/distribute-prizes",
           completedAt: admin.firestore.FieldValue.serverTimestamp()
         });
 
-        // Distribute prizes to each winner
+        // Distribute prizes to each winner — read each user's balance for audit
         for (const winner of winners) {
           const uRef = db.collection('users').doc(winner.userId);
+          const uDoc = await tx.get(uRef);
+          if (!uDoc.exists) continue; // skip non-existent users
+          const balanceBefore = uDoc.data()?.balance || 0;
+          const balanceAfter = balanceBefore + winner.prize;
 
           tx.update(uRef, {
             balance: admin.firestore.FieldValue.increment(winner.prize),
@@ -545,7 +541,6 @@ router.post("/api/wallet/distribute-prizes",
             updatedAt: admin.firestore.FieldValue.serverTimestamp()
           }, { merge: true });
 
-          // Create prize transaction ledger entry
           if (winner.prize > 0) {
             const txRef = db.collection('transactions').doc();
             tx.set(txRef, {
@@ -559,19 +554,21 @@ router.post("/api/wallet/distribute-prizes",
               status: 'success',
               timestamp: admin.firestore.FieldValue.serverTimestamp(),
               desc: `Prize for Rank ${winner.rank}`,
-              tournamentId
+              tournamentId,
+              balanceBefore,
+              balanceAfter,
             });
           }
         }
 
-        // Calculate and store revenue split (85/15) — atomic with prize distribution
+        // Revenue split (85/15) — atomic with prize distribution
         const approvedCount = tData.approvedCount || 0;
         const entryFee = tData.entryFee || 0;
         const entryFeeTotal = approvedCount * entryFee;
         const prizePoolTotal = tData.prizePool || 0;
         const profit = entryFeeTotal - prizePoolTotal;
-        const orgShare = Math.round(profit * 0.85);
-        const nexplayShare = Math.round(profit * 0.15);
+        const orgShare = Math.round(profit * REVENUE_SPLIT.ORGANIZER);
+        const nexplayShare = Math.round(profit * REVENUE_SPLIT.PLATFORM);
 
         // ponytail: only record earnings when profit > 0 — negative profit (organizer loss)
         // would create a record that could debit organizer wallet on release

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { collection, query, where, getDocs, orderBy, limit, doc, addDoc, serverTimestamp, startAfter, QueryDocumentSnapshot } from 'firebase/firestore';
 import { db, auth } from '../../../shared/config/firebase';
-import { Transaction, PromoCode } from '../../../shared/types/types';
+import { Transaction } from '../../../shared/types/types';
 import { formatCurrency, formatDate } from '../../../shared/utils/utils';
 import { ArrowUpRight, ArrowDownRight, CheckCircle2, Wallet as WalletIcon, Gift, AlertTriangle, X, ShieldCheck, Download, TrendingUp, ChevronRight } from 'lucide-react';
 import WalletModal from '../components/WalletModal';
@@ -18,8 +18,6 @@ const Wallet: React.FC = () => {
     const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot | null>(null);
     const [hasMore, setHasMore] = useState(true);
     const [activeModal, setActiveModal] = useState<'deposit' | 'withdraw' | null>(null);
-    const [fallbackMode, setFallbackMode] = useState(false);
-    const [txError, setTxError] = useState<string | null>(null);
     
     // Promo Code State
     const [isPromoModalOpen, setIsPromoModalOpen] = useState(false);
@@ -47,124 +45,70 @@ const Wallet: React.FC = () => {
         else setLoading(true);
         
         try {
-            let snap;
-            
-            if (fallbackMode) {
-                // Fallback: fetch all and slice
-                const q = query(collection(db, 'transactions'), where('userId', '==', user.uid));
-                snap = await getDocs(q);
-                let txs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction));
-                txs.sort((a,b) => {
-                    const aTime = a.timestamp?.toMillis ? a.timestamp.toMillis() : 0;
-                    const bTime = b.timestamp?.toMillis ? b.timestamp.toMillis() : 0;
-                    return bTime - aTime;
-                });
-                
-                const startIndex = isLoadMore ? transactions.length : 0;
-                const endIndex = startIndex + (isLoadMore ? 10 : 5);
-                const nextBatch = txs.slice(startIndex, endIndex);
-                
-                if (isLoadMore) {
-                    setTransactions(prev => [...prev, ...nextBatch]);
-                } else {
-                    setTransactions(nextBatch);
-                }
-                setHasMore(endIndex < txs.length);
+            let q;
+            if (isLoadMore && lastDoc) {
+                q = query(
+                    collection(db, 'transactions'),
+                    where('userId', '==', user.uid),
+                    orderBy('timestamp', 'desc'),
+                    startAfter(lastDoc),
+                    limit(10)
+                );
             } else {
-                try {
-                    let q;
-                    if (isLoadMore && lastDoc) {
-                        q = query(
-                            collection(db, 'transactions'),
-                            where('userId', '==', user.uid),
-                            orderBy('timestamp', 'desc'),
-                            startAfter(lastDoc),
-                            limit(10)
-                        );
-                    } else {
-                        q = query(
-                            collection(db, 'transactions'),
-                            where('userId', '==', user.uid),
-                            orderBy('timestamp', 'desc'),
-                            limit(5)
-                        );
-                    }
-                    snap = await getDocs(q);
-                    const txs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction));
-                    
-                    if (isLoadMore) {
-                        setTransactions(prev => [...prev, ...txs]);
-                    } else {
-                        setTransactions(txs);
-                    }
-                    
-                    if (snap.docs.length > 0) {
-                        setLastDoc(snap.docs[snap.docs.length - 1]);
-                    }
-                    setHasMore(snap.docs.length === (isLoadMore ? 10 : 5));
-
-                } catch (err: any) {
-                    if (err.message && err.message.includes('index')) {
-                        console.warn("Missing index, switching to fallback mode (client-side pagination)");
-                        setTxError("Loading transactions in compatibility mode.");
-                        setFallbackMode(true);
-                        // Rerun fetch in fallback mode
-                        const fallbackQ = query(collection(db, 'transactions'), where('userId', '==', user.uid));
-                        snap = await getDocs(fallbackQ);
-                        let fallbackTxs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction));
-                        fallbackTxs.sort((a,b) => {
-                            const aTime = a.timestamp?.toMillis ? a.timestamp.toMillis() : 0;
-                            const bTime = b.timestamp?.toMillis ? b.timestamp.toMillis() : 0;
-                            return bTime - aTime;
-                        });
-                        setTransactions(fallbackTxs.slice(0, 5));
-                        setHasMore(fallbackTxs.length > 5);
-                    } else {
-                        throw err;
-                    }
-                }
+                q = query(
+                    collection(db, 'transactions'),
+                    where('userId', '==', user.uid),
+                    orderBy('timestamp', 'desc'),
+                    limit(5)
+                );
             }
+            const snap = await getDocs(q);
+            const txs = snap.docs.map((d) => { const data = d.data() as Record<string, unknown>; return { id: d.id, ...data } as Transaction; });
+            
+            if (isLoadMore) {
+                setTransactions(prev => [...prev, ...txs]);
+            } else {
+                setTransactions(txs);
+            }
+            
+            if (snap.docs.length > 0) {
+                setLastDoc(snap.docs[snap.docs.length - 1]);
+            }
+            setHasMore(snap.docs.length === (isLoadMore ? 10 : 5));
         } catch (error: any) {
-            console.error("Error fetching transactions:", error);
+            // Error fetching transactions
         } finally {
             setLoading(false);
             setLoadingMore(false);
         }
     };
 
-    // Derived Analytics from fetched transactions (Firebase cost optimization: derived locally)
+    // Analytics derived from loaded transactions (display-only, not authoritative)
+    // ponytail: uses only the paginated subset already fetched — avoids extra reads
     const analytics = useMemo(() => {
-        let totalDeposits = 0;
-        let totalWithdrawals = 0;
-        let thisMonthEarnings = 0;
+        let recentDeposits = 0;
+        let recentWithdrawals = 0;
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
 
         transactions.forEach(tx => {
             if (tx.status === 'success' || tx.status === 'completed') {
                 if (tx.type === 'deposit') {
-                    totalDeposits += tx.amount;
+                    recentDeposits += tx.amount;
                 } else if (tx.type === 'withdrawal' || tx.type === 'withdraw') {
-                    totalWithdrawals += tx.amount;
-                } else if (tx.type === 'prize' || tx.type === 'promo') {
-                    // Count prize/promo as earnings
-                    const txTime = tx.timestamp?.toMillis ? tx.timestamp.toMillis() : 0;
-                    if (txTime >= startOfMonth) {
-                        thisMonthEarnings += tx.amount;
-                    }
+                    recentWithdrawals += Math.abs(tx.amount);
                 }
             }
         });
 
-        // Generate chart data for CSS bars
         const chartData = [...transactions].reverse().map(tx => ({
-            name: formatDate(tx.timestamp).split(',')[0], // Short date
+            name: formatDate(tx.timestamp).split(',')[0],
             amount: tx.amount,
             type: tx.type,
             status: tx.status
-        })).filter(tx => tx.status === 'success' || tx.status === 'completed').slice(-15); // Last 15 successful txs
+        })).filter(tx => tx.status === 'success' || tx.status === 'completed').slice(-15);
 
-        return { totalDeposits, totalWithdrawals, thisMonthEarnings, chartData };
+        return { recentDeposits, recentWithdrawals, chartData };
     }, [transactions]);
 
     const handleRedeemPromo = async () => {
@@ -216,7 +160,7 @@ const Wallet: React.FC = () => {
             setDisputeReason('');
             setSelectedTxForDispute(null);
         } catch (error: any) {
-            console.error("Error reporting dispute:", error);
+            // Error reporting dispute
             showToast('Failed to report dispute', 'error');
         } finally {
             setIsSubmittingDispute(false);
@@ -305,7 +249,7 @@ const Wallet: React.FC = () => {
                 <div className="bg-gray-900/50 border border-gray-800 rounded-3xl p-6 flex items-center justify-between">
                     <div>
                         <p className="text-xs font-black uppercase text-gray-500 tracking-widest mb-2 flex items-center gap-2">Recent Deposits</p>
-                        <p className="text-3xl font-black text-white">{formatCurrency(analytics.totalDeposits)}</p>
+                        <p className="text-3xl font-black text-white">{formatCurrency(analytics.recentDeposits)}</p>
                     </div>
                     <div className="w-14 h-14 rounded-2xl bg-green-500/10 flex items-center justify-center text-green-500">
                         <ArrowDownRight size={28} />
@@ -314,7 +258,7 @@ const Wallet: React.FC = () => {
                 <div className="bg-gray-900/50 border border-gray-800 rounded-3xl p-6 flex items-center justify-between">
                     <div>
                         <p className="text-xs font-black uppercase text-gray-500 tracking-widest mb-2 flex items-center gap-2">Recent Withdrawals</p>
-                        <p className="text-3xl font-black text-white">{formatCurrency(analytics.totalWithdrawals)}</p>
+                        <p className="text-3xl font-black text-white">{formatCurrency(analytics.recentWithdrawals)}</p>
                     </div>
                     <div className="w-14 h-14 rounded-2xl bg-red-500/10 flex items-center justify-center text-red-500">
                         <ArrowUpRight size={28} />
@@ -322,8 +266,8 @@ const Wallet: React.FC = () => {
                 </div>
                 <div className="bg-gray-900/50 border border-gray-800 rounded-3xl p-6 flex items-center justify-between">
                     <div>
-                        <p className="text-xs font-black uppercase text-gray-500 tracking-widest mb-2 flex items-center gap-2">Month Earnings</p>
-                        <p className="text-3xl font-black text-white">{formatCurrency(analytics.thisMonthEarnings)}</p>
+                        <p className="text-xs font-black uppercase text-gray-500 tracking-widest mb-2 flex items-center gap-2">Total Earnings</p>
+                        <p className="text-3xl font-black text-white">{formatCurrency(profile.totalEarnings || 0)}</p>
                     </div>
                     <div className="w-14 h-14 rounded-2xl bg-brand-500/10 flex items-center justify-center text-brand-500">
                         <TrendingUp size={28} />
@@ -515,8 +459,6 @@ const Wallet: React.FC = () => {
                 isOpen={activeModal !== null} 
                 onClose={() => {
                     setActiveModal(null);
-                    setLastDoc(null);
-                    fetchTransactions();
                 }} 
                 initialTab={activeModal === 'withdraw' ? 'withdraw' : 'deposit'} 
             />

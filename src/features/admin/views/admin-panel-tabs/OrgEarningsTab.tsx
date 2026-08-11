@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {DollarSign} from 'lucide-react';
 
 import { AdminPanelTabProps } from './types';
 
 export const OrgEarningsTab: React.FC<AdminPanelTabProps> = (props) => {
     const { formatCurrency, handleReleaseEarnings, tournamentEarnings } = props;
+    const [releasingId, setReleasingId] = useState<string | null>(null);
     return (
                 <div className="bg-card p-6 rounded-xl border border-gray-800 space-y-6">
                     <div className="flex justify-between items-center border-b border-gray-700 pb-4">
@@ -64,10 +65,11 @@ export const OrgEarningsTab: React.FC<AdminPanelTabProps> = (props) => {
                                             <td className="p-4 text-right">
                                                 {earning.status === 'pending' && (
                                                     <button
-                                                        onClick={() => handleReleaseEarnings(earning)}
-                                                        className="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition"
+                                                        onClick={async () => { setReleasingId(earning.id); try { await handleReleaseEarnings(earning); } finally { setReleasingId(null); } }}
+                                                        disabled={releasingId === earning.id}
+                                                        className="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition disabled:opacity-50 disabled:cursor-not-allowed"
                                                     >
-                                                        Release
+                                                        {releasingId === earning.id ? "Releasing..." : "Release"}
                                                     </button>
                                                 )}
                                             </td>

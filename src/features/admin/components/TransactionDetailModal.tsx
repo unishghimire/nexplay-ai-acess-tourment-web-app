@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { X, CreditCard, Layout, Info, Eye, Image as ImageIcon } from 'lucide-react';
 import { Transaction } from '../../../shared/types/types';
 import { formatCurrency } from '../../../shared/utils/utils';
@@ -26,6 +26,20 @@ const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
     setRejectionReason,
     getRelativeTime
 }) => {
+    const [processing, setProcessing] = useState(false);
+
+    const handleAction = async (action: 'approve' | 'reject' | 'refund') => {
+        if (processing) return;
+        setProcessing(true);
+        try {
+            if (action === 'approve') await onApprove(selectedTx);
+            else if (action === 'reject') await onReject(selectedTx);
+            else if (action === 'refund') await onRefund(selectedTx);
+        } finally {
+            setProcessing(false);
+        }
+    };
+
     return (
         <div className="fixed inset-0 bg-black/95 backdrop-blur-sm z-[110] flex items-center justify-center p-4 animate-fade-in">
             <div className="bg-card w-full max-w-2xl rounded-3xl border border-gray-800 p-8 space-y-8 shadow-2xl overflow-y-auto max-h-[90vh]">
@@ -125,19 +139,20 @@ const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                 <div className="flex gap-4 pt-6 border-t border-gray-800">
                     {selectedTx.status === 'pending' ? (
                         <>
-                            <button onClick={() => onReject(selectedTx)} className="flex-1 bg-red-900/20 hover:bg-red-600 text-red-500 hover:text-white border border-red-500/30 hover:border-red-500 py-4 rounded-xl font-black transition-all uppercase tracking-widest text-sm">
-                                Reject
+                            <button onClick={() => handleAction('reject')} disabled={processing} className="flex-1 bg-red-900/20 hover:bg-red-600 text-red-500 hover:text-white border border-red-500/30 hover:border-red-500 py-4 rounded-xl font-black transition-all uppercase tracking-widest text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                                {processing ? "Processing..." : "Reject"}
                             </button>
-                            <button onClick={() => onApprove(selectedTx)} className="flex-[2] bg-green-600 hover:bg-green-500 text-white shadow-lg shadow-green-600/20 py-4 rounded-xl font-black transition-all uppercase tracking-widest text-sm">
-                                Approve
+                            <button onClick={() => handleAction('approve')} disabled={processing} className="flex-[2] bg-green-600 hover:bg-green-500 text-white shadow-lg shadow-green-600/20 py-4 rounded-xl font-black transition-all uppercase tracking-widest text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                                {processing ? "Processing..." : "Approve"}
                             </button>
                         </>
                     ) : selectedTx.status === 'success' && (selectedTx.type === 'withdrawal' || selectedTx.type === 'entry_fee') ? (
                         <button 
-                            onClick={() => onRefund(selectedTx)} 
-                            className="w-full bg-orange-600 hover:bg-orange-500 text-white py-4 rounded-xl font-black transition-all uppercase tracking-widest text-sm shadow-lg shadow-orange-600/20"
+                            onClick={() => handleAction('refund')} 
+                            disabled={processing}
+                            className="w-full bg-orange-600 hover:bg-orange-500 text-white py-4 rounded-xl font-black transition-all uppercase tracking-widest text-sm shadow-lg shadow-orange-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            Manual Refund
+                            {processing ? "Processing..." : "Manual Refund"}
                         </button>
                     ) : (
                         <div className="flex gap-4 w-full">
