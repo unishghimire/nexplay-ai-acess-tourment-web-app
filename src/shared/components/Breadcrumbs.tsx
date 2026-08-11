@@ -35,7 +35,7 @@ const Breadcrumbs: React.FC = () => {
         'complete-profile': 'Complete Profile',
     };
 
-    const baseUrl = 'https://www.nexplayorg.app';
+    const baseUrl = 'https://nexplayorg.app';
 
     const schemaItemList = [
         {
