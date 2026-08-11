@@ -220,6 +220,7 @@ router.post("/api/wallet/join-tournament",
       }
 
       // Deterministic participant doc ID for atomic duplicate check
+      // ponytail: underscore separator is safe — Firebase Auth UIDs and Firestore auto-generated doc IDs are alphanumeric-only (no underscores). Ceiling: manually-created tournament doc IDs with underscores could theoretically collide. Upgrade: use '::' separator if user-created IDs are ever allowed.
       const partRef = db.collection('participants').doc(`${tournamentId}_${uid}`);
 
       const result = await db.runTransaction(async (tx) => {
@@ -411,6 +412,7 @@ router.post("/api/wallet/redeem-promo",
 
         // Idempotency: deterministic transaction doc ID prevents duplicate redemption
         // Two concurrent requests will conflict on this doc, and the retry will see it exists
+        // ponytail: deterministic doc ID — same (uid, promoCode) always collides for duplicate prevention. Underscore separator safe for Firebase Auth UIDs (alphanumeric-only). Promo codes are uppercased and may contain underscores, but the _PROMO_ marker disambiguates.
         const promoTxRef = db.collection('transactions').doc(`${uid}_PROMO_${upperCode}`);
         const existingTx = await tx.get(promoTxRef);
         if (existingTx.exists) throw new Error("You have already used this promo code");
