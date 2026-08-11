@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Seo } from '../../../shared/components/Seo';
 import { doc, updateDoc, writeBatch, serverTimestamp, collection, query, where, getDocs, getDoc } from 'firebase/firestore';
 import { updateEmail, sendPasswordResetEmail } from 'firebase/auth';
 import { db, auth } from '../../../shared/config/firebase';
@@ -12,6 +11,7 @@ import { useInvisibleImage } from '../../../shared/hooks/useInvisibleImage';
 import { DEFAULT_AVATAR, NEXPLAY_LOGO, PRESET_AVATARS, PRESET_PLAYER_BANNERS } from '../../../shared/constants/constants';
 import { User, Mail, Phone, Shield, Trophy, Wallet as WalletIcon, Save, Info, Briefcase, Users, Hash, Clock, ArrowDown, ArrowUp, Copy, CheckCircle2, Image as ImageIcon, Settings as SettingsIcon, X } from 'lucide-react';
 import { Transaction, SiteSettings } from '../../../shared/types/types';
+import { Seo } from '../../../shared/components/Seo';
 
 const Profile: React.FC = () => {
     const { user, profile } = useAuth();
@@ -302,10 +302,9 @@ const Profile: React.FC = () => {
         }
     };
 
-
     return (
         <div className="max-w-3xl mx-auto animate-fade-in pb-20">
-        <Seo title="Profile | NexPlay" description="Your profile settings" noindex />
+            <Seo title="Profile | NexPlay" description="Your profile settings" noindex />
 
             {/* Header Card */}
                 <div 

@@ -176,6 +176,7 @@ const Wallet: React.FC = () => {
     return (
         <div className="max-w-6xl mx-auto space-y-8 animate-fade-in pb-20 px-4 xl:px-0">
             {/* Header Area */}
+            <Seo title="Wallet | NexPlay" description="Your wallet and transactions" noindex />
             <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-12 border-b border-gray-800 pb-8">
                 <div>
                     <h1 className="text-4xl font-black text-white uppercase tracking-tighter mb-2">My Wallet</h1>
@@ -397,7 +398,6 @@ const Wallet: React.FC = () => {
                                                 const isIncoming = item.type === 'deposit' || item.type === 'promo';
                                                 return (
                                                     <div key={index} className="flex-1 flex flex-col items-center h-full justify-end group relative">
-        <Seo title="Wallet | NexPlay" description="Your wallet and transactions" noindex />
                                                         {/* Tooltip */}
                                                         <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none absolute -top-10 z-20 bg-slate-900 border border-slate-800 text-white text-[10px] font-bold py-1 px-2 rounded-xl whitespace-nowrap shadow-xl flex flex-col items-center">
                                                             <span>{formatCurrency(item.amount)}</span>

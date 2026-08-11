@@ -257,7 +257,7 @@ const OrganizerPanel: React.FC = () => {
 
   return (
     <DashboardLayout title="Organizer Panel">
-        <Seo title="Organizer Panel | NexPlay" description="Tournament organizer dashboard" noindex />
+            <Seo title="Organizer Panel | NexPlay" description="Tournament organizer dashboard" noindex />
       {/* Mobile nav toggle */}
       <button
         onClick={() => setMobileNavOpen(!mobileNavOpen)}

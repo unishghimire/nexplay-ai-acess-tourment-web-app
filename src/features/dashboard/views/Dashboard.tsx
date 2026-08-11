@@ -144,6 +144,7 @@ const Dashboard: React.FC = () => {
     return (
         <div className="animate-fade-in max-w-5xl mx-auto p-4 md:p-8">
             <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6 border-b border-gray-800 pb-8">
+            <Seo title="Dashboard | NexPlay" description="Your personal dashboard" noindex />
                 <h2 className="text-4xl font-black text-white uppercase tracking-tighter">My Dashboard</h2>
             </header>
             
@@ -182,7 +183,6 @@ const Dashboard: React.FC = () => {
 
                         return (
                             <div key={t.id} className="bg-black border border-gray-800 p-4 sm:p-8 rounded-2xl sm:rounded-3xl transition duration-300 hover:border-gray-700 hover:bg-gray-900/50 group">
-        <Seo title="Dashboard | NexPlay" description="Your personal dashboard" noindex />
                                 <div className="flex justify-between items-start gap-6">
                                     <div className="flex-1">
                                         <div className="flex items-center gap-3 mb-4 flex-wrap">
