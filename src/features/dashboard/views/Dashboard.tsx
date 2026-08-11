@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { Trophy, Eye, Upload, BarChart, User, Shield, Users } from 'lucide-react';
 import ResultUploadModal from '../../results/components/ResultUploadModal';
 import TournamentResultModal from '../../tournaments/components/TournamentResultModal';
+import { Seo } from '../../../shared/components/Seo';
 
 const Dashboard: React.FC = () => {
     const { user, profile } = useAuth();
@@ -181,6 +182,7 @@ const Dashboard: React.FC = () => {
 
                         return (
                             <div key={t.id} className="bg-black border border-gray-800 p-4 sm:p-8 rounded-2xl sm:rounded-3xl transition duration-300 hover:border-gray-700 hover:bg-gray-900/50 group">
+        <Seo title="Dashboard | NexPlay" description="Your personal dashboard" noindex />
                                 <div className="flex justify-between items-start gap-6">
                                     <div className="flex-1">
                                         <div className="flex items-center gap-3 mb-4 flex-wrap">

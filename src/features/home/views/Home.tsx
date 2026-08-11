@@ -196,12 +196,33 @@ const Home: React.FC = () => {
                 "@type": "Organization",
                 name: "NexPlay",
                 url: "https://www.nexplayorg.app",
-                description: "Nepal-focused esports tournament and scrim platform",
+                logo: "https://www.nexplayorg.app/nexplay-logo.png",
+                description: "Nepal's premier esports tournament and scrim platform. Host and compete in PUBG Mobile, Free Fire, Valorant, and Mobile Legends tournaments with secure wallets, live brackets, and national rankings.",
+                foundingDate: "2025",
+                areaServed: {
+                    "@type": "Country",
+                    name: "Nepal",
+                },
+                sameAs: [
+                    "https://www.facebook.com/nexplayorg",
+                    "https://www.instagram.com/nexplayorg",
+                    "https://twitter.com/nexplayorg",
+                    "https://www.youtube.com/@nexplayorg",
+                    "https://discord.gg/nexplay",
+                ],
             }, {
                 "@context": "https://schema.org",
                 "@type": "WebSite",
                 name: "NexPlay",
                 url: "https://www.nexplayorg.app",
+                potentialAction: {
+                    "@type": "SearchAction",
+                    target: {
+                        "@type": "EntryPoint",
+                        urlTemplate: "https://www.nexplayorg.app/tournaments?q={search_term_string}",
+                    },
+                    "query-input": "required name=search_term_string",
+                },
             }]}
         />
         <div className="animate-fade-in space-y-16 pb-20 relative">
@@ -357,7 +378,7 @@ const Home: React.FC = () => {
                             >
                                 <div className="flex gap-4 sm:gap-6 min-w-0">
                                     <div className="w-24 h-24 rounded-2xl bg-dark overflow-hidden shrink-0 border border-gray-800">
-                                        <img src={t.bannerUrl || `https://api.dicebear.com/7.x/identicon/svg?seed=${t.title}`} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                        <img src={t.bannerUrl || `https://api.dicebear.com/7.x/identicon/svg?seed=${t.title}`} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" />
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex justify-between items-start mb-2">

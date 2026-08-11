@@ -21,7 +21,7 @@ const GameCard: React.FC<GameCardProps> = ({ game }) => {
                 <img 
                     src={game.logoUrl || 'https://picsum.photos/seed/gaming/400/300' || undefined} 
                     alt={formatGameName(game.name)} 
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy"
                     referrerPolicy="no-referrer"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>

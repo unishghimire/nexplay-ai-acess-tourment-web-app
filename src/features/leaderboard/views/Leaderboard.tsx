@@ -15,8 +15,30 @@ const RankIndicator = ({ change }: { change?: number }) => {
         <>
         <Seo
             title="Leaderboard | NexPlay — Nepal Esports Rankings"
-            description="Check NexPlay's national esports leaderboard. See top players and teams in Nepal's competitive gaming scene."
+            description="Check NexPlay's national esports leaderboard. See top players and teams in Nepal's competitive gaming scene. Rankings updated daily based on tournament performance."
             canonicalPath="/leaderboard"
+            jsonLd={{
+                "@context": "https://schema.org",
+                "@type": "FAQPage",
+                mainEntity: [
+                    {
+                        "@type": "Question",
+                        name: "How are NexPlay leaderboard rankings calculated?",
+                        acceptedAnswer: {
+                            "@type": "Answer",
+                            text: "NexPlay rankings are based on tournament performance, including wins, placement, and prize earnings. Rankings are updated daily to reflect the latest results."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        name: "Can I see my rank on the NexPlay leaderboard?",
+                        acceptedAnswer: {
+                            "@type": "Answer",
+                            text: "Yes, registered players can view their current rank, rating, and tournament history on the leaderboard page."
+                        }
+                    }
+                ]
+            }}
         />
         <div className="flex items-center text-green-500 gap-0.5">
             <ArrowUp className="w-3 h-3" />
@@ -74,7 +96,7 @@ const PodiumCard = ({ item, rank, type, navigate }: {
                 <div className={`w-28 h-28 rounded-full border-4 ${borderColor} overflow-hidden bg-black shadow-xl`}>
                     <img 
                         src={avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${avatarSeed}`} 
-                        alt="Avatar" 
+                        alt={`${player.username} avatar`} 
                         className="w-full h-full object-cover"
                     />
                 </div>
@@ -281,7 +303,7 @@ const Leaderboard: React.FC = () => {
                                             <div className="w-16 h-16 rounded-2xl overflow-hidden bg-black border border-gray-800">
                                                 <img 
                                                     src={avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${avatarSeed}`} 
-                                                    alt="Avatar" 
+                                                    alt={`${player.username} avatar`} 
                                                     className="w-full h-full object-cover"
                                                 />
                                             </div>

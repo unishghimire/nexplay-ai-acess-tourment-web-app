@@ -175,7 +175,7 @@ const Results: React.FC = () => {
                         >
                             <div className="flex flex-col sm:flex-row h-full">
                                 <div className="sm:w-48 h-48 sm:h-auto shrink-0 bg-dark overflow-hidden relative">
-                                    <img src={t.bannerUrl || `https://api.dicebear.com/7.x/identicon/svg?seed=${t.title}`} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                    <img src={t.bannerUrl || `https://api.dicebear.com/7.x/identicon/svg?seed=${t.title}`} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" />
                                     <div className="absolute inset-0 bg-gradient-to-t from-gray-950 to-transparent"></div>
                                     <div className="absolute bottom-4 left-4">
                                         <div className="flex items-center gap-1.5 bg-brand-500 px-3 py-1 rounded-full border border-brand-400/30">

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Seo } from '../../../shared/components/Seo';
 import { doc, updateDoc, writeBatch, serverTimestamp, collection, query, where, getDocs, getDoc } from 'firebase/firestore';
 import { updateEmail, sendPasswordResetEmail } from 'firebase/auth';
 import { db, auth } from '../../../shared/config/firebase';
@@ -304,6 +305,8 @@ const Profile: React.FC = () => {
 
     return (
         <div className="max-w-3xl mx-auto animate-fade-in pb-20">
+        <Seo title="Profile | NexPlay" description="Your profile settings" noindex />
+
             {/* Header Card */}
                 <div 
                 onPaste={handlePaste}

@@ -334,14 +334,24 @@ export default function TournamentDetails() {
                         startDate: tournament.startTime?.toDate?.()?.toISOString(),
                         endDate: tournament.startTime?.toDate?.()?.toISOString(),
                         eventStatus: tournament.status === 'completed' ? "https://schema.org/EventCompleted" : "https://schema.org/EventScheduled",
+                        eventAttendanceMode: "https://schema.org/OnlineEventAttendanceMode",
                         url: `https://www.nexplayorg.app/details/${id}`,
                         organizer: {
                             "@type": "Organization",
                             name: tournament.hostName || "NexPlay",
+                            url: "https://www.nexplayorg.app",
                         },
                         location: {
-                            "@type": "Place",
-                            name: "Online",
+                            "@type": "VirtualLocation",
+                            name: "NexPlay Online",
+                            url: `https://www.nexplayorg.app/details/${id}`,
+                        },
+                        offers: {
+                            "@type": "Offer",
+                            price: tournament.entryFee ? String(tournament.entryFee) : "0",
+                            priceCurrency: "NPR",
+                            availability: "https://schema.org/InStock",
+                            url: `https://www.nexplayorg.app/details/${id}`,
                         },
                     }}
                 />
@@ -714,7 +724,7 @@ export default function TournamentDetails() {
                                             <img 
                                                 src={t.bannerUrl || DEFAULT_BANNER || undefined} 
                                                 alt={t.title}
-                                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy"
                                             />
                                             <div className="absolute inset-0 bg-gradient-to-t from-gray-950 to-transparent"></div>
                                         </div>

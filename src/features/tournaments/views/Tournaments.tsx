@@ -112,8 +112,46 @@ const Tournaments: React.FC = () => {
         <div className="animate-fade-in max-w-7xl mx-auto p-4 sm:p-6 md:p-8 w-full min-w-0">
             <Seo
                 title="Esports Tournaments in Nepal | NexPlay"
-                description="Browse and join upcoming esports tournaments in Nepal. PUBG Mobile, Free Fire, Valorant and more on NexPlay."
+                description="Browse and join upcoming esports tournaments in Nepal. PUBG Mobile, Free Fire, Valorant and more on NexPlay. Free and paid tournaments with real cash prizes."
                 canonicalPath="/tournaments"
+                jsonLd={{
+                    "@context": "https://schema.org",
+                    "@type": "FAQPage",
+                    mainEntity: [
+                        {
+                            "@type": "Question",
+                            name: "How do I join an esports tournament on NexPlay?",
+                            acceptedAnswer: {
+                                "@type": "Answer",
+                                text: "Browse the tournaments page, select a tournament, and click Register. You may need a team for squad-based tournaments. Entry fees are paid through your NexPlay wallet."
+                            }
+                        },
+                        {
+                            "@type": "Question",
+                            name: "What games are available on NexPlay?",
+                            acceptedAnswer: {
+                                "@type": "Answer",
+                                text: "NexPlay hosts tournaments for PUBG Mobile, Free Fire, Valorant, Mobile Legends, and other popular esports titles in Nepal."
+                            }
+                        },
+                        {
+                            "@type": "Question",
+                            name: "Are NexPlay tournaments free to enter?",
+                            acceptedAnswer: {
+                                "@type": "Answer",
+                                text: "NexPlay offers both free and paid tournaments. Free tournaments are a great way to compete without risk, while paid tournaments offer real cash prizes."
+                            }
+                        },
+                        {
+                            "@type": "Question",
+                            name: "How are tournament payouts handled?",
+                            acceptedAnswer: {
+                                "@type": "Answer",
+                                text: "Prize pools are distributed through the NexPlay wallet system. Winners receive payouts directly to their wallet after tournament completion and admin verification."
+                            }
+                        }
+                    ]
+                }}
             />
 
             <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 sm:mb-12 gap-4 sm:gap-6 border-b border-gray-800 pb-6 sm:pb-8 w-full">

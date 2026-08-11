@@ -6,6 +6,7 @@ import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { User, Hash, Save, LogOut, CheckCircle2 } from 'lucide-react';
 import { PRESET_AVATARS } from '../../../shared/constants/constants';
+import { Seo } from '../../../shared/components/Seo';
 
 const CompleteProfile: React.FC = () => {
     const { user, profile, logout } = useAuth();
@@ -67,6 +68,7 @@ const CompleteProfile: React.FC = () => {
 
     return (
         <div className="min-h-[80vh] flex items-center justify-center p-4">
+        <Seo title="Complete Profile | NexPlay" description="Complete your NexPlay profile" noindex />
             <div className="w-full max-w-md bg-card border border-gray-800 rounded-2xl sm:rounded-3xl p-5 sm:p-8 shadow-2xl animate-scale-in">
                 <div className="text-center mb-8">
                     <div className="w-20 h-20 bg-brand-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-brand-500/20">

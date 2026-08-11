@@ -10,6 +10,7 @@ import { useInvisibleImage } from '../../../shared/hooks/useInvisibleImage';
 import { NEXPLAY_LOGO, PRESET_TEAM_LOGOS } from '../../../shared/constants/constants';
 import { timeAgo, formatDate, formatCurrency } from '../../../shared/utils/utils';
 import Modal from '../../../shared/components/Modal';
+import { Seo } from '../../../shared/components/Seo';
 
 const TeamDetails: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -382,6 +383,7 @@ const TeamDetails: React.FC = () => {
 
     return (
         <div className="max-w-6xl mx-auto animate-fade-in pb-20 px-4">
+        <Seo title="Esports Team | NexPlay" description="View esports team roster, stats, and tournament history on NexPlay" canonicalPath="/team/${id}" />
             {/* Breadcrumbs & Back Button */}
             <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-gray-500">

@@ -65,8 +65,38 @@ const Scrims: React.FC = () => {
         <>
         <Seo
             title="Esports Scrims in Nepal | NexPlay"
-            description="Find and join esports scrims in Nepal. Practice matches for PUBG Mobile, Free Fire, Valorant and more on NexPlay."
+            description="Find and join esports scrims in Nepal. Practice matches for PUBG Mobile, Free Fire, Valorant and more on NexPlay. Free daily scrims with instant matchmaking."
             canonicalPath="/scrims"
+            jsonLd={{
+                "@context": "https://schema.org",
+                "@type": "FAQPage",
+                mainEntity: [
+                    {
+                        "@type": "Question",
+                        name: "What are esports scrims?",
+                        acceptedAnswer: {
+                            "@type": "Answer",
+                            text: "Scrims are practice matches where teams compete against each other to improve skills without the pressure of a tournament. NexPlay hosts daily scrims for popular esports titles in Nepal."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        name: "Are NexPlay scrims free?",
+                        acceptedAnswer: {
+                            "@type": "Answer",
+                            text: "Yes, NexPlay offers free daily scrims. Simply join a scrim room, connect with your team, and start practicing."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        name: "How do I join a scrim on NexPlay?",
+                        acceptedAnswer: {
+                            "@type": "Answer",
+                            text: "Browse the scrims page, find an open scrim matching your game and skill level, and click Join. You may need a registered team for squad-based scrims."
+                        }
+                    }
+                ]
+            }}
         />
         <div className="animate-fade-in max-w-5xl mx-auto p-4 md:p-8">
             <header className="mb-12 border-b border-gray-800 pb-8">
@@ -139,7 +169,7 @@ const Scrims: React.FC = () => {
                                 <img 
                                     src={scrim.bannerUrl || 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80'} 
                                     alt={scrim.title}
-                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/20 to-transparent"></div>
                                 <div className="absolute top-4 left-4 flex gap-2">

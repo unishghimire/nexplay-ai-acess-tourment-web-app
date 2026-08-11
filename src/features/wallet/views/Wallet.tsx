@@ -8,6 +8,7 @@ import { ArrowUpRight, ArrowDownRight, CheckCircle2, Wallet as WalletIcon, Gift,
 import WalletModal from '../components/WalletModal';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { useInView } from '../../../shared/hooks/useInView';
+import { Seo } from '../../../shared/components/Seo';
 
 const Wallet: React.FC = () => {
     const { user, profile } = useAuth();
@@ -396,6 +397,7 @@ const Wallet: React.FC = () => {
                                                 const isIncoming = item.type === 'deposit' || item.type === 'promo';
                                                 return (
                                                     <div key={index} className="flex-1 flex flex-col items-center h-full justify-end group relative">
+        <Seo title="Wallet | NexPlay" description="Your wallet and transactions" noindex />
                                                         {/* Tooltip */}
                                                         <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none absolute -top-10 z-20 bg-slate-900 border border-slate-800 text-white text-[10px] font-bold py-1 px-2 rounded-xl whitespace-nowrap shadow-xl flex flex-col items-center">
                                                             <span>{formatCurrency(item.amount)}</span>

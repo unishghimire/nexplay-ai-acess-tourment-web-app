@@ -11,7 +11,23 @@ Disallow: /complete-profile
 Disallow: /tournament-admin/
 Disallow: /api/
 
+# AI Search Engines — allow full crawling
 User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Bingbot
 Allow: /
 
 Sitemap: https://www.nexplayorg.app/sitemap.xml

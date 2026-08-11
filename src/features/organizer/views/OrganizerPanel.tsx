@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useOrgData } from '../hooks/useOrgData';
 import { OrgOverlayManager, OverlayType } from '../components/OrgOverlayManager';
+import { Seo } from '../../../shared/components/Seo';
 
 // Lazy-load tab components
 const OverviewTab = React.lazy(() => import('../components/OverviewTab'));
@@ -256,6 +257,7 @@ const OrganizerPanel: React.FC = () => {
 
   return (
     <DashboardLayout title="Organizer Panel">
+        <Seo title="Organizer Panel | NexPlay" description="Tournament organizer dashboard" noindex />
       {/* Mobile nav toggle */}
       <button
         onClick={() => setMobileNavOpen(!mobileNavOpen)}
