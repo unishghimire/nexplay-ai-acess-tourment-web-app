@@ -142,7 +142,7 @@ export const GroupsTab: React.FC<TournamentAdminTabProps> = (props) => {
             <Modal isOpen={isCreateGroupModalOpen} onClose={() => setIsCreateGroupModalOpen(false)} title="Create New Group">
                 <div className="space-y-4">
                     <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Group Name</label>
+                        <label htmlFor="group-name" className="block text-xs font-bold text-gray-500 uppercase mb-2">Group Name</label>
                         <input 
                             type="text" 
                             value={newGroup.name}
@@ -152,7 +152,7 @@ export const GroupsTab: React.FC<TournamentAdminTabProps> = (props) => {
                         />
                     </div>
                     <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Team Limit</label>
+                        <label htmlFor="team-limit" className="block text-xs font-bold text-gray-500 uppercase mb-2">Team Limit</label>
                         <input 
                             type="number" 
                             value={newGroup.teamLimit}

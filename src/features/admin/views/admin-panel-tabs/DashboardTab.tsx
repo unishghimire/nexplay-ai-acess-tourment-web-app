@@ -53,8 +53,8 @@ export const DashboardTab: React.FC<AdminPanelTabProps> = (props) => {
                     </div>
 
                     <div className="col-span-full grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div className="bg-card p-4 sm:p-6 rounded-2xl border border-gray-800 lg:col-span-2 shadow-xl">
-                            <div className="flex justify-between items-center mb-6 border-b border-gray-800 pb-4">
+                        <div className="bg-card p-4 sm:p-6 rounded-2xl border border-slate-800 lg:col-span-2 shadow-xl">
+                            <div className="flex justify-between items-center mb-6 border-b border-slate-800 pb-4">
                                 <h2 className="font-bold text-white text-lg flex items-center gap-2">
                                     <Bell className="w-5 h-5 text-brand-400" /> Pending Transactions
                                 </h2>
@@ -65,20 +65,20 @@ export const DashboardTab: React.FC<AdminPanelTabProps> = (props) => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[350px] sm:max-h-[450px] overflow-y-auto custom-scrollbar content-start pr-2">
                                 {pendingTransactions.length > 0 ? (
                                     pendingTransactions.map(t => (
-                                        <div key={t.id} className="bg-dark/50 hover:bg-dark p-5 rounded-2xl border border-gray-800 hover:border-gray-700 transition-all shadow-md group">
-                                            <div className="flex justify-between items-start mb-4 border-b border-gray-800 pb-3">
+                                        <div key={t.id} className="bg-dark/50 hover:bg-dark p-5 rounded-2xl border border-slate-800 hover:border-slate-700 transition-all shadow-md group">
+                                            <div className="flex justify-between items-start mb-4 border-b border-slate-800 pb-3">
                                                 <div>
                                                     <div className="flex items-center gap-2 mb-1">
                                                         <span className={`font-black tracking-wider ${t.type === 'deposit' ? 'text-green-400' : 'text-red-400'} uppercase text-xs`}>{t.type}</span>
-                                                        <span className="text-[10px] bg-gray-800 px-2 py-0.5 rounded-full text-gray-300 font-bold tracking-wider">{t.method}</span>
+                                                        <span className="text-[10px] bg-surface px-2 py-0.5 rounded-full text-slate-300 font-bold tracking-wider">{t.method}</span>
                                                     </div>
                                                     <div className="text-white font-bold text-sm mb-1">{t.username || 'Unknown User'}</div>
-                                                    <div className="text-[10px] text-gray-500 font-mono">{getRelativeTime(t.timestamp)}</div>
+                                                    <div className="text-[10px] text-slate-400 font-mono">{getRelativeTime(t.timestamp)}</div>
                                                 </div>
                                                 <div className="text-xl font-black text-white tracking-tight">{formatCurrency(Math.abs(t.amount))}</div>
                                             </div>
-                                            <div className="text-[11px] text-gray-400 mb-5 bg-black/30 p-2 rounded-lg border border-gray-800/50 font-mono flex justify-between items-center">
-                                                <span className="text-gray-600">REF:</span> 
+                                            <div className="text-[11px] text-slate-400 mb-5 bg-dark/40 p-2 rounded-lg border border-slate-800/50 font-mono flex justify-between items-center">
+                                                <span className="text-slate-500">REF:</span> 
                                                 <span className="text-brand-300 select-all">{t.refId}</span>
                                             </div>
                                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -106,19 +106,19 @@ export const DashboardTab: React.FC<AdminPanelTabProps> = (props) => {
                                         </div>
                                     ))
                                 ) : (
-                                    <div className="col-span-full h-full flex flex-col items-center justify-center text-gray-500 py-10">
-                                        <div className="w-16 h-16 bg-dark rounded-full flex items-center justify-center mb-4 border border-gray-800">
+                                    <div className="col-span-full h-full flex flex-col items-center justify-center text-slate-400 py-10">
+                                        <div className="w-16 h-16 bg-dark rounded-full flex items-center justify-center mb-4 border border-slate-800">
                                             <Check className="text-3xl text-green-500/50" />
                                         </div>
-                                        <p className="font-bold uppercase tracking-widest text-sm text-gray-600">All Caught Up!</p>
+                                        <p className="font-bold uppercase tracking-widest text-sm text-slate-500">All Caught Up!</p>
                                         <p className="text-xs text-gray-700 mt-1">No pending transactions to review.</p>
                                     </div>
                                 )}
                             </div>
                         </div>
 
-                        <div className="bg-card p-4 sm:p-6 rounded-2xl border border-gray-800 shadow-xl max-h-[450px] sm:max-h-[550px] flex flex-col">
-                            <div className="flex justify-between items-center mb-6 border-b border-gray-800 pb-4">
+                        <div className="bg-card p-4 sm:p-6 rounded-2xl border border-slate-800 shadow-xl max-h-[450px] sm:max-h-[550px] flex flex-col">
+                            <div className="flex justify-between items-center mb-6 border-b border-slate-800 pb-4">
                                 <h2 className="font-bold text-white text-lg flex items-center gap-2">
                                     <Info className="w-5 h-5 text-brand-400" /> Activity Feed
                                 </h2>
@@ -126,20 +126,20 @@ export const DashboardTab: React.FC<AdminPanelTabProps> = (props) => {
                             <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-4">
                                 {activityLogs.length > 0 ? (
                                     activityLogs.map(log => (
-                                        <div key={log.id} className="bg-dark/50 p-4 rounded-xl border border-gray-800">
+                                        <div key={log.id} className="bg-dark/50 p-4 rounded-xl border border-slate-800">
                                             <div className="flex justify-between items-start mb-2">
                                                 <span className="text-brand-400 font-bold text-sm">{log.action}</span>
                                                 <div className="text-right">
-                                                    <div className="text-[10px] text-gray-500">{formatDate(log.timestamp)}</div>
-                                                    <div className="text-[10px] text-gray-500 font-mono">{getRelativeTime(log.timestamp)}</div>
+                                                    <div className="text-[10px] text-slate-400">{formatDate(log.timestamp)}</div>
+                                                    <div className="text-[10px] text-slate-400 font-mono">{getRelativeTime(log.timestamp)}</div>
                                                 </div>
                                             </div>
-                                            <p className="text-gray-300 text-xs mb-2">{log.details}</p>
-                                            <div className="text-[10px] text-gray-500 font-mono">By: {log.adminEmail}</div>
+                                            <p className="text-slate-300 text-xs mb-2">{log.details}</p>
+                                            <div className="text-[10px] text-slate-400 font-mono">By: {log.adminEmail}</div>
                                         </div>
                                     ))
                                 ) : (
-                                    <div className="h-full flex flex-col items-center justify-center text-gray-500">
+                                    <div className="h-full flex flex-col items-center justify-center text-slate-400">
                                         <p className="text-sm">No recent activity.</p>
                                     </div>
                                 )}
@@ -148,8 +148,8 @@ export const DashboardTab: React.FC<AdminPanelTabProps> = (props) => {
                     </div>
 
                     <div className="space-y-6">
-                        <div className="bg-card p-4 rounded-xl border border-gray-800">
-                            <div className="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
+                        <div className="bg-card p-4 rounded-xl border border-slate-800">
+                            <div className="flex justify-between items-center mb-4 border-b border-slate-700 pb-2">
                                 <h2 className="font-bold text-white">Promotion Slider</h2>
                                 <button 
                                     onClick={() => {
@@ -168,7 +168,7 @@ export const DashboardTab: React.FC<AdminPanelTabProps> = (props) => {
                             <div className="h-48 overflow-y-auto custom-scrollbar">
                                 {slides.length > 0 ? (
                                     slides.map(s => (
-                                        <div key={s.id} className="flex justify-between items-center bg-dark p-2 rounded mb-2 border border-gray-700">
+                                        <div key={s.id} className="flex justify-between items-center bg-dark p-2 rounded mb-2 border border-slate-700">
                                             <div className="flex items-center gap-2">
                                                 <img src={s.imageUrl || undefined} onError={(e) => { e.currentTarget.src = NEXPLAY_LOGO; }} className="w-10 h-6 object-cover rounded" alt={s.title} />
                                                 <span className="text-white text-sm truncate flex-1 min-w-0">{s.title}</span>
@@ -189,35 +189,35 @@ export const DashboardTab: React.FC<AdminPanelTabProps> = (props) => {
                                         </div>
                                     ))
                                 ) : (
-                                    <p className="text-gray-500 text-sm text-center">No custom slides.</p>
+                                    <p className="text-slate-400 text-sm text-center">No custom slides.</p>
                                 )}
                             </div>
                         </div>
                     </div>
 
                     {isSlideModalOpen && (
-                        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                            <div className="bg-card w-full max-w-md rounded-2xl border border-gray-800 p-6 space-y-4 shadow-2xl overflow-y-auto max-h-[90vh] custom-scrollbar">
-                                <h3 className="text-xl font-bold text-white uppercase tracking-widest border-b border-gray-800 pb-4">
+                        <div className="fixed inset-0 modal-backdrop backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+                            <div className="bg-card w-full max-w-md rounded-2xl border border-slate-800 p-6 space-y-4 shadow-2xl overflow-y-auto max-h-[90vh] custom-scrollbar">
+                                <h3 className="text-xl font-bold text-white uppercase tracking-widest border-b border-slate-800 pb-4">
                                     {editingSlide ? 'Edit Slide' : 'Add Slide'}
                                 </h3>
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Title</label>
-                                        <input type="text" value={slideTitle} onChange={e => setSlideTitle(e.target.value)} className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" />
+                                        <label htmlFor="slide-title" className="text-xs text-slate-400 uppercase font-bold mb-1 block">Title</label>
+                                        <input id="slide-title" type="text" value={slideTitle} onChange={e => setSlideTitle(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" />
                                     </div>
                                     <div>
-                                        <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Description</label>
-                                        <textarea value={slideDescription} onChange={e => setSlideDescription(e.target.value)} className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none h-20 resize-none" placeholder="Short description for the slide..." />
+                                        <label htmlFor="slide-desc" className="text-xs text-slate-400 uppercase font-bold mb-1 block">Description</label>
+                                        <textarea id="slide-desc" value={slideDescription} onChange={e => setSlideDescription(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none h-20 resize-none" placeholder="Short description for the slide..." />
                                     </div>
                                     <div>
-                                        <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Image (Paste, Drop or Click to Select)</label>
+                                        <label className="text-xs text-slate-400 uppercase font-bold mb-1 block">Image (Paste, Drop or Click to Select)</label>
                                         <div 
                                             onPaste={handlePasteSlide}
                                             onDrop={handleDropSlide}
                                             onDragOver={handleDragOverSlide}
                                             onClick={() => document.getElementById('slide-image-file-input')?.click()}
-                                            className={`relative w-full aspect-video rounded-xl border-2 border-dashed transition-all flex items-center justify-center overflow-hidden group cursor-pointer ${uploading ? 'border-brand-500 bg-brand-500/10' : 'border-gray-700 hover:border-brand-500 bg-dark'}`}
+                                            className={`relative w-full aspect-video rounded-xl border-2 border-dashed transition-all flex items-center justify-center overflow-hidden group cursor-pointer ${uploading ? 'border-brand-500 bg-brand-500/10' : 'border-slate-700 hover:border-brand-500 bg-dark'}`}
                                         >
                                             {uploading ? (
                                                 <div className="flex flex-col items-center gap-2">
@@ -233,7 +233,7 @@ export const DashboardTab: React.FC<AdminPanelTabProps> = (props) => {
                                                         onError={(e) => (e.currentTarget.src = NEXPLAY_LOGO)}
                                                         referrerPolicy="no-referrer"
                                                     />
-                                                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition">
+                                                    <div className="absolute inset-0 flex items-center justify-center bg-dark/40 opacity-0 group-hover:opacity-100 transition">
                                                         <Plus className="w-8 h-8 text-white" />
                                                     </div>
                                                 </>
@@ -251,16 +251,16 @@ export const DashboardTab: React.FC<AdminPanelTabProps> = (props) => {
                                             }}
                                         />
                                         <div className="mt-2">
-                                            <input type="text" value={slideImage} onChange={e => setSlideImage(e.target.value)} className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none text-xs" placeholder="Or paste URL..." />
+                                            <input type="text" value={slideImage} onChange={e => setSlideImage(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none text-xs" placeholder="Or paste URL..." />
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Link</label>
-                                        <input type="text" value={slideLink} onChange={e => setSlideLink(e.target.value)} className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" placeholder="/tournaments or https://..." />
+                                        <label htmlFor="slide-link" className="text-xs text-slate-400 uppercase font-bold mb-1 block">Link</label>
+                                        <input id="slide-link" type="text" value={slideLink} onChange={e => setSlideLink(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" placeholder="/tournaments or https://..." />
                                     </div>
                                     <div>
-                                        <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Button Text</label>
-                                        <input type="text" value={slideBtnText} onChange={e => setSlideBtnText(e.target.value)} className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" />
+                                        <label htmlFor="slide-btn-text" className="text-xs text-slate-400 uppercase font-bold mb-1 block">Button Text</label>
+                                        <input type="text" value={slideBtnText} onChange={e => setSlideBtnText(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" />
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <input 
@@ -268,13 +268,13 @@ export const DashboardTab: React.FC<AdminPanelTabProps> = (props) => {
                                             id="slideIsActive"
                                             checked={slideIsActive} 
                                             onChange={e => setSlideIsActive(e.target.checked)} 
-                                            className="w-4 h-4 rounded border-gray-700 bg-dark text-brand-600 focus:ring-brand-500"
+                                            className="w-4 h-4 rounded border-slate-700 bg-dark text-brand-600 focus:ring-brand-500"
                                         />
-                                        <label htmlFor="slideIsActive" className="text-xs text-gray-300 font-bold uppercase cursor-pointer">Active Status</label>
+                                        <label htmlFor="slideIsActive" className="text-xs text-slate-300 font-bold uppercase cursor-pointer">Active Status</label>
                                     </div>
                                 </div>
                                 <div className="flex gap-3 pt-4">
-                                    <button onClick={() => setIsSlideModalOpen(false)} className="flex-1 bg-gray-800 py-3 rounded-xl font-bold">Cancel</button>
+                                    <button onClick={() => setIsSlideModalOpen(false)} className="flex-1 bg-surface py-3 rounded-xl font-bold">Cancel</button>
                                     <button onClick={handleSaveSlide} className="flex-1 bg-brand-600 py-3 rounded-xl font-bold">Save</button>
                                 </div>
                             </div>

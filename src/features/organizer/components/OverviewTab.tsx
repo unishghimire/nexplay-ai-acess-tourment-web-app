@@ -72,7 +72,7 @@ const renderStatusBadge = (status: string) => {
   }
   if (s === 'upcoming' || s === 'published' || s === 'draft') {
     return (
-      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-zinc-800 text-gray-300 border border-zinc-700">
+      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-slate-800/80 text-slate-300 border border-slate-700/60">
         <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
         {s.charAt(0).toUpperCase() + s.slice(1)}
       </span>
@@ -80,14 +80,14 @@ const renderStatusBadge = (status: string) => {
   }
   if (s === 'completed') {
     return (
-      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-zinc-900 text-gray-500 border border-zinc-800">
+      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-zinc-900 text-slate-400 border border-zinc-800">
         <span className="w-1.5 h-1.5 rounded-full bg-gray-600" />
         Completed
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-zinc-800 text-gray-400 border border-zinc-700">
+    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-slate-800/80 text-slate-400 border border-slate-700/60">
       {status || 'Unknown'}
     </span>
   );
@@ -115,7 +115,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-bold text-white tracking-tight">Overview</h2>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <p className="text-xs text-slate-400 mt-0.5">
             Key metrics and real-time activity for your esports organization.
           </p>
         </div>
@@ -186,7 +186,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
       {/* 2. Two-column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column (lg:col-span-2): Live Tournaments Data Table */}
-        <div className="lg:col-span-2 bg-card border border-gray-800 rounded-2xl p-4 sm:p-6">
+        <div className="lg:col-span-2 bg-card border border-slate-800 rounded-2xl p-4 sm:p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-base font-semibold text-white">Live Tournaments</h3>
           </div>
@@ -194,7 +194,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
           <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-gray-800 text-xs text-gray-500 uppercase tracking-wider">
+                <tr className="border-b border-slate-800 text-xs text-slate-400 uppercase tracking-wider">
                   <th className="pb-3 font-medium">Tournament</th>
                   <th className="pb-3 font-medium">Status</th>
                   <th className="pb-3 font-medium">Teams</th>
@@ -210,14 +210,14 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
                     return (
                       <tr
                         key={tournament.id || `tournament-${idx}`}
-                        className="border-b border-gray-800 hover:bg-gray-900/30 transition-colors"
+                        className="border-b border-slate-800 hover:bg-card/30 transition-colors"
                       >
                         <td className="py-3.5 pr-4">
                           <div className="font-medium text-white">
                             {tournament.title || 'Untitled Tournament'}
                           </div>
                           {tournament.game && (
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-slate-400">
                               {tournament.game}
                             </div>
                           )}
@@ -225,7 +225,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
                         <td className="py-3.5 px-2 whitespace-nowrap">
                           {renderStatusBadge(tournament.status)}
                         </td>
-                        <td className="py-3.5 px-2 text-gray-300 font-mono text-xs whitespace-nowrap">
+                        <td className="py-3.5 px-2 text-slate-300 font-mono text-xs whitespace-nowrap">
                           {current}/{max}
                         </td>
                         <td className="py-3.5 pl-2 text-right font-medium text-white whitespace-nowrap">
@@ -238,7 +238,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
                   <tr>
                     <td
                       colSpan={4}
-                      className="py-8 text-center text-xs text-gray-500"
+                      className="py-8 text-center text-xs text-slate-400"
                     >
                       No tournaments available.
                     </td>
@@ -250,7 +250,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
         </div>
 
         {/* Right Column: Recent Activity Feed */}
-        <div className="bg-card border border-gray-800 rounded-2xl p-4 sm:p-6">
+        <div className="bg-card border border-slate-800 rounded-2xl p-4 sm:p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-base font-semibold text-white">Recent Activity</h3>
           </div>
@@ -260,23 +260,23 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
               activityFeed.map((item) => (
                 <div
                   key={item.id}
-                  className="py-3 border-b border-gray-800 last:border-b-0 flex items-start gap-3"
+                  className="py-3 border-b border-slate-800 last:border-b-0 flex items-start gap-3"
                 >
-                  <div className="p-1.5 rounded-md bg-gray-900 border border-gray-800 mt-0.5">
+                  <div className="p-1.5 rounded-md bg-card border border-slate-800 mt-0.5">
                     {renderIcon(item.icon)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-white leading-snug">
                       {item.text}
                     </p>
-                    <span className="text-xs text-gray-500 mt-0.5 block">
+                    <span className="text-xs text-slate-400 mt-0.5 block">
                       {item.time}
                     </span>
                   </div>
                 </div>
               ))
             ) : (
-              <div className="py-8 text-center text-xs text-gray-500">
+              <div className="py-8 text-center text-xs text-slate-400">
                 No recent activity.
               </div>
             )}

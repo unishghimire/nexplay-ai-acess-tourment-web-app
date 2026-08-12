@@ -128,7 +128,7 @@ export const MatchesTab: React.FC<TournamentAdminTabProps> = (props) => {
                         </div>
 
                         <div>
-                            <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Map Name</label>
+                            <label htmlFor="map-name" className="block text-xs font-bold text-gray-500 uppercase mb-2">Map Name</label>
                             <input
                                 type="text"
                                 value={matchScore.map || ''}

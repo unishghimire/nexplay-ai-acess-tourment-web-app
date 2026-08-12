@@ -88,7 +88,7 @@ export const WalletPayoutsTab: React.FC<WalletPayoutsTabProps> = ({
     switch (type) {
       case 'entry_fee':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-gray-800 text-gray-300 border border-gray-700">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-surface text-slate-300 border border-slate-700">
             Entry Fee
           </span>
         );
@@ -112,7 +112,7 @@ export const WalletPayoutsTab: React.FC<WalletPayoutsTabProps> = ({
         );
       default:
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-gray-800 text-gray-300 border border-gray-700">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-surface text-slate-300 border border-slate-700">
             {type ? type.replace('_', ' ') : 'Transaction'}
           </span>
         );
@@ -144,7 +144,7 @@ export const WalletPayoutsTab: React.FC<WalletPayoutsTabProps> = ({
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-800 text-gray-300 border border-gray-700">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-surface text-slate-300 border border-slate-700">
             <span className="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
             {status || 'Unknown'}
           </span>
@@ -160,7 +160,7 @@ export const WalletPayoutsTab: React.FC<WalletPayoutsTabProps> = ({
           <div className="flex items-center gap-3">
             <h2 className="text-2xl font-bold text-white tracking-tight">Wallet & Payouts</h2>
           </div>
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="text-sm text-slate-400 mt-1">
             Escrow balances, prize distribution, and transaction history
           </p>
         </div>
@@ -169,8 +169,8 @@ export const WalletPayoutsTab: React.FC<WalletPayoutsTabProps> = ({
       {/* 2. Balance cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         {/* Wallet Balance */}
-        <div className="bg-gray-950/50 border border-gray-800 rounded-lg p-5">
-          <div className="flex items-center justify-between text-gray-400">
+        <div className="bg-dark/50 border border-slate-800 rounded-2xl p-5">
+          <div className="flex items-center justify-between text-slate-400">
             <span className="text-xs font-medium uppercase tracking-wider">Wallet Balance</span>
             <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
               <Wallet className="w-5 h-5" />
@@ -179,15 +179,15 @@ export const WalletPayoutsTab: React.FC<WalletPayoutsTabProps> = ({
           <div className="text-2xl font-semibold text-white mt-2">
             {formatCurrency(walletBalance)}
           </div>
-          <div className="flex items-center gap-1 text-xs text-gray-400 mt-2">
+          <div className="flex items-center gap-1 text-xs text-slate-400 mt-2">
             <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
             <span>Available for withdrawal</span>
           </div>
         </div>
 
         {/* In Escrow */}
-        <div className="bg-gray-950/50 border border-gray-800 rounded-lg p-5">
-          <div className="flex items-center justify-between text-gray-400">
+        <div className="bg-dark/50 border border-slate-800 rounded-2xl p-5">
+          <div className="flex items-center justify-between text-slate-400">
             <span className="text-xs font-medium uppercase tracking-wider">In Escrow</span>
             <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-400">
               <Clock className="w-5 h-5" />
@@ -196,15 +196,15 @@ export const WalletPayoutsTab: React.FC<WalletPayoutsTabProps> = ({
           <div className="text-2xl font-semibold text-white mt-2">
             {formatCurrency(escrowBalance)}
           </div>
-          <div className="flex items-center gap-1 text-xs text-gray-400 mt-2">
+          <div className="flex items-center gap-1 text-xs text-slate-400 mt-2">
             <DollarSign className="w-3.5 h-3.5 text-indigo-400" />
             <span>Locked for active tournament prizes</span>
           </div>
         </div>
 
         {/* Pending Payouts */}
-        <div className="bg-gray-950/50 border border-gray-800 rounded-lg p-5">
-          <div className="flex items-center justify-between text-gray-400">
+        <div className="bg-dark/50 border border-slate-800 rounded-2xl p-5">
+          <div className="flex items-center justify-between text-slate-400">
             <span className="text-xs font-medium uppercase tracking-wider">Pending Payouts</span>
             <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400">
               <ArrowDownToLine className="w-5 h-5" />
@@ -213,7 +213,7 @@ export const WalletPayoutsTab: React.FC<WalletPayoutsTabProps> = ({
           <div className="text-2xl font-semibold text-white mt-2">
             {formatCurrency(pendingPayouts)}
           </div>
-          <div className="flex items-center gap-1 text-xs text-gray-400 mt-2">
+          <div className="flex items-center gap-1 text-xs text-slate-400 mt-2">
             <Clock className="w-3.5 h-3.5 text-amber-400" />
             <span>Processing payouts</span>
           </div>
@@ -221,7 +221,7 @@ export const WalletPayoutsTab: React.FC<WalletPayoutsTabProps> = ({
       </div>
 
       {/* 3. Withdrawal form card */}
-      <div className="bg-gray-950/50 border border-gray-800 rounded-lg p-5">
+      <div className="bg-dark/50 border border-slate-800 rounded-2xl p-5">
         <div className="flex items-center gap-2 mb-4">
           <ArrowDownToLine className="w-5 h-5 text-emerald-400" />
           <h3 className="text-lg font-semibold text-white">Request Withdrawal</h3>
@@ -231,7 +231,7 @@ export const WalletPayoutsTab: React.FC<WalletPayoutsTabProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {/* Amount Input */}
             <div>
-              <label htmlFor="withdraw-amount" className="block text-xs font-medium text-gray-300 mb-1.5">
+              <label htmlFor="withdraw-amount" className="block text-xs font-medium text-slate-300 mb-1.5">
                 Amount (NPR)
               </label>
               <input
@@ -246,20 +246,20 @@ export const WalletPayoutsTab: React.FC<WalletPayoutsTabProps> = ({
                   if (error) setError(null);
                 }}
                 placeholder="e.g. 5000"
-                className="w-full bg-gray-900 border border-gray-800 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors"
+                className="w-full bg-card border border-slate-800 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors"
               />
             </div>
 
             {/* Method Select */}
             <div>
-              <label htmlFor="withdraw-method" className="block text-xs font-medium text-gray-300 mb-1.5">
+              <label htmlFor="withdraw-method" className="block text-xs font-medium text-slate-300 mb-1.5">
                 Payment Method
               </label>
               <select
                 id="withdraw-method"
                 value={withdrawMethod}
                 onChange={(e) => setWithdrawMethod(e.target.value)}
-                className="w-full bg-gray-900 border border-gray-800 rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors"
+                className="w-full bg-card border border-slate-800 rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors"
               >
                 <option value="Bank Transfer">Bank Transfer</option>
                 <option value="eSewa">eSewa</option>
@@ -270,7 +270,7 @@ export const WalletPayoutsTab: React.FC<WalletPayoutsTabProps> = ({
 
             {/* Account Details Input */}
             <div>
-              <label htmlFor="account-details" className="block text-xs font-medium text-gray-300 mb-1.5">
+              <label htmlFor="account-details" className="block text-xs font-medium text-slate-300 mb-1.5">
                 Account Details
               </label>
               <input
@@ -282,7 +282,7 @@ export const WalletPayoutsTab: React.FC<WalletPayoutsTabProps> = ({
                   if (error) setError(null);
                 }}
                 placeholder="e.g. 9800000000 or Bank Acc No."
-                className="w-full bg-gray-900 border border-gray-800 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors"
+                className="w-full bg-card border border-slate-800 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors"
               />
             </div>
           </div>
@@ -317,13 +317,13 @@ export const WalletPayoutsTab: React.FC<WalletPayoutsTabProps> = ({
       </div>
 
       {/* 4. Transaction history table */}
-      <div className="bg-gray-950/50 border border-gray-800 rounded-lg p-5">
+      <div className="bg-dark/50 border border-slate-800 rounded-2xl p-5">
         <div className="mb-4">
           <h3 className="text-lg font-semibold text-white">Transaction History</h3>
         </div>
 
         {transactions.length === 0 ? (
-          <div className="text-center py-8 text-gray-500 text-sm">
+          <div className="text-center py-8 text-slate-400 text-sm">
             No transactions found.
           </div>
         ) : (
@@ -332,7 +332,7 @@ export const WalletPayoutsTab: React.FC<WalletPayoutsTabProps> = ({
             <div className="hidden sm:block overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
               <table className="w-full text-left text-sm">
                 <thead>
-                  <tr className="border-b border-gray-800 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                  <tr className="border-b border-slate-800 text-xs font-semibold uppercase tracking-wider text-slate-400">
                     <th className="py-3 px-4">Type</th>
                     <th className="py-3 px-4">Amount</th>
                     <th className="py-3 px-4">Method</th>
@@ -343,23 +343,23 @@ export const WalletPayoutsTab: React.FC<WalletPayoutsTabProps> = ({
                 </thead>
                 <tbody className="divide-y divide-gray-800/60">
                   {transactions.map((tx, idx) => (
-                    <tr key={tx.id || idx} className="hover:bg-gray-900/40 transition-colors">
+                    <tr key={tx.id || idx} className="hover:bg-card/40 transition-colors">
                       <td className="py-3.5 px-4 whitespace-nowrap">
                         {getTypeBadge(tx.type)}
                       </td>
                       <td className="py-3.5 px-4 whitespace-nowrap font-mono font-semibold text-white">
                         {formatCurrency(tx.amount)}
                       </td>
-                      <td className="py-3.5 px-4 whitespace-nowrap text-gray-300">
+                      <td className="py-3.5 px-4 whitespace-nowrap text-slate-300">
                         {tx.method || '—'}
                       </td>
-                      <td className="py-3.5 px-4 whitespace-nowrap font-mono text-xs text-gray-400">
+                      <td className="py-3.5 px-4 whitespace-nowrap font-mono text-xs text-slate-400">
                         {tx.refId || tx.id || '—'}
                       </td>
                       <td className="py-3.5 px-4 whitespace-nowrap">
                         {getStatusPill(tx.status)}
                       </td>
-                      <td className="py-3.5 px-4 whitespace-nowrap text-xs text-gray-400">
+                      <td className="py-3.5 px-4 whitespace-nowrap text-xs text-slate-400">
                         {tx.timestamp || tx.date || tx.createdAt || '—'}
                       </td>
                     </tr>
@@ -373,7 +373,7 @@ export const WalletPayoutsTab: React.FC<WalletPayoutsTabProps> = ({
               {transactions.map((tx, idx) => (
                 <div
                   key={tx.id || idx}
-                  className="bg-gray-900/60 border border-gray-800 rounded-lg p-4 space-y-2.5"
+                  className="bg-card/60 border border-slate-800 rounded-2xl p-4 space-y-2.5"
                 >
                   <div className="flex items-center justify-between">
                     <div>{getTypeBadge(tx.type)}</div>
@@ -381,28 +381,28 @@ export const WalletPayoutsTab: React.FC<WalletPayoutsTabProps> = ({
                   </div>
 
                   <div className="flex items-baseline justify-between pt-1">
-                    <span className="text-xs text-gray-400">Amount</span>
+                    <span className="text-xs text-slate-400">Amount</span>
                     <span className="font-mono text-lg font-bold text-white">
                       {formatCurrency(tx.amount)}
                     </span>
                   </div>
 
                   {tx.desc && (
-                    <p className="text-xs text-gray-300 line-clamp-2">{tx.desc}</p>
+                    <p className="text-xs text-slate-300 line-clamp-2">{tx.desc}</p>
                   )}
 
-                  <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-gray-800/60 text-gray-400">
+                  <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-slate-800/60 text-slate-400">
                     <div>
-                      <span className="block text-[10px] uppercase text-gray-500 font-medium">Method</span>
-                      <span className="text-gray-300">{tx.method || '—'}</span>
+                      <span className="block text-[10px] uppercase text-slate-400 font-medium">Method</span>
+                      <span className="text-slate-300">{tx.method || '—'}</span>
                     </div>
                     <div>
-                      <span className="block text-[10px] uppercase text-gray-500 font-medium">Ref ID</span>
-                      <span className="font-mono text-gray-300">{tx.refId || tx.id || '—'}</span>
+                      <span className="block text-[10px] uppercase text-slate-400 font-medium">Ref ID</span>
+                      <span className="font-mono text-slate-300">{tx.refId || tx.id || '—'}</span>
                     </div>
                     <div className="col-span-2">
-                      <span className="block text-[10px] uppercase text-gray-500 font-medium">Date</span>
-                      <span className="text-gray-300">{tx.timestamp || tx.date || tx.createdAt || '—'}</span>
+                      <span className="block text-[10px] uppercase text-slate-400 font-medium">Date</span>
+                      <span className="text-slate-300">{tx.timestamp || tx.date || tx.createdAt || '—'}</span>
                     </div>
                   </div>
                 </div>

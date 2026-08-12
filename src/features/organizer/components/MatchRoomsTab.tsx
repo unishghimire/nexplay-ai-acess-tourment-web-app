@@ -53,7 +53,7 @@ const MatchRoomsTab: React.FC<MatchRoomsTabProps> = ({
       );
     }
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-800 text-gray-400 border border-gray-700">
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-800 text-slate-400 border border-gray-700">
         {status || 'Unknown'}
       </span>
     );
@@ -83,7 +83,7 @@ const MatchRoomsTab: React.FC<MatchRoomsTabProps> = ({
       );
     }
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-800 text-gray-400 border border-gray-700">
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-800 text-slate-400 border border-gray-700">
         {status || 'Unknown'}
       </span>
     );
@@ -92,12 +92,12 @@ const MatchRoomsTab: React.FC<MatchRoomsTabProps> = ({
   return (
     <div className="space-y-8 text-white">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-800 pb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-6">
         <div>
           <div className="flex items-center gap-3">
             <h2 className="text-2xl font-bold tracking-tight text-white">Match Rooms</h2>
           </div>
-          <p className="text-sm text-gray-400 mt-1">Live lobby dispatch and dispute resolution</p>
+          <p className="text-sm text-slate-400 mt-1">Live lobby dispatch and dispute resolution</p>
         </div>
       </div>
 
@@ -109,9 +109,9 @@ const MatchRoomsTab: React.FC<MatchRoomsTabProps> = ({
         </div>
 
         {matchRooms.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-12 text-center rounded-xl bg-gray-900/50 border border-gray-800">
+          <div className="flex flex-col items-center justify-center p-12 text-center rounded-xl bg-card/50 border border-slate-800">
             <Radio className="w-12 h-12 text-gray-600 mb-3" />
-            <p className="text-gray-400 font-medium">No active match rooms.</p>
+            <p className="text-slate-400 font-medium">No active match rooms.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4">
@@ -124,17 +124,17 @@ const MatchRoomsTab: React.FC<MatchRoomsTabProps> = ({
               return (
                 <div
                   key={room.id || idx}
-                  className="bg-gray-900/80 border border-gray-800 hover:border-gray-700 transition-all rounded-xl p-5 space-y-4"
+                  className="bg-card/80 border border-slate-800 hover:border-gray-700 transition-all rounded-xl p-5 space-y-4"
                 >
                   {/* Top Bar: Tournament Name, Map, Status */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-800/80 pb-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 pb-3">
                     <div className="space-y-1">
                       <h4 className="font-semibold text-white text-base md:text-lg">
                         {room.tournamentName || room.title || 'Free Fire Tournament'}
                       </h4>
                       {room.map && (
-                        <p className="text-xs text-gray-400 flex items-center gap-1">
-                          <MapPin className="w-3.5 h-3.5 text-gray-500" /> Map: <span className="text-gray-300 font-medium">{room.map}</span>
+                        <p className="text-xs text-slate-400 flex items-center gap-1">
+                          <MapPin className="w-3.5 h-3.5 text-slate-400" /> Map: <span className="text-slate-300 font-medium">{room.map}</span>
                         </p>
                       )}
                     </div>
@@ -144,14 +144,14 @@ const MatchRoomsTab: React.FC<MatchRoomsTabProps> = ({
                   {/* Room ID & Password Key-Value Grid */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {/* Room ID Box */}
-                    <div className="bg-black/40 border border-gray-800 rounded-lg p-3 flex flex-col justify-between">
-                      <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
+                    <div className="bg-dark/40 border border-slate-800 rounded-lg p-3 flex flex-col justify-between">
+                      <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
                         <span className="font-medium flex items-center gap-1">
                           <Key className="w-3.5 h-3.5 text-emerald-400" /> Room ID
                         </span>
                         <button
                           onClick={() => handleCopy(room.roomId, roomIdKey)}
-                          className="text-xs text-gray-400 hover:text-white transition-colors flex items-center gap-1 font-medium min-h-[44px] px-2"
+                          className="text-xs text-slate-400 hover:text-white transition-colors flex items-center gap-1 font-medium min-h-[44px] px-2"
                           aria-label="Copy Room ID" title="Copy Room ID"
                         >
                           {isIdCopied ? (
@@ -171,14 +171,14 @@ const MatchRoomsTab: React.FC<MatchRoomsTabProps> = ({
                     </div>
 
                     {/* Room Password Box */}
-                    <div className="bg-black/40 border border-gray-800 rounded-lg p-3 flex flex-col justify-between">
-                      <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
+                    <div className="bg-dark/40 border border-slate-800 rounded-lg p-3 flex flex-col justify-between">
+                      <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
                         <span className="font-medium flex items-center gap-1">
                           <Key className="w-3.5 h-3.5 text-emerald-400" /> Password
                         </span>
                         <button
                           onClick={() => handleCopy(room.roomPass, roomPassKey)}
-                          className="text-xs text-gray-400 hover:text-white transition-colors flex items-center gap-1 font-medium min-h-[44px] px-2"
+                          className="text-xs text-slate-400 hover:text-white transition-colors flex items-center gap-1 font-medium min-h-[44px] px-2"
                           aria-label="Copy Room Password" title="Copy Room Password"
                         >
                           {isPassCopied ? (
@@ -233,16 +233,16 @@ const MatchRoomsTab: React.FC<MatchRoomsTabProps> = ({
         </div>
 
         {disputes.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-12 text-center rounded-xl bg-gray-900/50 border border-gray-800">
+          <div className="flex flex-col items-center justify-center p-12 text-center rounded-xl bg-card/50 border border-slate-800">
             <ShieldAlert className="w-12 h-12 text-gray-600 mb-3" />
-            <p className="text-gray-400 font-medium">No disputes filed.</p>
+            <p className="text-slate-400 font-medium">No disputes filed.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4">
             {disputes.map((dispute, idx) => (
               <div
                 key={dispute.id || idx}
-                className="bg-gray-900/80 border border-gray-800 hover:border-gray-700 transition-all rounded-xl p-5 space-y-3"
+                className="bg-card/80 border border-slate-800 hover:border-gray-700 transition-all rounded-xl p-5 space-y-3"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div className="space-y-1">
@@ -251,12 +251,12 @@ const MatchRoomsTab: React.FC<MatchRoomsTabProps> = ({
                         {dispute.reportedBy ? `Reported by ${dispute.reportedBy}` : 'Dispute Report'}
                       </span>
                       {dispute.tournamentName && (
-                        <span className="text-xs text-gray-400 bg-gray-800 px-2 py-0.5 rounded">
+                        <span className="text-xs text-slate-400 bg-gray-800 px-2 py-0.5 rounded">
                           {dispute.tournamentName}
                         </span>
                       )}
                       {dispute.matchRoom && (
-                        <span className="text-xs text-gray-400 bg-gray-800/80 px-2 py-0.5 rounded">
+                        <span className="text-xs text-slate-400 bg-gray-800/80 px-2 py-0.5 rounded">
                           Room #{dispute.matchRoom}
                         </span>
                       )}
@@ -265,13 +265,13 @@ const MatchRoomsTab: React.FC<MatchRoomsTabProps> = ({
                   <div>{getDisputeStatusBadge(dispute.status)}</div>
                 </div>
 
-                <p className="text-sm text-gray-300 bg-black/30 p-3 rounded-lg border border-gray-800/50">
+                <p className="text-sm text-slate-300 bg-dark/30 p-3 rounded-lg border border-slate-800/50">
                   {dispute.reason || 'No details provided.'}
                 </p>
 
-                <div className="flex flex-wrap items-center justify-between gap-3 pt-1 text-xs text-gray-400">
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-1 text-xs text-slate-400">
                   <div className="flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-gray-500" />
+                    <Clock className="w-3.5 h-3.5 text-slate-400" />
                     <span>Filed: {dispute.filedAt || 'Recently'}</span>
                   </div>
 

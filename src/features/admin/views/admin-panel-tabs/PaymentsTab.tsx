@@ -27,17 +27,17 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {paymentCategories.length === 0 ? (
-                            <div className="py-8 text-center bg-dark/50 rounded-2xl border border-gray-800">
-                                <p className="text-sm text-gray-500 font-bold uppercase tracking-widest">No categories configured.</p>
+                            <div className="py-8 text-center bg-dark/50 rounded-2xl border border-slate-800">
+                                <p className="text-sm text-slate-400 font-bold uppercase tracking-widest">No categories configured.</p>
                             </div>
                         ) : paymentCategories.map(cat => (
-                                <div key={cat.id} className="bg-card p-4 rounded-xl border border-gray-800 flex flex-col gap-4">
+                                <div key={cat.id} className="bg-card p-4 rounded-xl border border-slate-800 flex flex-col gap-4">
                                     <div className="flex justify-between items-start">
                                         <div>
                                             <h3 className="font-bold text-white">{cat.name}</h3>
                                             <div className="flex items-center gap-2 mt-1">
                                                 <span className={`w-2 h-2 rounded-full ${cat.isActive ? 'bg-green-500' : 'bg-gray-600'}`}></span>
-                                                <span className="text-[10px] text-gray-500 uppercase font-bold">{cat.isActive ? 'Active' : 'Inactive'}</span>
+                                                <span className="text-[10px] text-slate-400 uppercase font-bold">{cat.isActive ? 'Active' : 'Inactive'}</span>
                                             </div>
                                         </div>
                                         <div className="flex gap-2">
@@ -51,7 +51,7 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                             <button aria-label="Delete category" onClick={() => handleDeleteCategory(cat.id)} className="text-red-400 hover:text-white p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-all"><Trash className="w-4 h-4" /></button>
                                         </div>
                                     </div>
-                                    <div className="text-[10px] text-gray-500 bg-dark p-2 rounded border border-gray-700 h-16 overflow-y-auto">
+                                    <div className="text-[10px] text-slate-400 bg-dark p-2 rounded border border-slate-700 h-16 overflow-y-auto">
                                         {cat.description || 'No description'}
                                     </div>
                                 </div>
@@ -84,16 +84,16 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                             {paymentMethods.map(pm => {
                                 const category = paymentCategories.find(c => c.id === pm.categoryId);
                                 return (
-                                <div key={pm.id} className="bg-card p-4 rounded-xl border border-gray-800 flex flex-col gap-4">
+                                <div key={pm.id} className="bg-card p-4 rounded-xl border border-slate-800 flex flex-col gap-4">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-16 h-16 bg-dark rounded-lg border border-gray-700 flex items-center justify-center overflow-hidden">
+                                        <div className="w-16 h-16 bg-dark rounded-lg border border-slate-700 flex items-center justify-center overflow-hidden">
                                             <img src={pm.qrUrl || undefined} className="w-full h-full object-contain" alt="QR" />
                                         </div>
                                         <div className="flex-grow">
                                             <h3 className="font-bold text-white">{pm.name}</h3>
                                             <div className="flex items-center gap-2 mt-1">
                                                 <span className={`w-2 h-2 rounded-full ${pm.isActive ? 'bg-green-500' : 'bg-gray-600'}`}></span>
-                                                <span className="text-[10px] text-gray-500 uppercase font-bold">{category ? category.name : pm.type} | {pm.isActive ? 'Active' : 'Inactive'}</span>
+                                                <span className="text-[10px] text-slate-400 uppercase font-bold">{category ? category.name : pm.type} | {pm.isActive ? 'Active' : 'Inactive'}</span>
                                             </div>
                                         </div>
                                         <div className="flex flex-col gap-2">
@@ -110,7 +110,7 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                             <button onClick={() => handleDeletePayment(pm.id)} className="text-red-400 hover:text-white"><Trash className="w-4 h-4" /></button>
                                         </div>
                                     </div>
-                                    <div className="text-[10px] text-gray-500 bg-dark p-2 rounded border border-gray-700 h-16 overflow-y-auto">
+                                    <div className="text-[10px] text-slate-400 bg-dark p-2 rounded border border-slate-700 h-16 overflow-y-auto">
                                         {pm.instructions}
                                     </div>
                                 </div>
@@ -119,29 +119,29 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                     </div>
 
                     {isCategoryModalOpen && (
-                        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                            <div className="bg-card w-full max-w-lg rounded-2xl border border-gray-800 p-5 sm:p-8 space-y-6 shadow-2xl">
-                                <h3 className="text-xl font-bold text-white uppercase tracking-widest border-b border-gray-800 pb-4">
+                        <div className="fixed inset-0 modal-backdrop backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+                            <div className="bg-card w-full max-w-lg rounded-2xl border border-slate-800 p-5 sm:p-8 space-y-6 shadow-2xl">
+                                <h3 className="text-xl font-bold text-white uppercase tracking-widest border-b border-slate-800 pb-4">
                                     {editingCategory ? 'Edit Category' : 'Add Category'}
                                 </h3>
                                 
                                 <div className="space-y-5">
                                     <div>
-                                        <label className="text-xs text-gray-400 uppercase font-bold mb-2 block">Category Name</label>
+                                        <label className="text-xs text-slate-400 uppercase font-bold mb-2 block">Category Name</label>
                                         <input 
                                             type="text" 
                                             value={categoryName}
                                             onChange={(e) => setCategoryName(e.target.value)}
-                                            className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none transition"
+                                            className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none transition"
                                             placeholder="e.g. E-Wallet, Bank Transfer"
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-xs text-gray-400 uppercase font-bold mb-2 block">Description</label>
+                                        <label className="text-xs text-slate-400 uppercase font-bold mb-2 block">Description</label>
                                         <textarea 
                                             value={categoryDescription}
                                             onChange={(e) => setCategoryDescription(e.target.value)}
-                                            className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none transition h-24 resize-none"
+                                            className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none transition h-24 resize-none"
                                             placeholder="Description of this category..."
                                         />
                                     </div>
@@ -151,16 +151,16 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                             id="catActive"
                                             checked={categoryActive}
                                             onChange={(e) => setCategoryActive(e.target.checked)}
-                                            className="w-4 h-4 rounded bg-dark border-gray-700 text-brand-500 focus:ring-brand-500"
+                                            className="w-4 h-4 rounded bg-dark border-slate-700 text-brand-500 focus:ring-brand-500"
                                         />
                                         <label htmlFor="catActive" className="text-sm text-white font-bold">Active (Visible to users)</label>
                                     </div>
                                 </div>
 
-                                <div className="flex gap-4 pt-4 border-t border-gray-800">
+                                <div className="flex gap-4 pt-4 border-t border-slate-800">
                                     <button 
                                         onClick={() => setIsCategoryModalOpen(false)}
-                                        className="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-3 rounded-xl font-bold transition"
+                                        className="flex-1 bg-surface hover:bg-gray-700 text-white py-3 rounded-xl font-bold transition"
                                     >
                                         Cancel
                                     </button>
@@ -176,24 +176,24 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                     )}
 
                     {isPaymentModalOpen && (
-                        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                            <div className="bg-card w-full max-w-lg rounded-2xl border border-gray-800 p-5 sm:p-8 space-y-6 shadow-2xl overflow-y-auto max-h-[90vh] custom-scrollbar">
-                                <h3 className="text-xl font-bold text-white uppercase tracking-widest border-b border-gray-800 pb-4">
+                        <div className="fixed inset-0 modal-backdrop backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+                            <div className="bg-card w-full max-w-lg rounded-2xl border border-slate-800 p-5 sm:p-8 space-y-6 shadow-2xl overflow-y-auto max-h-[90vh] custom-scrollbar">
+                                <h3 className="text-xl font-bold text-white uppercase tracking-widest border-b border-slate-800 pb-4">
                                     {editingPayment ? 'Edit Payment Method' : 'Add Payment Method'}
                                 </h3>
                                 
                                 <div className="space-y-5">
                                     <div>
-                                        <label className="text-xs text-gray-400 uppercase font-bold mb-2 block">Category</label>
+                                        <label className="text-xs text-slate-400 uppercase font-bold mb-2 block">Category</label>
                                         <select 
                                             value={paymentCategoryId}
                                             onChange={(e) => setPaymentCategoryId(e.target.value)}
-                                            className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none transition"
+                                            className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none transition"
                                         >
                                             <option value="">Select a category</option>
                                             {paymentCategories.length === 0 ? (
-                            <div className="py-8 text-center bg-dark/50 rounded-2xl border border-gray-800">
-                                <p className="text-sm text-gray-500 font-bold uppercase tracking-widest">No categories configured.</p>
+                            <div className="py-8 text-center bg-dark/50 rounded-2xl border border-slate-800">
+                                <p className="text-sm text-slate-400 font-bold uppercase tracking-widest">No categories configured.</p>
                             </div>
                         ) : paymentCategories.map(cat => (
                                                 <option key={cat.id} value={cat.id}>{cat.name}</option>
@@ -201,23 +201,23 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="text-xs text-gray-400 uppercase font-bold mb-2 block">Method Name</label>
+                                        <label className="text-xs text-slate-400 uppercase font-bold mb-2 block">Method Name</label>
                                         <input 
                                             type="text" 
                                             value={paymentName}
                                             onChange={(e) => setPaymentName(e.target.value)}
-                                            className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none transition"
+                                            className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none transition"
                                             placeholder="e.g. eSewa (Personal)"
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-xs text-gray-400 uppercase font-bold mb-2 block">QR Code Image (Paste, Drop or Click to Select)</label>
+                                        <label className="text-xs text-slate-400 uppercase font-bold mb-2 block">QR Code Image (Paste, Drop or Click to Select)</label>
                                         <div 
                                             onPaste={handlePastePayment}
                                             onDrop={handleDropPayment}
                                             onDragOver={handleDragOverPayment}
                                             onClick={() => document.getElementById('payment-qr-file-input')?.click()}
-                                            className={`relative w-48 h-48 mx-auto rounded-xl border-2 border-dashed transition-all flex items-center justify-center overflow-hidden group cursor-pointer ${uploading ? 'border-brand-500 bg-brand-500/10' : 'border-gray-700 hover:border-brand-500 bg-dark'}`}
+                                            className={`relative w-48 h-48 mx-auto rounded-xl border-2 border-dashed transition-all flex items-center justify-center overflow-hidden group cursor-pointer ${uploading ? 'border-brand-500 bg-brand-500/10' : 'border-slate-700 hover:border-brand-500 bg-dark'}`}
                                         >
                                             {uploading ? (
                                                 <div className="flex flex-col items-center gap-2">
@@ -233,7 +233,7 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                                         onError={(e) => (e.currentTarget.src = NEXPLAY_LOGO)}
                                                         referrerPolicy="no-referrer"
                                                     />
-                                                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition">
+                                                    <div className="absolute inset-0 flex items-center justify-center bg-dark/40 opacity-0 group-hover:opacity-100 transition">
                                                         <Plus className="w-8 h-8 text-white" />
                                                     </div>
                                                 </>
@@ -255,21 +255,21 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                                 type="text" 
                                                 value={paymentQr}
                                                 onChange={(e) => setPaymentQr(e.target.value)}
-                                                className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none text-sm transition"
+                                                className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none text-sm transition"
                                                 placeholder="Or paste QR URL..."
                                             />
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="text-xs text-gray-400 uppercase font-bold mb-2 block">Instructions (Account Name, Number, etc.)</label>
+                                        <label className="text-xs text-slate-400 uppercase font-bold mb-2 block">Instructions (Account Name, Number, etc.)</label>
                                         <textarea 
                                             value={paymentInstructions}
                                             onChange={(e) => setPaymentInstructions(e.target.value)}
-                                            className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none h-24 transition"
+                                            className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none h-24 transition"
                                             placeholder="Account Name: John Doe&#10;Number: 98XXXXXXXX"
                                         />
                                     </div>
-                                    <div className="flex items-center gap-3 bg-gray-900/50 p-3 rounded-lg border border-gray-800">
+                                    <div className="flex items-center gap-3 bg-dark/50 p-3 rounded-lg border border-slate-800">
                                         <input 
                                             type="checkbox" 
                                             id="paymentActive"
@@ -277,14 +277,14 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                             onChange={(e) => setPaymentActive(e.target.checked)}
                                             className="w-5 h-5 accent-brand-500 cursor-pointer"
                                         />
-                                        <label htmlFor="paymentActive" className="text-sm text-gray-300 font-bold uppercase cursor-pointer">Active (Visible to users)</label>
+                                        <label htmlFor="paymentActive" className="text-sm text-slate-300 font-bold uppercase cursor-pointer">Active (Visible to users)</label>
                                     </div>
                                 </div>
 
                                 <div className="flex gap-4 pt-2">
                                     <button 
                                         onClick={() => setIsPaymentModalOpen(false)}
-                                        className="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-3 rounded-xl font-bold transition"
+                                        className="flex-1 bg-surface hover:bg-gray-700 text-white py-3 rounded-xl font-bold transition"
                                     >
                                         Cancel
                                     </button>

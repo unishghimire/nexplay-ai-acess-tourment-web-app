@@ -78,7 +78,7 @@ const TournamentsTab: React.FC<TournamentsTabProps> = ({
       case 'completed':
       case 'finalized':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-zinc-800 text-zinc-400 border border-zinc-700">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-800/80 text-zinc-400 border border-slate-700/60">
             <Check className="w-3 h-3 text-zinc-400" />
             Completed
           </span>
@@ -108,7 +108,7 @@ const TournamentsTab: React.FC<TournamentsTabProps> = ({
     };
 
     return (
-      <div className="mt-4 pt-4 border-t border-gray-800">
+      <div className="mt-4 pt-4 border-t border-slate-800">
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
             Tournament Bracket
@@ -124,7 +124,7 @@ const TournamentsTab: React.FC<TournamentsTabProps> = ({
               const roundMatches = matches.filter((m) => m.round === roundNum);
               return (
                 <div key={roundNum} className="flex flex-col gap-3 min-w-[220px]">
-                  <div className="text-xs font-medium text-zinc-400 text-center py-1 bg-zinc-900/80 rounded border border-gray-800">
+                  <div className="text-xs font-medium text-zinc-400 text-center py-1 bg-zinc-900/80 rounded border border-slate-800">
                     {getRoundTitle(roundNum)}
                   </div>
                   {roundMatches.map((match, idx) => {
@@ -144,7 +144,7 @@ const TournamentsTab: React.FC<TournamentsTabProps> = ({
                     return (
                       <div
                         key={match.id || idx}
-                        className="bg-zinc-900 border border-gray-800 rounded-lg p-3 text-sm shadow-sm space-y-1.5"
+                        className="bg-zinc-900 border border-slate-800 rounded-lg p-3 text-sm shadow-sm space-y-1.5"
                       >
                         {/* Team A */}
                         <div
@@ -198,7 +198,7 @@ const TournamentsTab: React.FC<TournamentsTabProps> = ({
   return (
     <div className="space-y-6 text-sm text-zinc-200">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-gray-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-800">
         <div className="flex items-center gap-3">
           <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
             Tournaments
@@ -216,8 +216,8 @@ const TournamentsTab: React.FC<TournamentsTabProps> = ({
 
       {/* Tournament Cards or Empty State */}
       {!hasTournaments ? (
-        <div className="bg-gray-950/50 border border-gray-800 rounded-lg p-12 text-center flex flex-col items-center justify-center min-h-[300px]">
-          <div className="p-4 rounded-full bg-zinc-900 border border-gray-800 mb-4 text-amber-400">
+        <div className="bg-dark/50 border border-slate-800 rounded-lg p-12 text-center flex flex-col items-center justify-center min-h-[300px]">
+          <div className="p-4 rounded-full bg-zinc-900 border border-slate-800 mb-4 text-amber-400">
             <Trophy className="w-10 h-10" />
           </div>
           <p className="text-zinc-300 font-medium mb-4 text-base max-w-md">
@@ -245,7 +245,7 @@ const TournamentsTab: React.FC<TournamentsTabProps> = ({
             return (
               <div
                 key={tournament.id}
-                className="bg-gray-950/50 border border-gray-800 rounded-lg p-5 transition-colors hover:border-gray-700/80"
+                className="bg-dark/50 border border-slate-800 rounded-2xl p-5 transition-colors hover:border-gray-700/80"
               >
                 {/* Title & Status */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
@@ -302,7 +302,7 @@ const TournamentsTab: React.FC<TournamentsTabProps> = ({
                   {onEditTournament && (
                     <button
                       onClick={() => onEditTournament(tournament)}
-                      className="min-h-[44px] px-3.5 py-2 rounded-lg text-sm font-medium border border-gray-700 hover:border-gray-600 hover:bg-zinc-800/80 text-zinc-200 transition-colors flex items-center justify-center gap-2"
+                      className="min-h-[44px] px-3.5 py-2 rounded-lg text-sm font-medium border border-gray-700 hover:border-gray-600 hover:bg-slate-800/80/80 text-zinc-200 transition-colors flex items-center justify-center gap-2"
                     >
                       <Edit2 className="w-4 h-4" />
                       <span>Edit</span>
@@ -312,7 +312,7 @@ const TournamentsTab: React.FC<TournamentsTabProps> = ({
                   {/* Room Details */}
                   <button
                     onClick={() => onOpenRoomDispatch(tournament)}
-                    className="min-h-[44px] px-3.5 py-2 rounded-lg text-sm font-medium border border-gray-700 hover:border-gray-600 hover:bg-zinc-800/80 text-zinc-200 transition-colors flex items-center justify-center gap-2"
+                    className="min-h-[44px] px-3.5 py-2 rounded-lg text-sm font-medium border border-gray-700 hover:border-gray-600 hover:bg-slate-800/80/80 text-zinc-200 transition-colors flex items-center justify-center gap-2"
                   >
                     <Radio className="w-4 h-4 text-brand-400" />
                     <span>Room Details</span>

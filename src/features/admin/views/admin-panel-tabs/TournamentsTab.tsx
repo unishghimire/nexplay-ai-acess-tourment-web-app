@@ -7,20 +7,20 @@ import { DEFAULT_BANNER } from '../../../../shared/constants/constants';
 export const TournamentsTab: React.FC<AdminPanelTabProps> = (props) => {
     const { allTournaments, formatGameName, handleCancelTournament, handleEditTournament, handleToggleFeatured, handleViewParticipants, searchQuery, setSearchQuery } = props;
     return (
-                <div className="bg-card p-6 rounded-xl border border-gray-800 space-y-6">
-                    <div className="flex justify-between items-center border-b border-gray-700 pb-4">
+                <div className="bg-card p-6 rounded-2xl border border-slate-800 space-y-6">
+                    <div className="flex justify-between items-center border-b border-slate-700 pb-4">
                         <h2 className="text-xl font-bold text-white uppercase tracking-widest flex items-center gap-2">
                             <Trophy className="text-brand-500" /> All Tournaments
                         </h2>
                         <div className="flex items-center gap-4">
                             <div className="relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                 <input 
                                     type="text" 
                                     placeholder="Search tournaments..." 
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="bg-dark border border-gray-700 rounded-lg pl-10 pr-4 py-2.5 min-h-[44px] text-white text-sm focus:border-brand-500 outline-none w-full sm:w-64"
+                                    className="bg-dark border border-slate-700 rounded-lg pl-10 pr-4 py-2.5 min-h-[44px] text-white text-sm focus:border-brand-500 outline-none w-full sm:w-64"
                                 />
                             </div>
                         </div>
@@ -30,12 +30,12 @@ export const TournamentsTab: React.FC<AdminPanelTabProps> = (props) => {
                         {allTournaments
                             .filter(t => t.title.toLowerCase().includes(searchQuery.toLowerCase()))
                             .map(t => (
-                                <div key={t.id} className="bg-dark p-4 rounded-xl border border-gray-800 space-y-3">
+                                <div key={t.id} className="bg-dark p-4 rounded-xl border border-slate-800 space-y-3">
                                     <img src={t.bannerUrl || undefined} onError={(e) => { e.currentTarget.src = DEFAULT_BANNER; }} className="w-full aspect-video object-cover rounded-lg" alt={t.title} />
                                     <div>
                                         <h3 className="font-bold text-white truncate">{t.title}</h3>
                                         <div className="flex justify-between items-center mt-2">
-                                            <span className="text-[10px] text-gray-500 uppercase font-bold">{formatGameName(t.game)}</span>
+                                            <span className="text-[10px] text-slate-400 uppercase font-bold">{formatGameName(t.game)}</span>
                                             <div className="flex items-center gap-2">
                                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
                                                     t.status === 'upcoming' ? 'bg-blue-600/20 text-blue-400' :

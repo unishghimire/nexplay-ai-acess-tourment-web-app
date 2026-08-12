@@ -36,8 +36,8 @@ const TransactionHistoryTab: React.FC<TransactionHistoryTabProps> = ({
     setTxSearchUser
 }) => {
     return (
-        <div className="bg-card p-6 rounded-xl border border-gray-800 space-y-6">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-700 pb-4">
+        <div className="bg-card p-6 rounded-2xl border border-slate-800 space-y-6">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-700 pb-4">
                 <h2 className="text-xl font-bold text-white uppercase tracking-widest flex items-center gap-2">
                     <CreditCard className="text-brand-500" /> Transaction History
                 </h2>
@@ -45,7 +45,7 @@ const TransactionHistoryTab: React.FC<TransactionHistoryTabProps> = ({
                     <select 
                         value={txFilterType} 
                         onChange={e => setTxFilterType(e.target.value as any)}
-                        className="bg-dark border border-gray-700 rounded-lg p-2 text-white text-xs focus:border-brand-500 outline-none"
+                        className="bg-dark border border-slate-700 rounded-lg p-2 text-white text-xs focus:border-brand-500 outline-none"
                     >
                         <option value="all">All Types</option>
                         <option value="deposit">Deposit</option>
@@ -57,7 +57,7 @@ const TransactionHistoryTab: React.FC<TransactionHistoryTabProps> = ({
                     <select 
                         value={txFilterStatus} 
                         onChange={e => setTxFilterStatus(e.target.value as any)}
-                        className="bg-dark border border-gray-700 rounded-lg p-2 text-white text-xs focus:border-brand-500 outline-none"
+                        className="bg-dark border border-slate-700 rounded-lg p-2 text-white text-xs focus:border-brand-500 outline-none"
                     >
                         <option value="all">All Status</option>
                         <option value="pending">Pending</option>
@@ -68,7 +68,7 @@ const TransactionHistoryTab: React.FC<TransactionHistoryTabProps> = ({
                     <select 
                         value={txFilterTournament} 
                         onChange={e => setTxFilterTournament(e.target.value)}
-                        className="bg-dark border border-gray-700 rounded-lg p-2 text-white text-xs focus:border-brand-500 outline-none w-40"
+                        className="bg-dark border border-slate-700 rounded-lg p-2 text-white text-xs focus:border-brand-500 outline-none w-40"
                     >
                         <option value="all">All Tournaments</option>
                         {allTournaments.map(t => (
@@ -76,13 +76,13 @@ const TransactionHistoryTab: React.FC<TransactionHistoryTabProps> = ({
                         ))}
                     </select>
                     <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-500" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400" />
                         <input 
                             type="text" 
                             placeholder="Search User..." 
                             value={txSearchUser}
                             onChange={e => setTxSearchUser(e.target.value)}
-                            className="bg-dark border border-gray-700 rounded-lg p-2 pl-8 text-white text-xs focus:border-brand-500 outline-none w-40"
+                            className="bg-dark border border-slate-700 rounded-lg p-2 pl-8 text-white text-xs focus:border-brand-500 outline-none w-40"
                         />
                     </div>
                 </div>
@@ -90,7 +90,7 @@ const TransactionHistoryTab: React.FC<TransactionHistoryTabProps> = ({
             <div className="overflow-x-auto custom-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
                 <table className="w-full text-left border-collapse">
                     <thead>
-                        <tr className="text-[10px] text-gray-500 uppercase tracking-widest border-b border-gray-800">
+                        <tr className="text-[10px] text-slate-400 uppercase tracking-widest border-b border-slate-800">
                             <th className="py-3 px-4">Date</th>
                             <th className="py-3 px-4">User</th>
                             <th className="py-3 px-4">Type</th>
@@ -116,15 +116,15 @@ const TransactionHistoryTab: React.FC<TransactionHistoryTabProps> = ({
                             <tr 
                                 key={t.id} 
                                 onClick={() => setSelectedTx(t)}
-                                className="border-b border-gray-800/50 hover:bg-gray-800/30 transition cursor-pointer group"
+                                className="border-b border-slate-800/50 hover:bg-surface/30 transition cursor-pointer group"
                             >
                                 <td className="py-3 px-4 text-gray-400">
                                     <div>{formatDate(t.timestamp)}</div>
-                                    <div className="text-[10px] text-gray-500 font-mono">{getRelativeTime(t.timestamp)}</div>
+                                    <div className="text-[10px] text-slate-400 font-mono">{getRelativeTime(t.timestamp)}</div>
                                 </td>
                                 <td className="py-3 px-4">
                                     <div className="text-white font-bold">{t.username || t.userId.slice(0, 8)}</div>
-                                    <div className="text-[10px] text-gray-500 truncate max-w-[100px]">{t.userEmail}</div>
+                                    <div className="text-[10px] text-slate-400 truncate max-w-[100px]">{t.userEmail}</div>
                                     {t.confirmedByUsername && <div className="text-[10px] text-brand-400 uppercase font-black">By: {t.confirmedByUsername}</div>}
                                 </td>
                                 <td className="py-3 px-4">
@@ -151,7 +151,7 @@ const TransactionHistoryTab: React.FC<TransactionHistoryTabProps> = ({
                                         {t.status}
                                     </span>
                                 </td>
-                                <td className="py-3 px-4 text-gray-500 font-mono">
+                                <td className="py-3 px-4 text-slate-400 font-mono">
                                     {t.refId || 'N/A'}
                                 </td>
                                 <td className="py-3 px-4 text-right">

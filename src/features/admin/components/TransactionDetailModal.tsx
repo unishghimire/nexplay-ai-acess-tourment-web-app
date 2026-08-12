@@ -41,9 +41,9 @@ const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
     };
 
     return (
-        <div className="fixed inset-0 bg-black/95 backdrop-blur-sm z-[110] flex items-center justify-center p-4 animate-fade-in">
-            <div className="bg-card w-full max-w-2xl rounded-3xl border border-gray-800 p-4 sm:p-8 space-y-6 sm:space-y-8 shadow-2xl overflow-y-auto max-h-[90vh]">
-                <div className="flex justify-between items-center border-b border-gray-800 pb-5">
+        <div className="fixed inset-0 modal-backdrop backdrop-blur-sm z-[110] flex items-center justify-center p-4 animate-fade-in">
+            <div className="bg-card w-full max-w-2xl rounded-3xl border border-slate-800 p-4 sm:p-8 space-y-6 sm:space-y-8 shadow-2xl overflow-y-auto max-h-[90vh]">
+                <div className="flex justify-between items-center border-b border-slate-800 pb-5">
                     <div className="flex items-center gap-4">
                         <h3 className="text-2xl font-black text-white uppercase tracking-tight flex items-center gap-3">
                             <CreditCard className="text-brand-500" /> Review Transaction
@@ -55,40 +55,40 @@ const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                             <Layout className="w-3 h-3" /> Dashboard
                         </button>
                     </div>
-                    <button aria-label="Close modal" onClick={onClose} className="text-gray-500 hover:text-white bg-dark min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full transition"><X className="w-5 h-5" /></button>
+                    <button aria-label="Close modal" onClick={onClose} className="text-slate-400 hover:text-white bg-dark min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full transition"><X className="w-5 h-5" /></button>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-6">
-                        <div className="bg-dark p-5 rounded-2xl border border-gray-800 shadow-inner">
-                            <div className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-3">Transaction Details</div>
+                        <div className="bg-dark p-5 rounded-2xl border border-slate-800 shadow-inner">
+                            <div className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-3">Transaction Details</div>
                             <div className="flex items-end gap-3 mb-4">
                                 <div className="text-3xl font-black text-white tracking-tight">{formatCurrency(Math.abs(selectedTx.amount))}</div>
                                 <div className={`text-sm font-bold uppercase mb-1 ${selectedTx.type === 'deposit' ? 'text-green-400' : 'text-red-400'}`}>{selectedTx.type}</div>
                             </div>
                             <div className="space-y-2 text-sm font-mono">
-                                <div className="flex justify-between border-b border-gray-800/50 pb-2">
-                                    <span className="text-gray-500">Method</span>
+                                <div className="flex justify-between border-b border-slate-800/50 pb-2">
+                                    <span className="text-slate-400">Method</span>
                                     <span className="text-white">{selectedTx.method}</span>
                                 </div>
-                                <div className="flex justify-between border-b border-gray-800/50 pb-2">
-                                    <span className="text-gray-500">User</span>
+                                <div className="flex justify-between border-b border-slate-800/50 pb-2">
+                                    <span className="text-slate-400">User</span>
                                     <span className="text-white">{selectedTx.username || 'Unknown'}</span>
                                 </div>
-                                <div className="flex justify-between border-b border-gray-800/50 pb-2">
-                                    <span className="text-gray-500">Email</span>
+                                <div className="flex justify-between border-b border-slate-800/50 pb-2">
+                                    <span className="text-slate-400">Email</span>
                                     <span className="text-white text-xs">{selectedTx.userEmail || 'N/A'}</span>
                                 </div>
-                                <div className="flex justify-between border-b border-gray-800/50 pb-2">
-                                    <span className="text-gray-500">User ID</span>
-                                    <span className="text-gray-400 text-[10px] truncate select-all max-w-[160px] sm:max-w-[220px]">{selectedTx.userId}</span>
+                                <div className="flex justify-between border-b border-slate-800/50 pb-2">
+                                    <span className="text-slate-400">User ID</span>
+                                    <span className="text-slate-400 text-[10px] truncate select-all max-w-[160px] sm:max-w-[220px]">{selectedTx.userId}</span>
                                 </div>
-                                <div className="flex justify-between border-b border-gray-800/50 pb-2">
-                                    <span className="text-gray-500">Ref ID</span>
+                                <div className="flex justify-between border-b border-slate-800/50 pb-2">
+                                    <span className="text-slate-400">Ref ID</span>
                                     <span className="text-brand-300 text-xs truncate select-all max-w-[160px] sm:max-w-[220px]">{selectedTx.refId}</span>
                                 </div>
                                 {selectedTx.confirmedByUsername && (
-                                    <div className="flex justify-between border-b border-gray-800/50 pb-2">
+                                    <div className="flex justify-between border-b border-slate-800/50 pb-2">
                                         <span className="text-brand-400">Confirmed By</span>
                                         <span className="text-brand-300">{selectedTx.confirmedByUsername}</span>
                                     </div>
@@ -106,20 +106,20 @@ const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                         </div>
 
                         <div>
-                            <label className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-2 block">Rejection Reason (Optional)</label>
+                            <label className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-2 block">Rejection Reason (Optional)</label>
                             <textarea 
                                 value={rejectionReason}
                                 onChange={(e) => setRejectionReason(e.target.value)}
-                                className="w-full bg-dark border border-gray-800 rounded-xl p-4 text-white focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 outline-none h-28 text-sm transition-all"
+                                className="w-full bg-dark border border-slate-800 rounded-xl p-4 text-white focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 outline-none h-28 text-sm transition-all"
                                 placeholder="Explain why this is being rejected..."
                             />
                         </div>
                     </div>
 
                     <div className="space-y-6">
-                        <div className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-2">Proof of Payment</div>
+                        <div className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-2">Proof of Payment</div>
                         {selectedTx.proofUrl ? (
-                            <div className="relative group rounded-2xl overflow-hidden border border-gray-800 bg-black">
+                            <div className="relative group rounded-2xl overflow-hidden border border-slate-800 bg-black">
                                 <img src={selectedTx.proofUrl || undefined} onError={(e) => { e.currentTarget.style.display = "none"; }} className="w-full aspect-square object-contain" alt="Payment proof screenshot" referrerPolicy="no-referrer" />
                                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
                                     <a href={selectedTx.proofUrl} target="_blank" rel="noreferrer" className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all border border-white/10">
@@ -128,7 +128,7 @@ const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                                 </div>
                             </div>
                         ) : (
-                            <div className="w-full aspect-square bg-dark/50 rounded-2xl border-2 border-dashed border-gray-800 flex flex-col items-center justify-center text-gray-600">
+                            <div className="w-full aspect-square bg-dark/50 rounded-2xl border-2 border-dashed border-slate-800 flex flex-col items-center justify-center text-slate-500">
                                 <ImageIcon className="w-12 h-12 mb-3 opacity-20" />
                                 <span className="text-xs font-bold uppercase tracking-widest">No Proof Uploaded</span>
                             </div>
@@ -136,7 +136,7 @@ const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                     </div>
                 </div>
 
-                <div className="flex gap-4 pt-6 border-t border-gray-800">
+                <div className="flex gap-4 pt-6 border-t border-slate-800">
                     {selectedTx.status === 'pending' ? (
                         <>
                             <button onClick={() => handleAction('reject')} disabled={processing} className="flex-1 bg-red-900/20 hover:bg-red-600 text-red-500 hover:text-white border border-red-500/30 hover:border-red-500 py-4 rounded-xl font-black transition-all uppercase tracking-widest text-sm disabled:opacity-50 disabled:cursor-not-allowed">
@@ -162,7 +162,7 @@ const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                             >
                                 Dashboard
                             </button>
-                            <button onClick={onClose} className="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-4 rounded-xl font-black transition-all uppercase tracking-widest text-sm">
+                            <button onClick={onClose} className="flex-1 bg-surface hover:bg-gray-700 text-white py-4 rounded-xl font-black transition-all uppercase tracking-widest text-sm">
                                 Close
                             </button>
                         </div>

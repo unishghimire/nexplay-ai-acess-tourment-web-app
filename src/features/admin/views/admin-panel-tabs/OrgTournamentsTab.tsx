@@ -6,15 +6,15 @@ import { AdminPanelTabProps } from './types';
 export const OrgTournamentsTab: React.FC<AdminPanelTabProps> = (props) => {
     const { fetchOrgTournaments, formatGameName, handleCancelTournament, handleEditTournament, handleToggleFeatured, handleViewParticipants, orgTournaments, organizers, selectedOrgId } = props;
     return (
-                <div className="bg-card p-6 rounded-xl border border-gray-800 space-y-6">
-                    <div className="flex justify-between items-center border-b border-gray-700 pb-4">
+                <div className="bg-card p-6 rounded-2xl border border-slate-800 space-y-6">
+                    <div className="flex justify-between items-center border-b border-slate-700 pb-4">
                         <h2 className="text-xl font-bold text-white uppercase tracking-widest flex items-center gap-2">
                             <Trophy className="text-brand-500" /> Organization Tournaments
                         </h2>
                         <select 
                             value={selectedOrgId}
                             onChange={(e) => fetchOrgTournaments(e.target.value)}
-                            className="bg-dark border border-gray-700 rounded-lg p-2 text-white text-sm focus:border-brand-500 outline-none"
+                            className="bg-dark border border-slate-700 rounded-lg p-2 text-white text-sm focus:border-brand-500 outline-none"
                         >
                             <option value="">Select Organization</option>
                             {organizers.map(org => (
@@ -26,12 +26,12 @@ export const OrgTournamentsTab: React.FC<AdminPanelTabProps> = (props) => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {orgTournaments.length > 0 ? (
                             orgTournaments.map(t => (
-                                <div key={t.id} className="bg-dark p-4 rounded-xl border border-gray-800 space-y-3">
+                                <div key={t.id} className="bg-dark p-4 rounded-xl border border-slate-800 space-y-3">
                                     <img src={t.bannerUrl || undefined} className="w-full aspect-video object-cover rounded-lg" alt={t.title} />
                                     <div>
                                         <h3 className="font-bold text-white truncate">{t.title}</h3>
                                         <div className="flex justify-between items-center mt-2">
-                                            <span className="text-[10px] text-gray-500 uppercase font-bold">{formatGameName(t.game)}</span>
+                                            <span className="text-[10px] text-slate-400 uppercase font-bold">{formatGameName(t.game)}</span>
                                             <div className="flex items-center gap-2">
                                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
                                                     t.status === 'upcoming' ? 'bg-blue-600/20 text-blue-400' :
@@ -83,12 +83,12 @@ export const OrgTournamentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                 </div>
                             ))
                         ) : selectedOrgId ? (
-                            <div className="col-span-full flex flex-col items-center justify-center py-20 text-gray-600">
+                            <div className="col-span-full flex flex-col items-center justify-center py-20 text-slate-500">
                                 <Trophy className="w-12 h-12 mb-3 opacity-20" />
                                 <p className="text-sm font-bold uppercase tracking-widest">No tournaments found for this organization</p>
                             </div>
                         ) : (
-                            <div className="col-span-full flex flex-col items-center justify-center py-20 text-gray-600">
+                            <div className="col-span-full flex flex-col items-center justify-center py-20 text-slate-500">
                                 <Users className="w-12 h-12 mb-3 opacity-20" />
                                 <p className="text-sm font-bold uppercase tracking-widest">Select an organization to view their tournaments</p>
                             </div>

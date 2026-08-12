@@ -107,13 +107,13 @@ export const SettingsStreamTab: React.FC<SettingsStreamTabProps> = ({
   return (
     <div className="space-y-6 text-gray-100">
       {/* 1. Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-gray-800">
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800">
         <div>
           <div className="flex items-center gap-3">
             <Settings className="w-6 h-6 text-brand-500" />
             <h2 className="text-2xl font-bold text-white tracking-tight">Settings &amp; Stream</h2>
           </div>
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-slate-400 mt-1">
             Organization branding, stream configuration, and staff permissions
           </p>
         </div>
@@ -122,8 +122,8 @@ export const SettingsStreamTab: React.FC<SettingsStreamTabProps> = ({
       {/* 2. Two-column grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Section A: Organization Profile Card */}
-        <div className="bg-gray-950/50 border border-gray-800 rounded-lg p-5 space-y-5">
-          <div className="flex items-center justify-between pb-3 border-b border-gray-800/80">
+        <div className="bg-dark/50 border border-slate-800 rounded-2xl p-5 space-y-5">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-800/80">
             <h3 className="text-sm font-bold uppercase tracking-wider text-white flex items-center gap-2">
               <Settings className="w-4 h-4 text-brand-500" /> Organization Profile
             </h3>
@@ -137,7 +137,7 @@ export const SettingsStreamTab: React.FC<SettingsStreamTabProps> = ({
           <form onSubmit={handleSave} className="space-y-4">
             {/* Org Name */}
             <div>
-              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
                 Org Name
               </label>
               <input
@@ -145,14 +145,14 @@ export const SettingsStreamTab: React.FC<SettingsStreamTabProps> = ({
                 value={orgName}
                 onChange={(e) => setOrgName(e.target.value)}
                 placeholder="e.g. Free Fire Champions Esports"
-                className="w-full bg-black border border-gray-800 rounded-lg p-3 text-sm text-white placeholder-gray-600 outline-none focus:border-brand-500 transition-colors"
+                className="w-full bg-black border border-slate-800 rounded-lg p-3 text-sm text-white placeholder-gray-600 outline-none focus:border-brand-500 transition-colors"
                 required
               />
             </div>
 
             {/* Bio (textarea 3 rows) */}
             <div>
-              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
                 Bio
               </label>
               <textarea
@@ -160,13 +160,13 @@ export const SettingsStreamTab: React.FC<SettingsStreamTabProps> = ({
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
                 placeholder="Brief summary of your esports organization, motto, or tournament rules..."
-                className="w-full bg-black border border-gray-800 rounded-lg p-3 text-sm text-white placeholder-gray-600 outline-none focus:border-brand-500 transition-colors resize-none"
+                className="w-full bg-black border border-slate-800 rounded-lg p-3 text-sm text-white placeholder-gray-600 outline-none focus:border-brand-500 transition-colors resize-none"
               />
             </div>
 
             {/* WhatsApp Number */}
             <div>
-              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
                 WhatsApp Number
               </label>
               <input
@@ -174,13 +174,13 @@ export const SettingsStreamTab: React.FC<SettingsStreamTabProps> = ({
                 value={whatsapp}
                 onChange={(e) => setWhatsapp(e.target.value)}
                 placeholder="e.g. +977 9800000000 or https://chat.whatsapp.com/..."
-                className="w-full bg-black border border-gray-800 rounded-lg p-3 text-sm text-white placeholder-gray-600 outline-none focus:border-brand-500 transition-colors"
+                className="w-full bg-black border border-slate-800 rounded-lg p-3 text-sm text-white placeholder-gray-600 outline-none focus:border-brand-500 transition-colors"
               />
             </div>
 
             {/* Contact Email */}
             <div>
-              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
                 Contact Email
               </label>
               <input
@@ -188,13 +188,13 @@ export const SettingsStreamTab: React.FC<SettingsStreamTabProps> = ({
                 value={contactInfo}
                 onChange={(e) => setContactInfo(e.target.value)}
                 placeholder="e.g. contact@esportsorg.com"
-                className="w-full bg-black border border-gray-800 rounded-lg p-3 text-sm text-white placeholder-gray-600 outline-none focus:border-brand-500 transition-colors"
+                className="w-full bg-black border border-slate-800 rounded-lg p-3 text-sm text-white placeholder-gray-600 outline-none focus:border-brand-500 transition-colors"
               />
             </div>
 
             {/* Discord Webhook URL */}
             <div>
-              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
                 <Link2 className="w-3.5 h-3.5 text-brand-400" /> Discord Webhook URL
               </label>
               <input
@@ -202,7 +202,7 @@ export const SettingsStreamTab: React.FC<SettingsStreamTabProps> = ({
                 value={discord}
                 onChange={(e) => setDiscord(e.target.value)}
                 placeholder="https://discord.com/api/webhooks/..."
-                className="w-full bg-black border border-gray-800 rounded-lg p-3 text-sm font-mono text-white placeholder-gray-600 outline-none focus:border-brand-500 transition-colors"
+                className="w-full bg-black border border-slate-800 rounded-lg p-3 text-sm font-mono text-white placeholder-gray-600 outline-none focus:border-brand-500 transition-colors"
               />
             </div>
 
@@ -221,9 +221,9 @@ export const SettingsStreamTab: React.FC<SettingsStreamTabProps> = ({
         </div>
 
         {/* Section B: Stream & Staff Card */}
-        <div className="bg-gray-950/50 border border-gray-800 rounded-lg p-5 space-y-6">
+        <div className="bg-dark/50 border border-slate-800 rounded-2xl p-5 space-y-6">
           {/* Stream Configuration Header */}
-          <div className="pb-3 border-b border-gray-800/80">
+          <div className="pb-3 border-b border-slate-800/80">
             <h3 className="text-sm font-bold uppercase tracking-wider text-white flex items-center gap-2">
               <Radio className="w-4 h-4 text-brand-500" /> Stream &amp; Staff Configuration
             </h3>
@@ -233,7 +233,7 @@ export const SettingsStreamTab: React.FC<SettingsStreamTabProps> = ({
           <div className="space-y-4">
             {/* YouTube Live URL */}
             <div>
-              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
                 <Youtube className="w-4 h-4 text-red-500" /> YouTube Live URL
               </label>
               <input
@@ -241,13 +241,13 @@ export const SettingsStreamTab: React.FC<SettingsStreamTabProps> = ({
                 value={youtubeUrl}
                 onChange={(e) => setYoutubeUrl(e.target.value)}
                 placeholder="https://youtube.com/watch?v=..."
-                className="w-full bg-black border border-gray-800 rounded-lg p-3 text-sm text-white placeholder-gray-600 outline-none focus:border-brand-500 transition-colors"
+                className="w-full bg-black border border-slate-800 rounded-lg p-3 text-sm text-white placeholder-gray-600 outline-none focus:border-brand-500 transition-colors"
               />
             </div>
 
             {/* Twitch URL (Using Radio icon as requested) */}
             <div>
-              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
                 <Radio className="w-4 h-4 text-brand-400" /> Twitch Broadcast URL
               </label>
               <input
@@ -255,16 +255,16 @@ export const SettingsStreamTab: React.FC<SettingsStreamTabProps> = ({
                 value={twitchUrl}
                 onChange={(e) => setTwitchUrl(e.target.value)}
                 placeholder="https://twitch.tv/..."
-                className="w-full bg-black border border-gray-800 rounded-lg p-3 text-sm text-white placeholder-gray-600 outline-none focus:border-brand-500 transition-colors"
+                className="w-full bg-black border border-slate-800 rounded-lg p-3 text-sm text-white placeholder-gray-600 outline-none focus:border-brand-500 transition-colors"
               />
             </div>
 
             {/* Stream Preview Area */}
             <div>
-              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
                 Stream Preview
               </label>
-              <div className="aspect-video bg-gray-900 rounded-lg border border-gray-800 relative overflow-hidden flex flex-col items-center justify-center group">
+              <div className="aspect-video bg-card rounded-lg border border-slate-800 relative overflow-hidden flex flex-col items-center justify-center group">
                 {embedUrl ? (
                   <iframe
                     src={embedUrl}
@@ -275,11 +275,11 @@ export const SettingsStreamTab: React.FC<SettingsStreamTabProps> = ({
                   />
                 ) : (
                   <div className="flex flex-col items-center gap-2 text-center p-4">
-                    <div className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 group-hover:scale-105 transition-transform">
+                    <div className="w-12 h-12 rounded-full bg-surface flex items-center justify-center text-slate-400 group-hover:scale-105 transition-transform">
                       <Radio className="w-6 h-6 text-brand-500 animate-pulse" />
                     </div>
-                    <span className="text-sm font-semibold text-gray-300">Stream preview</span>
-                    <span className="text-xs text-gray-500 max-w-xs">
+                    <span className="text-sm font-semibold text-slate-300">Stream preview</span>
+                    <span className="text-xs text-slate-400 max-w-xs">
                       Enter a valid YouTube or Twitch live URL above to test live player stream feed.
                     </span>
                   </div>
@@ -289,7 +289,7 @@ export const SettingsStreamTab: React.FC<SettingsStreamTabProps> = ({
           </div>
 
           {/* Staff Permissions Section */}
-          <div className="pt-4 border-t border-gray-800/80 space-y-4">
+          <div className="pt-4 border-t border-slate-800/80 space-y-4">
             <div className="flex items-center gap-2">
               <UserCog className="w-4 h-4 text-brand-500" />
               <h4 className="text-xs font-bold uppercase tracking-wider text-white">
@@ -298,9 +298,9 @@ export const SettingsStreamTab: React.FC<SettingsStreamTabProps> = ({
             </div>
 
             {/* Referee Name Input + Toggle */}
-            <div className="bg-black/40 border border-gray-800 rounded-lg p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="bg-dark/40 border border-slate-800 rounded-lg p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex-1">
-                <label className="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
                   Referee Name / Handle
                 </label>
                 <input
@@ -308,18 +308,18 @@ export const SettingsStreamTab: React.FC<SettingsStreamTabProps> = ({
                   value={refereeName}
                   onChange={(e) => setRefereeName(e.target.value)}
                   placeholder="e.g. Ref_Alex or FreeFire_Admin"
-                  className="w-full bg-black border border-gray-800 rounded p-2 text-xs text-white placeholder-gray-600 outline-none focus:border-brand-500"
+                  className="w-full bg-black border border-slate-800 rounded p-2 text-xs text-white placeholder-gray-600 outline-none focus:border-brand-500"
                 />
               </div>
-              <div className="flex items-center justify-between sm:justify-end gap-3 pt-1 sm:pt-0 border-t sm:border-t-0 border-gray-800">
-                <span className="text-xs text-gray-400 font-medium">Referee Access</span>
+              <div className="flex items-center justify-between sm:justify-end gap-3 pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-800">
+                <span className="text-xs text-slate-400 font-medium">Referee Access</span>
                 <button
                   type="button"
                   role="switch"
                   aria-checked={refereeEnabled}
                   onClick={() => setRefereeEnabled(!refereeEnabled)}
                   className={`relative inline-flex h-6 w-11 min-h-[44px] min-w-[44px] items-center justify-start flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                    refereeEnabled ? 'bg-brand-500' : 'bg-gray-800'
+                    refereeEnabled ? 'bg-brand-500' : 'bg-surface'
                   }`}
                 >
                   <span
@@ -332,9 +332,9 @@ export const SettingsStreamTab: React.FC<SettingsStreamTabProps> = ({
             </div>
 
             {/* Caster Name Input + Toggle */}
-            <div className="bg-black/40 border border-gray-800 rounded-lg p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="bg-dark/40 border border-slate-800 rounded-lg p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex-1">
-                <label className="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
                   Caster Name / Handle
                 </label>
                 <input
@@ -342,18 +342,18 @@ export const SettingsStreamTab: React.FC<SettingsStreamTabProps> = ({
                   value={casterName}
                   onChange={(e) => setCasterName(e.target.value)}
                   placeholder="e.g. Caster_Sam or FF_Shoutcaster"
-                  className="w-full bg-black border border-gray-800 rounded p-2 text-xs text-white placeholder-gray-600 outline-none focus:border-brand-500"
+                  className="w-full bg-black border border-slate-800 rounded p-2 text-xs text-white placeholder-gray-600 outline-none focus:border-brand-500"
                 />
               </div>
-              <div className="flex items-center justify-between sm:justify-end gap-3 pt-1 sm:pt-0 border-t sm:border-t-0 border-gray-800">
-                <span className="text-xs text-gray-400 font-medium">Caster Access</span>
+              <div className="flex items-center justify-between sm:justify-end gap-3 pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-800">
+                <span className="text-xs text-slate-400 font-medium">Caster Access</span>
                 <button
                   type="button"
                   role="switch"
                   aria-checked={casterEnabled}
                   onClick={() => setCasterEnabled(!casterEnabled)}
                   className={`relative inline-flex h-6 w-11 min-h-[44px] min-w-[44px] items-center justify-start flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                    casterEnabled ? 'bg-brand-500' : 'bg-gray-800'
+                    casterEnabled ? 'bg-brand-500' : 'bg-surface'
                   }`}
                 >
                   <span
@@ -366,7 +366,7 @@ export const SettingsStreamTab: React.FC<SettingsStreamTabProps> = ({
             </div>
 
             {/* Note text about staff permissions */}
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-slate-400">
               Note: Staff permissions grant assigned handles access to referee room management, match score validation, live stream overlays, and spectator access.
             </p>
           </div>

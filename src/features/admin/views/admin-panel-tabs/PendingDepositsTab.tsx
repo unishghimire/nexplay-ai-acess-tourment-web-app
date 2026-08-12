@@ -7,8 +7,8 @@ export const PendingDepositsTab: React.FC<AdminPanelTabProps> = (props) => {
     const { allTransactions, closeConfirmModal, formatCurrency, getRelativeTime, handleApproveTx, setConfirmModal, setSelectedTx } = props;
     const [processingId, setProcessingId] = useState<string | null>(null);
     return (
-                    <div className="bg-card p-6 rounded-xl border border-gray-800 space-y-6">
-                        <div className="flex justify-between items-center border-b border-gray-700 pb-4">
+                    <div className="bg-card p-6 rounded-2xl border border-slate-800 space-y-6">
+                        <div className="flex justify-between items-center border-b border-slate-700 pb-4">
                             <div className="flex items-center gap-4">
                                 <h2 className="text-xl font-bold text-white uppercase tracking-widest flex items-center gap-2">
                                     <ArrowDown className="text-green-500" /> Pending Deposits
@@ -47,32 +47,32 @@ export const PendingDepositsTab: React.FC<AdminPanelTabProps> = (props) => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[600px] overflow-y-auto custom-scrollbar content-start pr-2">
                             {allTransactions.filter(t => t.type === 'deposit' && t.status === 'pending').length > 0 ? (
                                 allTransactions.filter(t => t.type === 'deposit' && t.status === 'pending').map(t => (
-                                    <div key={t.id} className="bg-dark/50 hover:bg-dark p-5 rounded-2xl border border-gray-800 hover:border-gray-700 transition-all shadow-md group">
-                                        <div className="flex justify-between items-start mb-4 border-b border-gray-800 pb-3">
+                                    <div key={t.id} className="bg-dark/50 hover:bg-dark p-5 rounded-2xl border border-slate-800 hover:border-slate-700 transition-all shadow-md group">
+                                        <div className="flex justify-between items-start mb-4 border-b border-slate-800 pb-3">
                                             <div>
                                                 <div className="flex items-center gap-2 mb-1">
                                                     <span className="font-black tracking-wider text-green-400 uppercase text-xs">Deposit</span>
-                                                    <span className="text-[10px] bg-gray-800 px-2 py-0.5 rounded-full text-gray-300 font-bold tracking-wider">{t.method}</span>
+                                                    <span className="text-[10px] bg-surface px-2 py-0.5 rounded-full text-gray-300 font-bold tracking-wider">{t.method}</span>
                                                 </div>
                                                 <div className="text-white font-bold text-sm">{t.username || 'Unknown User'}</div>
-                                                <div className="text-[10px] text-gray-500 font-mono">{getRelativeTime(t.timestamp)}</div>
+                                                <div className="text-[10px] text-slate-400 font-mono">{getRelativeTime(t.timestamp)}</div>
                                             </div>
                                             <div className="text-xl font-black text-white tracking-tight">{formatCurrency(Math.abs(t.amount))}</div>
                                         </div>
                                         <div className="text-[11px] text-gray-400 mb-3 space-y-2">
-                                            <div className="bg-black/30 p-2 rounded-lg border border-gray-800/50 font-mono flex justify-between items-center">
-                                                <span className="text-gray-600">REF:</span> 
+                                            <div className="bg-dark/40 p-2 rounded-lg border border-slate-800/50 font-mono flex justify-between items-center">
+                                                <span className="text-slate-500">REF:</span> 
                                                 <span className="text-brand-300 select-all break-all">{t.refId}</span>
                                             </div>
                                             {t.transactionCode && (
-                                                <div className="bg-black/30 p-2 rounded-lg border border-gray-800/50 font-mono flex justify-between items-center">
-                                                    <span className="text-gray-600">TX CODE:</span> 
+                                                <div className="bg-dark/40 p-2 rounded-lg border border-slate-800/50 font-mono flex justify-between items-center">
+                                                    <span className="text-slate-500">TX CODE:</span> 
                                                     <span className="text-brand-300 select-all break-all">{t.transactionCode}</span>
                                                 </div>
                                             )}
                                             {t.accountDetails && (
-                                                <div className="bg-black/30 p-2 rounded-lg border border-gray-800/50 font-mono flex justify-between items-center">
-                                                    <span className="text-gray-600">ACC:</span> 
+                                                <div className="bg-dark/40 p-2 rounded-lg border border-slate-800/50 font-mono flex justify-between items-center">
+                                                    <span className="text-slate-500">ACC:</span> 
                                                     <span className="text-brand-300 select-all break-all">{t.accountDetails}</span>
                                                 </div>
                                             )}
@@ -81,7 +81,7 @@ export const PendingDepositsTab: React.FC<AdminPanelTabProps> = (props) => {
                                         {t.proofUrl && (
                                             <div className="mb-3">
                                                 <a href={t.proofUrl} target="_blank" rel="noreferrer" className="block group/img">
-                                                    <div className="relative rounded-xl overflow-hidden border border-gray-800 hover:border-brand-500 transition">
+                                                    <div className="relative rounded-xl overflow-hidden border border-slate-800 hover:border-brand-500 transition">
                                                         <img src={t.proofUrl} alt="Payment proof" className="w-full max-h-48 object-contain bg-black/50 rounded-lg" referrerPolicy="no-referrer" onError={(e) => { e.currentTarget.style.display = "none"; }} />
                                                         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/img:opacity-100 transition flex items-center justify-center">
                                                             <span className="text-white text-xs font-bold uppercase tracking-wider flex items-center gap-1">
@@ -103,11 +103,11 @@ export const PendingDepositsTab: React.FC<AdminPanelTabProps> = (props) => {
                                     </div>
                                 ))
                             ) : (
-                                <div className="col-span-full h-full flex flex-col items-center justify-center text-gray-500 py-20">
-                                    <div className="w-16 h-16 bg-dark rounded-full flex items-center justify-center mb-4 border border-gray-800">
+                                <div className="col-span-full h-full flex flex-col items-center justify-center text-slate-400 py-20">
+                                    <div className="w-16 h-16 bg-dark rounded-full flex items-center justify-center mb-4 border border-slate-800">
                                         <Check className="text-3xl text-green-500/50" />
                                     </div>
-                                    <p className="font-bold uppercase tracking-widest text-sm text-gray-600">All Caught Up!</p>
+                                    <p className="font-bold uppercase tracking-widest text-sm text-slate-500">All Caught Up!</p>
                                     <p className="text-xs text-gray-700 mt-1">No pending deposits to review.</p>
                                 </div>
                             )}
