@@ -5,11 +5,9 @@ import { doc, getDoc, collection, query, where, getDocs, addDoc, deleteDoc, serv
 import { db } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { UserProfile, Team, Tournament, OrgPost, MatchHistory } from '../../../shared/types/types';
-import {Trophy, Briefcase, Users, ArrowLeft, CheckCircle2, Copy, UserPlus, UserMinus, Calendar, Share2, Eye, MessageSquare, Plus, Star, Activity, Award, Zap, ChevronRight, Camera} from 'lucide-react';
+import {Trophy, Briefcase, Users, ArrowLeft, CheckCircle2, Copy, UserPlus, UserMinus, Calendar, Share2, MessageSquare, Star, Activity, Award, Zap, ChevronRight} from 'lucide-react';
 import { useNotification } from '../../../shared/context/NotificationContext';
-import Modal from '../../../shared/components/Modal';
 import { formatDate, timeAgo, formatCurrency } from '../../../shared/utils/utils';
-import { useInvisibleImage } from '../../../shared/hooks/useInvisibleImage';
 
 const PublicProfile: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -30,23 +28,8 @@ const PublicProfile: React.FC = () => {
     const [followerCount, setFollowerCount] = useState(0);
     const [followingCount, setFollowingCount] = useState(0);
 
-    // Create Post Modal State
-    const [showCreatePost, setShowCreatePost] = useState(false);
-    const [postTitle, setPostTitle] = useState('');
-    const [postContent, setPostContent] = useState('');
-    const [postImageUrl, setPostImageUrl] = useState('');
-    const [isCreatingPost, setIsCreatingPost] = useState(false);
-    const [isUploadingPostImage, setIsUploadingPostImage] = useState(false);
-
-    const { handlePaste, handleDrop, handleDragOver, processAndUpload } = useInvisibleImage({
-        onUploadStart: () => setIsUploadingPostImage(true),
-        onUploadEnd: () => setIsUploadingPostImage(false),
-        onUploadSuccess: (url) => {
-            setPostImageUrl(url);
-            showToast('Post image uploaded successfully!', 'success');
-        },
-        onError: (err) => showToast(err, 'error')
-    });
+    // ponytail: news posting moved to admin panel — organizer posts are read-only here
+    // (news posting now admin-only)
 
     useEffect(() => {
         const fetchAllData = async () => {
@@ -125,39 +108,6 @@ const PublicProfile: React.FC = () => {
 
         fetchAllData();
     }, [id, user]);
-
-    const handleCreatePost = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!user || !profile || !postTitle.trim() || !postContent.trim()) return;
-        
-        setIsCreatingPost(true);
-        try {
-            const newPost = {
-                orgId: user.uid,
-                orgName: profile.orgName || profile.username,
-                orgAvatar: profile.profilePicUrl || '',
-                title: postTitle.trim(),
-                content: postContent.trim(),
-                imageUrl: postImageUrl.trim(),
-                createdAt: serverTimestamp()
-            };
-            
-            const docRef = await addDoc(collection(db, 'org_posts'), newPost);
-            setOrgPosts(prev => [{ id: docRef.id, ...newPost, createdAt: serverTimestamp() } as OrgPost, ...prev]);
-            
-            showToast('Announcement posted successfully!', 'success');
-            setShowCreatePost(false);
-            setPostTitle('');
-            setPostContent('');
-            setPostImageUrl('');
-        } catch (error) {
-            console.error("Error creating post:", error);
-            showToast('Failed to create post', 'error');
-        } finally {
-            setIsCreatingPost(false);
-        }
-    };
-
     const handleToggleFollow = async () => {
         if (!user || !id) return;
         setFollowLoading(true);
@@ -408,31 +358,20 @@ const PublicProfile: React.FC = () => {
                                 <h3 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-2">
                                     <MessageSquare className="w-5 h-5 text-brand-500" /> Announcements
                                 </h3>
-                                {user?.uid === id && (
-                                    <button 
-                                        onClick={() => setShowCreatePost(true)}
-                                        className="bg-brand-500 hover:bg-brand-400 text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition flex items-center gap-2"
-                                    >
-                                        <Plus className="w-4 h-4" /> Create Post
-                                    </button>
-                                )}
+                
                             </div>
                             <div className="p-6 space-y-6">
                                 {orgPosts.map(post => (
-                                    <div key={post.id} className="bg-dark p-6 rounded-2xl border border-gray-800 hover:border-gray-700 transition group">
+                                    <Link key={post.id} to={`/post/${post.id}`} className="block bg-dark p-6 rounded-2xl border border-gray-800 hover:border-brand-500/50 transition group">
                                         <h4 className="text-xl font-black text-white mb-2 group-hover:text-brand-400 transition">{post.title}</h4>
-                                        <p className="text-gray-400 text-sm leading-relaxed mb-4">{post.content}</p>
+                                        <p className="text-gray-400 text-sm leading-relaxed mb-4 line-clamp-2">{post.content}</p>
                                         {post.imageUrl && (
-                                            <img src={post.imageUrl} alt="Post" className="w-full h-48 object-cover rounded-xl mb-4" />
+                                            <img src={post.imageUrl} alt={post.title} className="w-full h-48 object-cover rounded-xl mb-4" />
                                         )}
-                                        <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-gray-500">
-                                            <span>{formatDate(post.createdAt)}</span>
-                                            <div className="flex items-center gap-4">
-                                                <button className="hover:text-white transition flex items-center gap-1"><Eye className="w-3 h-3" /> 1.2k</button>
-                                                <button className="hover:text-white transition flex items-center gap-1"><MessageSquare className="w-3 h-3" /> 42</button>
-                                            </div>
+                                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-500">
+                                            <Calendar className="w-3 h-3" /> {formatDate(post.createdAt)}
                                         </div>
-                                    </div>
+                                    </Link>
                                 ))}
                             </div>
                         </div>
@@ -484,101 +423,6 @@ const PublicProfile: React.FC = () => {
                     </div>
                 </div>
             </div>
-
-            {/* Create Post Modal */}
-            <Modal isOpen={showCreatePost} onClose={() => setShowCreatePost(false)} title="Create Announcement">
-                <form onSubmit={handleCreatePost} className="space-y-4">
-                    <div>
-                        <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Title</label>
-                        <input
-                            type="text"
-                            value={postTitle}
-                            onChange={(e) => setPostTitle(e.target.value)}
-                            className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-500 transition font-bold"
-                            placeholder="Announcement Title"
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Content</label>
-                        <textarea
-                            value={postContent}
-                            onChange={(e) => setPostContent(e.target.value)}
-                            className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-500 transition h-32 resize-none text-sm"
-                            placeholder="Write your announcement here..."
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Image (Drag & Drop, Paste, Browse or Paste URL)</label>
-                        <div 
-                            onPaste={handlePaste}
-                            onDrop={handleDrop}
-                            onDragOver={handleDragOver}
-                            onClick={() => document.getElementById('post-image-file-input')?.click()}
-                            className={`relative w-full aspect-video rounded-2xl border-2 border-dashed transition-all flex flex-col items-center justify-center overflow-hidden group cursor-pointer mb-3 ${isUploadingPostImage ? 'border-brand-500 bg-brand-500/10' : 'border-gray-700 hover:border-brand-500 bg-dark'}`}
-                        >
-                            {isUploadingPostImage ? (
-                                <div className="flex flex-col items-center gap-2">
-                                    <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
-                                    <span className="text-[10px] text-brand-400 font-bold uppercase">Uploading...</span>
-                                </div>
-                            ) : postImageUrl ? (
-                                <>
-                                    <img 
-                                        src={postImageUrl} 
-                                        alt="Post Preview" 
-                                        className="w-full h-full object-cover"
-                                        referrerPolicy="no-referrer"
-                                    />
-                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-                                        <Camera className="w-8 h-8 text-white" />
-                                    </div>
-                                </>
-                            ) : (
-                                <div className="flex flex-col items-center gap-2 p-4 text-center">
-                                    <Camera className="w-8 h-8 text-gray-500 group-hover:text-brand-500 transition-colors" />
-                                    <span className="text-[10px] text-gray-500 font-bold uppercase">Drag & Drop or Click to Upload</span>
-                                </div>
-                            )}
-                        </div>
-                        <input 
-                            id="post-image-file-input"
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(e) => {
-                                if (e.target.files?.[0]) {
-                                    processAndUpload(e.target.files[0]);
-                                }
-                            }}
-                        />
-                        <input
-                            type="url"
-                            value={postImageUrl}
-                            onChange={(e) => setPostImageUrl(e.target.value)}
-                            className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-500 transition font-mono text-xs"
-                            placeholder="Or paste direct image URL here..."
-                        />
-                    </div>
-                    <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-800">
-                        <button
-                            type="button"
-                            onClick={() => setShowCreatePost(false)}
-                            className="px-6 py-3 rounded-xl font-bold text-gray-400 hover:text-white transition"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={isCreatingPost || !postTitle.trim() || !postContent.trim()}
-                            className="bg-brand-600 hover:bg-brand-500 text-white px-8 py-3 rounded-xl font-black uppercase tracking-widest transition shadow-lg disabled:opacity-50"
-                        >
-                            {isCreatingPost ? 'Posting...' : 'Post Announcement'}
-                        </button>
-                    </div>
-                </form>
-            </Modal>
         </div>
     );
 };

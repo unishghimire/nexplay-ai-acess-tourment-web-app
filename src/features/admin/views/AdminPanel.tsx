@@ -5,8 +5,8 @@ import ConfirmModal from '../../../shared/components/ConfirmModal';
 import TournamentCreateModal from '../../tournaments/components/TournamentCreateModal';
 import TransactionDetailModal from '../components/TransactionDetailModal';
 import TransactionHistoryTab from '../components/TransactionHistoryTab';
-import {Users, ArrowDown, ArrowUp, Layout, Check, X, Image as ImageIcon, CreditCard, QrCode, Megaphone, Trophy, Gamepad2, Tag, Sliders, DollarSign} from 'lucide-react';
-import { DashboardTab, TournamentsTab, OrgApprovalsTab, OrgTournamentsTab, UsersTab, OrganizersTab, OrgEarningsTab, PendingDepositsTab, PendingWithdrawalsTab, GamesTab, PaymentsTab, PromoTab, MediaTab, SettingsTab } from './admin-panel-tabs';
+import {Users, ArrowDown, ArrowUp, Layout, Check, X, Image as ImageIcon, CreditCard, QrCode, Megaphone, Newspaper, Trophy, Gamepad2, Tag, Sliders, DollarSign} from 'lucide-react';
+import { DashboardTab, TournamentsTab, OrgApprovalsTab, OrgTournamentsTab, UsersTab, OrganizersTab, OrgEarningsTab, PendingDepositsTab, PendingWithdrawalsTab, GamesTab, PaymentsTab, PromoTab, MediaTab, NewsTab, SettingsTab } from './admin-panel-tabs';
 import DiscordAdminPanel from '../components/DiscordAdminPanel';
 import { useAdminData } from '../hooks/useAdminData';
 
@@ -140,7 +140,8 @@ const AdminPanel: React.FC = () => {
                             { id: 'games', icon: Gamepad2, label: 'Games' },
                             { id: 'payments', icon: QrCode, label: 'Payments' },
                             { id: 'promo', icon: Tag, label: 'Promo Codes' },
-                            { id: 'media', icon: ImageIcon, label: 'Media Library' }
+                            { id: 'media', icon: ImageIcon, label: 'Media Library' },
+                            { id: 'news', icon: Newspaper, label: 'News' }
                         ].map(tab => {
                             const Icon = tab.icon;
                             const isActive = activeTab === `tab-${tab.id}`;
@@ -242,6 +243,8 @@ const AdminPanel: React.FC = () => {
             {activeTab === 'tab-promo' && <PromoTab {...tabProps} />}
 
             {activeTab === 'tab-media' && <MediaTab {...tabProps} />}
+
+            {activeTab === 'tab-news' && <NewsTab {...tabProps} />}
 
             {activeTab === 'tab-settings' && <SettingsTab {...tabProps} />}
 

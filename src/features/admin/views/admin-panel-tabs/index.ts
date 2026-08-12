@@ -12,5 +12,6 @@ export { GamesTab } from './GamesTab';
 export { PaymentsTab } from './PaymentsTab';
 export { PromoTab } from './PromoTab';
 export { MediaTab } from './MediaTab';
+export { default as NewsTab } from './NewsTab';
 export { SettingsTab } from './SettingsTab';
 export type { AdminPanelTabProps } from './types';

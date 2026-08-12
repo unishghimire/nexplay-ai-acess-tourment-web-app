@@ -178,7 +178,7 @@ const AppContent = () => {
   );
 };
 
-export default // Redirect legacy /details/:id to /tournaments/:id for SEO canonical consistency
+// Redirect legacy /details/:id to /tournaments/:id for SEO canonical consistency
 function DetailsRedirect() {
     const { id } = useParams<{ id: string }>();
     return <Navigate to={`/tournaments/${id}`} replace />;
@@ -197,7 +197,7 @@ function OrgRedirect() {
 }
 
 
-function App() {
+export default function App() {
   return (
     <ErrorBoundary>
       <HelmetProvider>
