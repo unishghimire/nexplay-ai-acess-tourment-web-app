@@ -18,6 +18,7 @@ export async function generateSitemapXml(db: any): Promise<string> {
     { loc: `${baseUrl}/games`, changefreq: "weekly", priority: "0.9" },
     { loc: `${baseUrl}/results`, changefreq: "daily", priority: "0.7" },
     { loc: `${baseUrl}/organizations`, changefreq: "daily", priority: "0.7" },
+    { loc: `${baseUrl}/news`, changefreq: "daily", priority: "0.8" },
     { loc: `${baseUrl}/teams`, changefreq: "daily", priority: "0.7" },
     { loc: `${baseUrl}/leaderboard`, changefreq: "daily", priority: "0.7" },
     { loc: `${baseUrl}/about`, changefreq: "monthly", priority: "0.5" },
@@ -50,13 +51,13 @@ export async function generateSitemapXml(db: any): Promise<string> {
     return new Date().toISOString();
   };
 
-  // 1. Dynamic tournaments (/details/:id)
+  // 1. Dynamic tournaments (/tournaments/:id)
   try {
     const snap = await db.collection("tournaments").get();
     snap.forEach((doc: any) => {
       const data = doc.data() || {};
       dynamicItems.push({
-        loc: `${baseUrl}/details/${doc.id}`,
+        loc: `${baseUrl}/tournaments/${doc.id}`,
         changefreq: "daily",
         priority: "0.9",
         lastmod: formatLastMod(data),
@@ -116,7 +117,7 @@ export async function generateSitemapXml(db: any): Promise<string> {
 
   // 5. Public posts (/post/:id)
   try {
-    const snap = await db.collection("posts").get();
+    const snap = await db.collection("org_posts").get();
     snap.forEach((doc: any) => {
       const data = doc.data() || {};
       dynamicItems.push({
