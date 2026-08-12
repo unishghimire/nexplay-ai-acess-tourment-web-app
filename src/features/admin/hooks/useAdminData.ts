@@ -265,8 +265,6 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
                 getDocs(query(collection(db, 'activityLogs'), orderBy('timestamp', 'desc'), limit(10))),
                 // 12: tournament earnings
                 getDocs(query(collection(db, 'tournamentEarnings'), orderBy('createdAt', 'desc'))),
-                // 13: subscription plans
-                getDocs(query(collection(db, 'subscriptionPlans'), orderBy('isActive', 'desc'))),
                 // 14: site settings
                 getDoc(doc(db, 'settings', 'site')),
                 // 15: today's transactions for stats
@@ -310,10 +308,8 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
                 setActivityLogs(results[11].value.docs.map(d => ({ id: d.id, ...d.data() })));
             if (results[12].status === 'fulfilled')
                 setTournamentEarnings(results[12].value.docs.map(d => ({ id: d.id, ...d.data() } as TournamentEarning)));
-            if (results[13].status === 'fulfilled')
-                setSubscriptionPlans(results[13].value.docs.map(d => ({ id: d.id, ...d.data() } as any)));
-            if (results[14].status === 'fulfilled' && results[14].value.exists()) {
-                const data = results[14].value.data() as SiteSettings;
+            if (results[13].status === 'fulfilled' && results[13].value.exists()) {
+                const data = results[13].value.data() as SiteSettings;
                 setSiteSettings(data);
                 setMinWithdrawal(data.minWithdrawal?.toString() || '');
                 setSupportEmail(data.supportEmail || '');
@@ -330,8 +326,8 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
                 results[10].value.forEach(d => totalBal += (d.data().balance || 0));
             }
             let dep = 0, withdr = 0;
-            if (results[15].status === 'fulfilled') {
-                results[15].value.forEach(d => {
+            if (results[14].status === 'fulfilled') {
+                results[14].value.forEach(d => {
                     const data = d.data();
                     if (data.status === 'success') {
                         if (data.type === 'deposit') dep += data.amount;

@@ -35,7 +35,7 @@ export default function TournamentAdminPanel() {
                 <div className="flex items-center gap-3 sm:gap-6">
                     <button 
                         onClick={() => navigate(`/details/${tournament.id}`)}
-                        className="p-2.5 sm:p-3 bg-gray-950 border border-gray-800 rounded-full text-gray-400 hover:text-white hover:border-brand-500 transition-all hover:bg-gray-900 shrink-0 touch-target"
+                        className="p-2.5 sm:p-3 bg-dark border border-gray-800 rounded-full text-gray-400 hover:text-white hover:border-brand-500 transition-all hover:bg-card shrink-0 touch-target"
                         aria-label="Back to tournament"
                     >
                         <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -65,7 +65,7 @@ export default function TournamentAdminPanel() {
                             link.click();
                             document.body.removeChild(link);
                         }}
-                        className="bg-gray-950 border border-gray-800 hover:border-brand-500 text-gray-500 hover:text-white p-2.5 sm:p-3 rounded-full transition-all touch-target flex items-center justify-center"
+                        className="bg-dark border border-gray-800 hover:border-brand-500 text-gray-500 hover:text-white p-2.5 sm:p-3 rounded-full transition-all touch-target flex items-center justify-center"
                         title="Export Participants"
                         aria-label="Export participants"
                     >
@@ -100,7 +100,7 @@ export default function TournamentAdminPanel() {
                         className={`flex items-center gap-2 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-widest whitespace-nowrap transition-all shrink-0 ${
                             activeTab === tab.id 
                                 ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/20' 
-                                : 'bg-gray-950/50 border border-gray-800 text-gray-400 hover:text-white hover:border-gray-700'
+                                : 'bg-dark/50 border border-gray-800 text-gray-400 hover:text-white hover:border-gray-700'
                         }`}
                     >
                         <tab.icon className="w-4 h-4" /> {tab.label}
@@ -109,7 +109,7 @@ export default function TournamentAdminPanel() {
             </div>
 
             {/* ponytail: shared tabProps — built once, spread to each tab */}
-            <div className="bg-gray-950/50 rounded-2xl sm:rounded-[2rem] border border-gray-800 p-4 sm:p-6 lg:p-8">
+            <div className="bg-dark/50 rounded-2xl sm:rounded-[2rem] border border-gray-800 p-4 sm:p-6 lg:p-8">
                 <AnimatePresence mode="wait">
                     {activeTab === 'overview' && <OverviewTab {...tabProps} />}
                     {activeTab === 'groups' && <GroupsTab {...tabProps} />}

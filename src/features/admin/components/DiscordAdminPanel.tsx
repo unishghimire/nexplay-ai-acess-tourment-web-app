@@ -134,7 +134,7 @@ const DiscordAdminPanel: React.FC<DiscordAdminPanelProps> = ({ allTournaments, s
             </div>
 
             {/* Tournament selector */}
-            <div className="bg-gray-900/50 p-6 rounded-3xl border border-gray-800 space-y-4">
+            <div className="bg-card/50 p-6 rounded-3xl border border-gray-800 space-y-4">
                 <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block">
                     Select Tournament or Scrim
                 </label>
@@ -154,7 +154,7 @@ const DiscordAdminPanel: React.FC<DiscordAdminPanelProps> = ({ allTournaments, s
 
                 {selectedTournament && (
                     <div className="flex items-center gap-3 p-4 bg-black/40 rounded-2xl border border-gray-800">
-                        <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-900 border border-gray-700 shrink-0">
+                        <div className="w-12 h-12 rounded-xl overflow-hidden bg-card border border-gray-700 shrink-0">
                             {selectedTournament.bannerUrl && (
                                 <img src={selectedTournament.bannerUrl} alt="" className="w-full h-full object-cover" />
                             )}
@@ -177,7 +177,7 @@ const DiscordAdminPanel: React.FC<DiscordAdminPanelProps> = ({ allTournaments, s
             </div>
 
             {/* Announce buttons */}
-            <div className="bg-gray-900/50 p-6 rounded-3xl border border-gray-800">
+            <div className="bg-card/50 p-6 rounded-3xl border border-gray-800">
                 <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">
                     Announcement Type
                 </div>

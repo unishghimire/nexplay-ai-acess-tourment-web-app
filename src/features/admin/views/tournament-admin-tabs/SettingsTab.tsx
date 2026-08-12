@@ -31,8 +31,9 @@ export const SettingsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                     <h3 className="text-xs font-black uppercase tracking-widest text-brand-500 border-b border-gray-800 pb-2">Scoring Rules</h3>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-[10px] font-black text-gray-500 uppercase mb-2 tracking-widest">Points Per Kill</label>
+                                            <label htmlFor="points-per-kill" className="block text-[10px] font-black text-gray-500 uppercase mb-2 tracking-widest">Points Per Kill</label>
                                             <input 
+                                                id="points-per-kill"
                                                 type="number"
                                                 value={tournament.pointSystem?.pointsPerKill ?? 1}
                                                 onChange={(e) => {
@@ -43,13 +44,13 @@ export const SettingsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-[10px] font-black text-gray-500 uppercase mb-2 tracking-widest">Placement Scale</label>
+                                            <label htmlFor="placement-scale" className="block text-[10px] font-black text-gray-500 uppercase mb-2 tracking-widest">Placement Scale</label>
                                             <div className="text-[10px] text-gray-400 mb-2 font-bold italic">Configured in placement points list</div>
                                         </div>
                                     </div>
 
                                     <div className="space-y-3">
-                                        <label className="block text-[10px] font-black text-gray-500 uppercase mb-2 tracking-widest flex justify-between">
+                                        <label htmlFor="placement-points" className="block text-[10px] font-black text-gray-500 uppercase mb-2 tracking-widest flex justify-between">
                                             Placement Points
                                             <button 
                                                 onClick={() => {
@@ -195,7 +196,7 @@ export const SettingsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                             />
                                             <div className="flex gap-2">
                                                 <div className="flex-1">
-                                                    <label className="block text-[10px] text-gray-600 font-black uppercase mb-1">Qualifiers</label>
+                                                    <label aria-label={`Qualifiers for round ${idx + 1}`} className="block text-[10px] text-gray-600 font-black uppercase mb-1">Qualifiers</label>
                                                     <input 
                                                         type="number"
                                                         value={step.qualificationRule}
@@ -208,7 +209,7 @@ export const SettingsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                                     />
                                                 </div>
                                                 <div className="flex-1">
-                                                    <label className="block text-[10px] text-gray-600 font-black uppercase mb-1">Groups</label>
+                                                    <label aria-label={`Groups for round ${idx + 1}`} className="block text-[10px] text-gray-600 font-black uppercase mb-1">Groups</label>
                                                     <input 
                                                         type="number"
                                                         value={step.numGroups}

@@ -96,23 +96,23 @@ export const OrganizersTab: React.FC<AdminPanelTabProps> = (props) => {
                                 </h3>
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="text-xs text-slate-400 uppercase font-bold mb-1 block">Organization Name</label>
+                                        <label htmlFor="org-name" className="text-xs text-slate-400 uppercase font-bold mb-1 block">Organization Name</label>
                                         <input type="text" value={orgNameEdit} onChange={e => setOrgNameEdit(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" />
                                     </div>
                                     <div>
-                                        <label className="text-xs text-slate-400 uppercase font-bold mb-1 block">Email</label>
+                                        <label htmlFor="org-email" className="text-xs text-slate-400 uppercase font-bold mb-1 block">Email</label>
                                         <input type="email" value={orgEmail} onChange={e => setOrgEmail(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" />
                                     </div>
                                     <div>
-                                        <label className="text-xs text-slate-400 uppercase font-bold mb-1 block">WhatsApp</label>
+                                        <label htmlFor="org-whatsapp" className="text-xs text-slate-400 uppercase font-bold mb-1 block">WhatsApp</label>
                                         <input type="text" value={orgWhatsapp} onChange={e => setOrgWhatsapp(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" />
                                     </div>
                                     <div>
-                                        <label className="text-xs text-slate-400 uppercase font-bold mb-1 block">Discord</label>
+                                        <label htmlFor="org-discord" className="text-xs text-slate-400 uppercase font-bold mb-1 block">Discord</label>
                                         <input type="text" value={orgDiscord} onChange={e => setOrgDiscord(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" />
                                     </div>
                                     <div>
-                                        <label className="text-xs text-slate-400 uppercase font-bold mb-1 block">YouTube</label>
+                                        <label htmlFor="org-youtube" className="text-xs text-slate-400 uppercase font-bold mb-1 block">YouTube</label>
                                         <input type="text" value={orgYoutube} onChange={e => setOrgYoutube(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" />
                                     </div>
                                 </div>

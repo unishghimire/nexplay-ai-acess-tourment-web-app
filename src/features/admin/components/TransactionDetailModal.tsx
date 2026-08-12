@@ -106,7 +106,7 @@ const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                         </div>
 
                         <div>
-                            <label className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-2 block">Rejection Reason (Optional)</label>
+                            <label htmlFor="rejection-reason" className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-2 block">Rejection Reason (Optional)</label>
                             <textarea 
                                 value={rejectionReason}
                                 onChange={(e) => setRejectionReason(e.target.value)}

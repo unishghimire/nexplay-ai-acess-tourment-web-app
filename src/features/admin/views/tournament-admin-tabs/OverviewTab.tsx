@@ -23,36 +23,36 @@ export const OverviewTab: React.FC<TournamentAdminTabProps> = (props) => {
                                  <h2 className="text-xl font-black uppercase tracking-tighter text-white">Tournament Controls</h2>
                                  <button 
                                      onClick={() => window.location.reload()}
-                                     className="px-5 py-2 bg-gray-900 border border-gray-800 text-gray-500 rounded-full hover:text-white hover:border-gray-700 transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-widest"
+                                     className="px-5 py-2 bg-card border border-gray-800 text-gray-500 rounded-full hover:text-white hover:border-gray-700 transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-widest"
                                  >
                                      <RotateCcw className="w-3 h-3" /> Refresh
                                  </button>
                              </div>
                              
                              {tournamentEarning && (
-                                 <div className="bg-gray-900/50 border border-brand-500/10 rounded-2xl sm:rounded-[2rem] p-4 sm:p-8 mb-6 sm:mb-8">
+                                 <div className="bg-card/50 border border-brand-500/10 rounded-2xl sm:rounded-[2rem] p-4 sm:p-8 mb-6 sm:mb-8">
                                      <h3 className="text-xs font-black text-brand-400 uppercase tracking-widest mb-6 flex items-center gap-3">
                                          <DollarSign className="w-4 h-4" /> Tournament Financials
                                      </h3>
                                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8">
                                          <div>
                                              <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-2">Total Entry Fees</p>
-                                             <p className="text-2xl font-black text-white font-mono">{formatCurrency(tournamentEarning.entryFeeTotal)}</p>
+                                             <p className="text-lg sm:text-2xl font-black text-white font-mono truncate">{formatCurrency(tournamentEarning.entryFeeTotal)}</p>
                                          </div>
                                          <div>
                                              <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-2">Total Prize Pool</p>
-                                             <p className="text-2xl font-black text-white font-mono">{formatCurrency(tournamentEarning.prizePoolTotal)}</p>
+                                             <p className="text-lg sm:text-2xl font-black text-white font-mono truncate">{formatCurrency(tournamentEarning.prizePoolTotal)}</p>
                                          </div>
                                          <div>
                                              <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-2">Net Profit</p>
-                                             <p className={`text-2xl font-black ${tournamentEarning.profit > 0 ? 'text-green-500' : 'text-red-500'} flex items-center gap-2 font-mono`}>
-                                                 {tournamentEarning.profit > 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-                                                 {formatCurrency(tournamentEarning.profit)}
+                                             <p className={`text-lg sm:text-2xl font-black ${tournamentEarning.profit > 0 ? 'text-green-500' : 'text-red-500'} flex items-center gap-2 font-mono truncate`}>
+                                                 {tournamentEarning.profit > 0 ? <TrendingUp className="w-4 h-4 shrink-0" /> : <TrendingDown className="w-4 h-4 shrink-0" />}
+                                                 <span className="truncate">{formatCurrency(tournamentEarning.profit)}</span>
                                              </p>
                                          </div>
                                          <div>
                                              <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-2">Your Share (85%)</p>
-                                             <p className="text-2xl font-black text-brand-400 font-mono">{formatCurrency(tournamentEarning.orgShare)}</p>
+                                             <p className="text-lg sm:text-2xl font-black text-brand-400 font-mono truncate">{formatCurrency(tournamentEarning.orgShare)}</p>
                                              <span className={`inline-block mt-2 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${
                                                  tournamentEarning.status === 'released' ? 'bg-green-500/10 text-green-500' :
                                                  tournamentEarning.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500' :
@@ -66,7 +66,7 @@ export const OverviewTab: React.FC<TournamentAdminTabProps> = (props) => {
                              )}
 
                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                                 <div className="bg-gray-900/50 p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border border-gray-800">
+                                 <div className="bg-card/50 p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border border-gray-800">
                                      <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-6">Status Control</h3>
                                      <div className="flex gap-3">
                                          <button 
@@ -85,12 +85,12 @@ export const OverviewTab: React.FC<TournamentAdminTabProps> = (props) => {
                                          </button>
                                      </div>
                                  </div>
-                                 <div className="bg-gray-900/50 p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border border-gray-800">
+                                 <div className="bg-card/50 p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border border-gray-800">
                                      <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-6">Stage Progression</h3>
                                      <select 
                                          value={tournament.stage || 'registration'}
                                          onChange={(e) => handleUpdateStage(e.target.value)}
-                                         className="w-full bg-gray-950 border border-gray-800 rounded-full p-4 text-[10px] text-white font-black uppercase tracking-widest focus:border-brand-500 outline-none cursor-pointer transition-all"
+                                         className="w-full bg-dark border border-gray-800 rounded-full p-4 text-[10px] text-white font-black uppercase tracking-widest focus:border-brand-500 outline-none cursor-pointer transition-all"
                                      >
                                          <option value="registration">Registration</option>
                                          <option value="group_stage">Group Stage</option>
@@ -98,7 +98,7 @@ export const OverviewTab: React.FC<TournamentAdminTabProps> = (props) => {
                                          <option value="completed">Completed</option>
                                      </select>
                                  </div>
-                                 <div className="bg-gray-900/50 p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border border-gray-800 sm:col-span-2 lg:col-span-1">
+                                 <div className="bg-card/50 p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border border-gray-800 sm:col-span-2 lg:col-span-1">
                                      <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-6">Quick Actions</h3>
                                      <div className="flex flex-col sm:flex-row lg:flex-col gap-3">
                                          <button 
@@ -124,7 +124,7 @@ export const OverviewTab: React.FC<TournamentAdminTabProps> = (props) => {
                              </div>
 
                              {/* ── Discord Announcements ── */}
-                             <div className="bg-gray-900/50 p-4 sm:p-8 rounded-2xl sm:rounded-[2rem] border border-[#5865F2]/20">
+                             <div className="bg-card/50 p-4 sm:p-8 rounded-2xl sm:rounded-[2rem] border border-[#5865F2]/20">
                                  <div className="flex items-center gap-3 mb-6">
                                      <div className="p-2 bg-[#5865F2]/10 rounded-xl border border-[#5865F2]/20">
                                          <Send className="w-4 h-4 text-[#5865F2]" />
@@ -140,14 +140,14 @@ export const OverviewTab: React.FC<TournamentAdminTabProps> = (props) => {
                                  {/* Group selector for match-specific announces */}
                                  {(tournament.groups?.length ?? 0) > 0 && (
                                      <div className="mb-6">
-                                         <label className="text-[10px] text-gray-500 font-black uppercase tracking-widest block mb-2">
+                                         <label htmlFor="target-group" className="text-[10px] text-gray-500 font-black uppercase tracking-widest block mb-2">
                                              Target Group (for Game Start / Reminder)
                                          </label>
                                          <select
                                              value={gameStartGroupId}
                                              onChange={e => setGameStartGroupId(e.target.value)}
                                              aria-label="Select group for Discord announcement"
-                                             className="bg-gray-950 border border-gray-800 rounded-full px-5 py-3 text-white text-xs font-black uppercase tracking-widest focus:border-[#5865F2] outline-none transition w-full sm:w-auto"
+                                             className="bg-dark border border-gray-800 rounded-full px-5 py-3 text-white text-xs font-black uppercase tracking-widest focus:border-[#5865F2] outline-none transition w-full sm:w-auto"
                                          >
                                              <option value="">All Groups</option>
                                              {tournament.groups?.map(g => (

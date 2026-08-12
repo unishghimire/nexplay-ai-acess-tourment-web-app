@@ -42,20 +42,20 @@ export const GroupsTab: React.FC<TournamentAdminTabProps> = (props) => {
                             exit={{ opacity: 0, y: -10 }}
                             className="space-y-4 sm:space-y-6"
                         >
-                            <div className="flex justify-between items-center border-b border-gray-800 pb-4">
-                                <h2 className="text-lg font-black uppercase tracking-widest text-white">Groups Management</h2>
-                                <div className="flex gap-2">
+                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 border-b border-gray-800 pb-4">
+                                <h2 className="text-base sm:text-lg font-black uppercase tracking-widest text-white">Groups Management</h2>
+                                <div className="flex gap-2 flex-wrap">
                                     <button 
                                         onClick={handleAutoGenerateGroups}
-                                        className="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all"
+                                        className="bg-purple-600 hover:bg-purple-500 text-white px-3 sm:px-4 py-2.5 min-h-[44px] rounded-lg text-[10px] sm:text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all flex-1 sm:flex-none justify-center"
                                     >
-                                        <CheckCircle2 className="w-4 h-4" /> Auto Generate Groups
+                                        <CheckCircle2 className="w-4 h-4 shrink-0" /> <span className="truncate">Auto Generate</span>
                                     </button>
                                     <button 
                                         onClick={() => setIsCreateGroupModalOpen(true)}
-                                        className="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all"
+                                        className="bg-brand-600 hover:bg-brand-500 text-white px-3 sm:px-4 py-2.5 min-h-[44px] rounded-lg text-[10px] sm:text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all flex-1 sm:flex-none justify-center"
                                     >
-                                        <Plus className="w-4 h-4" /> Create Group
+                                        <Plus className="w-4 h-4 shrink-0" /> <span className="truncate">Create Group</span>
                                     </button>
                                 </div>
                             </div>
@@ -174,7 +174,7 @@ export const GroupsTab: React.FC<TournamentAdminTabProps> = (props) => {
                     </div>
                     {!newGroup.isPublic && (
                         <div>
-                            <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Passcode</label>
+                            <label htmlFor="group-passcode" className="block text-xs font-bold text-gray-500 uppercase mb-2">Passcode</label>
                             <input 
                                 type="text" 
                                 value={newGroup.passCode}

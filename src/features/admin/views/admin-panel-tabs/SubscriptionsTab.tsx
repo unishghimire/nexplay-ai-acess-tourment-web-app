@@ -97,24 +97,24 @@ export const SubscriptionsTab: React.FC<AdminPanelTabProps> = (props) => {
                                 <div className="space-y-4">
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="text-xs text-slate-400 uppercase font-bold mb-1 block">Plan Name</label>
+                                            <label htmlFor="plan-name" className="text-xs text-slate-400 uppercase font-bold mb-1 block">Plan Name</label>
                                             <input type="text" value={planName} onChange={e => setPlanName(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" placeholder="e.g. Pro Plan" />
                                         </div>
                                         <div>
-                                            <label className="text-xs text-slate-400 uppercase font-bold mb-1 block">Monthly Price</label>
+                                            <label htmlFor="plan-price" className="text-xs text-slate-400 uppercase font-bold mb-1 block">Monthly Price</label>
                                             <input type="number" value={planPrice} onChange={e => setPlanPrice(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" placeholder="e.g. 999" />
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="text-xs text-slate-400 uppercase font-bold mb-1 block">Description</label>
+                                        <label htmlFor="plan-desc" className="text-xs text-slate-400 uppercase font-bold mb-1 block">Description</label>
                                         <textarea value={planDesc} onChange={e => setPlanDesc(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none h-20" placeholder="Plan details..." />
                                     </div>
                                     <div>
-                                        <label className="text-xs text-slate-400 uppercase font-bold mb-1 block">Max Tournaments / Mo</label>
+                                        <label htmlFor="plan-max-tourneys" className="text-xs text-slate-400 uppercase font-bold mb-1 block">Max Tournaments / Mo</label>
                                         <input type="number" value={planMaxTournaments} onChange={e => setPlanMaxTournaments(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" />
                                     </div>
                                     <div>
-                                        <label className="text-xs text-slate-400 uppercase font-bold mb-1 block">Features (Comma separated)</label>
+                                        <label htmlFor="plan-features" className="text-xs text-slate-400 uppercase font-bold mb-1 block">Features (Comma separated)</label>
                                         <textarea value={planFeatures} onChange={e => setPlanFeatures(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none h-24" placeholder="Feature 1, Feature 2..." />
                                     </div>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">

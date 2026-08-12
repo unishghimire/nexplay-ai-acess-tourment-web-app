@@ -127,7 +127,7 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                 
                                 <div className="space-y-5">
                                     <div>
-                                        <label className="text-xs text-slate-400 uppercase font-bold mb-2 block">Category Name</label>
+                                        <label htmlFor="payment-cat-name" className="text-xs text-slate-400 uppercase font-bold mb-2 block">Category Name</label>
                                         <input 
                                             type="text" 
                                             value={categoryName}
@@ -137,7 +137,7 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-xs text-slate-400 uppercase font-bold mb-2 block">Description</label>
+                                        <label htmlFor="payment-cat-desc" className="text-xs text-slate-400 uppercase font-bold mb-2 block">Description</label>
                                         <textarea 
                                             value={categoryDescription}
                                             onChange={(e) => setCategoryDescription(e.target.value)}
@@ -184,7 +184,7 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                 
                                 <div className="space-y-5">
                                     <div>
-                                        <label className="text-xs text-slate-400 uppercase font-bold mb-2 block">Category</label>
+                                        <label htmlFor="payment-category" className="text-xs text-slate-400 uppercase font-bold mb-2 block">Category</label>
                                         <select 
                                             value={paymentCategoryId}
                                             onChange={(e) => setPaymentCategoryId(e.target.value)}
@@ -201,7 +201,7 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="text-xs text-slate-400 uppercase font-bold mb-2 block">Method Name</label>
+                                        <label htmlFor="payment-method-name" className="text-xs text-slate-400 uppercase font-bold mb-2 block">Method Name</label>
                                         <input 
                                             type="text" 
                                             value={paymentName}
@@ -211,7 +211,7 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-xs text-slate-400 uppercase font-bold mb-2 block">QR Code Image (Paste, Drop or Click to Select)</label>
+                                        <label htmlFor="payment-qr" className="text-xs text-slate-400 uppercase font-bold mb-2 block">QR Code Image (Paste, Drop or Click to Select)</label>
                                         <div 
                                             onPaste={handlePastePayment}
                                             onDrop={handleDropPayment}
@@ -261,7 +261,7 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="text-xs text-slate-400 uppercase font-bold mb-2 block">Instructions (Account Name, Number, etc.)</label>
+                                        <label htmlFor="payment-instructions" className="text-xs text-slate-400 uppercase font-bold mb-2 block">Instructions (Account Name, Number, etc.)</label>
                                         <textarea 
                                             value={paymentInstructions}
                                             onChange={(e) => setPaymentInstructions(e.target.value)}

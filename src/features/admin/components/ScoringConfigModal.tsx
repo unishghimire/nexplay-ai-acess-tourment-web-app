@@ -130,7 +130,7 @@ export const ScoringConfigModal: React.FC<ScoringConfigModalProps> = ({
 
                 {/* Kill Points */}
                 <div>
-                    <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">Points Per Kill</label>
+                    <label htmlFor="scoring-kill-points" className="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">Points Per Kill</label>
                     <div className="flex items-center gap-3">
                         <input
                             type="number"

@@ -18,7 +18,7 @@ export const SettingsTab: React.FC<AdminPanelTabProps> = (props) => {
                         <div className="space-y-6">
                             <h3 className="text-sm font-bold text-brand-400 uppercase tracking-widest border-l-2 border-brand-500 pl-3">Financial Settings</h3>
                             <div>
-                                <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Minimum Withdrawal Amount</label>
+                                <label htmlFor="min-withdrawal" className="text-xs text-gray-500 uppercase font-bold mb-1 block">Minimum Withdrawal Amount</label>
                                 <div className="relative">
                                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-bold">Rs.</span>
                                     <input 
@@ -35,7 +35,7 @@ export const SettingsTab: React.FC<AdminPanelTabProps> = (props) => {
                             <h3 className="text-sm font-bold text-brand-400 uppercase tracking-widest border-l-2 border-brand-500 pl-3">Support Info</h3>
                             <div className="grid grid-cols-1 gap-4">
                                 <div>
-                                    <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Support Email</label>
+                                    <label htmlFor="support-email" className="text-xs text-gray-500 uppercase font-bold mb-1 block">Support Email</label>
                                     <input 
                                         type="email" 
                                         value={supportEmail}
@@ -44,7 +44,7 @@ export const SettingsTab: React.FC<AdminPanelTabProps> = (props) => {
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Support Phone / WhatsApp</label>
+                                    <label htmlFor="support-phone" className="text-xs text-gray-500 uppercase font-bold mb-1 block">Support Phone / WhatsApp</label>
                                     <input 
                                         type="text" 
                                         value={supportPhone}
@@ -106,7 +106,7 @@ export const SettingsTab: React.FC<AdminPanelTabProps> = (props) => {
                                 <p className="text-[10px] text-gray-500 uppercase font-bold">Toggle whether users can apply to become an organization from the contact page.</p>
                                 
                                 <div className="pt-4 border-t border-gray-800">
-                                    <label className="text-[10px] text-gray-500 uppercase font-black mb-2 block tracking-widest">Organizer Form Description</label>
+                                    <label htmlFor="organizer-form-desc" className="text-[10px] text-gray-500 uppercase font-black mb-2 block tracking-widest">Organizer Form Description</label>
                                     <textarea 
                                         value={orgFormDescription}
                                         onChange={e => setOrgFormDescription(e.target.value)}

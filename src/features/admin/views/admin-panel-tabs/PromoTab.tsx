@@ -66,15 +66,15 @@ export const PromoTab: React.FC<AdminPanelTabProps> = (props) => {
                                 </h3>
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="text-xs text-slate-400 uppercase font-bold mb-1 block">Code</label>
+                                        <label htmlFor="promo-code" className="text-xs text-slate-400 uppercase font-bold mb-1 block">Code</label>
                                         <input type="text" value={promoCode} onChange={e => setPromoCode(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none uppercase" placeholder="WELCOME50" />
                                     </div>
                                     <div>
-                                        <label className="text-xs text-slate-400 uppercase font-bold mb-1 block">Amount</label>
+                                        <label htmlFor="promo-amount" className="text-xs text-slate-400 uppercase font-bold mb-1 block">Amount</label>
                                         <input type="number" value={promoAmount} onChange={e => setPromoAmount(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" />
                                     </div>
                                     <div>
-                                        <label className="text-xs text-slate-400 uppercase font-bold mb-1 block">Max Uses</label>
+                                        <label htmlFor="promo-max-uses" className="text-xs text-slate-400 uppercase font-bold mb-1 block">Max Uses</label>
                                         <input type="number" value={promoMaxUses} onChange={e => setPromoMaxUses(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" />
                                     </div>
                                     <div className="flex items-center gap-3">

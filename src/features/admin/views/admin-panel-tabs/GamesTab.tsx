@@ -68,7 +68,7 @@ export const GamesTab: React.FC<AdminPanelTabProps> = (props) => {
                                 </h3>
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Game Name</label>
+                                        <label htmlFor="game-name" className="text-xs text-gray-500 uppercase font-bold mb-1 block">Game Name</label>
                                         <input 
                                             type="text" 
                                             value={gameName}
@@ -128,7 +128,7 @@ export const GamesTab: React.FC<AdminPanelTabProps> = (props) => {
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="text-xs text-gray-500 uppercase font-bold mb-1 block">Game Modes (Comma separated)</label>
+                                        <label htmlFor="game-modes" className="text-xs text-gray-500 uppercase font-bold mb-1 block">Game Modes (Comma separated)</label>
                                         <textarea 
                                             value={gameModes}
                                             onChange={(e) => setGameModes(e.target.value)}

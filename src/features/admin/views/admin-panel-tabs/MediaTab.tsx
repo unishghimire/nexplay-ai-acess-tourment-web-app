@@ -30,7 +30,7 @@ export const MediaTab: React.FC<AdminPanelTabProps> = (props) => {
                         <h3 className="text-sm font-bold text-brand-400 uppercase tracking-widest pl-3 border-l-2 border-brand-500">Quick Upload to Library</h3>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
                             <div className="space-y-2">
-                                <label className="text-[10px] text-gray-500 uppercase font-black tracking-wider">Asset Category Group</label>
+                                <label htmlFor="asset-category" className="text-[10px] text-gray-500 uppercase font-black tracking-wider">Asset Category Group</label>
                                 <select
                                     value={selectedMediaCategory}
                                     onChange={(e) => setSelectedMediaCategory(e.target.value as MediaCategory)}

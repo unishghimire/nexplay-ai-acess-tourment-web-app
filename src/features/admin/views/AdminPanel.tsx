@@ -9,7 +9,7 @@ import TransactionHistoryTab from '../components/TransactionHistoryTab';
 import { MediaCategory, deleteImage } from '../../../shared/services/mediaService';
 import { DEFAULT_BANNER, NEXPLAY_LOGO } from '../../../shared/constants/constants';
 import {Users, ArrowDown, ArrowUp, Layout, Check, X, Image as ImageIcon, CreditCard, QrCode, Megaphone, Trophy, Gamepad2, Tag, Sliders, DollarSign} from 'lucide-react';
-import { DashboardTab, TournamentsTab, OrgApprovalsTab, OrgTournamentsTab, UsersTab, OrganizersTab, OrgEarningsTab, PendingDepositsTab, PendingWithdrawalsTab, SubscriptionsTab, GamesTab, PaymentsTab, PromoTab, MediaTab, SettingsTab } from './admin-panel-tabs';
+import { DashboardTab, TournamentsTab, OrgApprovalsTab, OrgTournamentsTab, UsersTab, OrganizersTab, OrgEarningsTab, PendingDepositsTab, PendingWithdrawalsTab, GamesTab, PaymentsTab, PromoTab, MediaTab, SettingsTab } from './admin-panel-tabs';
 import DiscordAdminPanel from '../components/DiscordAdminPanel';
 import { useAdminData } from '../hooks/useAdminData';
 
@@ -17,7 +17,7 @@ import { useAdminData } from '../hooks/useAdminData';
 const AdminPanel: React.FC = () => {
     const { showToast } = useNotification();
     const {
-        activeTab, adjustmentAmount, adjustmentType, allTournaments, allTransactions, closeConfirmModal, confirmModal, fetchOrgTournaments, getRelativeTime, handleAdjustBalance, handleApproveTx, handleRefundTx, handleRejectTx, handleUpdateUserRole, handleUpdateUserSubscription, isSidebarOpen, isTournamentModalOpen, pendingDepositsCount, pendingOrgCount, pendingWithdrawalsCount, rejectionReason, selectedOrgId, selectedTournament, selectedTx, selectedUser, setActiveTab, setAdjustmentAmount, setAdjustmentType, setIsSidebarOpen, setIsTournamentModalOpen, setRejectionReason, setSelectedTournament, setSelectedTx, setSelectedUser, setTxFilterStatus, setTxFilterTournament, setTxFilterType, setTxSearchUser, subscriptionPlans, tabProps, txFilterStatus, txFilterTournament, txFilterType, txSearchUser
+        activeTab, adjustmentAmount, adjustmentType, allTournaments, allTransactions, closeConfirmModal, confirmModal, fetchOrgTournaments, getRelativeTime, handleAdjustBalance, handleApproveTx, handleRefundTx, handleRejectTx, handleUpdateUserRole, isSidebarOpen, isTournamentModalOpen, pendingDepositsCount, pendingOrgCount, pendingWithdrawalsCount, rejectionReason, selectedOrgId, selectedTournament, selectedTx, selectedUser, setActiveTab, setAdjustmentAmount, setAdjustmentType, setIsSidebarOpen, setIsTournamentModalOpen, setRejectionReason, setSelectedTournament, setSelectedTx, setSelectedUser, setTxFilterStatus, setTxFilterTournament, setTxFilterType, setTxSearchUser, tabProps, txFilterStatus, txFilterTournament, txFilterType, txSearchUser
     } = useAdminData(showToast);
 
     return (
@@ -34,7 +34,7 @@ const AdminPanel: React.FC = () => {
             </button>
 
             {/* Sidebar Navigation */}
-            <div className={`w-full md:w-72 shrink-0 space-y-6 sm:space-y-8 bg-gray-950/50 p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border border-gray-800 h-fit md:sticky md:top-24 ${isSidebarOpen ? 'block' : 'hidden md:block'}`}>
+            <div className={`w-full md:w-72 shrink-0 space-y-6 sm:space-y-8 bg-dark/50 p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border border-gray-800 h-fit md:sticky md:top-24 ${isSidebarOpen ? 'block' : 'hidden md:block'}`}>
                 <div>
                     <div className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-6 px-3">Main</div>
                     <div className="space-y-2">
@@ -59,17 +59,6 @@ const AdminPanel: React.FC = () => {
                         >
                             <Users className={`w-5 h-5 ${activeTab === 'tab-users' ? 'text-white' : 'text-gray-500'}`} />
                             Manage Users
-                        </button>
-                        <button 
-                            onClick={() => { setActiveTab('tab-subscriptions'); setIsSidebarOpen(false); }} 
-                            className={`w-full text-left px-5 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all flex items-center gap-4 ${
-                                activeTab === 'tab-subscriptions' 
-                                    ? 'bg-brand-500 text-white shadow-xl shadow-brand-500/20' 
-                                    : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
-                            }`}
-                        >
-                            <CreditCard className={`w-5 h-5 ${activeTab === 'tab-subscriptions' ? 'text-white' : 'text-gray-500'}`} />
-                            Sub Plans
                         </button>
                     </div>
                 </div>
@@ -206,9 +195,9 @@ const AdminPanel: React.FC = () => {
             </div>
 
             {/* Main Content Area */}
-            <div className="flex-1 bg-gray-950/50 rounded-2xl sm:rounded-[2rem] border border-gray-800 p-4 sm:p-6 lg:p-8 min-h-[500px] sm:min-h-[600px] w-full overflow-hidden">
+            <div className="flex-1 bg-dark/50 rounded-2xl sm:rounded-[2rem] border border-gray-800 p-4 sm:p-6 lg:p-8 min-h-[500px] sm:min-h-[600px] w-full overflow-hidden">
                 <header className="mb-10 pb-8 border-b border-gray-800">
-                    <h1 className="text-4xl font-black text-white uppercase tracking-tighter">Admin Panel</h1>
+                    <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white uppercase tracking-tighter">Admin Panel</h1>
                 </header>
                 {activeTab === 'tab-dashboard' && <DashboardTab {...tabProps} />}
 
@@ -247,7 +236,7 @@ const AdminPanel: React.FC = () => {
                     />
                 )}
 
-            {activeTab === 'tab-subscriptions' && <SubscriptionsTab {...tabProps} />}
+            
 
             {activeTab === 'tab-games' && <GamesTab {...tabProps} />}
 
@@ -293,7 +282,7 @@ const AdminPanel: React.FC = () => {
                         </div>
 
                         <div className="space-y-4">
-                            <label className="text-xs text-gray-500 uppercase font-bold block">Adjust Balance</label>
+                            <label htmlFor="adjust-balance" className="text-xs text-gray-500 uppercase font-bold block">Adjust Balance</label>
                             <div className="flex gap-2">
                                 <button 
                                     onClick={() => setAdjustmentType('add')}
@@ -321,29 +310,7 @@ const AdminPanel: React.FC = () => {
                         </div>
 
                         <div className="space-y-4 border-t border-gray-800 pt-6">
-                            <label className="text-xs text-gray-500 uppercase font-bold block">Assigned Subscription Plan</label>
-                            <div className="grid grid-cols-1 gap-2">
-                                <select 
-                                    value={selectedUser.subscription?.planId || ''}
-                                    onChange={(e) => handleUpdateUserSubscription(selectedUser.uid, e.target.value)}
-                                    className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none text-sm"
-                                >
-                                    <option value="">No Plan / Free</option>
-                                    {subscriptionPlans.map(plan => (
-                                        <option key={plan.id} value={plan.id}>{plan.name} - {formatCurrency(plan.price)}/mo</option>
-                                    ))}
-                                </select>
-                                {selectedUser.subscription && (
-                                    <div className="text-[10px] text-gray-500 flex justify-between items-center px-1">
-                                        <span>Expires: {selectedUser.subscription.endDate?.toDate().toLocaleDateString()}</span>
-                                        <span className="text-brand-500 font-bold uppercase">{selectedUser.subscription.status}</span>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="space-y-4 border-t border-gray-800 pt-6">
-                            <label className="text-xs text-gray-500 uppercase font-bold block">Update Role</label>
+                            <label htmlFor="update-role" className="text-xs text-gray-500 uppercase font-bold block">Update Role</label>
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                 {(['player', 'organizer', 'admin'] as const).map(role => (
                                     <button 

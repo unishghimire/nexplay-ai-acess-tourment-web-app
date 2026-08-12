@@ -139,7 +139,7 @@ export const MatchesTab: React.FC<TournamentAdminTabProps> = (props) => {
                         </div>
 
                         <div>
-                            <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Match Status</label>
+                            <label htmlFor="match-status" className="block text-xs font-bold text-gray-500 uppercase mb-2">Match Status</label>
                             <select
                                 value={matchScore.status}
                                 onChange={(e) => setMatchScore({...matchScore, status: e.target.value as any})}
@@ -187,7 +187,7 @@ export const MatchesTab: React.FC<TournamentAdminTabProps> = (props) => {
                     <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-3 sm:gap-4">
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Team 1</label>
+                                <label htmlFor="team-1" className="block text-xs font-bold text-gray-500 uppercase mb-2">Team 1</label>
                                 <select
                                     value={newMatchData.team1Id}
                                     onChange={(e) => setNewMatchData({...newMatchData, team1Id: e.target.value})}
@@ -201,7 +201,7 @@ export const MatchesTab: React.FC<TournamentAdminTabProps> = (props) => {
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Team 2</label>
+                                <label htmlFor="team-2" className="block text-xs font-bold text-gray-500 uppercase mb-2">Team 2</label>
                                 <select
                                     value={newMatchData.team2Id}
                                     onChange={(e) => setNewMatchData({...newMatchData, team2Id: e.target.value})}
@@ -218,7 +218,7 @@ export const MatchesTab: React.FC<TournamentAdminTabProps> = (props) => {
 
                         <div className="grid grid-cols-2 gap-3 sm:gap-4">
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Round</label>
+                                <label htmlFor="match-round" className="block text-xs font-bold text-gray-500 uppercase mb-2">Round</label>
                                 <input
                                     type="number"
                                     value={newMatchData.round}
@@ -227,7 +227,7 @@ export const MatchesTab: React.FC<TournamentAdminTabProps> = (props) => {
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Map</label>
+                                <label htmlFor="match-map" className="block text-xs font-bold text-gray-500 uppercase mb-2">Map</label>
                                 <input
                                     type="text"
                                     value={newMatchData.map}
