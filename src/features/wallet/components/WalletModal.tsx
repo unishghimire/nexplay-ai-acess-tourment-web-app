@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, ArrowDown, CreditCard, AlertTriangle, Upload, Image as ImageIcon } from 'lucide-react';
+import { X, ArrowDown, CreditCard, AlertTriangle, Upload } from 'lucide-react';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db, auth } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';

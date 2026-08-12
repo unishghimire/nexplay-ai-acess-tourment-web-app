@@ -6,7 +6,6 @@ import {
   ShieldAlert,
   ExternalLink,
   Clock,
-  AlertTriangle,
   Check,
   MapPin
 } from 'lucide-react';

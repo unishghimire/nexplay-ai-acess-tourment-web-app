@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react';
 import { collection, query, where, getDocs, doc, updateDoc, deleteDoc, orderBy, limit, setDoc, serverTimestamp, getDoc, writeBatch, increment, Timestamp, runTransaction } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, auth } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { Transaction, UserProfile, Slide, PromoCode, Game, PaymentMethod, PaymentCategory, SiteSettings, OrgApplication, Tournament, TournamentEarning, SubscriptionPlan } from '../../../shared/types/types';
 import { GameScoringConfig } from '../../../shared/types/scoring';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { formatCurrency, formatDate, formatGameName } from '../../../shared/utils/utils';
+import { ImageUploader } from '../../../shared/components/ImageUploader';
+import { DEFAULT_BANNER, NEXPLAY_LOGO } from '../../../shared/constants/constants';
 import { NotificationService } from '../../../shared/services/NotificationService';
 import { useInvisibleImage } from '../../../shared/hooks/useInvisibleImage';
-import { ImageUploader } from '../../../shared/components/ImageUploader';
 import { MediaCategory, deleteImage } from '../../../shared/services/mediaService';
-import { DEFAULT_BANNER, NEXPLAY_LOGO } from '../../../shared/constants/constants';
 
 export function useAdminData(showToast: (message: string, type: 'success' | 'error' | 'info' | 'warning') => void) {
     const { profile } = useAuth();
@@ -887,7 +887,6 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
             onConfirm: () => executeDeletePayment(id)
         });
     };
-
 
     const handleSaveGame = async () => {
         if (!gameName || !gameLogo || !gameModes) return showToast('Please fill all fields', 'warning');

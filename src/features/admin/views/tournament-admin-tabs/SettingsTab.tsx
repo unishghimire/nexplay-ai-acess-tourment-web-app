@@ -3,8 +3,6 @@ import { motion } from 'motion/react';
 import {
     Plus, Trash2, Save, XCircle,
     } from 'lucide-react';
-import { Tournament, TournamentGroup, Match, Team, TournamentEarning } from '../../../../shared/types/types';
-import { formatCurrency, formatDate } from '../../../../shared/utils/utils';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../../../shared/config/firebase';
 import { TournamentAdminTabProps } from './types';

@@ -7,7 +7,6 @@ import { useNotification } from '../../../shared/context/NotificationContext';
 import { Team, TeamMember, UserProfile, TeamInvite, TeamActivity } from '../../../shared/types/types';
 import {Users, UserPlus, Settings, LogOut, X, ArrowLeft, Crown, Activity, Globe, Calendar, Trophy, Zap, ChevronRight, Star, Camera} from 'lucide-react';
 import { useInvisibleImage } from '../../../shared/hooks/useInvisibleImage';
-import { NEXPLAY_LOGO, PRESET_TEAM_LOGOS } from '../../../shared/constants/constants';
 import { timeAgo, formatDate, formatCurrency } from '../../../shared/utils/utils';
 import Modal from '../../../shared/components/Modal';
 import { Seo } from '../../../shared/components/Seo';

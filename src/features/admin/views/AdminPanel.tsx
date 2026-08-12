@@ -1,13 +1,10 @@
 import React from 'react';
 import { useNotification } from '../../../shared/context/NotificationContext';
-import { Transaction, Tournament } from '../../../shared/types/types';
 import { formatCurrency, formatDate } from '../../../shared/utils/utils';
 import ConfirmModal from '../../../shared/components/ConfirmModal';
 import TournamentCreateModal from '../../tournaments/components/TournamentCreateModal';
 import TransactionDetailModal from '../components/TransactionDetailModal';
 import TransactionHistoryTab from '../components/TransactionHistoryTab';
-import { MediaCategory, deleteImage } from '../../../shared/services/mediaService';
-import { DEFAULT_BANNER, NEXPLAY_LOGO } from '../../../shared/constants/constants';
 import {Users, ArrowDown, ArrowUp, Layout, Check, X, Image as ImageIcon, CreditCard, QrCode, Megaphone, Trophy, Gamepad2, Tag, Sliders, DollarSign} from 'lucide-react';
 import { DashboardTab, TournamentsTab, OrgApprovalsTab, OrgTournamentsTab, UsersTab, OrganizersTab, OrgEarningsTab, PendingDepositsTab, PendingWithdrawalsTab, GamesTab, PaymentsTab, PromoTab, MediaTab, SettingsTab } from './admin-panel-tabs';
 import DiscordAdminPanel from '../components/DiscordAdminPanel';

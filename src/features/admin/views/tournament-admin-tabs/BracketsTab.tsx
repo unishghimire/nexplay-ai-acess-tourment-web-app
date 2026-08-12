@@ -2,9 +2,6 @@ import React from 'react';
 import { motion } from 'motion/react';
 import {
     Trophy, } from 'lucide-react';
-import { Tournament, TournamentGroup, Match, Team, TournamentEarning } from '../../../../shared/types/types';
-import { formatCurrency, formatDate } from '../../../../shared/utils/utils';
-import { doc, updateDoc } from 'firebase/firestore';
 import { } from '../../../../shared/config/firebase';
 import { TournamentAdminTabProps } from './types';
 

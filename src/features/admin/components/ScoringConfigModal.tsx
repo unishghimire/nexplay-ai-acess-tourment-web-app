@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { X, Save, Plus, Trash2, AlertTriangle } from 'lucide-react';
 import { GameScoringConfig, FREE_FIRE_DEFAULT_SCORING } from '../../../shared/types/scoring';
-import { calculateTeamScore, validateScoringConfig, generateScoringPreview } from '../../../shared/services/scoringEngine';
+import { validateScoringConfig, generateScoringPreview } from '../../../shared/services/scoringEngine';
 
 interface ScoringConfigModalProps {
     isOpen: boolean;

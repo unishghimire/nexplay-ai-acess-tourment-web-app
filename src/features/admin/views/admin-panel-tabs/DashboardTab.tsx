@@ -1,7 +1,5 @@
 import React from 'react';
 import {Users, ArrowDown, ArrowUp, Check, X, Trash, Edit, Eye, Plus, Bell, Info} from 'lucide-react';
-import { formatCurrency, formatDate } from '../../../../shared/utils/utils';
-import { DEFAULT_BANNER, NEXPLAY_LOGO } from '../../../../shared/constants/constants';
 
 import { AdminPanelTabProps } from './types';
 

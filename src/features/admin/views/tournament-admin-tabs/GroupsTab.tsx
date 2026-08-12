@@ -3,7 +3,6 @@ import { motion } from 'motion/react';
 import {
     Plus, Trash2, Users, CheckCircle2,
 } from 'lucide-react';
-import { Tournament, TournamentGroup, Match, Team } from '../../../../shared/types/types';
 import { TournamentAdminTabProps } from './types';
 import Modal from '../../../../shared/components/Modal';
 
@@ -201,8 +200,6 @@ export const GroupsTab: React.FC<TournamentAdminTabProps> = (props) => {
                     </div>
                 </div>
             </Modal>
-
-
 
             {/* Manage Teams Modal */}
             <Modal isOpen={isManageTeamsModalOpen} onClose={() => setIsManageTeamsModalOpen(false)} title={`Manage Teams: ${selectedGroup?.name}`} maxWidth="max-w-4xl">

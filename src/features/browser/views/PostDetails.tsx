@@ -6,7 +6,6 @@ import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { OrgPost } from '../../../shared/types/types';
 import Seo from '../../../shared/components/Seo';
-import { Helmet } from 'react-helmet-async';
 import { ArrowLeft, Calendar, Trash2 } from 'lucide-react';
 import { formatDate } from '../../../shared/utils/utils';
 import ConfirmModal from '../../../shared/components/ConfirmModal';

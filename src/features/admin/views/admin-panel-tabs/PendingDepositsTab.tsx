@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import {ArrowDown, Check, Eye, Image as ImageIcon} from 'lucide-react';
+import {ArrowDown, Check, Eye} from 'lucide-react';
 
 import { AdminPanelTabProps } from './types';
 

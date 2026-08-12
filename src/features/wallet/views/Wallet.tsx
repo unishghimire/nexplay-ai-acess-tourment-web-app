@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../../shared/context/AuthContext';
-import { collection, query, where, getDocs, orderBy, limit, doc, addDoc, serverTimestamp, startAfter, QueryDocumentSnapshot } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, limit, addDoc, serverTimestamp, startAfter, QueryDocumentSnapshot } from 'firebase/firestore';
 import { db, auth } from '../../../shared/config/firebase';
 import { Transaction } from '../../../shared/types/types';
 import { formatCurrency, formatDate } from '../../../shared/utils/utils';

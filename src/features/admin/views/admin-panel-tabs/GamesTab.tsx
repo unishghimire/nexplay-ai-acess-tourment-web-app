@@ -1,6 +1,5 @@
 import React from 'react';
 import {Trash, Edit, Plus, Trophy} from 'lucide-react';
-import { DEFAULT_BANNER, NEXPLAY_LOGO } from '../../../../shared/constants/constants';
 
 import { AdminPanelTabProps } from './types';
 import ScoringConfigModal from '../../components/ScoringConfigModal';

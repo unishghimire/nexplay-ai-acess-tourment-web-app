@@ -1,7 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { Calendar } from 'lucide-react';
-import { Tournament, TournamentGroup, Match } from '../../../../shared/types/types';
 import { TournamentAdminTabProps } from './types';
 import Modal from '../../../../shared/components/Modal';
 import ResultUploader from '../../../results/components/ResultUploader';

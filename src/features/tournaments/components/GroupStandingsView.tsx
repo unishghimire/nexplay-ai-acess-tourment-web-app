@@ -5,7 +5,6 @@ import { Tournament, TournamentGroup, Participant } from '../../../shared/types/
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { aggregateStandings } from '../../../shared/services/scoringEngine';
-import type { TournamentStanding } from '../../../shared/types/scoring';
 
 interface GroupStandingsViewProps {
     tournament: Tournament;
