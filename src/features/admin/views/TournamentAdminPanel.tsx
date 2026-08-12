@@ -34,7 +34,7 @@ export default function TournamentAdminPanel() {
                 {/* Top row: back button + title */}
                 <div className="flex items-center gap-3 sm:gap-6">
                     <button 
-                        onClick={() => navigate(`/details/${tournament.id}`)}
+                        onClick={() => navigate(`/tournaments/${tournament.id}`)}
                         className="p-2.5 sm:p-3 bg-dark border border-gray-800 rounded-full text-gray-400 hover:text-white hover:border-brand-500 transition-all hover:bg-card shrink-0 touch-target"
                         aria-label="Back to tournament"
                     >

@@ -160,7 +160,7 @@ const Results: React.FC = () => {
                                         <div className="mt-1 text-sm font-bold text-white">{featuredResult ? formatDate(featuredResult.startTime) : 'N/A'}</div>
                                     </div>
                                     <button
-                                        onClick={() => featuredResult && navigate(`/details/${featuredResult.id}`)}
+                                        onClick={() => featuredResult && navigate(`/tournaments/${featuredResult.id}`)}
                                         disabled={!featuredResult}
                                         className="inline-flex items-center gap-2 rounded-xl bg-brand-500 px-4 py-3 text-xs font-black uppercase tracking-[0.25em] text-white transition hover:bg-brand-400 disabled:cursor-not-allowed disabled:opacity-50"
                                     >
@@ -190,7 +190,7 @@ const Results: React.FC = () => {
                     filteredResults.map(t => (
                         <div 
                             key={t.id} 
-                            onClick={() => navigate(`/details/${t.id}`)}
+                            onClick={() => navigate(`/tournaments/${t.id}`)}
                             className="bg-surface rounded-3xl border border-gray-800 hover:border-brand-500/30 transition-all cursor-pointer group overflow-hidden"
                         >
                             <div className="flex flex-col sm:flex-row h-full">

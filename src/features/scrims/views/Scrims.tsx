@@ -161,7 +161,7 @@ const Scrims: React.FC = () => {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             onClick={() => {
-                                navigate(`/details/${scrim.tournamentId || scrim.id}`);
+                                navigate(`/tournaments/${scrim.tournamentId || scrim.id}`);
                             }}
                             className="bg-card/50 rounded-[2rem] border border-gray-800 overflow-hidden cursor-pointer group hover:border-brand-500/50 transition-all hover:bg-card"
                         >

@@ -201,7 +201,7 @@ const Dashboard: React.FC = () => {
                                         <h3 
                                             className="text-2xl font-black text-white mb-3 hover:text-brand-400 transition cursor-pointer tracking-tighter" 
                                             onClick={() => {
-                                                    navigate(`/details/${t.id}`);
+                                                    navigate(`/tournaments/${t.id}`);
                                                 }}
                                         >
                                             {t.title}
@@ -237,7 +237,7 @@ const Dashboard: React.FC = () => {
                                 )}
                                 <div className="mt-6 sm:mt-8 flex flex-wrap gap-4 sm:gap-6 border-t border-gray-800 pt-6 sm:pt-8">
                                     <button onClick={() => {
-                                            navigate(`/details/${t.id}`);
+                                            navigate(`/tournaments/${t.id}`);
                                         }} className="flex items-center gap-3 text-xs font-black uppercase tracking-widest text-gray-400 hover:text-white transition">
                                         <Eye className="w-5 h-5" /> View Details
                                     </button>

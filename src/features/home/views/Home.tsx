@@ -7,7 +7,7 @@ import { Tournament, Game, Slide } from '../../../shared/types/types';
 import TournamentCard from '../../tournaments/components/TournamentCard';
 import GameCard from '../components/GameCard';
 import HotPromotionsSlider, { PromoSlide } from '../components/HotPromotionsSlider';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { 
     Star, 
     ChevronRight, 
@@ -16,7 +16,8 @@ import {
     Trophy, 
     CheckCircle2, 
     Users, 
-    Flame 
+    Flame,
+    BarChart3
 } from 'lucide-react';
 import { formatGameName } from '../../../shared/utils/utils';
 
@@ -373,7 +374,7 @@ const Home: React.FC = () => {
                         {recentResults.map((t, idx) => (
                             <div 
                                 key={t.id || `result-${idx}`} 
-                                onClick={() => handleCtaClick(`/details/${t.id}`, `ConcludedTournament_${t.id}`)}
+                                onClick={() => handleCtaClick(`/tournaments/${t.id}`, `ConcludedTournament_${t.id}`)}
                                 className="bg-surface p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-brand-500/30 transition-all cursor-pointer group"
                             >
                                 <div className="flex flex-wrap gap-4 sm:gap-6 min-w-0">
@@ -410,6 +411,32 @@ const Home: React.FC = () => {
                     </div>
                 </section>
             )}
+            {/* Quick Links — internal linking for SEO */}
+            <section className="mb-12">
+                <h2 className="text-white font-black text-xl uppercase tracking-tight mb-4">Explore NexPlay</h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <Link to="/tournaments" className="bg-card rounded-2xl border border-gray-800 p-4 hover:border-brand-500/50 transition-all group">
+                        <Trophy className="w-6 h-6 text-brand-500 mb-2 group-hover:scale-110 transition-transform" />
+                        <h3 className="text-white font-bold text-sm">Tournaments</h3>
+                        <p className="text-gray-500 text-xs">Browse & register</p>
+                    </Link>
+                    <Link to="/scrims" className="bg-card rounded-2xl border border-gray-800 p-4 hover:border-brand-500/50 transition-all group">
+                        <Gamepad2 className="w-6 h-6 text-brand-500 mb-2 group-hover:scale-110 transition-transform" />
+                        <h3 className="text-white font-bold text-sm">Scrims</h3>
+                        <p className="text-gray-500 text-xs">Practice matches</p>
+                    </Link>
+                    <Link to="/teams" className="bg-card rounded-2xl border border-gray-800 p-4 hover:border-brand-500/50 transition-all group">
+                        <Users className="w-6 h-6 text-brand-500 mb-2 group-hover:scale-110 transition-transform" />
+                        <h3 className="text-white font-bold text-sm">Teams</h3>
+                        <p className="text-gray-500 text-xs">Find teams</p>
+                    </Link>
+                    <Link to="/leaderboard" className="bg-card rounded-2xl border border-gray-800 p-4 hover:border-brand-500/50 transition-all group">
+                        <BarChart3 className="w-6 h-6 text-brand-500 mb-2 group-hover:scale-110 transition-transform" />
+                        <h3 className="text-white font-bold text-sm">Leaderboard</h3>
+                        <p className="text-gray-500 text-xs">Top rankings</p>
+                    </Link>
+                </div>
+            </section>
             {/* ponytail: FAQ section for Home page */}
             <Faq items={homeFaqs} />
         </div>

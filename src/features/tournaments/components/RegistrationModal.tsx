@@ -50,7 +50,7 @@ const RegistrationModal: React.FC<RegistrationModalProps> = ({
                 'Tournament Joined!',
                 `You have successfully joined ${tournament.title}. Good luck!`,
                 'success',
-                `/details/${tournament.id}`
+                `/tournaments/${tournament.id}`
             );
             
             showToast('Joined Successfully!', 'success');

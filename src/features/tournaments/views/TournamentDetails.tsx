@@ -142,7 +142,7 @@ export default function TournamentDetails() {
             setIsResultModalOpen(true);
             setActiveTab('overview');
             // Remove the ?tab=results from URL so refreshing won't keep popping it
-            navigate(`/details/${tournament.id}`, { replace: true });
+            navigate(`/tournaments/${tournament.id}`, { replace: true });
         }
     }, [searchParams, tournament, loading, navigate]);
 
@@ -283,7 +283,7 @@ export default function TournamentDetails() {
                 'Tournament Left',
                 `You have left ${tournament.title}. Your entry fee has been refunded.`,
                 'info',
-                `/details/${tournament.id}`
+                `/tournaments/${tournament.id}`
             );
             showToast('Left Tournament Successfully!', 'success');
         } catch (e: any) {
@@ -326,17 +326,18 @@ export default function TournamentDetails() {
                 <Seo
                     title={`${tournament.title} | ${formatGameName(tournament.game)} Tournament Nepal | NexPlay`}
                     description={`Join ${tournament.title} on NexPlay. View tournament details, registration, prize pool, schedule, and results for this ${formatGameName(tournament.game)} esports competition in Nepal.`}
-                    canonicalPath={`/details/${id}`}
+                    canonicalPath={`/tournaments/${id}`}
                     jsonLd={{
                         "@context": "https://schema.org",
-                        "@type": "Event",
+                        "@type": "SportsEvent",
+                        "sport": formatGameName(tournament.game),
                         name: tournament.title,
                         description: `${formatGameName(tournament.game)} tournament on NexPlay — Nepal esports platform.`,
                         startDate: tournament.startTime?.toDate?.()?.toISOString(),
                         endDate: tournament.startTime?.toDate?.()?.toISOString(),
                         eventStatus: tournament.status === 'completed' ? "https://schema.org/EventCompleted" : "https://schema.org/EventScheduled",
                         eventAttendanceMode: "https://schema.org/OnlineEventAttendanceMode",
-                        url: `https://www.nexplayorg.app/details/${id}`,
+                        url: `https://www.nexplayorg.app/tournaments/${id}`,
                         organizer: {
                             "@type": "Organization",
                             name: tournament.hostName || "NexPlay",
@@ -345,14 +346,14 @@ export default function TournamentDetails() {
                         location: {
                             "@type": "VirtualLocation",
                             name: "NexPlay Online",
-                            url: `https://www.nexplayorg.app/details/${id}`,
+                            url: `https://www.nexplayorg.app/tournaments/${id}`,
                         },
                         offers: {
                             "@type": "Offer",
                             price: tournament.entryFee ? String(tournament.entryFee) : "0",
                             priceCurrency: "NPR",
                             availability: "https://schema.org/InStock",
-                            url: `https://www.nexplayorg.app/details/${id}`,
+                            url: `https://www.nexplayorg.app/tournaments/${id}`,
                         },
                     }}
                 />
@@ -710,7 +711,7 @@ export default function TournamentDetails() {
                     )}
 
                     {/* Related Tournaments */}
-                    {false && relatedTournaments.length > 0 && (
+                    ({relatedTournaments.length > 0 && (
                         <div className="space-y-6 pt-8 border-t border-gray-800/50">
                             <div className="flex justify-between items-center">
                                 <button onClick={() => navigate('/tournaments')} className="text-xs font-black text-brand-500 uppercase tracking-widest hover:text-brand-400 transition-colors flex items-center gap-1">
@@ -721,7 +722,7 @@ export default function TournamentDetails() {
                                 {relatedTournaments.map((t) => (
                                     <div 
                                         key={t.id} 
-                                        onClick={() => navigate(`/details/${t.id}`)}
+                                        onClick={() => navigate(`/tournaments/${t.id}`)}
                                         className="bg-surface rounded-2xl border border-gray-800 overflow-hidden cursor-pointer group hover:border-brand-500/50 transition-all"
                                     >
                                         <div className="h-24 overflow-hidden relative">

@@ -110,7 +110,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
                                 'Upcoming Tournament!',
                                 `${t.title} is starting in less than 30 minutes. Get ready!`,
                                 'warning',
-                                `/details/${t.id}`
+                                `/tournaments/${t.id}`
                             );
                             notifiedSet.add(id + '_upcoming');
                             showToast(`${t.title} starts in 30m!`, 'warning');

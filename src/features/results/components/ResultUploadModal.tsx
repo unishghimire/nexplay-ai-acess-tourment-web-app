@@ -171,7 +171,7 @@ const ResultUploadModal: React.FC<ResultUploadModalProps> = ({ isOpen, onClose, 
                 'Results Uploaded!',
                 `Final results for ${tournament.title} are now available. Check the leaderboard!`,
                 'success',
-                `/details/${tournament.id}`
+                `/tournaments/${tournament.id}`
             );
 
             showToast('Results finalized and winners paid!', 'success');

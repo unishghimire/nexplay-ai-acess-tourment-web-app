@@ -249,7 +249,7 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
                 message: `${formData.title} has been created by ${profile?.username || 'an organizer'}`,
                 type: 'info',
                 read: false,
-                link: `/details/${docRef.id}`,
+                link: `/tournaments/${docRef.id}`,
                 timestamp: serverTimestamp()
             });
         });

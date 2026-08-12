@@ -20,7 +20,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({ tournament }) => {
             whileHover={{ y: -8, scale: 1.02 }}
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
             className="group relative bg-surface rounded-2xl sm:rounded-[2rem] overflow-hidden border border-gray-800/50 hover:border-brand-500/50 transition-all duration-500 cursor-pointer flex flex-col h-full shadow-2xl hover:shadow-brand-500/20 w-full min-w-0"
-            onClick={() => navigate(`/details/${tournament.id}`)}
+            onClick={() => navigate(`/tournaments/${tournament.id}`)}
         >
             {/* Banner Section */}
             <div className="h-36 sm:h-48 relative overflow-hidden w-full shrink-0">
