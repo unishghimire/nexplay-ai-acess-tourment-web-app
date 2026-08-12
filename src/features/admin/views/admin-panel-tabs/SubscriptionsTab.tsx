@@ -26,6 +26,12 @@ export const SubscriptionsTab: React.FC<AdminPanelTabProps> = (props) => {
                         </button>
                     </div>
 
+                    {subscriptionPlans.length === 0 ? (
+                        <div className="text-center py-16 bg-card rounded-2xl border border-dashed border-slate-800">
+                            <p className="text-slate-400 font-bold text-sm">No subscription plans yet</p>
+                            <p className="text-slate-500 text-xs mt-1">Click "Add Plan" to create your first subscription tier</p>
+                        </div>
+                    ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {subscriptionPlans.map(plan => (
                             <div key={plan.id} className="bg-card p-6 rounded-2xl border border-slate-800 flex flex-col gap-4 relative group">
@@ -80,6 +86,7 @@ export const SubscriptionsTab: React.FC<AdminPanelTabProps> = (props) => {
                             </div>
                         ))}
                     </div>
+                    )}
 
                     {isPlanModalOpen && (
                         <div className="fixed inset-0 modal-backdrop backdrop-blur-sm z-[100] flex items-center justify-center p-4">

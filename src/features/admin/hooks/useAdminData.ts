@@ -231,115 +231,130 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
         if (profile?.role !== 'admin') return;
 
         const fetchData = async () => {
-            try {
-                // Fetch pending transactions
-                const txSnap = await getDocs(query(collection(db, 'transactions'), where('status', '==', 'pending')));
-                setPendingTransactions(txSnap.docs.map(d => ({ id: d.id, ...d.data() } as Transaction)));
+            // ponytail: Promise.allSettled — each query is independent.
+            // One failed collection (missing index, permissions) no longer blocks the rest.
+            const results = await Promise.allSettled([
+                // 0: pending transactions
+                getDocs(query(collection(db, 'transactions'), where('status', '==', 'pending'))),
+                // 1: all recent transactions
+                getDocs(query(collection(db, 'transactions'), orderBy('timestamp', 'desc'), limit(100))),
+                // 2: all tournaments
+                getDocs(query(collection(db, 'tournaments'), orderBy('createdAt', 'desc'))),
+                // 3: slides
+                getDocs(query(collection(db, 'slides'), orderBy('createdAt', 'desc'))),
+                // 4: promo codes
+                getDocs(query(collection(db, 'promocodes'), orderBy('createdAt', 'desc'))),
+                // 5: games
+                getDocs(query(collection(db, 'games'), orderBy('createdAt', 'desc'))),
+                // 6: payment categories
+                getDocs(query(collection(db, 'paymentCategories'), orderBy('createdAt', 'desc'))),
+                // 7: payment methods
+                getDocs(query(collection(db, 'paymentMethods'), orderBy('createdAt', 'desc'))),
+                // 8: org applications
+                getDocs(query(collection(db, 'orgApplications'), where('status', '==', 'pending'))),
+                // 9: organizers + admins
+                getDocs(query(collection(db, 'users'), where('role', 'in', ['organizer', 'admin']))),
+                // 10: users (first 50)
+                getDocs(query(collection(db, 'users'), orderBy('createdAt', 'desc'), limit(50))),
+                // 11: activity logs
+                getDocs(query(collection(db, 'activityLogs'), orderBy('timestamp', 'desc'), limit(10))),
+                // 12: tournament earnings
+                getDocs(query(collection(db, 'tournamentEarnings'), orderBy('createdAt', 'desc'))),
+                // 13: subscription plans
+                getDocs(query(collection(db, 'subscriptionPlans'), orderBy('isActive', 'desc'))),
+                // 14: site settings
+                getDoc(doc(db, 'settings', 'site')),
+                // 15: today's transactions for stats
+                getDocs(query(collection(db, 'transactions'), where('timestamp', '>=', new Date(new Date().setHours(0, 0, 0, 0))))),
+            ]);
 
-                // Fetch all recent transactions
-                const allTxSnap = await getDocs(query(collection(db, 'transactions'), orderBy('timestamp', 'desc'), limit(100)));
-                setAllTransactions(allTxSnap.docs.map(d => ({ id: d.id, ...d.data() } as Transaction)));
-
-                // Fetch all tournaments for filtering
-                const tourneySnap = await getDocs(query(collection(db, 'tournaments'), orderBy('createdAt', 'desc')));
-                setAllTournaments(tourneySnap.docs.map(d => ({ id: d.id, ...d.data() } as Tournament)));
-
-                // Fetch slides
-                const slideSnap = await getDocs(query(collection(db, 'slides'), orderBy('createdAt', 'desc')));
-                setSlides(slideSnap.docs.map(d => ({ id: d.id, ...d.data() } as Slide)));
-
-                // Fetch promo codes
-                const promoSnap = await getDocs(query(collection(db, 'promocodes'), orderBy('createdAt', 'desc')));
-                setPromoCodes(promoSnap.docs.map(d => ({ id: d.id, ...d.data() } as PromoCode)));
-
-                // Fetch games
-                const gameSnap = await getDocs(query(collection(db, 'games'), orderBy('createdAt', 'desc')));
-                setGames(gameSnap.docs.map(d => ({ id: d.id, ...d.data() } as Game)));
-
-                // Fetch payment categories
-                const payCatSnap = await getDocs(query(collection(db, 'paymentCategories'), orderBy('createdAt', 'desc')));
-                setPaymentCategories(payCatSnap.docs.map(d => ({ id: d.id, ...d.data() } as PaymentCategory)));
-
-                // Fetch payment methods
-                const paySnap = await getDocs(query(collection(db, 'paymentMethods'), orderBy('createdAt', 'desc')));
-                setPaymentMethods(paySnap.docs.map(d => ({ id: d.id, ...d.data() } as PaymentMethod)));
-
-                // Fetch Org Applications
-                const orgAppSnap = await getDocs(query(collection(db, 'orgApplications'), where('status', '==', 'pending')));
-                let orgApps = orgAppSnap.docs.map(d => ({ id: d.id, ...d.data() } as OrgApplication));
-                orgApps.sort((a,b) => {
+            // Apply results — each one checked independently
+            if (results[0].status === 'fulfilled')
+                setPendingTransactions(results[0].value.docs.map(d => ({ id: d.id, ...d.data() } as Transaction)));
+            if (results[1].status === 'fulfilled')
+                setAllTransactions(results[1].value.docs.map(d => ({ id: d.id, ...d.data() } as Transaction)));
+            if (results[2].status === 'fulfilled')
+                setAllTournaments(results[2].value.docs.map(d => ({ id: d.id, ...d.data() } as Tournament)));
+            if (results[3].status === 'fulfilled')
+                setSlides(results[3].value.docs.map(d => ({ id: d.id, ...d.data() } as Slide)));
+            if (results[4].status === 'fulfilled')
+                setPromoCodes(results[4].value.docs.map(d => ({ id: d.id, ...d.data() } as PromoCode)));
+            if (results[5].status === 'fulfilled')
+                setGames(results[5].value.docs.map(d => ({ id: d.id, ...d.data() } as Game)));
+            if (results[6].status === 'fulfilled')
+                setPaymentCategories(results[6].value.docs.map(d => ({ id: d.id, ...d.data() } as PaymentCategory)));
+            if (results[7].status === 'fulfilled')
+                setPaymentMethods(results[7].value.docs.map(d => ({ id: d.id, ...d.data() } as PaymentMethod)));
+            if (results[8].status === 'fulfilled') {
+                let orgApps = results[8].value.docs.map(d => ({ id: d.id, ...d.data() } as OrgApplication));
+                orgApps.sort((a, b) => {
                     const aTime = a.timestamp?.toMillis ? a.timestamp.toMillis() : 0;
                     const bTime = b.timestamp?.toMillis ? b.timestamp.toMillis() : 0;
                     return bTime - aTime;
                 });
                 setOrgApplications(orgApps);
-
-                // Fetch Organizers
-                const orgsSnap = await getDocs(query(collection(db, 'users'), where('role', 'in', ['organizer', 'admin'])));
-                setOrganizers(orgsSnap.docs.map(d => ({ uid: d.id, ...d.data() } as UserProfile)));
-
-                // Fetch users with pagination — admin can search/load more as needed
-                // ponytail: was getDocs(collection(db, 'users')) fetching ALL users just for totalBalance.
-                // Now fetches first 50 users for the table; total balance derived from pending/success transactions.
-                const usersSnap = await getDocs(query(collection(db, 'users'), orderBy('createdAt', 'desc'), limit(50)));
+            }
+            if (results[9].status === 'fulfilled')
+                setOrganizers(results[9].value.docs.map(d => ({ uid: d.id, ...d.data() } as UserProfile)));
+            if (results[10].status === 'fulfilled') {
+                const usersSnap = results[10].value;
                 const usersData = usersSnap.docs.map(d => ({ uid: d.id, ...d.data() } as UserProfile));
                 setUsers(usersData);
-                
-                let totalBal = 0;
-                usersSnap.forEach(d => totalBal += (d.data().balance || 0));
+            }
+            if (results[11].status === 'fulfilled')
+                setActivityLogs(results[11].value.docs.map(d => ({ id: d.id, ...d.data() })));
+            if (results[12].status === 'fulfilled')
+                setTournamentEarnings(results[12].value.docs.map(d => ({ id: d.id, ...d.data() } as TournamentEarning)));
+            if (results[13].status === 'fulfilled')
+                setSubscriptionPlans(results[13].value.docs.map(d => ({ id: d.id, ...d.data() } as any)));
+            if (results[14].status === 'fulfilled' && results[14].value.exists()) {
+                const data = results[14].value.data() as SiteSettings;
+                setSiteSettings(data);
+                setMinWithdrawal(data.minWithdrawal?.toString() || '');
+                setSupportEmail(data.supportEmail || '');
+                setSupportPhone(data.supportPhone || '');
+                setNotice(data.notice || '');
+                setIsNoticeActive(data.isNoticeActive || false);
+                setMaintenanceMode(data.maintenanceMode || false);
+                setOrgFormDescription(data.orgFormDescription || '');
+            }
 
-                // Fetch activity logs
-                const logsSnap = await getDocs(query(collection(db, 'activityLogs'), orderBy('timestamp', 'desc'), limit(10)));
-                setActivityLogs(logsSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-
-                // Fetch tournament earnings
-                const earningsSnap = await getDocs(query(collection(db, 'tournamentEarnings'), orderBy('createdAt', 'desc')));
-                setTournamentEarnings(earningsSnap.docs.map(d => ({ id: d.id, ...d.data() } as TournamentEarning)));
-
-                // Fetch subscription plans
-                const planSnap = await getDocs(query(collection(db, 'subscriptionPlans'), orderBy('isActive', 'desc')));
-                setSubscriptionPlans(planSnap.docs.map(d => ({ id: d.id, ...d.data() } as any)));
-
-                // Load filters from local storage
-                const savedTxStatus = localStorage.getItem('txFilterStatus');
-                const savedTxType = localStorage.getItem('txFilterType');
-                const savedTxFrom = localStorage.getItem('txDateFrom');
-                const savedTxTo = localStorage.getItem('txDateTo');
-                if (savedTxStatus) setTxFilterStatus(savedTxStatus as any);
-                if (savedTxType) setTxFilterType(savedTxType as any);
-                if (savedTxFrom) setTxDateFrom(savedTxFrom);
-                if (savedTxTo) setTxDateTo(savedTxTo);
-
-                // Fetch site settings
-                const settingsSnap = await getDoc(doc(db, 'settings', 'site'));
-                if (settingsSnap.exists()) {
-                    const data = settingsSnap.data() as SiteSettings;
-                    setSiteSettings(data);
-                    setMinWithdrawal(data.minWithdrawal?.toString() || '');
-                    setSupportEmail(data.supportEmail || '');
-                    setSupportPhone(data.supportPhone || '');
-                    setNotice(data.notice || '');
-                    setIsNoticeActive(data.isNoticeActive || false);
-                    setMaintenanceMode(data.maintenanceMode || false);
-                    setOrgFormDescription(data.orgFormDescription || '');
-                }
-
-                const startOfDay = new Date();
-                startOfDay.setHours(0, 0, 0, 0);
-                const todayTxSnap = await getDocs(query(collection(db, 'transactions'), where('timestamp', '>=', startOfDay)));
-                let dep = 0, withdr = 0;
-                todayTxSnap.forEach(d => {
+            // Calculate stats
+            let totalBal = 0;
+            if (results[10].status === 'fulfilled') {
+                results[10].value.forEach(d => totalBal += (d.data().balance || 0));
+            }
+            let dep = 0, withdr = 0;
+            if (results[15].status === 'fulfilled') {
+                results[15].value.forEach(d => {
                     const data = d.data();
                     if (data.status === 'success') {
                         if (data.type === 'deposit') dep += data.amount;
                         if (data.type === 'withdrawal') withdr += Math.abs(data.amount);
                     }
                 });
+            }
+            setStats({ totalBalance: totalBal, todayDep: dep, todayWith: withdr });
 
-                setStats({ totalBalance: totalBal, todayDep: dep, todayWith: withdr });
-            } catch (error) {
-                console.error('Error fetching admin data:', error);
-                showToast('Failed to load admin data', 'error');
+            // Load filters from local storage
+            const savedTxStatus = localStorage.getItem('txFilterStatus');
+            const savedTxType = localStorage.getItem('txFilterType');
+            const savedTxFrom = localStorage.getItem('txDateFrom');
+            const savedTxTo = localStorage.getItem('txDateTo');
+            if (savedTxStatus) setTxFilterStatus(savedTxStatus as any);
+            if (savedTxType) setTxFilterType(savedTxType as any);
+            if (savedTxFrom) setTxDateFrom(savedTxFrom);
+            if (savedTxTo) setTxDateTo(savedTxTo);
+
+            // Log any failures for debugging
+            const failures = results.filter(r => r.status === 'rejected');
+            if (failures.length > 0) {
+                console.warn('Admin data: ' + failures.length + ' queries failed (loaded partial data)');
+                if (failures.length === results.length) {
+                    showToast('Failed to load admin data', 'error');
+                } else {
+                    showToast('Some admin data failed to load (' + failures.length + ' errors)', 'warning');
+                }
             }
         };
 
