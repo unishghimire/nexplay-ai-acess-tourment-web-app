@@ -5,7 +5,7 @@ import { db, auth } from '../../../shared/config/firebase';
 import { Tournament, UserProfile } from '../../../shared/types/types';
 import { DEFAULT_BANNER } from '../../../shared/constants/constants';
 import { useAuth } from '../../../shared/context/AuthContext';
-import { formatCurrency, formatDate, formatGameName, getYoutubeId, toDateSafe } from '../../../shared/utils/utils';
+import { formatCurrency, formatDate, formatGameName, getYoutubeId, toDateSafe, sanitizeUrl } from '../../../shared/utils/utils';
 import { Clock, Users, Trophy, Lock, Eye, EyeOff, Play, Share2, Calendar, MapPin, Info, Medal, ExternalLink, ChevronRight, AlertCircle, CheckCircle2, Search, Building2 } from 'lucide-react';
 import RegistrationModal from '../components/RegistrationModal';
 import JoinTournamentModal from '../components/JoinTournamentModal';
@@ -19,6 +19,7 @@ import ScoringInfoCard from '../components/ScoringInfoCard';
 import TournamentResultModal from '../components/TournamentResultModal';
 import { TournamentRoadmap } from '../components/TournamentRoadmap';
 import GroupStandingsView from '../components/GroupStandingsView';
+import { fetchRoomCredentials } from '../../../shared/services/roomCredentials';
 
 export default function TournamentDetails() {
     const { id } = useParams<{ id: string }>();
@@ -42,6 +43,7 @@ export default function TournamentDetails() {
     const [showRegistrationModal, setShowRegistrationModal] = useState(false);
     const [teamMembers, setTeamMembers] = useState<any[]>([]);
     const [showPassword, setShowPassword] = useState(false);
+    const [roomCreds, setRoomCreds] = useState<{ roomId?: string; roomPass?: string } | null>(null);
     const [hostProfile, setHostProfile] = useState<UserProfile | null>(null);
 
     useEffect(() => {
@@ -317,7 +319,16 @@ export default function TournamentDetails() {
 
     const bannerUrl = tournament.bannerUrl || DEFAULT_BANNER;
     const bannerStyle = { backgroundImage: `url('${bannerUrl}')`, backgroundSize: 'cover', backgroundPosition: 'center' };
-    const showRoom = tournament.matchType === 'scrims' && isJoined && (tournament.status === 'live' || (tournament.roomId && tournament.status === 'upcoming'));
+    // Fetch room credentials from secure subcollection (not the public tournament doc)
+    useEffect(() => {
+        if (!tournament || !isJoined || !user) return;
+        if (tournament.status !== 'live' && tournament.status !== 'upcoming') return;
+        fetchRoomCredentials(tournament.id).then(creds => {
+            if (creds) setRoomCreds(creds);
+        });
+    }, [tournament?.id, tournament?.status, isJoined, user]);
+
+    const showRoom = tournament.matchType === 'scrims' && isJoined && (tournament.status === 'live' || ((roomCreds?.roomId || tournament.roomId) && tournament.status === 'upcoming'));
     const ytId = getYoutubeId(tournament.ytLink);
 
     return (
@@ -475,7 +486,7 @@ export default function TournamentDetails() {
                                 {tournament.ytLink && (
                                     <div className="flex justify-center">
                                         <a 
-                                            href={tournament.ytLink} 
+                                            href={sanitizeUrl(tournament.ytLink)} 
                                             target="_blank" 
                                             rel="noopener noreferrer"
                                             className="flex items-center gap-2 text-brand-500 hover:text-brand-400 font-bold text-xs sm:text-sm transition"
@@ -520,9 +531,9 @@ export default function TournamentDetails() {
                                                 <div className="bg-card/80 p-4 rounded-2xl border border-gray-800">
                                                     <div className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1">Room ID</div>
                                                     <div className="flex items-center justify-between">
-                                                        <span className="text-lg sm:text-xl font-mono font-bold text-white tracking-wider">{tournament.roomId || 'Waiting...'}</span>
+                                                        <span className="text-lg sm:text-xl font-mono font-bold text-white tracking-wider">{roomCreds?.roomId || tournament.roomId || 'Waiting...'}</span>
                                                         <button onClick={() => {
-                                                            navigator.clipboard.writeText(tournament.roomId || '');
+                                                            navigator.clipboard.writeText(roomCreds?.roomId || tournament.roomId || '');
                                                             showToast("Copied!", "success");
                                                         }} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
                                                             <ExternalLink className="w-5 h-5 text-gray-500" />
@@ -534,7 +545,7 @@ export default function TournamentDetails() {
                                                     <div className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1">Password</div>
                                                     <div className="flex items-center justify-between">
                                                         <span className="text-lg sm:text-xl font-mono font-bold text-white tracking-wider">
-                                                            {showPassword ? (tournament.roomPass || 'None') : '••••••••'}
+                                                            {showPassword ? (roomCreds?.roomPass || tournament.roomPass || 'None') : '••••••••'}
                                                         </span>
                                                         <div className="flex items-center gap-1">
                                                             <button 
@@ -544,7 +555,7 @@ export default function TournamentDetails() {
                                                                 {showPassword ? <EyeOff className="w-5 h-5 text-gray-500" /> : <Eye className="w-5 h-5 text-gray-500" />}
                                                             </button>
                                                             <button onClick={() => {
-                                                                navigator.clipboard.writeText(tournament.roomPass || '');
+                                                                navigator.clipboard.writeText(roomCreds?.roomPass || tournament.roomPass || '');
                                                                 showToast("Copied!", "success");
                                                             }} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
                                                                 <ExternalLink className="w-5 h-5 text-gray-500" />

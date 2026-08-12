@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Game } from '../../../shared/types/types';
 import { motion } from 'motion/react';
 import { formatGameModeLabel, formatGameName } from '../../../shared/utils/utils';
@@ -9,7 +9,6 @@ interface GameCardProps {
 }
 
 const GameCard: React.FC<GameCardProps> = ({ game }) => {
-    const navigate = useNavigate();
     return (
         <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -42,12 +41,12 @@ const GameCard: React.FC<GameCardProps> = ({ game }) => {
                 </div>
                 <div className="pt-2 border-t border-gray-800 flex justify-between items-center">
                     <span className="text-xs text-gray-500 font-mono uppercase">Available Modes: {game.modes.length}</span>
-                    <button 
-                        onClick={() => navigate(`/games/${game.id}`)}
+                    <Link 
+                        to={`/games/${game.id}`}
                         className="text-xs font-bold text-brand-500 hover:text-brand-400 uppercase tracking-wider transition"
                     >
                         Explore
-                    </button>
+                    </Link>
                 </div>
             </div>
         </motion.div>

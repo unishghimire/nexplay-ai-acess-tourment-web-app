@@ -111,6 +111,8 @@ export interface TournamentGroup {
     isPublic: boolean;
     passCode?: string;
     inviteLink?: string;
+    roomId?: string;
+    roomPass?: string;
     // ─── Engine fields (optional, backward compat) ───
     status?: 'draft' | 'preview' | 'locked' | 'active' | 'completed';
     roundNumber?: number;
@@ -158,7 +160,8 @@ export interface Match {
     changeHistory?: MatchChangeLog[]; // Added
     winnerId?: string;
     replayLink?: string;
-    // Battle Royale results — populated by ResultUploader
+    // Battle Royale results — populated by ResultUploader (stores full ScoredResult with breakdown)
+    // ponytail: type is TeamMatchResult[] for backward compat, but actual data includes placementPoints, killPoints, scoringVersion
     results?: TeamMatchResult[];
     screenshotUrl?: string;
 }
@@ -293,6 +296,16 @@ export interface Tournament {
         source: 'game-default' | 'custom';
         snapshotAt: Timestamp | any;
     };
+    // ─── Audit log — tracks all major tournament operations ───
+    auditLog?: {
+        timestamp: Timestamp | any;
+        userId: string;
+        userName: string;
+        action: string;
+        details?: string;
+        roundNumber?: number;
+        targetId?: string;
+    }[];
 }
 
 export interface Transaction {
@@ -452,6 +465,22 @@ export interface Participant {
     status?: 'pending' | 'approved' | 'rejected';
     logoUrl?: string;
     timestamp: Timestamp | any;
+    // ─── Check-in & eligibility ───
+    checkedIn?: boolean;
+    checkedInAt?: Timestamp | any;
+    paymentStatus?: 'pending' | 'confirmed' | 'failed' | 'free';
+    isDisqualified?: boolean;
+    isWithdrawn?: boolean;
+    // ─── Per-round progression (stored for history) ───
+    progression?: {
+        roundNumber: number;
+        groupId: string;
+        groupName: string;
+        rank: number;
+        kills: number;
+        totalPoints: number;
+        qualificationStatus: 'qualified' | 'eliminated' | 'pending' | 'disqualified' | 'withdrawn';
+    }[];
 }
 
 export interface Media {

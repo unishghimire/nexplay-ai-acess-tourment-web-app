@@ -606,3 +606,49 @@ router.post("/api/wallet/distribute-prizes",
     }
   }
 );
+
+// GET /api/migrate-room-creds — one-time migration of room creds to subcollection
+// ponytail: one-time migration endpoint — safe to delete after deployment
+router.get("/api/migrate-room-creds", authenticateToken, async (req: any, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ success: false, message: "Admin only" });
+  }
+  try {
+    const tSnap = await db.collection('tournaments').get();
+    let migrated = 0;
+    let skipped = 0;
+
+    const batch = db.batch();
+    for (const tDoc of tSnap.docs) {
+      const data = tDoc.data() as any;
+      const hasRoomCreds = data.roomId || data.roomPass;
+      if (!hasRoomCreds) { skipped++; continue; }
+
+      const credRef = db.collection('tournaments').doc(tDoc.id).collection('credentials').doc('main');
+      batch.set(credRef, {
+        roomId: data.roomId || '',
+        roomPass: data.roomPass || '',
+        migratedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      if (Array.isArray(data.groups)) {
+        for (const group of data.groups) {
+          if (group.roomId || group.roomPass) {
+            const gCredRef = db.collection('tournaments').doc(tDoc.id).collection('credentials').doc(`group_${group.id}`);
+            batch.set(gCredRef, {
+              roomId: group.roomId || '',
+              roomPass: group.roomPass || '',
+              migratedAt: admin.firestore.FieldValue.serverTimestamp(),
+            });
+          }
+        }
+      }
+      migrated++;
+    }
+
+    await batch.commit();
+    return res.json({ success: true, migrated, skipped, total: tSnap.size });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+});

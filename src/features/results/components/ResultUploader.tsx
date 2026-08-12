@@ -221,12 +221,17 @@ export const ResultUploader: React.FC<ResultUploaderProps> = ({ isOpen, onClose,
                                 return {
                                     ...m,
                                     status: 'completed' as const,
+                                    // FIX: Store full ScoredResult with placementPoints + killPoints breakdown
+                                    // This preserves the scoring audit trail and enables recalculation
                                     results: scoredResults.map(r => ({
                                         teamId: r.teamId,
                                         teamName: r.teamName,
                                         placement: r.placement,
                                         kills: r.kills,
+                                        placementPoints: r.placementPoints,
+                                        killPoints: r.killPoints,
                                         totalPoints: r.totalPoints,
+                                        scoringVersion: scoringConfig.scoringVersion,
                                     })),
                                     screenshotUrl
                                 };

@@ -21,14 +21,14 @@
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.nexplayorg.app/results</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.nexplayorg.app/organizations</loc>
     <changefreq>daily</changefreq>
-    <priority>0.7</priority>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.nexplayorg.app/news</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.nexplayorg.app/teams</loc>
@@ -39,6 +39,11 @@
     <loc>https://www.nexplayorg.app/leaderboard</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.nexplayorg.app/results</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://www.nexplayorg.app/about</loc>
@@ -53,11 +58,11 @@
   <url>
     <loc>https://www.nexplayorg.app/privacy</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
+    <priority>0.4</priority>
   </url>
   <url>
     <loc>https://www.nexplayorg.app/terms</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
+    <priority>0.4</priority>
   </url>
 </urlset>

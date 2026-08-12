@@ -1,3 +1,4 @@
+import { sanitizeUrl } from '../../../shared/utils/utils';
 import React, { useState } from 'react';
 import {
   Radio,
@@ -208,7 +209,7 @@ const MatchRoomsTab: React.FC<MatchRoomsTabProps> = ({
 
                     {room.streamUrl && (
                       <a
-                        href={room.streamUrl}
+                        href={sanitizeUrl(room.streamUrl)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="min-h-[44px] px-3 py-2 text-xs sm:text-sm text-brand-400 hover:text-brand-300 font-medium flex items-center gap-1.5 transition-colors rounded-lg hover:bg-brand-500/10"

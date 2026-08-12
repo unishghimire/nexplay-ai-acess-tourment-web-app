@@ -1,10 +1,19 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'motion/react';
-import { Trophy, CheckCircle2, Copy, EyeOff, Eye, Users, Sword, Lock } from 'lucide-react';
+import { Trophy, CheckCircle2, Copy, EyeOff, Eye, Users, Sword, Lock, Shield } from 'lucide-react';
 import { Tournament, TournamentGroup, Participant } from '../../../shared/types/types';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { aggregateStandings } from '../../../shared/services/scoringEngine';
+import { fetchRoomCredentials } from '../../../shared/services/roomCredentials';
+import { useEffect } from 'react';
+
+// ═══════════════════════════════════════════════════════════════
+// GROUP ACCESS CONTROL
+// ponytail: 3-tier access — organizer/admin sees all, player sees
+// only their group, unregistered sees group names only (locked).
+// Uses existing isPublic/passCode fields on TournamentGroup.
+// ═══════════════════════════════════════════════════════════════
 
 interface GroupStandingsViewProps {
     tournament: Tournament;
@@ -20,7 +29,6 @@ interface TeamStanding {
     points: number;
     kills: number;
     isCurrentUser: boolean;
-    // BR scoring breakdown
     placementPoints?: number;
     killPoints?: number;
     matches?: number;
@@ -29,23 +37,15 @@ interface TeamStanding {
 
 function computeStandings(group: TournamentGroup, participants: Participant[], currentTeamId?: string): TeamStanding[] {
     const completedMatches = (group.matches ?? []).filter(m => m.status === 'completed');
-
-    // ponytail: detect BR format — matches have results[] array with TeamMatchResult
     const hasBRResults = completedMatches.some(m => m.results && m.results.length > 0);
 
     if (hasBRResults) {
-        // Battle Royale: use scoring engine aggregation
         const matchResults = completedMatches
             .filter(m => m.results && m.results.length > 0)
             .map(m => m.results!.map(r => ({
-                teamId: r.teamId,
-                teamName: r.teamName,
-                placement: r.placement,
-                kills: r.kills,
-                placementPoints: 0, // recalculated by engine
-                killPoints: 0,
-                totalPoints: r.totalPoints,
-                scoringVersion: 1,
+                teamId: r.teamId, teamName: r.teamName, placement: r.placement,
+                kills: r.kills, placementPoints: 0, killPoints: 0,
+                totalPoints: r.totalPoints, scoringVersion: 1,
             })));
 
         const teams = group.teams.map(t => {
@@ -56,34 +56,22 @@ function computeStandings(group: TournamentGroup, participants: Participant[], c
         const standings = aggregateStandings({ matchResults, teams });
 
         return standings.map(s => ({
-            id: s.teamId,
-            name: s.teamName,
-            logoUrl: s.logoUrl,
-            wins: 0,
-            losses: 0,
-            points: s.totalPoints,
-            kills: s.kills,
+            id: s.teamId, name: s.teamName, logoUrl: s.logoUrl,
+            wins: 0, losses: 0, points: s.totalPoints, kills: s.kills,
             isCurrentUser: s.teamId === currentTeamId,
-            placementPoints: s.placementPoints,
-            killPoints: s.killPoints,
+            placementPoints: s.placementPoints, killPoints: s.killPoints,
             matches: s.matches,
             bestPlacement: s.bestPlacement === Infinity ? undefined : s.bestPlacement,
         }));
     }
 
-    // Head-to-head format: wins/losses
+    // Head-to-head format
     const map: Record<string, TeamStanding> = {};
-
     group.teams.forEach(t => {
         const participant = participants.find(p => p.teamId === t.id || p.userId === t.id);
         map[t.id] = {
-            id: t.id,
-            name: t.name,
-            logoUrl: participant?.logoUrl,
-            wins: 0,
-            losses: 0,
-            points: 0,
-            kills: 0,
+            id: t.id, name: t.name, logoUrl: participant?.logoUrl,
+            wins: 0, losses: 0, points: 0, kills: 0,
             isCurrentUser: t.id === currentTeamId,
         };
     });
@@ -91,16 +79,13 @@ function computeStandings(group: TournamentGroup, participants: Participant[], c
     completedMatches.forEach(m => {
         const s1 = m.score1 ?? 0;
         const s2 = m.score2 ?? 0;
-
         if (m.team1Id && map[m.team1Id]) {
             map[m.team1Id].points += s1;
-            if (s1 > s2) map[m.team1Id].wins++;
-            else map[m.team1Id].losses++;
+            if (s1 > s2) map[m.team1Id].wins++; else map[m.team1Id].losses++;
         }
         if (m.team2Id && map[m.team2Id]) {
             map[m.team2Id].points += s2;
-            if (s2 > s1) map[m.team2Id].wins++;
-            else map[m.team2Id].losses++;
+            if (s2 > s1) map[m.team2Id].wins++; else map[m.team2Id].losses++;
         }
     });
 
@@ -116,7 +101,6 @@ function resolveTeamName(id: string, group: TournamentGroup, participants: Parti
 }
 
 // ─── Standings Table ──────────────────────────────────────────────────
-// ponytail: adapts columns based on whether we have BR scoring data or head-to-head.
 function StandingsTable({ standings }: { standings: TeamStanding[] }) {
     const isBR = standings.some(s => s.placementPoints !== undefined);
 
@@ -187,7 +171,7 @@ function StandingsTable({ standings }: { standings: TeamStanding[] }) {
         );
     }
 
-    // Head-to-head standings (wins/losses)
+    // Head-to-head standings
     return (
         <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
             <table className="w-full text-left min-w-[550px]">
@@ -236,7 +220,7 @@ function StandingsTable({ standings }: { standings: TeamStanding[] }) {
                                 </div>
                             </td>
                             <td className="py-3.5 text-center font-black text-brand-400 text-sm">{s.points}</td>
-                            <td className="py-3.5 text-center font-bold text-emerald-400 text-sm">{s.wins}</td>
+                            <td className="py-3.5 text-center font-bold text-emerald-400/80 text-sm">{s.wins}</td>
                             <td className="py-3.5 text-center font-bold text-red-400/80 text-sm">{s.losses}</td>
                         </tr>
                     ))}
@@ -253,6 +237,32 @@ function StandingsTable({ standings }: { standings: TeamStanding[] }) {
     );
 }
 
+// ─── Locked Group Card (shown to players who aren't in this group) ─────
+function LockedGroupCard({ group }: { group: TournamentGroup }) {
+    return (
+        <div className="rounded-3xl border border-gray-800 overflow-hidden">
+            <div className="px-6 py-4 flex items-center justify-between bg-card/70">
+                <div className="flex items-center gap-3">
+                    <Lock className="w-5 h-5 text-gray-600" />
+                    <h3 className="text-gray-500 font-black text-lg uppercase tracking-tighter">{group.name}</h3>
+                </div>
+                <div className="flex items-center gap-2 text-xs font-black text-gray-600 uppercase tracking-widest">
+                    <Users className="w-4 h-4" />
+                    {group.teams.length} Teams
+                </div>
+            </div>
+            <div className="p-6 bg-dark/20">
+                <div className="flex flex-col items-center justify-center py-6 text-center">
+                    <Shield className="w-8 h-8 text-gray-700 mb-3" />
+                    <p className="text-gray-500 text-sm font-bold mb-1">Other groups are private during the match</p>
+                    <p className="text-gray-600 text-xs">Standings and matches from other groups will be visible after the round is completed</p>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────
 export default function GroupStandingsView({ tournament, participants }: GroupStandingsViewProps) {
     const { profile } = useAuth();
     const { showToast } = useNotification();
@@ -262,6 +272,9 @@ export default function GroupStandingsView({ tournament, participants }: GroupSt
     const groups = tournament.groups ?? [];
     const currentTeamId = profile?.teamId || profile?.uid;
 
+    // Access control: organizer/admin sees all, player sees only their group
+    const isOrganizer = profile?.uid === tournament.hostUid || profile?.role === 'admin' || profile?.role === 'organizer';
+
     // Find which group the current player is in
     const myGroup = useMemo(() =>
         groups.find(g => g.teams.some(t => t.id === currentTeamId)) ?? null,
@@ -269,7 +282,23 @@ export default function GroupStandingsView({ tournament, participants }: GroupSt
     );
 
     const isLive = tournament.status === 'live';
-    const showRoom = isLive && (tournament.roomId || tournament.roomPass);
+    // Secure credential fetch from subcollection — falls back to group/tournament doc for backward compat
+    // ponytail: subcollection fetch is async; UI uses doc-level creds immediately, upgrades when subcollection responds
+    const [secureCreds, setSecureCreds] = useState<{ roomId?: string; roomPass?: string } | null>(null);
+    useEffect(() => {
+        if (!tournament.id || !myGroup) return;
+        fetchRoomCredentials(tournament.id, myGroup.id).then(creds => {
+            if (creds) setSecureCreds(creds);
+        });
+    }, [tournament.id, myGroup?.id]);
+
+    const groupRoomId = secureCreds?.roomId || myGroup?.roomId || tournament.roomId;
+    const groupRoomPass = secureCreds?.roomPass || myGroup?.roomPass || tournament.roomPass;
+    const showRoom = isLive && (groupRoomId || groupRoomPass);
+
+    // Is the tournament past the group stage? If so, reveal all groups.
+    const isPastGroupStage = tournament.stage === 'knockout' || tournament.status === 'completed';
+    const canSeeAllGroups = isOrganizer || isPastGroupStage;
 
     const copy = (value: string, key: string) => {
         navigator.clipboard.writeText(value);
@@ -299,30 +328,30 @@ export default function GroupStandingsView({ tournament, participants }: GroupSt
                         <Lock className="w-4 h-4" /> Match Credentials — {myGroup.name}
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {tournament.roomId && (
+                        {groupRoomId && (
                             <div className="bg-black/50 p-4 rounded-2xl border border-white/5 flex justify-between items-center">
                                 <div>
                                     <div className="text-[9px] text-gray-500 uppercase font-black tracking-widest mb-1">Room ID</div>
-                                    <div className="text-white font-mono font-black text-xl">{tournament.roomId}</div>
+                                    <div className="text-white font-mono font-black text-xl">{groupRoomId}</div>
                                 </div>
-                                <button onClick={() => copy(tournament.roomId!, 'roomId')} aria-label="Copy Room ID" className="p-2 hover:bg-white/10 rounded-xl transition">
+                                <button onClick={() => copy(groupRoomId!, 'roomId')} aria-label="Copy Room ID" className="p-2 hover:bg-white/10 rounded-xl transition">
                                     {copied === 'roomId' ? <CheckCircle2 className="w-5 h-5 text-green-400" /> : <Copy className="w-5 h-5 text-gray-500" />}
                                 </button>
                             </div>
                         )}
-                        {tournament.roomPass && (
+                        {groupRoomPass && (
                             <div className="bg-black/50 p-4 rounded-2xl border border-white/5 flex justify-between items-center">
                                 <div>
                                     <div className="text-[9px] text-gray-500 uppercase font-black tracking-widest mb-1">Password</div>
                                     <div className="text-white font-mono font-black text-xl">
-                                        {showPass ? tournament.roomPass : '••••••'}
+                                        {showPass ? groupRoomPass : '••••••'}
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-1">
                                     <button onClick={() => setShowPass(p => !p)} aria-label={showPass ? 'Hide password' : 'Show password'} className="p-2 hover:bg-white/10 rounded-xl transition">
                                         {showPass ? <EyeOff className="w-5 h-5 text-gray-500" /> : <Eye className="w-5 h-5 text-gray-500" />}
                                     </button>
-                                    <button onClick={() => copy(tournament.roomPass!, 'roomPass')} aria-label="Copy Password" className="p-2 hover:bg-white/10 rounded-xl transition">
+                                    <button onClick={() => copy(groupRoomPass!, 'roomPass')} aria-label="Copy Password" className="p-2 hover:bg-white/10 rounded-xl transition">
                                         {copied === 'roomPass' ? <CheckCircle2 className="w-5 h-5 text-green-400" /> : <Copy className="w-5 h-5 text-gray-500" />}
                                     </button>
                                 </div>
@@ -343,25 +372,37 @@ export default function GroupStandingsView({ tournament, participants }: GroupSt
                 />
             )}
 
-            {/* ── All groups ── */}
+            {/* ── Not registered message ── */}
+            {!myGroup && !isOrganizer && (
+                <div className="rounded-2xl border border-dashed border-gray-800 bg-card/50 p-6 text-center">
+                    <Shield className="w-8 h-8 text-gray-600 mx-auto mb-3" />
+                    <p className="text-gray-400 text-sm font-bold">You haven't been assigned to a group yet</p>
+                    <p className="text-gray-600 text-xs mt-1">Group details will appear here once the organizer publishes your group assignment</p>
+                </div>
+            )}
+
+            {/* ── Other groups ── */}
             <div>
-                {myGroup && (
-                    <div className="text-xs font-black text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-3">
-                        <span className="inline-block w-6 h-px bg-surface" />
-                        All Groups
-                    </div>
-                )}
+                <div className="text-xs font-black text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-3">
+                    <span className="inline-block w-6 h-px bg-surface" />
+                    {canSeeAllGroups ? 'All Groups' : 'Other Groups'}
+                </div>
                 <div className="space-y-6">
-                    {groups.map(group => (
-                        <GroupCard
-                            key={group.id}
-                            group={group}
-                            participants={participants}
-                            currentTeamId={currentTeamId}
-                            isHighlighted={false}
-                            label={undefined}
-                        />
-                    ))}
+                    {groups
+                        .filter(g => g.id !== myGroup?.id) // Don't duplicate my group
+                        .map(group => (
+                            canSeeAllGroups ? (
+                                <GroupCard
+                                    key={group.id}
+                                    group={group}
+                                    participants={participants}
+                                    currentTeamId={currentTeamId}
+                                    isHighlighted={false}
+                                />
+                            ) : (
+                                <LockedGroupCard key={group.id} group={group} />
+                            )
+                        ))}
                 </div>
             </div>
         </div>
@@ -516,7 +557,7 @@ function GroupCard({ group, participants, currentTeamId, isHighlighted, label }:
                                 >
                                     <div className="w-10 h-10 rounded-xl bg-surface border border-gray-700 flex items-center justify-center font-black text-sm text-brand-400 overflow-hidden shrink-0">
                                         {participant?.logoUrl ? (
-                                            <img src={participant.logoUrl} alt={t.name} className="w-full h-full object-cover" />
+                                            <img src={participant?.logoUrl} alt={t.name} className="w-full h-full object-cover" />
                                         ) : (
                                             t.name.charAt(0).toUpperCase()
                                         )}

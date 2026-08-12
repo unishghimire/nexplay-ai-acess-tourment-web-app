@@ -178,20 +178,42 @@ service cloud.firestore {
     }
 
     // ═══════════════════════════════════════════════════════════════
+    // ROOM CREDENTIALS — host + joined participants only
+    // Stores roomId/roomPass per tournament and per group.
+    // Public tournament reads do NOT include these fields.
+    // ═══════════════════════════════════════════════════════════════
+    function isTournamentParticipant(tournamentId) {
+      return isSignedIn() &&
+             exists(/databases/$(database)/documents/participants/$(tournamentId + '_' + request.auth.uid));
+    }
+    match /tournaments/{tournamentId}/credentials/{credId} {
+      allow get: if isValidId(tournamentId) && (
+        isAdmin() ||
+        isTournamentHost(tournamentId) ||
+        isTournamentParticipant(tournamentId)
+      );
+      allow list: if false; // ponytail: no listing — always fetch by known doc ID
+      allow write: if isAdmin() || isTournamentHost(tournamentId);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
     // PARTICIPANTS — players self-register, organizer can approve
     // ═══════════════════════════════════════════════════════════════
     match /participants/{participantId} {
-      allow read: if true;
+      allow read: if isSignedIn(); // ponytail: was public — exposed userId/inGameId/teammates to anyone
 
       // Client-side creation blocked — all joins go through /api/wallet/join-tournament
       // (Admin SDK bypasses rules, enforces atomic balance/overbooking/duplicate checks)
       allow create: if false;
 
-      // Organizer/admin can update status field (approve/reject).
+      // Organizer/admin can update status + check-in fields (approve/reject/check-in).
+      // Players can check themselves in (toggle checkedIn only).
       // Player can delete their own registration (leave tournament).
       allow update: if isAdmin() ||
                        (isOrganizer() && isTournamentHost(existing().tournamentId) &&
-                        incoming().diff(existing()).affectedKeys().hasOnly(['status']));
+                        incoming().diff(existing()).affectedKeys().hasOnly(['status', 'checkedIn', 'checkedInAt'])) ||
+                       (isVerified() && existing().userId == request.auth.uid &&
+                        incoming().diff(existing()).affectedKeys().hasOnly(['checkedIn', 'checkedInAt']));
 
       allow delete: if isAdmin() ||
                        (isVerified() && (
@@ -232,7 +254,13 @@ service cloud.firestore {
     match /notifications/{notificationId} {
       allow get:    if isOwner(existing().userId) && isValidId(notificationId);
       allow list:   if isSignedIn() && resource.data.userId == request.auth.uid;
-      allow create: if isSignedIn();
+      // SECURITY FIX: Only admin/organizer can create notifications for others.
+      // Players can only create notifications for themselves (e.g. self-reminders).
+      allow create: if isSignedIn() && (
+        isAdmin() ||
+        isOrganizer() ||
+        incoming().userId == request.auth.uid
+      ) && incoming().userId is string;
       allow update: if isOwner(existing().userId) &&
                        incoming().diff(existing()).affectedKeys().hasOnly(['read']);
       allow delete: if isOwner(existing().userId) || isAdmin();

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Tournament } from '../../../shared/types/types';
 import { DEFAULT_BANNER } from '../../../shared/constants/constants';
 import { formatCurrency, formatDate, formatGameName } from '../../../shared/utils/utils';
@@ -12,15 +12,14 @@ interface TournamentCardProps {
 }
 
 const TournamentCard: React.FC<TournamentCardProps> = ({ tournament }) => {
-    const navigate = useNavigate();
     const bannerUrl = tournament.bannerUrl || DEFAULT_BANNER;
 
     return (
+        <Link to={`/tournaments/${tournament.id}`} className="block h-full">
         <motion.div 
             whileHover={{ y: -8, scale: 1.02 }}
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
             className="group relative bg-surface rounded-2xl sm:rounded-[2rem] overflow-hidden border border-gray-800/50 hover:border-brand-500/50 transition-all duration-500 cursor-pointer flex flex-col h-full shadow-2xl hover:shadow-brand-500/20 w-full min-w-0"
-            onClick={() => navigate(`/tournaments/${tournament.id}`)}
         >
             {/* Banner Section */}
             <div className="h-36 sm:h-48 relative overflow-hidden w-full shrink-0">
@@ -139,6 +138,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({ tournament }) => {
                 </div>
             </div>
         </motion.div>
+        </Link>
     );
 };
 

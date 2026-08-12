@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { XCircle, CheckCircle2, User } from 'lucide-react';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, writeBatch } from 'firebase/firestore';
 import { db } from '../../../../shared/config/firebase';
 import { TournamentAdminTabProps } from './types';
 
@@ -23,6 +23,33 @@ export const ParticipantsTab: React.FC<TournamentAdminTabProps> = (props) => {
             setParticipants(participants.map(p => p.id === id ? { ...p, status: 'rejected' } : p));
             showToast('Player rejected', 'info');
         } catch { showToast('Failed to reject', 'error'); }
+    };
+
+    const handleCheckIn = async (id: string) => {
+        try {
+            const isCheckedIn = participants.find(p => p.id === id)?.checkedIn;
+            await updateDoc(doc(db, 'participants', id), {
+                checkedIn: !isCheckedIn,
+                checkedInAt: !isCheckedIn ? new Date() : null,
+            });
+            setParticipants(participants.map(p => p.id === id ? { ...p, checkedIn: !isCheckedIn, checkedInAt: !isCheckedIn ? new Date() as any : null } : p));
+            showToast(isCheckedIn ? 'Player checked out' : 'Player checked in', 'success');
+        } catch { showToast('Failed to toggle check-in', 'error'); }
+    };
+
+    const handleBulkCheckIn = async () => {
+        const approved = participants.filter(p => p.status === 'approved' && !p.checkedIn);
+        if (approved.length === 0) { showToast('No approved players pending check-in', 'info'); return; }
+        if (!window.confirm(`Check in all ${approved.length} approved players?`)) return;
+        try {
+            const batch = writeBatch(db);
+            for (const p of approved) {
+                batch.update(doc(db, 'participants', p.id), { checkedIn: true, checkedInAt: new Date() });
+            }
+            await batch.commit();
+            setParticipants(participants.map(p => p.status === 'approved' && !p.checkedIn ? { ...p, checkedIn: true, checkedInAt: new Date() as any } : p));
+            showToast(`${approved.length} players checked in`, 'success');
+        } catch { showToast('Failed to bulk check-in', 'error'); }
     };
 
     return (
@@ -47,7 +74,17 @@ export const ParticipantsTab: React.FC<TournamentAdminTabProps> = (props) => {
                         <div className="text-[10px] sm:text-[10px] text-yellow-500/50 font-black uppercase tracking-widest mb-1">Pending</div>
                         <div className="text-lg sm:text-xl font-black text-yellow-500">{participants.filter(p => p.status === 'pending').length}</div>
                     </div>
+                    <div className="bg-dark px-4 sm:px-6 py-2 sm:py-3 rounded-xl sm:rounded-2xl border border-gray-800 text-center flex-1 sm:flex-none">
+                        <div className="text-[10px] sm:text-[10px] text-green-500/50 font-black uppercase tracking-widest mb-1">Checked In</div>
+                        <div className="text-lg sm:text-xl font-black text-green-500">{participants.filter(p => p.checkedIn).length}</div>
+                    </div>
                 </div>
+                <button
+                    onClick={handleBulkCheckIn}
+                    className="bg-green-600 hover:bg-green-500 text-white px-4 py-2.5 min-h-[44px] rounded-lg text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all"
+                >
+                    <CheckCircle2 className="w-4 h-4 shrink-0" /> Check In All
+                </button>
             </div>
 
             {participants.length === 0 ? (
@@ -97,6 +134,16 @@ export const ParticipantsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                         <button onClick={() => handleReject(p.id)}
                                             className="flex-1 py-2.5 border border-red-500/20 text-red-500 hover:bg-red-500/10 rounded-lg transition-all text-xs font-bold uppercase tracking-widest touch-target flex items-center justify-center gap-1.5">
                                             <XCircle className="w-4 h-4" /> Reject
+                                        </button>
+                                    )}
+                                    {p.status === 'approved' && (
+                                        <button onClick={() => handleCheckIn(p.id)}
+                                            className={`flex-1 py-2.5 border rounded-lg transition-all text-xs font-bold uppercase tracking-widest touch-target flex items-center justify-center gap-1.5 ${
+                                                p.checkedIn
+                                                    ? 'border-green-500/30 bg-green-500/10 text-green-500'
+                                                    : 'border-blue-500/20 text-blue-500 hover:bg-blue-500/10'
+                                            }`}>
+                                            <CheckCircle2 className="w-4 h-4" /> {p.checkedIn ? 'In' : 'Check-In'}
                                         </button>
                                     )}
                                 </div>
@@ -162,6 +209,17 @@ export const ParticipantsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                                         className="p-2 border border-red-500/20 text-red-500 hover:bg-red-500/10 rounded-lg transition-all touch-target"
                                                         title="Reject">
                                                         <XCircle className="w-4 h-4" />
+                                                    </button>
+                                                )}
+                                                {p.status === 'approved' && (
+                                                    <button onClick={() => handleCheckIn(p.id)}
+                                                        className={`p-2 border rounded-lg transition-all touch-target ${
+                                                            p.checkedIn
+                                                                ? 'border-green-500/30 bg-green-500/10 text-green-500'
+                                                                : 'border-blue-500/20 text-blue-500 hover:bg-blue-500/10'
+                                                        }`}
+                                                        title={p.checkedIn ? 'Checked In' : 'Check In'}>
+                                                        <CheckCircle2 className="w-4 h-4" />
                                                     </button>
                                                 )}
                                             </div>

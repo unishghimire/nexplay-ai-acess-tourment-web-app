@@ -17,7 +17,9 @@ import {
     CheckCircle2, 
     Users, 
     Flame,
-    BarChart3
+    BarChart3,
+    Newspaper,
+    Building2
 } from 'lucide-react';
 import { formatGameName } from '../../../shared/utils/utils';
 
@@ -414,7 +416,7 @@ const Home: React.FC = () => {
             {/* Quick Links — internal linking for SEO */}
             <section className="mb-12">
                 <h2 className="text-white font-black text-xl uppercase tracking-tight mb-4">Explore NexPlay</h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                     <Link to="/tournaments" className="bg-card rounded-2xl border border-gray-800 p-4 hover:border-brand-500/50 transition-all group">
                         <Trophy className="w-6 h-6 text-brand-500 mb-2 group-hover:scale-110 transition-transform" />
                         <h3 className="text-white font-bold text-sm">Tournaments</h3>
@@ -425,10 +427,20 @@ const Home: React.FC = () => {
                         <h3 className="text-white font-bold text-sm">Scrims</h3>
                         <p className="text-gray-500 text-xs">Practice matches</p>
                     </Link>
-                    <Link to="/teams" className="bg-card rounded-2xl border border-gray-800 p-4 hover:border-brand-500/50 transition-all group">
-                        <Users className="w-6 h-6 text-brand-500 mb-2 group-hover:scale-110 transition-transform" />
-                        <h3 className="text-white font-bold text-sm">Teams</h3>
-                        <p className="text-gray-500 text-xs">Find teams</p>
+                    <Link to="/games" className="bg-card rounded-2xl border border-gray-800 p-4 hover:border-brand-500/50 transition-all group">
+                        <Gamepad2 className="w-6 h-6 text-brand-500 mb-2 group-hover:scale-110 transition-transform" />
+                        <h3 className="text-white font-bold text-sm">Games</h3>
+                        <p className="text-gray-500 text-xs">Browse by game</p>
+                    </Link>
+                    <Link to="/organizations" className="bg-card rounded-2xl border border-gray-800 p-4 hover:border-brand-500/50 transition-all group">
+                        <Building2 className="w-6 h-6 text-brand-500 mb-2 group-hover:scale-110 transition-transform" />
+                        <h3 className="text-white font-bold text-sm">Organizations</h3>
+                        <p className="text-gray-500 text-xs">Esports orgs</p>
+                    </Link>
+                    <Link to="/news" className="bg-card rounded-2xl border border-gray-800 p-4 hover:border-brand-500/50 transition-all group">
+                        <Newspaper className="w-6 h-6 text-brand-500 mb-2 group-hover:scale-110 transition-transform" />
+                        <h3 className="text-white font-bold text-sm">News</h3>
+                        <p className="text-gray-500 text-xs">Latest updates</p>
                     </Link>
                     <Link to="/leaderboard" className="bg-card rounded-2xl border border-gray-800 p-4 hover:border-brand-500/50 transition-all group">
                         <BarChart3 className="w-6 h-6 text-brand-500 mb-2 group-hover:scale-110 transition-transform" />

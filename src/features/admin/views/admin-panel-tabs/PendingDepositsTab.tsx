@@ -1,3 +1,4 @@
+import { sanitizeUrl } from '../../../../shared/utils/utils';
 import React, { useState } from 'react';
 import {ArrowDown, Check, Eye} from 'lucide-react';
 
@@ -80,7 +81,7 @@ export const PendingDepositsTab: React.FC<AdminPanelTabProps> = (props) => {
                                         {/* Payment Screenshot Thumbnail */}
                                         {t.proofUrl && (
                                             <div className="mb-3">
-                                                <a href={t.proofUrl} target="_blank" rel="noreferrer" className="block group/img">
+                                                <a href={sanitizeUrl(t.proofUrl)} target="_blank" rel="noreferrer" className="block group/img">
                                                     <div className="relative rounded-xl overflow-hidden border border-slate-800 hover:border-brand-500 transition">
                                                         <img src={t.proofUrl} alt="Payment proof" className="w-full max-h-48 object-contain bg-black/50 rounded-lg" referrerPolicy="no-referrer" onError={(e) => { e.currentTarget.style.display = "none"; }} />
                                                         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/img:opacity-100 transition flex items-center justify-center">

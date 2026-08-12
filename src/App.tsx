@@ -1,5 +1,5 @@
 import { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useParams, useLocation } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider, useAuth } from './shared/context/AuthContext';
 import { NotificationProvider } from './shared/context/NotificationContext';
@@ -58,6 +58,7 @@ const GameModesBrowser = lazyWithRetry(() => import('./features/browser/views/Ga
 const Login = lazyWithRetry(() => import('./features/auth/views/Login'));
 const Register = lazyWithRetry(() => import('./features/auth/views/Register'));
 const NotFound = lazyWithRetry(() => import('./features/home/views/NotFound'));
+const News = lazyWithRetry(() => import('./features/news/News'));
 
 const LoadingFallback = () => (
   <div className="min-h-[60vh] flex flex-col items-center justify-center">
@@ -142,7 +143,7 @@ const AppContent = () => {
               <Route path="/games" element={<GameBrowser />} />
               <Route path="/results" element={<Results />} />
               <Route path="/games/:id" element={<GameModesBrowser />} />
-              <Route path="/details/:id" element={<TournamentDetails />} />
+              <Route path="/details/:id" element={<DetailsRedirect />} />
               <Route path="/tournaments/:id" element={<TournamentDetails />} />
               <Route path="/post/:id" element={<PostDetails />} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
@@ -150,9 +151,10 @@ const AppContent = () => {
               <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />
               <Route path="/complete-profile" element={<ProtectedRoute><CompleteProfile /></ProtectedRoute>} />
               <Route path="/user/:id" element={<PublicProfile />} />
-              <Route path="/profile/:id" element={<PublicProfile />} />
-              <Route path="/organization/:id" element={<PublicProfile />} />
+              <Route path="/profile/:id" element={<ProfileRedirect />} />
+              <Route path="/organization/:id" element={<OrgRedirect />} />
               <Route path="/organizations" element={<OrgBrowser />} />
+              <Route path="/news" element={<News />} />
               <Route path="/teams" element={<Teams />} />
               <Route path="/team/:id" element={<TeamDetails />} />
               <Route path="/leaderboard" element={<Leaderboard />} />
@@ -176,7 +178,26 @@ const AppContent = () => {
   );
 };
 
-export default function App() {
+export default // Redirect legacy /details/:id to /tournaments/:id for SEO canonical consistency
+function DetailsRedirect() {
+    const { id } = useParams<{ id: string }>();
+    return <Navigate to={`/tournaments/${id}`} replace />;
+}
+
+// Redirect legacy /profile/:id to /user/:id for SEO canonical consistency
+function ProfileRedirect() {
+    const { id } = useParams<{ id: string }>();
+    return <Navigate to={`/user/${id}`} replace />;
+}
+
+// Redirect /organization/:id to /user/:id for SEO canonical consistency
+function OrgRedirect() {
+    const { id } = useParams<{ id: string }>();
+    return <Navigate to={`/user/${id}`} replace />;
+}
+
+
+function App() {
   return (
     <ErrorBoundary>
       <HelmetProvider>

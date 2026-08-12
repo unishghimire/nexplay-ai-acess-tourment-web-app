@@ -9,13 +9,9 @@ import MobileMenu from './navbar/MobileMenu';
 
 const navLinks = [
     { name: 'Home', path: '/' },
-    { name: 'Tournaments', path: '/tournaments' },
-    { name: 'Scrims', path: '/scrims' },
-    { name: 'Teams', path: '/teams' },
-    { name: 'Leaderboard', path: '/leaderboard' },
-    { name: 'Results', path: '/results' },
     { name: 'Games', path: '/games' },
-    { name: 'Organizations', path: '/organizations' }
+    { name: 'Organizations', path: '/organizations' },
+    { name: 'News', path: '/news' }
 ];
 
 const Navbar: React.FC = () => {
@@ -39,21 +35,23 @@ const Navbar: React.FC = () => {
     return (
         <nav className="sticky top-0 z-50 bg-dark/90 backdrop-blur-xl border-b border-gray-800 transition-all duration-200">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="relative flex items-center justify-between h-16 sm:h-20">
+                <div className="grid grid-cols-[auto_1fr_auto] items-center h-16 sm:h-20 gap-2">
                     {/* Logo */}
-                    <Link to="/" className="flex items-center gap-3 shrink-0 group z-10">
+                    <Link to="/" className="flex items-center gap-3 shrink-0 group">
                         <img src="/logo.png" alt="Nexplay Logo" className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg shrink-0 object-cover shadow-md group-hover:scale-105 transition-transform" />
                         <span className="text-xl sm:text-2xl font-black tracking-widest text-white leading-none">NEX<span className="text-brand-500">PLAY</span></span>
                     </Link>
 
-                    {/* Desktop nav links */}
-                    <div className="hidden lg:flex absolute inset-0 items-center justify-center pointer-events-none">
-                        <div className="flex items-center space-x-1 pointer-events-auto bg-dark/50 backdrop-blur-md px-2 py-1.5 rounded-full border border-gray-800/50 shadow-xl">
+                    {/* Desktop nav links — lives in its own grid column, so it can never overlap
+                        the logo or right section. Scrolls horizontally if it ever runs out of room
+                        instead of spilling over neighboring columns (fix for navbar overlap bug). */}
+                    <div className="hidden lg:flex min-w-0 items-center justify-center">
+                        <div className="flex items-center space-x-1 max-w-full overflow-x-auto no-scrollbar bg-dark/50 backdrop-blur-md px-2 py-1.5 rounded-full border border-gray-800/50 shadow-xl">
                             {navLinks.map((link) => (
                                 <Link
                                     key={link.path}
                                     to={link.path}
-                                    className={`px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-200 flex items-center whitespace-nowrap ${isActive(link.path) ? 'bg-brand-500 text-white shadow-md shadow-brand-500/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                                    className={`px-3 xl:px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-200 flex items-center whitespace-nowrap ${isActive(link.path) ? 'bg-brand-500 text-white shadow-md shadow-brand-500/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
                                 >
                                     {link.name}
                                 </Link>
@@ -62,7 +60,7 @@ const Navbar: React.FC = () => {
                     </div>
 
                     {/* Right section */}
-                    <div className="flex items-center justify-end gap-2 sm:gap-4 shrink-0 z-10">
+                    <div className="flex items-center justify-end gap-2 sm:gap-4 shrink-0">
                         {user ? (
                             <>
                                 <NotificationDropdown />

@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import {
-    Plus, Trash2, Users, CheckCircle2,
+    Plus, Trash2, Users, CheckCircle2, Key, Save,
 } from 'lucide-react';
 import { TournamentAdminTabProps } from './types';
 import Modal from '../../../../shared/components/Modal';
@@ -13,7 +13,8 @@ export const GroupsTab: React.FC<TournamentAdminTabProps> = (props) => {
         setNewGroup, setSelectedGroup, setIsCreateGroupModalOpen, setIsManageTeamsModalOpen,
         setIsAddMatchModalOpen,
         handleAutoGenerateGroups, handleCreateGroup, handleDeleteGroup,
-        handleAssignTeam, handleRemoveTeam, handleGenerateGroupMatches, } = props;
+        handleAssignTeam, handleRemoveTeam, handleGenerateGroupMatches,
+        handleSetGroupRoom, } = props;
 
     // ponytail: compute available teams locally — moved from main file with the modal
     const groupedParticipants = participants.reduce((acc: any, p) => {
@@ -62,69 +63,15 @@ export const GroupsTab: React.FC<TournamentAdminTabProps> = (props) => {
                             {tournament.groups && tournament.groups.length > 0 ? (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
                                     {tournament.groups.map(group => (
-                                        <div key={group.id} className="bg-surface border border-gray-800 rounded-2xl p-4 sm:p-5 hover:border-brand-500/20 transition-all shadow-xl">
-                                            <div className="flex justify-between items-start mb-4">
-                                                <div>
-                                                    <h3 className="text-md font-black text-white uppercase tracking-tight">{group.name}</h3>
-                                                    <div className="flex items-center gap-2 text-[10px] text-gray-500 mt-1 font-bold">
-                                                        <Users className="w-3 h-3 text-brand-500" /> {group.teams.length} / {group.teamLimit} TEAMS
-                                                    </div>
-                                                </div>
-                                                <button 
-                                                    onClick={() => handleDeleteGroup(group.id)}
-                                                    className="p-2 text-gray-600 hover:text-red-500 transition-colors bg-dark rounded-lg border border-gray-800"
-                                                >
-                                                    <Trash2 className="w-3 h-3" />
-                                                </button>
-                                            </div>
-                                            <div className="space-y-1.5">
-                                                <div className="flex items-center justify-between text-[10px] bg-dark p-2 rounded-lg border border-gray-800 font-bold">
-                                                    <span className="text-gray-500 flex items-center gap-1 uppercase">Access</span>
-                                                    <span className={group.isPublic ? 'text-green-500' : 'text-yellow-500'}>
-                                                        {group.isPublic ? 'PUBLIC' : 'PRIVATE'}
-                                                    </span>
-                                                </div>
-                                                {group.passCode && (
-                                                    <div className="flex items-center justify-between text-[10px] bg-dark p-2 rounded-lg border border-gray-800 font-bold">
-                                                        <span className="text-gray-500 flex items-center gap-1 uppercase">Passcode</span>
-                                                        <span className="text-white font-mono">{group.passCode}</span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div className="mt-4 pt-4 border-t border-gray-800 flex flex-wrap gap-2">
-                                                <button 
-                                                    onClick={() => {
-                                                        setSelectedGroup(group);
-                                                        setIsAddMatchModalOpen(true);
-                                                    }}
-                                                    className="flex-1 min-w-[80px] min-h-[44px] flex items-center justify-center bg-purple-600/10 hover:bg-purple-600/20 text-purple-500 py-2.5 rounded-lg text-[10px] sm:text-[10px] font-black uppercase tracking-widest transition-all border border-purple-500/10"
-                                                >
-                                                    Match
-                                                </button>
-                                                <button 
-                                                    onClick={() => {
-                                                        setSelectedGroup(group);
-                                                        setIsManageTeamsModalOpen(true);
-                                                    }}
-                                                    className="flex-1 min-w-[80px] min-h-[44px] flex items-center justify-center bg-brand-600/10 hover:bg-brand-600/20 text-brand-500 py-2.5 rounded-lg text-[10px] sm:text-[10px] font-black uppercase tracking-widest transition-all border border-brand-500/10"
-                                                >
-                                                    Teams
-                                                </button>
-                                                <button 
-                                                    onClick={() => {
-                                                        if (window.confirm("Generate a single Match for ALL teams in this group? (BR Style)")) {
-                                                            handleGenerateGroupMatches(group.id, 'single');
-                                                        } else if (window.confirm("Generate Round Robin matches? (1v1 for every pair)")) {
-                                                            handleGenerateGroupMatches(group.id, 'round-robin');
-                                                        }
-                                                    }}
-                                                    disabled={group.teams.length < 2}
-                                                    className="w-full min-h-[44px] flex items-center justify-center bg-blue-600/10 hover:bg-blue-600/20 text-blue-500 disabled:opacity-50 disabled:cursor-not-allowed py-2.5 rounded-lg text-[10px] sm:text-[10px] font-black uppercase tracking-widest transition-all border border-blue-500/10"
-                                                >
-                                                    GENERATE MATCHES
-                                                </button>
-                                            </div>
-                                        </div>
+                                        <GroupCard
+                                            key={group.id}
+                                            group={group}
+                                            onDelete={handleDeleteGroup}
+                                            onSetRoom={handleSetGroupRoom}
+                                            onAddMatch={() => { setSelectedGroup(group); setIsAddMatchModalOpen(true); }}
+                                            onManageTeams={() => { setSelectedGroup(group); setIsManageTeamsModalOpen(true); }}
+                                            onGenerateMatches={(mode) => handleGenerateGroupMatches(group.id, mode)}
+                                        />
                                     ))}
                                 </div>
                             ) : (
@@ -300,3 +247,133 @@ export const GroupsTab: React.FC<TournamentAdminTabProps> = (props) => {
             </>
         );
 };
+
+// ─── GroupCard with per-group room credentials ────────────────────────
+interface GroupCardProps {
+    group: import('../../../../shared/types/types').TournamentGroup;
+    onDelete: (groupId: string) => void;
+    onSetRoom: (groupId: string, field: 'roomId' | 'roomPass', value: string) => void;
+    onAddMatch: () => void;
+    onManageTeams: () => void;
+    onGenerateMatches: (mode: 'round-robin' | 'single') => void;
+}
+
+function GroupCard({ group, onDelete, onSetRoom, onAddMatch, onManageTeams, onGenerateMatches }: GroupCardProps) {
+    const [showRoom, setShowRoom] = useState(false);
+    const [roomId, setRoomId] = useState(group.roomId || '');
+    const [roomPass, setRoomPass] = useState(group.roomPass || '');
+
+    // Sync local state when group updates from Firestore
+    React.useEffect(() => {
+        setRoomId(group.roomId || '');
+        setRoomPass(group.roomPass || '');
+    }, [group.roomId, group.roomPass]);
+
+    const saveRoom = () => {
+        onSetRoom(group.id, 'roomId', roomId);
+        onSetRoom(group.id, 'roomPass', roomPass);
+        setShowRoom(false);
+    };
+
+    return (
+        <div className="bg-surface border border-gray-800 rounded-2xl p-4 sm:p-5 hover:border-brand-500/20 transition-all shadow-xl">
+            <div className="flex justify-between items-start mb-4">
+                <div>
+                    <h3 className="text-md font-black text-white uppercase tracking-tight">{group.name}</h3>
+                    <div className="flex items-center gap-2 text-[10px] text-gray-500 mt-1 font-bold">
+                        <Users className="w-3 h-3 text-brand-500" /> {group.teams.length} / {group.teamLimit} TEAMS
+                    </div>
+                </div>
+                <button 
+                    onClick={() => onDelete(group.id)}
+                    className="p-2 text-gray-600 hover:text-red-500 transition-colors bg-dark rounded-lg border border-gray-800"
+                >
+                    <Trash2 className="w-3 h-3" />
+                </button>
+            </div>
+
+            <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-[10px] bg-dark p-2 rounded-lg border border-gray-800 font-bold">
+                    <span className="text-gray-500 flex items-center gap-1 uppercase">Access</span>
+                    <span className={group.isPublic ? 'text-green-500' : 'text-yellow-500'}>
+                        {group.isPublic ? 'PUBLIC' : 'PRIVATE'}
+                    </span>
+                </div>
+                {group.passCode && (
+                    <div className="flex items-center justify-between text-[10px] bg-dark p-2 rounded-lg border border-gray-800 font-bold">
+                        <span className="text-gray-500 flex items-center gap-1 uppercase">Passcode</span>
+                        <span className="text-white font-mono">{group.passCode}</span>
+                    </div>
+                )}
+
+                {/* Room credentials status / editor */}
+                <div className="bg-dark p-2 rounded-lg border border-gray-800">
+                    <button
+                        onClick={() => setShowRoom(s => !s)}
+                        className="flex items-center justify-between w-full text-[10px] font-bold uppercase"
+                    >
+                        <span className="text-gray-500 flex items-center gap-1">
+                            <Key className="w-3 h-3 text-brand-500" /> Room
+                        </span>
+                        <span className={group.roomId ? 'text-green-500' : 'text-gray-600'}>
+                            {group.roomId ? 'SET ✓' : 'NOT SET'}
+                        </span>
+                    </button>
+
+                    {showRoom && (
+                        <div className="mt-2 space-y-2">
+                            <input
+                                type="text"
+                                value={roomId}
+                                onChange={e => setRoomId(e.target.value)}
+                                placeholder="Room ID"
+                                className="w-full bg-black border border-gray-800 text-white rounded-lg p-2 text-xs font-mono focus:border-brand-500 outline-none"
+                            />
+                            <input
+                                type="text"
+                                value={roomPass}
+                                onChange={e => setRoomPass(e.target.value)}
+                                placeholder="Password"
+                                className="w-full bg-black border border-gray-800 text-white rounded-lg p-2 text-xs font-mono focus:border-brand-500 outline-none"
+                            />
+                            <button
+                                onClick={saveRoom}
+                                className="w-full bg-brand-600 hover:bg-brand-500 text-white py-2 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-1.5 transition"
+                            >
+                                <Save className="w-3 h-3" /> Save Room
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            <div className="mt-4 pt-4 border-t border-gray-800 flex flex-wrap gap-2">
+                <button 
+                    onClick={onAddMatch}
+                    className="flex-1 min-w-[80px] min-h-[44px] flex items-center justify-center bg-purple-600/10 hover:bg-purple-600/20 text-purple-500 py-2.5 rounded-lg text-[10px] sm:text-[10px] font-black uppercase tracking-widest transition-all border border-purple-500/10"
+                >
+                    Match
+                </button>
+                <button 
+                    onClick={onManageTeams}
+                    className="flex-1 min-w-[80px] min-h-[44px] flex items-center justify-center bg-brand-600/10 hover:bg-brand-600/20 text-brand-500 py-2.5 rounded-lg text-[10px] sm:text-[10px] font-black uppercase tracking-widest transition-all border border-brand-500/10"
+                >
+                    Teams
+                </button>
+                <button 
+                    onClick={() => {
+                        if (window.confirm("Generate a single Match for ALL teams in this group? (BR Style)")) {
+                            onGenerateMatches('single');
+                        } else if (window.confirm("Generate Round Robin matches? (1v1 for every pair)")) {
+                            onGenerateMatches('round-robin');
+                        }
+                    }}
+                    disabled={group.teams.length < 2}
+                    className="w-full min-h-[44px] flex items-center justify-center bg-blue-600/10 hover:bg-blue-600/20 text-blue-500 disabled:opacity-50 disabled:cursor-not-allowed py-2.5 rounded-lg text-[10px] sm:text-[10px] font-black uppercase tracking-widest transition-all border border-blue-500/10"
+                >
+                    GENERATE MATCHES
+                </button>
+            </div>
+        </div>
+    );
+}

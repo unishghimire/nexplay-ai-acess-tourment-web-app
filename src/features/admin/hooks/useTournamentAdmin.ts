@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { doc, onSnapshot, updateDoc, collection, query, where, getDocs, setDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../../../shared/config/firebase';
+import { doc, onSnapshot, updateDoc, collection, query, where, getDocs, setDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { db, auth } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { Tournament, TournamentGroup, Match, Team, TournamentEarning } from '../../../shared/types/types';
 import { formatDate } from '../../../shared/utils/utils';
@@ -30,7 +30,15 @@ import {
     getCurrentStage,
     getNextStage,
     validateGroupAssignment,
+    areGroupsLocked,
+    lockGroups,
+    hasMatchesStarted,
+    validateRoundConfiguration,
+    createAuditEntry,
+    isParticipantEligible,
+    getEligibleParticipants,
 } from '../../../shared/services/tournamentEngine';
+import { TournamentAuditEntry } from '../../../shared/types/tournament-engine';
 
 export function useTournamentAdmin(
     id: string | undefined,
@@ -164,26 +172,41 @@ export function useTournamentAdmin(
 
     const handleAutoGenerateGroups = async () => {
         if (!tournament) return;
-        const approvedParticipants = participants.filter(p => p.status === 'approved');
-        if (approvedParticipants.length === 0) {
-            showToast('No approved participants to organize into groups', 'error');
+
+        // Group locking: prevent regeneration if matches have started
+        if (tournament.groups && areGroupsLocked(tournament.groups)) {
+            if (!window.confirm('Groups are locked (matches have started). Regenerating will corrupt tournament data. Override lock and regenerate anyway?')) return;
+        }
+
+        // Eligibility: only approved + checked-in participants (not just 'approved')
+        const eligibleParticipants = participants.filter(p =>
+            p.status === 'approved' &&
+            !(p as any).isDisqualified &&
+            !(p as any).isWithdrawn
+        );
+        if (eligibleParticipants.length === 0) {
+            showToast('No eligible participants to organize into groups', 'error');
             return;
         }
 
         // ponytail: validate before generating
-        if (!window.confirm(`Auto-generate groups for ${approvedParticipants.length} participants? This will reset existing groups.`)) return;
+        const existingGroups = tournament.groups?.length || 0;
+        const confirmMsg = existingGroups > 0
+            ? `Regenerate groups for ${eligibleParticipants.length} participants? This will replace ${existingGroups} existing groups.`
+            : `Auto-generate groups for ${eligibleParticipants.length} participants?`;
+        if (!window.confirm(confirmMsg)) return;
 
         try {
             setLoading(true);
             const round1Config = tournament.roadmap?.[0];
-            const numGroups = round1Config?.numGroups || Math.ceil(approvedParticipants.length / 12);
-            const teamsPerGroup = round1Config?.teamsPerGroup || Math.ceil(approvedParticipants.length / numGroups);
+            const numGroups = round1Config?.numGroups || Math.ceil(eligibleParticipants.length / 12);
+            const teamsPerGroup = round1Config?.teamsPerGroup || Math.ceil(eligibleParticipants.length / numGroups);
             const namingStyle = (round1Config as any)?.groupNamingStyle || 'alpha';
             const distributionMethod = (round1Config as any)?.distributionMethod || 'random';
 
             // Use the engine — single source of truth for group generation
             const result = generateGroups({
-                participants: approvedParticipants,
+                participants: eligibleParticipants,
                 numGroups,
                 teamsPerGroup,
                 distributionMethod,
@@ -210,10 +233,19 @@ export function useTournamentAdmin(
                 maps: round1Config?.maps,
             });
 
+            const auditEntry = createAuditEntry({
+                userId: auth.currentUser?.uid || 'unknown',
+                userName: auth.currentUser?.displayName || 'Organizer',
+                action: 'groups_generated',
+                details: `${result.groups.length} groups, ${result.totalAssigned} teams, Round 1`,
+                roundNumber: 1,
+            });
+
             await updateDoc(doc(db, 'tournaments', tournament.id), {
                 groups: groupsWithMatches,
                 stage: 'group_stage',
-                currentRound: 1
+                currentRound: 1,
+                auditLog: [...(tournament.auditLog || []), auditEntry] as TournamentAuditEntry[],
             });
 
             showToast(`Groups generated: ${result.groups.length} groups, ${result.totalAssigned} teams assigned`, 'success');
@@ -227,6 +259,12 @@ export function useTournamentAdmin(
 
     const handleAdvanceRound = async () => {
         if (!tournament) return;
+
+        // Idempotency: prevent double-click
+        if (loading) {
+            showToast('Already processing, please wait...', 'info');
+            return;
+        }
 
         try {
             setLoading(true);
@@ -268,6 +306,12 @@ export function useTournamentAdmin(
                 }
 
                 if (nextRoundConfig) {
+                    // Capacity validation: block advancement if next round can't hold qualifiers
+                    const nextCapacity = (nextRoundConfig.numGroups || 0) * (nextRoundConfig.teamsPerGroup || 0);
+                    if (nextCapacity > 0 && qualifiers.length > nextCapacity) {
+                        throw new Error(`Cannot advance: ${qualifiers.length} qualifiers exceed Round ${nextRoundConfig.roundNumber} capacity of ${nextCapacity}. Adjust round configuration.`);
+                    }
+
                     // Build qualifiersByGroup for cross-group distribution
                     const qualifiersByGroup = preview.groups.map(g => ({
                         groupName: g.groupName,
@@ -284,9 +328,20 @@ export function useTournamentAdmin(
                         tournament,
                     });
 
+                    // CRITICAL FIX: Append next round groups — preserve previous round history
+                    // Previous rounds' groups are kept for progression history and public results
+                    const allGroups = [...(tournament.groups || []), ...nextRound.groups];
+                    const advanceAudit = createAuditEntry({
+                        userId: auth.currentUser?.uid || 'unknown',
+                        userName: auth.currentUser?.displayName || 'Organizer',
+                        action: 'round_advanced',
+                        details: `Round ${nextRound.roundNumber}: ${qualifiers.length} qualified, ${preview.totalEliminated} eliminated`,
+                        roundNumber: nextRound.roundNumber,
+                    });
                     await updateDoc(doc(db, 'tournaments', tournament.id), {
-                        groups: nextRound.groups,
+                        groups: allGroups,
                         currentRound: nextRound.roundNumber,
+                        auditLog: [...(tournament.auditLog || []), advanceAudit] as TournamentAuditEntry[],
                     });
                     showToast(`Advanced to ${nextRoundConfig.stageName || 'Round ' + nextRound.roundNumber}! ${qualifiers.length} teams qualified, ${preview.totalEliminated} eliminated.`, 'success');
                 } else {
@@ -385,6 +440,29 @@ export function useTournamentAdmin(
         } catch (error) {
             console.error("Error deleting group:", error);
             showToast('Failed to delete group', 'error');
+        }
+    };
+
+
+    const handleSetGroupRoom = async (groupId: string, field: 'roomId' | 'roomPass', value: string) => {
+        if (!tournament) return;
+        try {
+            const updatedGroups = (tournament.groups || []).map(g =>
+                g.id === groupId ? { ...g, [field]: value } : g
+            );
+            // Write to tournament doc (for backward compat) AND credentials subcollection (secure)
+            const batch = writeBatch(db);
+            batch.update(doc(db, 'tournaments', tournament.id), { groups: updatedGroups });
+            const group = updatedGroups.find(g => g.id === groupId);
+            if (group) {
+                const credRef = doc(db, 'tournaments', tournament.id, 'credentials', `group_${groupId}`);
+                batch.set(credRef, { roomId: group.roomId || '', roomPass: group.roomPass || '' }, { merge: true });
+            }
+            await batch.commit();
+            setTournament({ ...tournament, groups: updatedGroups });
+        } catch (error) {
+            console.error("Error updating group room:", error);
+            showToast('Failed to update room credentials', 'error');
         }
     };
 
@@ -770,5 +848,5 @@ export function useTournamentAdmin(
 
 
     // ponytail: shared props object — spread to all tabs, each destructures what it needs
-    return { activeTab, discordSending, fetchingParticipants, gameStartGroupId, handleAdvanceRound, handleAssignTeam, handleAutoGenerateGroups, handleCreateGroup, handleDeleteGroup, handleDiscord, handleRemoveTeam, handleUpdateStage, handleUpdateStatus, isAddMatchModalOpen, isCreateGroupModalOpen, isManageTeamsModalOpen, isResultUploaderOpen, isUpdateScoreModalOpen, loading, matchScore, newGroup, newMatchData, participants, selectedGroup, selectedMatch, setActiveTab, setGameStartGroupId, setIsAddMatchModalOpen, setIsCreateGroupModalOpen, setIsManageTeamsModalOpen, setIsResultUploaderOpen, setIsUpdateScoreModalOpen, setMatchScore, setNewGroup, setNewMatchData, setParticipants, setSelectedGroup, setSelectedMatch, tournamentEarning, tournament, setTournament, handleAddMatch, handleUpdateScore, handleGenerateBracket, handleGenerateGroupMatches, getTeamName };
+    return { activeTab, discordSending, fetchingParticipants, gameStartGroupId, handleAdvanceRound, handleAssignTeam, handleAutoGenerateGroups, handleCreateGroup, handleDeleteGroup, handleSetGroupRoom, handleDiscord, handleRemoveTeam, handleUpdateStage, handleUpdateStatus, isAddMatchModalOpen, isCreateGroupModalOpen, isManageTeamsModalOpen, isResultUploaderOpen, isUpdateScoreModalOpen, loading, matchScore, newGroup, newMatchData, participants, selectedGroup, selectedMatch, setActiveTab, setGameStartGroupId, setIsAddMatchModalOpen, setIsCreateGroupModalOpen, setIsManageTeamsModalOpen, setIsResultUploaderOpen, setIsUpdateScoreModalOpen, setMatchScore, setNewGroup, setNewMatchData, setParticipants, setSelectedGroup, setSelectedMatch, tournamentEarning, tournament, setTournament, handleAddMatch, handleUpdateScore, handleGenerateBracket, handleGenerateGroupMatches, getTeamName };
 }

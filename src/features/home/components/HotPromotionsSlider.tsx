@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Star, Trophy, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
 import { formatGameName } from '../../../shared/utils/utils';
@@ -28,7 +28,6 @@ const HotPromotionsSlider: React.FC<HotPromotionsSliderProps> = ({ slides, varia
     const [touchStart, setTouchStart] = useState<number | null>(null);
     const [touchEnd, setTouchEnd] = useState<number | null>(null);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
-    const navigate = useNavigate();
 
     const minSwipeDistance = 50;
     const isHero = variant === 'hero' || (variant === undefined && slides.length > 0 && 'imageUrl' in slides[0]);
@@ -139,12 +138,12 @@ const HotPromotionsSlider: React.FC<HotPromotionsSliderProps> = ({ slides, varia
                                 transition={{ delay: 0.4 }}
                                 className="flex items-center gap-4 pt-2 md:pt-4"
                             >
-                                <button 
-                                    onClick={() => navigate(currentSlide.link)}
+                                <Link 
+                                    to={currentSlide.link}
                                     className="bg-brand-600 hover:bg-brand-500 text-white px-6 md:px-10 py-3 md:py-4 rounded-xl font-black uppercase tracking-widest transition-all hover:scale-105 shadow-xl shadow-brand-600/20 flex items-center gap-2 text-xs md:text-sm"
                                 >
                                     {currentSlide.buttonText || 'Explore'} <ExternalLink className="w-4 h-4" />
-                                </button>
+                                </Link>
                             </motion.div>
                         </div>
                     </motion.div>
@@ -278,17 +277,17 @@ const HotPromotionsSlider: React.FC<HotPromotionsSliderProps> = ({ slides, varia
                                         </div>
                                     )}
                                     
-                                    <button 
-                                        onClick={() => navigate(slide.status === 'COMPLETED' ? `${slide.link}?tab=results` : slide.link)}
+                                    <Link 
+                                        to={slide.status === 'COMPLETED' ? `${slide.link}?tab=results` : slide.link}
                                         aria-label={slide.status === 'COMPLETED' ? 'View Results' : 'Join Now'}
                                         className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${
                                             slide.status === 'COMPLETED' 
                                             ? 'bg-surface hover:bg-surface text-white' 
                                             : 'bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white shadow-lg shadow-brand-500/25'
-                                        } sm:w-auto w-full sm:ml-4 text-center`}
+                                        } sm:w-auto w-full sm:ml-4 text-center inline-flex items-center justify-center`}
                                     >
                                         {slide.status === 'COMPLETED' ? 'VIEW RESULTS' : 'JOIN NOW'}
-                                    </button>
+                                    </Link>
                                 </div>
                             </div>
 

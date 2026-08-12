@@ -1,3 +1,4 @@
+import { sanitizeUrl } from '../../../../shared/utils/utils';
 import React from 'react';
 import {Search, Trash, Image as ImageIcon, ExternalLink, RefreshCw} from 'lucide-react';
 import {MediaCategory} from '../../../../shared/services/mediaService';
@@ -150,7 +151,7 @@ export const MediaTab: React.FC<AdminPanelTabProps> = (props) => {
                                                 </div>
                                                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                                                     <a
-                                                        href={item.url}
+                                                        href={sanitizeUrl(item.url)}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         className="p-2 rounded-lg bg-dark text-white hover:bg-amber-500 hover:text-black transition shadow"

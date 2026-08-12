@@ -37,6 +37,7 @@ export interface TournamentAdminTabProps {
     handleAutoGenerateGroups: () => void;
     handleCreateGroup: () => void;
     handleDeleteGroup: (groupId: string) => void;
+    handleSetGroupRoom: (groupId: string, field: 'roomId' | 'roomPass', value: string) => void;
     handleAssignTeam: (participantId: string) => void;
     handleRemoveTeam: (teamId: string) => void;
     handleDiscord: (action: string) => void;

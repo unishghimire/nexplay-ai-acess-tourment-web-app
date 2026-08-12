@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { Game } from '../../../shared/types/types';
@@ -112,13 +112,16 @@ const GameModesBrowser: React.FC = () => {
                         const modeLabel = formatGameModeLabel(mode);
 
                         return (
-                        <motion.button 
+                        <Link
                             key={idx}
+                            to={`/tournaments?game=${encodeURIComponent(game.name)}&mode=${encodeURIComponent(mode)}`}
+                            className="block w-full h-full"
+                        >
+                        <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: idx * 0.1 }}
                             whileHover={{ y: -8 }}
-                            onClick={() => navigate(`/tournaments?game=${encodeURIComponent(game.name)}&mode=${encodeURIComponent(mode)}`)}
                             className="relative rounded-3xl overflow-hidden group border border-gray-800 bg-card/50 text-left w-full h-full"
                         >
                             <div className="relative h-48 w-full overflow-hidden">
@@ -137,7 +140,8 @@ const GameModesBrowser: React.FC = () => {
                                     </p>
                                 </div>
                             </div>
-                        </motion.button>
+                        </motion.div>
+                        </Link>
                         );
                     })
                 ) : (

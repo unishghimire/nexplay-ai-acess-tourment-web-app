@@ -1,44 +1,87 @@
 // ═══════════════════════════════════════════════════════════════
-// TOURNAMENT ROADMAP — Dynamic, data-driven, responsive
-// Uses computeRoadmap() from tournamentEngine — no hardcoded stages.
-// ponytail: derive from state, never store derived data.
+// TOURNAMENT ROADMAP — Simple 4-stage visual: Register → Groups → Play → Finals
+// ponytail: collapse 8-12 micro-stages into 4 that users actually understand.
 // ═══════════════════════════════════════════════════════════════
 
 import { Tournament } from '../../../shared/types/types';
-import { computeRoadmap, computeTournamentProgress, getCurrentStage, getNextStage } from '../../../shared/services/tournamentEngine';
+import { computeTournamentProgress } from '../../../shared/services/tournamentEngine';
 
 interface Props {
     tournament: Tournament;
     compact?: boolean;
 }
 
+// Simple stage type — no imports needed
+type SimpleStatus = 'done' | 'active' | 'todo';
+
+interface SimpleStage {
+    label: string;
+    sublabel?: string;
+    status: SimpleStatus;
+}
+
 export function TournamentRoadmap({ tournament, compact = false }: Props) {
-    const stages = computeRoadmap(tournament);
     const progress = computeTournamentProgress(tournament);
-    const currentStage = getCurrentStage(tournament);
-    const nextStage = getNextStage(tournament);
 
-    if (stages.length === 0) {
-        return (
-            <div className="text-center py-8 text-gray-500 text-sm">
-                No roadmap configured yet.
-            </div>
-        );
-    }
+    // Derive 4 simple stages from tournament state
+    const stage = (tournament.stage as string) || '';
+    const hasGroups = (tournament.groups || []).length > 0;
+    const isCompleted = tournament.status === 'completed';
+    const currentRound = tournament.currentRound || 0;
+    const roadmap = tournament.roadmap || [];
+    const totalRounds = roadmap.length;
 
-    const statusConfig = {
-        completed: { dot: 'bg-emerald-500', text: 'text-emerald-400', label: 'Completed', icon: '✓' },
-        current: { dot: 'bg-brand-500', text: 'text-brand-400', label: 'Current', icon: '●' },
-        active: { dot: 'bg-brand-500', text: 'text-brand-400', label: 'Active', icon: '●' },
-        upcoming: { dot: 'bg-gray-600', text: 'text-gray-400', label: 'Upcoming', icon: '○' },
-        pending: { dot: 'bg-gray-700', text: 'text-gray-500', label: 'Pending', icon: '○' },
+    // Count completed matches across all groups
+    const allGroups = tournament.groups || [];
+    const totalMatches = allGroups.reduce((sum, g) => sum + g.matches.length, 0);
+    const completedMatches = allGroups.reduce(
+        (sum, g) => sum + g.matches.filter(m => m.status === 'completed').length, 0
+    );
+
+    const stages: SimpleStage[] = [
+        {
+            label: 'Register',
+            sublabel: `${tournament.currentPlayers || 0} players`,
+            status: stage === 'registration' || (!stage && tournament.status === 'upcoming')
+                ? 'active'
+                : stage && stage !== 'registration' ? 'done' : 'todo',
+        },
+        {
+            label: 'Groups',
+            sublabel: hasGroups ? `${allGroups.length} groups` : undefined,
+            status: hasGroups && (stage === 'group_stage' || stage === 'knockout' || currentRound > 0)
+                ? 'done'
+                : stage === 'group_stage' || (hasGroups && currentRound === 0)
+                    ? 'active'
+                    : 'todo',
+        },
+        {
+            label: totalRounds > 1 ? `Play (${currentRound}/${totalRounds})` : 'Play',
+            sublabel: totalMatches > 0 ? `${completedMatches}/${totalMatches} matches` : undefined,
+            status: isCompleted
+                ? 'done'
+                : currentRound > 0 || stage === 'knockout'
+                    ? 'active'
+                    : 'todo',
+        },
+        {
+            label: 'Finals',
+            sublabel: isCompleted ? 'Champion crowned' : undefined,
+            status: isCompleted ? 'done' : 'todo',
+        },
+    ];
+
+    const statusStyle: Record<SimpleStatus, { dot: string; ring: string; text: string; bg: string; line: string }> = {
+        done:   { dot: 'bg-emerald-500', ring: 'border-emerald-500/40', text: 'text-emerald-400', bg: 'bg-card', line: 'bg-emerald-500' },
+        active: { dot: 'bg-brand-500 animate-pulse', ring: 'border-brand-500/60', text: 'text-brand-400', bg: 'bg-card', line: 'bg-brand-500' },
+        todo:   { dot: 'bg-gray-700', ring: 'border-gray-800', text: 'text-gray-500', bg: 'bg-card', line: 'bg-gray-800' },
     };
 
     return (
         <div className="w-full">
-            {/* Progress header */}
+            {/* Header with progress bar */}
             <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-bold text-white uppercase tracking-wider">Tournament Roadmap</h3>
+                <h3 className="text-sm font-bold text-white uppercase tracking-wider">Roadmap</h3>
                 <div className="flex items-center gap-2">
                     <div className="w-24 h-1.5 bg-gray-800 rounded-full overflow-hidden">
                         <div className="h-full bg-brand-500 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
@@ -47,92 +90,41 @@ export function TournamentRoadmap({ tournament, compact = false }: Props) {
                 </div>
             </div>
 
-            {/* Mobile: vertical timeline / Desktop: horizontal flow */}
-            <div className="flex flex-col lg:flex-row lg:items-start gap-2 lg:gap-1 overflow-x-auto">
-                {stages.map((stage, idx) => {
-                    const config = statusConfig[stage.status] || statusConfig.pending;
-                    const isLast = idx === stages.length - 1;
+            {/* 4-stage flow — horizontal on desktop, vertical on mobile */}
+            <div className="flex flex-col sm:flex-row sm:items-stretch gap-1 sm:gap-0">
+                {stages.map((s, i) => {
+                    const style = statusStyle[s.status];
+                    const isLast = i === stages.length - 1;
 
                     return (
-                        <div key={idx} className="flex lg:flex-col items-start lg:items-center gap-2 lg:gap-1 min-w-0 lg:flex-1">
-                            {/* Connector line — desktop only */}
-                            {idx > 0 && (
-                                <div className={`hidden lg:block h-8 w-0.5 ${stage.status === 'completed' || stage.status === 'current' ? 'bg-brand-500' : 'bg-gray-800'}`} />
-                            )}
-
-                            {/* Stage card */}
-                            <div className={`flex-1 lg:w-full rounded-lg border p-2.5 lg:p-3 ${
-                                stage.status === 'current' || stage.status === 'active'
-                                    ? 'bg-card border-brand-500/50'
-                                    : stage.status === 'completed'
-                                        ? 'bg-card border-emerald-500/30'
-                                        : 'bg-card border-gray-800'
-                            }`}>
+                        <div key={i} className="flex items-center sm:flex-1">
+                            {/* Stage pill */}
+                            <div className={`flex-1 rounded-lg border ${style.ring} ${style.bg} px-3 py-2.5 transition-all`}>
                                 <div className="flex items-center gap-2">
-                                    <span className={`text-xs ${config.text}`}>{config.icon}</span>
-                                    <span className={`text-xs font-bold truncate ${stage.status === 'completed' ? 'text-gray-400' : 'text-white'}`}>
-                                        {stage.label}
-                                    </span>
-                                </div>
-
-                                {!compact && (
-                                    <div className="mt-1.5 space-y-0.5">
-                                        {/* Stats — only show if they have real data */}
-                                        {stage.participantCount !== undefined && stage.participantCount > 0 && (
-                                            <p className="text-[10px] text-gray-500">{stage.participantCount} participants</p>
-                                        )}
-                                        {stage.groupCount !== undefined && stage.groupCount > 0 && (
-                                            <p className="text-[10px] text-gray-500">{stage.groupCount} groups</p>
-                                        )}
-                                        {stage.matchCount !== undefined && stage.matchCount > 0 && (
-                                            <p className="text-[10px] text-gray-500">{stage.completedMatches || 0}/{stage.matchCount} matches</p>
-                                        )}
-                                        {stage.qualifiedCount !== undefined && stage.qualifiedCount > 0 && (
-                                            <p className="text-[10px] text-emerald-500">{stage.qualifiedCount} qualified</p>
-                                        )}
-                                        {stage.progressPercent > 0 && stage.status !== 'completed' && (
-                                            <div className="w-full h-1 bg-gray-800 rounded-full overflow-hidden mt-1">
-                                                <div className="h-full bg-brand-500 rounded-full" style={{ width: `${stage.progressPercent}%` }} />
-                                            </div>
+                                    <span className={`w-2 h-2 rounded-full shrink-0 ${style.dot}`} />
+                                    <div className="min-w-0">
+                                        <p className={`text-xs font-bold truncate ${s.status === 'todo' ? 'text-gray-500' : 'text-white'}`}>
+                                            {s.label}
+                                        </p>
+                                        {s.sublabel && !compact && (
+                                            <p className={`text-[10px] truncate ${style.text}`}>{s.sublabel}</p>
                                         )}
                                     </div>
-                                )}
-
-                                <p className={`text-[10px] mt-1 ${config.text}`}>{config.label}</p>
+                                </div>
                             </div>
 
-                            {/* Connector arrow — mobile only */}
+                            {/* Connector line — desktop only */}
                             {!isLast && (
-                                <div className="lg:hidden text-gray-700 text-xs pl-3">↓</div>
+                                <div className={`hidden sm:block h-0.5 w-3 xl:w-5 shrink-0 ${style.line}`} />
+                            )}
+                            {/* Arrow — mobile only */}
+                            {!isLast && (
+                                <div className="sm:hidden text-gray-700 text-[10px] px-2 py-1">↓</div>
                             )}
                         </div>
                     );
                 })}
             </div>
-
-            {/* Current + Next summary */}
-            {!compact && (currentStage || nextStage) && (
-                <div className="mt-4 flex flex-col sm:flex-row gap-3">
-                    {currentStage && (
-                        <div className="flex-1 rounded-lg bg-card border border-brand-500/30 p-3">
-                            <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Current Stage</p>
-                            <p className="text-sm font-bold text-white">{currentStage.label}</p>
-                            <p className="text-xs text-gray-400">
-                                {currentStage.completedMatches !== undefined && currentStage.matchCount
-                                    ? `${currentStage.completedMatches}/${currentStage.matchCount} matches`
-                                    : currentStage.status}
-                            </p>
-                        </div>
-                    )}
-                    {nextStage && (
-                        <div className="flex-1 rounded-lg bg-card border border-gray-800 p-3">
-                            <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Next Stage</p>
-                            <p className="text-sm font-bold text-gray-300">{nextStage.label}</p>
-                            <p className="text-xs text-gray-500">{nextStage.status}</p>
-                        </div>
-                    )}
-                </div>
-            )}
         </div>
     );
 }

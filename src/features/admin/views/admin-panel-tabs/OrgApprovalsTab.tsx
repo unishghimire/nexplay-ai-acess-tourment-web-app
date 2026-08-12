@@ -1,3 +1,4 @@
+import { sanitizeUrl } from '../../../../shared/utils/utils';
 import React from 'react';
 import {Check, ExternalLink, CheckCircle} from 'lucide-react';
 
@@ -35,7 +36,7 @@ export const OrgApprovalsTab: React.FC<AdminPanelTabProps> = (props) => {
                                     </div>
                                     <div className="bg-dark/40 p-3 rounded-xl border border-slate-800">
                                         <div className="text-slate-400 uppercase font-bold text-[10px] mb-1">Proof Link</div>
-                                        <a href={app.proofLink} target="_blank" rel="noreferrer" className="text-brand-400 hover:text-brand-300 flex items-center gap-2 truncate">
+                                        <a href={sanitizeUrl(app.proofLink)} target="_blank" rel="noreferrer" className="text-brand-400 hover:text-brand-300 flex items-center gap-2 truncate">
                                             <ExternalLink className="w-3 h-3" /> {app.proofLink}
                                         </a>
                                     </div>

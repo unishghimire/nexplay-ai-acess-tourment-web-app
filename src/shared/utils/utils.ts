@@ -113,3 +113,22 @@ export const formatGameName = (name: string) => {
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
 };
+
+/**
+ * Sanitizes a user-supplied URL to prevent javascript: / data: protocol injection.
+ * Only allows http, https, and relative URLs.
+ * Returns '#' for anything dangerous or empty.
+ */
+export function sanitizeUrl(url: string | undefined | null): string {
+    if (!url) return '#';
+    const trimmed = url.trim();
+    // Allow relative URLs
+    if (trimmed.startsWith('/') && !trimmed.startsWith('//')) return trimmed;
+    try {
+        const parsed = new URL(trimmed);
+        if (parsed.protocol === 'http:' || parsed.protocol === 'https:') return trimmed;
+        return '#';
+    } catch {
+        return '#';
+    }
+}

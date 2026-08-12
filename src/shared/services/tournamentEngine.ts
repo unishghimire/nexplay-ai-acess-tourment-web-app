@@ -549,6 +549,96 @@ export function createNextRound(params: {
     return { groups: groupsWithMatches, roundNumber };
 }
 
+
+/**
+ * Check if any match in the groups has started (LIVE or COMPLETED).
+ * Groups with started matches cannot be regenerated without explicit confirmation.
+ */
+export function hasMatchesStarted(groups: TournamentGroup[]): boolean {
+    return groups.some(g => g.matches.some(m => m.status === 'live' || m.status === 'completed'));
+}
+
+/**
+ * Check if groups are locked (either explicitly locked or matches have started).
+ */
+export function areGroupsLocked(groups: TournamentGroup[]): boolean {
+    return groups.some(g => (g as any).status === 'locked') || hasMatchesStarted(groups);
+}
+
+/**
+ * Lock groups — returns groups with locked status.
+ * Once locked, groups cannot be regenerated without admin override.
+ */
+export function lockGroups(groups: TournamentGroup[]): TournamentGroup[] {
+    return groups.map(g => ({ ...g, status: 'locked' as any }));
+}
+
+// ─── Check-in System ────────────────────────────────────────────
+
+/**
+ * Check if a participant is eligible for group assignment.
+ * Must be: approved + checked-in (if check-in required) + not disqualified/withdrawn.
+ */
+export function isParticipantEligible(
+    participant: { status?: string; checkedIn?: boolean; isDisqualified?: boolean; isWithdrawn?: boolean; paymentStatus?: string },
+    requireCheckIn: boolean = false,
+): boolean {
+    if (participant.status !== 'approved') return false;
+    if (participant.isDisqualified) return false;
+    if (participant.isWithdrawn) return false;
+    if (participant.paymentStatus === 'failed') return false;
+    if (requireCheckIn && !participant.checkedIn) return false;
+    return true;
+}
+
+/**
+ * Get count of eligible participants for group assignment.
+ */
+export function getEligibleParticipants(
+    participants: any[],
+    requireCheckIn: boolean = false,
+): any[] {
+    return participants.filter(p => isParticipantEligible(p, requireCheckIn));
+}
+
+/**
+ * Get check-in stats for the roadmap.
+ */
+export function getCheckInStats(participants: any[]): { total: number; checkedIn: number; pending: number } {
+    const approved = participants.filter(p => p.status === 'approved');
+    const checkedIn = approved.filter(p => p.checkedIn).length;
+    return {
+        total: approved.length,
+        checkedIn,
+        pending: approved.length - checkedIn,
+    };
+}
+
+// ─── Audit Log ────────────────────────────────────────────────
+
+/**
+ * Create an audit log entry for a tournament operation.
+ * Callers should append this to a tournament's auditLog array.
+ */
+export function createAuditEntry(params: {
+    userId: string;
+    userName: string;
+    action: string;
+    details?: string;
+    roundNumber?: number;
+    targetId?: string;
+}): TournamentAuditEntry {
+    return {
+        timestamp: new Date() as any,
+        userId: params.userId,
+        userName: params.userName,
+        action: params.action,
+        details: params.details,
+        roundNumber: params.roundNumber,
+        targetId: params.targetId,
+    };
+}
+
 // ─── Roadmap Computation ───────────────────────────────────────
 
 /**
@@ -572,12 +662,16 @@ export function computeRoadmap(tournament: Tournament): RoadmapStageInfo[] {
         progressPercent: 0,
     });
 
-    // Check-in stage
+    // Check-in stage — derived from tournament stage progression
+    // Check-in is 'completed' once we've moved past registration to group_stage
+    const isPastCheckIn = (tournament.stage as string) === 'group_stage' || (tournament.stage as string) === 'knockout';
     stages.push({
         label: 'Check-in',
         type: 'check_in',
-        status: 'pending', // ponytail: no check-in system yet — always pending until implemented
-        progressPercent: 0,
+        status: isPastCheckIn ? 'completed'
+            : (tournament.stage as string) === 'registration' && tournament.status === 'live' ? 'active'
+            : 'pending',
+        progressPercent: isPastCheckIn ? 100 : 0,
     });
 
     // Group allocation

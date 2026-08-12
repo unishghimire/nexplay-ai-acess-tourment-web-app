@@ -4,7 +4,7 @@ import { collection, query, getDocs, limit } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { Tournament } from '../../../shared/types/types';
 import { Trophy, Calendar, Gamepad2, ChevronRight, Search } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { formatCurrency, formatDate, formatGameName, toDateSafe } from '../../../shared/utils/utils';
 
 const Results: React.FC = () => {
@@ -188,10 +188,10 @@ const Results: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
                 {filteredResults.length > 0 ? (
                     filteredResults.map(t => (
-                        <div 
+                        <Link
                             key={t.id} 
-                            onClick={() => navigate(`/tournaments/${t.id}`)}
-                            className="bg-surface rounded-3xl border border-gray-800 hover:border-brand-500/30 transition-all cursor-pointer group overflow-hidden"
+                            to={`/tournaments/${t.id}`}
+                            className="bg-surface rounded-3xl border border-gray-800 hover:border-brand-500/30 transition-all cursor-pointer group overflow-hidden block"
                         >
                             <div className="flex flex-col sm:flex-row h-full">
                                 <div className="sm:w-48 h-48 sm:h-auto shrink-0 bg-dark overflow-hidden relative">
@@ -260,7 +260,7 @@ const Results: React.FC = () => {
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </Link>
                     ))
                 ) : (
                     <div className="col-span-2 py-32 text-center bg-card/30 rounded-[3rem] border border-dashed border-gray-800">
