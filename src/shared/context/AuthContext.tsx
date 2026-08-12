@@ -20,6 +20,10 @@ const AuthContext = createContext<AuthContextType>({
 
 export const useAuth = () => useContext(AuthContext);
 
+// ponytail: 8s timeout — if onAuthStateChanged never fires (network issue, Firebase down),
+// unblock the UI and render as logged-out. Prevents infinite loading screen.
+const AUTH_TIMEOUT_MS = 8000;
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<{ uid: string; email: string; username: string; role: string } | null>(null);
     const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -42,6 +46,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     useEffect(() => {
+        let settled = false;
+
+        const markDone = () => {
+            if (!settled) {
+                settled = true;
+                setLoading(false);
+            }
+        };
+
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             try {
                 if (firebaseUser) {
@@ -112,11 +125,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setUser(null);
                 setProfile(null);
             } finally {
-                setLoading(false);
+                markDone();
             }
         });
 
-        return () => unsubscribe();
+        // Timeout fallback — if onAuthStateChanged never fires, unblock the UI
+        const timeoutId = setTimeout(() => {
+            console.warn("Auth: Firebase auth timed out after 8s, rendering as logged-out");
+            markDone();
+        }, AUTH_TIMEOUT_MS);
+
+        return () => {
+            unsubscribe();
+            clearTimeout(timeoutId);
+        };
     }, []);
 
     const statusRef = React.useRef<string | undefined>(profile?.status);
