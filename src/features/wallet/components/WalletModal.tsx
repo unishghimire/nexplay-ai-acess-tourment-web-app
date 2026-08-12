@@ -229,12 +229,12 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
   return (
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm animate-fade-in" onClick={onClose}></div>
-      <div className="relative w-full sm:max-w-lg bg-gray-900 rounded-t-3xl sm:rounded-3xl border border-gray-800 shadow-2xl overflow-hidden animate-slide-up sm:animate-scale-in max-h-[90vh] flex flex-col">
+      <div className="relative w-full sm:max-w-lg bg-card rounded-t-3xl sm:rounded-3xl border border-gray-800 shadow-2xl overflow-hidden animate-slide-up sm:animate-scale-in max-h-[90vh] flex flex-col">
         <div className="p-4 sm:p-6 border-b border-gray-800 flex justify-between items-center bg-gradient-to-r from-gray-900 to-black shrink-0">
           <h2 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-2">
             <CreditCard className="w-5 h-5 text-brand-500" /> {activeTab === 'deposit' ? 'Deposit Funds' : 'Withdraw Funds'}
           </h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-800 rounded-full transition text-gray-400 hover:text-white">
+          <button onClick={onClose} className="p-2 hover:bg-surface rounded-full transition text-gray-400 hover:text-white">
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -378,7 +378,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
                             </>
                           ) : (
                             <>
-                              <div className="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center group-hover:bg-brand-500/10 transition">
+                              <div className="w-12 h-12 bg-surface rounded-full flex items-center justify-center group-hover:bg-brand-500/10 transition">
                                 <Upload className="w-5 h-5 text-gray-500 group-hover:text-brand-500" />
                               </div>
                               <p className="text-xs text-gray-400 font-medium">Upload payment screenshot</p>

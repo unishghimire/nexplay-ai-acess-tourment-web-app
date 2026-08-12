@@ -294,7 +294,7 @@ const PublicProfile: React.FC = () => {
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                                 <div>
                                     <div className="flex items-center gap-3 mb-2">
-                                        <h1 className="text-4xl font-black text-white tracking-tight break-words [overflow-wrap:anywhere]">{profile.username}</h1>
+                                        <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight break-words [overflow-wrap:anywhere]">{profile.username}</h1>
                                         {profile.isVerified && <CheckCircle2 className="w-6 h-6 text-blue-400 fill-blue-400/10" />}
                                         {profile.isChampion && <Award className="w-6 h-6 text-yellow-500" />}
                                     </div>
@@ -303,7 +303,7 @@ const PublicProfile: React.FC = () => {
                                         <span className="text-[10px] font-black uppercase tracking-widest bg-brand-500/20 text-brand-400 px-3 py-1 rounded-full border border-brand-500/30 flex items-center gap-1">
                                             <Zap className="w-3 h-3" /> Rank #{profile.rank || 'Unranked'}
                                         </span>
-                                        <span className="text-[10px] font-black uppercase tracking-widest bg-gray-800 text-gray-400 px-3 py-1 rounded-full border border-gray-700">
+                                        <span className="text-[10px] font-black uppercase tracking-widest bg-surface text-gray-400 px-3 py-1 rounded-full border border-gray-700">
                                             {profile.role}
                                         </span>
                                         <button onClick={handleCopyId} className="text-[10px] font-mono text-gray-500 hover:text-white transition bg-dark px-3 py-1 rounded-full border border-gray-800 flex items-center gap-2">
@@ -324,14 +324,14 @@ const PublicProfile: React.FC = () => {
                                             disabled={followLoading}
                                             className={`px-8 py-3 rounded-2xl font-black uppercase tracking-widest text-xs transition shadow-xl flex items-center gap-2 ${
                                                 isFollowing 
-                                                    ? 'bg-gray-800 hover:bg-red-900/50 text-gray-300 hover:text-red-400 border border-gray-700' 
+                                                    ? 'bg-surface hover:bg-red-900/50 text-gray-300 hover:text-red-400 border border-gray-700' 
                                                     : 'bg-brand-600 hover:bg-brand-500 text-white'
                                             }`}
                                         >
                                             {isFollowing ? <><UserMinus className="w-4 h-4" /> Unfollow</> : <><UserPlus className="w-4 h-4" /> Follow</>}
                                         </button>
                                     )}
-                                    <button className="p-3 bg-gray-800 hover:bg-gray-700 text-white rounded-2xl transition border border-gray-700">
+                                    <button className="p-3 bg-surface hover:bg-surface text-white rounded-2xl transition border border-gray-700">
                                         <Share2 className="w-5 h-5" />
                                     </button>
                                 </div>
@@ -469,7 +469,7 @@ const PublicProfile: React.FC = () => {
                             {teams.length > 0 ? (
                                 teams.map(team => (
                                     <Link to={`/team/${team.id}`} key={team.id} className="flex items-center gap-3 bg-dark p-3 rounded-2xl border border-gray-800 hover:border-brand-500/50 transition group">
-                                        <div className="w-12 h-12 rounded-xl bg-gray-800 overflow-hidden flex items-center justify-center shrink-0 border border-gray-700">
+                                        <div className="w-12 h-12 rounded-xl bg-surface overflow-hidden flex items-center justify-center shrink-0 border border-gray-700">
                                             {team.logoUrl ? <img src={team.logoUrl} alt="Logo" className="w-full h-full object-cover" /> : <Users className="w-6 h-6 text-gray-600" />}
                                         </div>
                                         <div>

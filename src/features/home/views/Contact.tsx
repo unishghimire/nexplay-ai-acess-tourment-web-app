@@ -64,7 +64,7 @@ const Contact: React.FC = () => {
         />
         <div className="animate-fade-in max-w-4xl mx-auto space-y-8">
             <div className="bg-card p-5 sm:p-8 rounded-2xl border border-gray-800 shadow-2xl">
-                <h1 className="text-3xl font-black text-white mb-6 border-b border-gray-800 pb-4 flex items-center gap-4">
+                <h1 className="text-2xl sm:text-3xl font-black text-white mb-6 border-b border-gray-800 pb-4 flex items-center gap-4">
                     <Headset className="text-brand-500 w-10 h-10" /> Contact Us
                 </h1>
                 <p className="text-gray-400 mb-8 leading-relaxed">Have a question, found a bug, or want to partner with us? We'd love to hear from you.</p>
@@ -106,7 +106,7 @@ const Contact: React.FC = () => {
                             <a href="https://wa.me/+9779767783336" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white py-3 rounded-xl font-bold transition-all text-xs">
                                 <MessageCircle className="w-4 h-4" /> WhatsApp
                             </a>
-                            <a href="https://www.tiktok.com/@nexplayorg" target="_blank" rel="noopener noreferrer" className="col-span-2 flex items-center justify-center gap-2 bg-black hover:bg-gray-900 text-white py-3 rounded-xl font-bold transition-all text-xs border border-gray-800">
+                            <a href="https://www.tiktok.com/@nexplayorg" target="_blank" rel="noopener noreferrer" className="col-span-2 flex items-center justify-center gap-2 bg-black hover:bg-card text-white py-3 rounded-xl font-bold transition-all text-xs border border-gray-800">
                                 <Music2 className="w-4 h-4" /> Follow on TikTok
                             </a>
                         </div>
@@ -131,7 +131,7 @@ const Contact: React.FC = () => {
                                 onClick={() => setIsApplying(!isApplying)}
                                 className={`px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-sm transition-all shadow-xl ${
                                     isApplying 
-                                    ? 'bg-gray-800 text-gray-400 hover:text-white' 
+                                    ? 'bg-surface text-gray-400 hover:text-white' 
                                     : 'bg-brand-600 hover:bg-brand-500 text-white shadow-brand-500/20'
                                 }`}
                             >

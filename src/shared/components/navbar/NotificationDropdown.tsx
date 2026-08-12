@@ -51,8 +51,8 @@ const NotificationDropdown: React.FC = () => {
             </button>
 
             {isOpen && (
-                <div className="fixed top-16 left-4 right-4 sm:absolute sm:top-auto sm:left-auto sm:right-0 sm:mt-2 sm:w-80 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl overflow-hidden animate-fade-in z-[60]">
-                    <div className="p-4 border-b border-gray-800 flex justify-between items-center bg-gray-900/50">
+                <div className="fixed top-16 left-4 right-4 sm:absolute sm:top-auto sm:left-auto sm:right-0 sm:mt-2 sm:w-80 bg-card border border-gray-700 rounded-xl shadow-2xl overflow-hidden animate-fade-in z-[60]">
+                    <div className="p-4 border-b border-gray-800 flex justify-between items-center bg-card/50">
                         <h4 className="text-sm font-black tracking-wider uppercase text-white">Notifications</h4>
                         <button onClick={markAllAsRead} className="text-[10px] uppercase font-bold tracking-widest text-brand-400 hover:text-brand-300 transition-colors">
                             Mark all as read

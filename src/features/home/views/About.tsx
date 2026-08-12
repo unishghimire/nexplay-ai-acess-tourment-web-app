@@ -31,7 +31,7 @@ const About: React.FC = () => {
         />
         <div className="animate-fade-in max-w-4xl mx-auto space-y-8">
             <div className="bg-card p-5 sm:p-8 rounded-xl border border-gray-800 shadow-2xl">
-                <h1 className="text-3xl font-bold text-white mb-6 border-b border-gray-700 pb-4 flex items-center">
+                <h1 className="text-2xl sm:text-3xl font-bold text-white mb-6 border-b border-gray-700 pb-4 flex items-center">
                     <Info className="mr-3 text-brand-500 w-8 h-8" /> About NexPlay
                 </h1>
                 <div className="space-y-4 text-gray-300 leading-relaxed">

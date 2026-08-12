@@ -244,7 +244,7 @@ const ResultUploadModal: React.FC<ResultUploadModalProps> = ({ isOpen, onClose, 
                                                 <CheckCircle2 className="w-8 h-8 text-green-500" />
                                             </div>
                                         ) : (
-                                            <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                            <div className="w-16 h-16 bg-surface rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                                                 <Upload className="w-8 h-8 text-gray-500 group-hover:text-brand-500" />
                                             </div>
                                         )}
@@ -393,7 +393,7 @@ const ResultUploadModal: React.FC<ResultUploadModalProps> = ({ isOpen, onClose, 
                 <div className="pt-6 border-t border-gray-800 flex flex-col md:flex-row gap-3">
                     <button 
                         onClick={onClose}
-                        className="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-4 rounded-2xl font-black uppercase tracking-widest transition-all active:scale-95"
+                        className="flex-1 bg-surface hover:bg-surface text-white py-4 rounded-2xl font-black uppercase tracking-widest transition-all active:scale-95"
                     >
                         Cancel
                     </button>

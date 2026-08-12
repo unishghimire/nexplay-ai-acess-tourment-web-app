@@ -36,7 +36,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, maxWidt
                 <div className="fixed inset-0 modal-backdrop transition-opacity" onClick={onClose} aria-hidden="true"></div>
                 <div className={`relative w-full ${maxWidth} max-w-[calc(100vw-0px)] sm:max-w-[calc(100vw-2rem)] bg-card rounded-t-2xl sm:rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 border border-gray-700 max-h-[100vh] sm:max-h-[90vh] flex flex-col`}>
                     {title && (
-                        <div className="bg-gray-800 px-4 sm:px-6 py-4 border-b border-gray-700 flex justify-between items-center shrink-0">
+                        <div className="bg-surface px-4 sm:px-6 py-4 border-b border-gray-700 flex justify-between items-center shrink-0">
                             <h3 className="text-base sm:text-lg font-bold text-white break-anywhere">{title}</h3>
                             <button onClick={onClose} className="text-gray-400 hover:text-white transition shrink-0 touch-target flex items-center justify-center" aria-label="Close">
                                 <X className="w-5 h-5" />

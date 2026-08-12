@@ -36,7 +36,7 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                         <div>
                                             <h3 className="font-bold text-white">{cat.name}</h3>
                                             <div className="flex items-center gap-2 mt-1">
-                                                <span className={`w-2 h-2 rounded-full ${cat.isActive ? 'bg-green-500' : 'bg-gray-600'}`}></span>
+                                                <span className={`w-2 h-2 rounded-full ${cat.isActive ? 'bg-green-500' : 'bg-surface'}`}></span>
                                                 <span className="text-[10px] text-slate-400 uppercase font-bold">{cat.isActive ? 'Active' : 'Inactive'}</span>
                                             </div>
                                         </div>
@@ -92,7 +92,7 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                         <div className="flex-grow">
                                             <h3 className="font-bold text-white">{pm.name}</h3>
                                             <div className="flex items-center gap-2 mt-1">
-                                                <span className={`w-2 h-2 rounded-full ${pm.isActive ? 'bg-green-500' : 'bg-gray-600'}`}></span>
+                                                <span className={`w-2 h-2 rounded-full ${pm.isActive ? 'bg-green-500' : 'bg-surface'}`}></span>
                                                 <span className="text-[10px] text-slate-400 uppercase font-bold">{category ? category.name : pm.type} | {pm.isActive ? 'Active' : 'Inactive'}</span>
                                             </div>
                                         </div>
@@ -160,7 +160,7 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                 <div className="flex gap-4 pt-4 border-t border-slate-800">
                                     <button 
                                         onClick={() => setIsCategoryModalOpen(false)}
-                                        className="flex-1 bg-surface hover:bg-gray-700 text-white py-3 rounded-xl font-bold transition"
+                                        className="flex-1 bg-surface hover:bg-surface text-white py-3 rounded-xl font-bold transition"
                                     >
                                         Cancel
                                     </button>
@@ -284,7 +284,7 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                 <div className="flex gap-4 pt-2">
                                     <button 
                                         onClick={() => setIsPaymentModalOpen(false)}
-                                        className="flex-1 bg-surface hover:bg-gray-700 text-white py-3 rounded-xl font-bold transition"
+                                        className="flex-1 bg-surface hover:bg-surface text-white py-3 rounded-xl font-bold transition"
                                     >
                                         Cancel
                                     </button>

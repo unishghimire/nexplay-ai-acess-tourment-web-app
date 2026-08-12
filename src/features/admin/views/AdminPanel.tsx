@@ -43,7 +43,7 @@ const AdminPanel: React.FC = () => {
                             className={`w-full text-left px-5 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all flex items-center gap-4 ${
                                 activeTab === 'tab-dashboard' 
                                     ? 'bg-brand-500 text-white shadow-xl shadow-brand-500/20' 
-                                    : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
+                                    : 'text-gray-400 hover:bg-surface/50 hover:text-white'
                             }`}
                         >
                             <Layout className={`w-5 h-5 ${activeTab === 'tab-dashboard' ? 'text-white' : 'text-gray-500'}`} />
@@ -54,7 +54,7 @@ const AdminPanel: React.FC = () => {
                             className={`w-full text-left px-5 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all flex items-center gap-4 ${
                                 activeTab === 'tab-users' 
                                     ? 'bg-brand-500 text-white shadow-xl shadow-brand-500/20' 
-                                    : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
+                                    : 'text-gray-400 hover:bg-surface/50 hover:text-white'
                             }`}
                         >
                             <Users className={`w-5 h-5 ${activeTab === 'tab-users' ? 'text-white' : 'text-gray-500'}`} />
@@ -80,7 +80,7 @@ const AdminPanel: React.FC = () => {
                                     className={`w-full text-left px-5 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all flex items-center justify-between ${
                                         isActive 
                                             ? 'bg-brand-500 text-white shadow-xl shadow-brand-500/20' 
-                                            : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
+                                            : 'text-gray-400 hover:bg-surface/50 hover:text-white'
                                     }`}
                                 >
                                     <div className="flex items-center gap-4">
@@ -116,7 +116,7 @@ const AdminPanel: React.FC = () => {
                                     className={`w-full text-left px-5 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all flex items-center justify-between ${
                                         isActive 
                                             ? 'bg-brand-500 text-white shadow-xl shadow-brand-500/20' 
-                                            : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
+                                            : 'text-gray-400 hover:bg-surface/50 hover:text-white'
                                     }`}
                                 >
                                     <div className="flex items-center gap-4">
@@ -154,7 +154,7 @@ const AdminPanel: React.FC = () => {
                                     className={`w-full text-left px-5 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all flex items-center gap-4 ${
                                         isActive 
                                             ? 'bg-brand-500 text-white shadow-xl shadow-brand-500/20' 
-                                            : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
+                                            : 'text-gray-400 hover:bg-surface/50 hover:text-white'
                                     }`}
                                 >
                                     <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-500'}`} />
@@ -173,7 +173,7 @@ const AdminPanel: React.FC = () => {
                             className={`w-full text-left px-5 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all flex items-center gap-4 ${
                                 activeTab === 'tab-discord' 
                                     ? 'bg-[#5865F2] text-white shadow-xl shadow-[#5865F2]/20' 
-                                    : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
+                                    : 'text-gray-400 hover:bg-surface/50 hover:text-white'
                             }`}
                         >
                             <Megaphone className={`w-5 h-5 ${activeTab === 'tab-discord' ? 'text-white' : 'text-gray-500'}`} />
@@ -184,7 +184,7 @@ const AdminPanel: React.FC = () => {
                             className={`w-full text-left px-5 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all flex items-center gap-4 ${
                                 activeTab === 'tab-settings' 
                                     ? 'bg-brand-500 text-white shadow-xl shadow-brand-500/20' 
-                                    : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
+                                    : 'text-gray-400 hover:bg-surface/50 hover:text-white'
                             }`}
                         >
                             <Sliders className={`w-5 h-5 ${activeTab === 'tab-settings' ? 'text-white' : 'text-gray-500'}`} />

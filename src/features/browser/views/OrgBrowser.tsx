@@ -103,7 +103,7 @@ const OrgBrowser: React.FC = () => {
             <div className="mb-12 border-b border-gray-800 pb-10">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                     <div>
-                        <h1 className="text-4xl font-black text-white uppercase tracking-tighter leading-none mb-2 flex items-center gap-4">
+                        <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white uppercase tracking-tighter leading-none mb-2 flex items-center gap-4">
                             <Building2 className="w-8 h-8 text-brand-500" />
                             Organizations
                         </h1>
@@ -111,7 +111,7 @@ const OrgBrowser: React.FC = () => {
                             Discover and follow tournament organizers to stay ahead of competitions.
                         </p>
                     </div>
-                    <div className="flex items-center gap-3 bg-gray-900/50 px-6 py-3 rounded-2xl border border-gray-800">
+                    <div className="flex items-center gap-3 bg-card/50 px-6 py-3 rounded-2xl border border-gray-800">
                         <Users className="w-5 h-5 text-brand-500" />
                         <span className="text-white font-black tracking-widest uppercase text-sm">{orgs.length} Organizers</span>
                     </div>
@@ -119,7 +119,7 @@ const OrgBrowser: React.FC = () => {
             </div>
 
             {/* Search */}
-            <div className="relative mb-12 bg-gray-900/50 p-6 rounded-3xl border border-gray-800">
+            <div className="relative mb-12 bg-card/50 p-6 rounded-3xl border border-gray-800">
                 <Search className="absolute left-10 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                 <input
                     type="text"
@@ -134,11 +134,11 @@ const OrgBrowser: React.FC = () => {
             {loading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {[1, 2, 3, 4, 5, 6].map(i => (
-                        <div key={i} className="bg-gray-900/50 h-48 rounded-3xl animate-pulse border border-gray-800" />
+                        <div key={i} className="bg-card/50 h-48 rounded-3xl animate-pulse border border-gray-800" />
                     ))}
                 </div>
             ) : filteredOrgs.length === 0 ? (
-                <div className="bg-gray-900/50 p-16 rounded-3xl border border-gray-800 text-center">
+                <div className="bg-card/50 p-16 rounded-3xl border border-gray-800 text-center">
                     <Building2 className="w-16 h-16 text-gray-700 mx-auto mb-6" />
                     <h3 className="text-2xl font-black text-white uppercase mb-2">No Organizations Found</h3>
                     <p className="text-gray-500 font-bold max-w-sm mx-auto mb-8">
@@ -169,7 +169,7 @@ const OrgBrowser: React.FC = () => {
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: i * 0.08 }}
-                                        className="relative bg-gray-900/50 rounded-[2rem] border border-brand-500/20 overflow-hidden group hover:border-brand-500/50 transition-all shadow-xl"
+                                        className="relative bg-card/50 rounded-[2rem] border border-brand-500/20 overflow-hidden group hover:border-brand-500/50 transition-all shadow-xl"
                                     >
                                         {/* Banner strip */}
                                         <div className="h-20 bg-gradient-to-r from-brand-900/60 via-brand-800/30 to-black relative">
@@ -198,7 +198,7 @@ const OrgBrowser: React.FC = () => {
                                             <div className="flex gap-2">
                                                 <Link
                                                     to={`/profile/${org.uid}`}
-                                                    className="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-2.5 rounded-xl text-center font-black text-xs uppercase tracking-widest transition flex items-center justify-center gap-2"
+                                                    className="flex-1 bg-surface hover:bg-surface text-white py-2.5 rounded-xl text-center font-black text-xs uppercase tracking-widest transition flex items-center justify-center gap-2"
                                                 >
                                                     Profile <ChevronRight className="w-3 h-3" />
                                                 </Link>
@@ -208,7 +208,7 @@ const OrgBrowser: React.FC = () => {
                                                         disabled={togglingId === org.uid}
                                                         className={`px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition flex items-center gap-2 ${
                                                             following.has(org.uid)
-                                                                ? 'bg-gray-800 text-gray-400 hover:bg-red-500/10 hover:text-red-400 border border-gray-700 hover:border-red-500/30'
+                                                                ? 'bg-surface text-gray-400 hover:bg-red-500/10 hover:text-red-400 border border-gray-700 hover:border-red-500/30'
                                                                 : 'bg-brand-500/10 text-brand-400 border border-brand-500/20 hover:bg-brand-500 hover:text-white'
                                                         } disabled:opacity-50`}
                                                         aria-label={following.has(org.uid) ? 'Unfollow' : 'Follow'}
@@ -233,7 +233,7 @@ const OrgBrowser: React.FC = () => {
                     {/* Full list */}
                     <section>
                         <h2 className="text-xs font-black text-gray-500 uppercase tracking-widest mb-6 flex items-center gap-3">
-                            <span className="inline-block w-6 h-px bg-gray-700"></span>
+                            <span className="inline-block w-6 h-px bg-surface"></span>
                             {searchTerm ? `Results for "${searchTerm}"` : 'All Organizations'}
                         </h2>
                         <div className="space-y-3">
@@ -243,7 +243,7 @@ const OrgBrowser: React.FC = () => {
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: index * 0.04 }}
-                                    className="bg-gray-900/50 rounded-3xl border border-gray-800 p-6 flex items-center justify-between gap-6 hover:border-gray-700 hover:bg-gray-900 transition-all group"
+                                    className="bg-card/50 rounded-3xl border border-gray-800 p-6 flex items-center justify-between gap-6 hover:border-gray-700 hover:bg-card transition-all group"
                                 >
                                     <div className="flex items-center gap-4 min-w-0">
                                         <div className="w-14 h-14 rounded-2xl bg-black border border-gray-800 overflow-hidden shrink-0">
@@ -264,7 +264,7 @@ const OrgBrowser: React.FC = () => {
                                     <div className="flex items-center gap-3 shrink-0">
                                         <Link
                                             to={`/profile/${org.uid}`}
-                                            className="hidden sm:flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-white px-5 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition"
+                                            className="hidden sm:flex items-center gap-2 bg-surface hover:bg-surface text-white px-5 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition"
                                         >
                                             View <ChevronRight className="w-3 h-3" />
                                         </Link>
@@ -274,7 +274,7 @@ const OrgBrowser: React.FC = () => {
                                                 disabled={togglingId === org.uid}
                                                 className={`px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition flex items-center gap-2 ${
                                                     following.has(org.uid)
-                                                        ? 'bg-gray-800 text-gray-400 hover:bg-red-500/10 hover:text-red-400 border border-gray-700 hover:border-red-500/30'
+                                                        ? 'bg-surface text-gray-400 hover:bg-red-500/10 hover:text-red-400 border border-gray-700 hover:border-red-500/30'
                                                         : 'bg-brand-500/10 text-brand-400 border border-brand-500/20 hover:bg-brand-500 hover:text-white'
                                                 } disabled:opacity-50`}
                                                 aria-label={following.has(org.uid) ? 'Unfollow' : 'Follow'}

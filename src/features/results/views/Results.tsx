@@ -263,7 +263,7 @@ const Results: React.FC = () => {
                         </div>
                     ))
                 ) : (
-                    <div className="col-span-2 py-32 text-center bg-gray-900/30 rounded-[3rem] border border-dashed border-gray-800">
+                    <div className="col-span-2 py-32 text-center bg-card/30 rounded-[3rem] border border-dashed border-gray-800">
                         <Trophy className="w-20 h-20 text-gray-800 mx-auto mb-6" />
                         <h3 className="text-2xl font-black text-white uppercase mb-2">No Results Found</h3>
                         <p className="text-gray-500 font-bold max-w-sm mx-auto">

@@ -56,7 +56,7 @@ export const OverviewTab: React.FC<TournamentAdminTabProps> = (props) => {
                                              <span className={`inline-block mt-2 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${
                                                  tournamentEarning.status === 'released' ? 'bg-green-500/10 text-green-500' :
                                                  tournamentEarning.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500' :
-                                                 'bg-gray-800 text-gray-500'
+                                                 'bg-surface text-gray-500'
                                              }`}>
                                                  {tournamentEarning.status}
                                              </span>

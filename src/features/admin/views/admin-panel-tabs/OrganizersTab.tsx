@@ -30,7 +30,7 @@ export const OrganizersTab: React.FC<AdminPanelTabProps> = (props) => {
                                             </div>
                                             <button
                                                 onClick={() => togglePowerOrganizer(org)}
-                                                className={`mt-1 flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded ${org.isPowerOrganizer ? 'bg-green-600/20 text-green-500' : 'bg-gray-600/20 text-slate-400'}`}
+                                                className={`mt-1 flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded ${org.isPowerOrganizer ? 'bg-green-600/20 text-green-500' : 'bg-surface/20 text-slate-400'}`}
                                             >
                                                 {org.isPowerOrganizer ? <CheckCircle className="w-3 h-3" /> : <X className="w-3 h-3" />}
                                                 {org.isPowerOrganizer ? 'Power' : 'Standard'}
@@ -117,7 +117,7 @@ export const OrganizersTab: React.FC<AdminPanelTabProps> = (props) => {
                                     </div>
                                 </div>
                                 <div className="flex gap-4 pt-4">
-                                    <button onClick={() => setIsOrgEditModalOpen(false)} className="flex-1 bg-surface hover:bg-gray-700 text-white py-3 rounded-xl font-bold transition">Cancel</button>
+                                    <button onClick={() => setIsOrgEditModalOpen(false)} className="flex-1 bg-surface hover:bg-surface text-white py-3 rounded-xl font-bold transition">Cancel</button>
                                     <button onClick={handleSaveOrgDetails} className="flex-1 bg-brand-600 hover:bg-brand-500 text-white py-3 rounded-xl font-bold transition">Save Changes</button>
                                 </div>
                             </div>

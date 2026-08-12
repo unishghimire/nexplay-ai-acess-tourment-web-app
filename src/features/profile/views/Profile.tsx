@@ -311,7 +311,7 @@ const Profile: React.FC = () => {
                 onPaste={handlePaste}
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
-                className="bg-gray-900/50 rounded-3xl border border-gray-800 overflow-hidden shadow-2xl mb-6 relative group"
+                className="bg-card/50 rounded-3xl border border-gray-800 overflow-hidden shadow-2xl mb-6 relative group"
             >
                 <button 
                     onClick={() => setShowSettingsModal(true)}
@@ -381,7 +381,7 @@ const Profile: React.FC = () => {
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                 <div>
                                     <div className="flex items-center gap-3 mb-1">
-                                        <h2 className="text-4xl font-black text-white tracking-tighter">{profile.username}</h2>
+                                        <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tighter">{profile.username}</h2>
                                         <span className="bg-brand-500/10 text-brand-400 border border-brand-500/20 px-4 py-1 rounded-full text-xs uppercase font-black tracking-widest flex items-center gap-2">
                                             <Shield className="w-4 h-4" /> {profile.role}
                                         </span>
@@ -777,7 +777,7 @@ const Profile: React.FC = () => {
                             <button 
                                 onClick={handleSave} 
                                 disabled={isSaving}
-                                className="w-full bg-brand-600 hover:bg-brand-500 disabled:bg-gray-700 text-white py-4 rounded-xl font-black transition shadow-lg uppercase tracking-widest flex items-center justify-center gap-2 min-h-[44px]"
+                                className="w-full bg-brand-600 hover:bg-brand-500 disabled:bg-surface text-white py-4 rounded-xl font-black transition shadow-lg uppercase tracking-widest flex items-center justify-center gap-2 min-h-[44px]"
                             >
                                 {isSaving ? (
                                     <>
@@ -800,7 +800,7 @@ const Profile: React.FC = () => {
                             <h3 className="font-black text-white uppercase tracking-widest">Security & Authentication</h3>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="bg-gray-900/50 p-4 rounded-xl border border-gray-800">
+                            <div className="bg-card/50 p-4 rounded-xl border border-gray-800">
                                 <p className="text-xs text-gray-400 mb-4">Update your account password to keep your wallet secure.</p>
                                 <button 
                                     onClick={async () => {
@@ -825,7 +825,7 @@ const Profile: React.FC = () => {
                                     <Mail className="w-4 h-4" /> Send Reset Link
                                 </button>
                             </div>
-                            <div className="bg-gray-900/50 p-4 rounded-xl border border-gray-800">
+                            <div className="bg-card/50 p-4 rounded-xl border border-gray-800">
                                 <p className="text-xs text-gray-400 mb-4">Change your account email address.</p>
                                 <div className="flex gap-2">
                                     <input 
@@ -838,7 +838,7 @@ const Profile: React.FC = () => {
                                     <button 
                                         onClick={handleUpdateEmail} 
                                         disabled={isUpdatingEmail || !newEmail}
-                                        className="bg-brand-600 px-4 rounded-xl hover:bg-brand-500 disabled:bg-gray-700 text-white text-[10px] font-black transition uppercase tracking-widest shadow-lg whitespace-nowrap"
+                                        className="bg-brand-600 px-4 rounded-xl hover:bg-brand-500 disabled:bg-surface text-white text-[10px] font-black transition uppercase tracking-widest shadow-lg whitespace-nowrap"
                                     >
                                         {isUpdatingEmail ? 'Updating...' : 'Update'}
                                     </button>
@@ -941,7 +941,7 @@ const Profile: React.FC = () => {
                                 // Reset application state to allow re-applying
                                 updateDoc(doc(db, 'users', user.uid), { orgStatus: null });
                             }}
-                            className="w-full mt-4 bg-gray-800 hover:bg-gray-700 text-white py-3 rounded-xl font-bold transition uppercase text-xs tracking-widest"
+                            className="w-full mt-4 bg-surface hover:bg-surface text-white py-3 rounded-xl font-bold transition uppercase text-xs tracking-widest"
                         >
                             Re-apply as Organizer
                         </button>

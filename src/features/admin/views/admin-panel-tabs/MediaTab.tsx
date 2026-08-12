@@ -18,7 +18,7 @@ export const MediaTab: React.FC<AdminPanelTabProps> = (props) => {
                         <button
                             onClick={fetchMedia}
                             disabled={mediaLoading}
-                            className="bg-gray-800 hover:bg-gray-750 text-white px-5 py-2 rounded-lg font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition"
+                            className="bg-surface hover:bg-surface/80 text-white px-5 py-2 rounded-lg font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition"
                         >
                             <RefreshCw className={`w-4 h-4 ${mediaLoading ? 'animate-spin' : ''}`} />
                             Refresh Library
@@ -69,7 +69,7 @@ export const MediaTab: React.FC<AdminPanelTabProps> = (props) => {
                                 className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors ${
                                     mediaFilter === "ALL"
                                         ? "bg-brand-500 text-white"
-                                        : "bg-gray-800/80 text-gray-400 hover:bg-gray-800 hover:text-white"
+                                        : "bg-surface/80 text-gray-400 hover:bg-surface hover:text-white"
                                 }`}
                             >
                                 All Assets
@@ -85,7 +85,7 @@ export const MediaTab: React.FC<AdminPanelTabProps> = (props) => {
                                         className={`px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors ${
                                             mediaFilter === cat
                                                 ? "bg-brand-500 text-white"
-                                                : "bg-gray-800/85 text-gray-400 hover:bg-gray-800 hover:text-white"
+                                                : "bg-surface/85 text-gray-400 hover:bg-surface hover:text-white"
                                         }`}
                                     >
                                         {cat.replace("_", " ")} <span className="opacity-60">({count})</span>
@@ -153,7 +153,7 @@ export const MediaTab: React.FC<AdminPanelTabProps> = (props) => {
                                                         href={item.url}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className="p-2 rounded-lg bg-gray-850 text-white hover:bg-amber-500 hover:text-black transition shadow"
+                                                        className="p-2 rounded-lg bg-dark text-white hover:bg-amber-500 hover:text-black transition shadow"
                                                         title="Open direct image link"
                                                     >
                                                         <ExternalLink className="w-4 h-4" />
@@ -163,7 +163,7 @@ export const MediaTab: React.FC<AdminPanelTabProps> = (props) => {
                                                             navigator.clipboard.writeText(item.url);
                                                             showToast("Direct link copied to clipboard!", "success");
                                                         }}
-                                                        className="p-2 rounded-lg bg-gray-850 text-white hover:bg-brand-500 hover:text-white transition shadow text-xs font-bold uppercase"
+                                                        className="p-2 rounded-lg bg-dark text-white hover:bg-brand-500 hover:text-white transition shadow text-xs font-bold uppercase"
                                                         title="Copy URL link"
                                                     >
                                                         Copy URL

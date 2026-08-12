@@ -135,7 +135,7 @@ const Teams: React.FC = () => {
         <div className="animate-fade-in max-w-5xl mx-auto p-4 md:p-8">
             <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6 border-b border-gray-800 pb-8">
                 <div>
-                    <h1 className="text-4xl font-black text-white uppercase tracking-tighter mb-2">Teams</h1>
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white uppercase tracking-tighter mb-2">Teams</h1>
                     <p className="text-gray-400 font-bold">Discover and join teams, or create your own.</p>
                 </div>
                 {user && (
@@ -155,7 +155,7 @@ const Teams: React.FC = () => {
             </header>
 
             {isCreating && (
-                <div className="bg-gray-900/50 p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 shadow-2xl mb-6 sm:mb-12 animate-fade-in">
+                <div className="bg-card/50 p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 shadow-2xl mb-6 sm:mb-12 animate-fade-in">
                     <h3 className="text-xl font-black text-white uppercase tracking-widest mb-8">Create New Team</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-6">
@@ -239,7 +239,7 @@ const Teams: React.FC = () => {
                         <button 
                             onClick={handleCreateTeam}
                             disabled={creating || !newTeamName.trim()}
-                            className="bg-brand-600 hover:bg-brand-500 disabled:bg-gray-700 text-white px-8 py-3 rounded-xl font-black uppercase tracking-widest transition shadow-lg flex items-center gap-2"
+                            className="bg-brand-600 hover:bg-brand-500 disabled:bg-surface text-white px-8 py-3 rounded-xl font-black uppercase tracking-widest transition shadow-lg flex items-center gap-2"
                         >
                             {creating ? 'Creating...' : 'Create Team'}
                         </button>
@@ -274,7 +274,7 @@ const Teams: React.FC = () => {
                     <h2 className="text-2xl font-black text-white uppercase tracking-tighter mb-8 border-b border-gray-800 pb-4">My Teams</h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {myTeams.map(team => (
-                            <Link to={`/team/${team.id}`} key={team.id} className="bg-gray-900/50 rounded-2xl sm:rounded-3xl border border-gray-800 p-5 sm:p-8 hover:border-brand-500/50 transition group hover:bg-gray-900">
+                            <Link to={`/team/${team.id}`} key={team.id} className="bg-card/50 rounded-2xl sm:rounded-3xl border border-gray-800 p-5 sm:p-8 hover:border-brand-500/50 transition group hover:bg-card">
                                 <div className="flex items-center gap-6 mb-6">
                                     <div className="w-20 h-20 rounded-2xl bg-black border border-gray-800 overflow-hidden flex items-center justify-center shrink-0">
                                         <img 
@@ -312,7 +312,7 @@ const Teams: React.FC = () => {
                                 setSearchTerm(val);
                             }}
                             placeholder="Search teams..."
-                            className="w-full bg-gray-900/50 border border-gray-800 rounded-2xl pl-12 pr-4 py-3 text-sm text-white focus:border-brand-500 outline-none font-bold"
+                            className="w-full bg-card/50 border border-gray-800 rounded-2xl pl-12 pr-4 py-3 text-sm text-white focus:border-brand-500 outline-none font-bold"
                         />
                     </div>
                 </div>
@@ -322,14 +322,14 @@ const Teams: React.FC = () => {
                         <div className="w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
                     </div>
                 ) : filteredTeams.length === 0 ? (
-                    <div className="text-center py-20 bg-gray-900/50 rounded-3xl border border-gray-800">
+                    <div className="text-center py-20 bg-card/50 rounded-3xl border border-gray-800">
                         <Users className="w-16 h-16 text-gray-700 mx-auto mb-4" />
                         <p className="text-gray-400 font-black uppercase tracking-widest">No teams found.</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredTeams.map(team => (
-                            <Link to={`/team/${team.id}`} key={team.id} className="bg-gray-900/50 rounded-2xl sm:rounded-3xl border border-gray-800 p-5 sm:p-8 hover:border-brand-500/50 transition group hover:bg-gray-900 flex flex-col h-full">
+                            <Link to={`/team/${team.id}`} key={team.id} className="bg-card/50 rounded-2xl sm:rounded-3xl border border-gray-800 p-5 sm:p-8 hover:border-brand-500/50 transition group hover:bg-card flex flex-col h-full">
                                 <div className="flex items-center gap-6 mb-6">
                                     <div className="w-20 h-20 rounded-2xl bg-black border border-gray-800 overflow-hidden flex items-center justify-center shrink-0">
                                         <img 

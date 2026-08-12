@@ -67,7 +67,7 @@ export default function GameBrowser() {
         <div className="animate-fade-in max-w-5xl mx-auto p-4 md:p-8">
             <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6 border-b border-gray-800 pb-8">
                 <div>
-                    <h1 className="text-4xl font-black text-white uppercase tracking-tighter mb-2">Explore Games</h1>
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white uppercase tracking-tighter mb-2">Explore Games</h1>
                     <p className="text-gray-400 font-bold">Discover your next battlefield</p>
                 </div>
                 
@@ -106,7 +106,7 @@ export default function GameBrowser() {
                         <GameCard key={game.id} game={game} />
                     ))
                 ) : (
-                    <div className="col-span-full py-20 bg-gray-900/50 rounded-3xl border border-gray-800 text-center">
+                    <div className="col-span-full py-20 bg-card/50 rounded-3xl border border-gray-800 text-center">
                         <Gamepad2 className="w-16 h-16 text-gray-700 mx-auto mb-6" />
                         <h3 className="text-xl font-black text-white uppercase tracking-widest">No Games Found</h3>
                         <p className="text-gray-500 font-bold mt-2">Try adjusting your search or filters.</p>

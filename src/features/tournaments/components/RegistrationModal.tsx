@@ -125,7 +125,7 @@ const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     <button 
                         onClick={onClose}
                         disabled={loading}
-                        className="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-4 rounded-2xl font-black uppercase tracking-widest transition-all disabled:opacity-50"
+                        className="flex-1 bg-surface hover:bg-surface text-white py-4 rounded-2xl font-black uppercase tracking-widest transition-all disabled:opacity-50"
                     >
                         Cancel
                     </button>

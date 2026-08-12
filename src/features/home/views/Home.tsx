@@ -238,11 +238,11 @@ const Home: React.FC = () => {
                         <p className="text-sm text-gray-400">All escrow entries and payouts are guarded server-side.</p>
                     </div>
                 </div>
-                <div className="flex gap-4">
-                    <span className="flex items-center gap-2 bg-gray-800/50 px-4 py-2 rounded-full border border-gray-700 text-xs text-brand-300 font-black uppercase tracking-widest">
+                <div className="flex flex-wrap gap-4">
+                    <span className="flex items-center gap-2 bg-surface/50 px-4 py-2 rounded-full border border-gray-700 text-xs text-brand-300 font-black uppercase tracking-widest">
                         <Users className="w-4 h-4" /> {totalPlayersCount}+ Players
                     </span>
-                    <span className="flex items-center gap-2 bg-gray-800/50 px-4 py-2 rounded-full border border-gray-700 text-xs text-yellow-500 font-black uppercase tracking-widest">
+                    <span className="flex items-center gap-2 bg-surface/50 px-4 py-2 rounded-full border border-gray-700 text-xs text-yellow-500 font-black uppercase tracking-widest">
                         <Wallet className="w-4 h-4" /> Instant Payouts
                     </span>
                 </div>
@@ -260,28 +260,28 @@ const Home: React.FC = () => {
 
             {/* Value Highlights (Conversion Funnel Indicators) */}
             <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="bg-gray-900/50 p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-brand-500/50 transition-all hover:-translate-y-1">
+                <div className="bg-card/50 p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-brand-500/50 transition-all hover:-translate-y-1">
                     <div className="bg-brand-500/10 p-4 rounded-2xl text-brand-500 mb-6 inline-block">
                         <Trophy className="w-8 h-8" />
                     </div>
                     <h4 className="text-white font-black uppercase text-lg mb-2">Tournaments</h4>
                     <p className="text-sm text-gray-500">Compete in verified, admin-refereed ladders.</p>
                 </div>
-                <div className="bg-gray-900/50 p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-emerald-500/50 transition-all hover:-translate-y-1">
+                <div className="bg-card/50 p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-emerald-500/50 transition-all hover:-translate-y-1">
                     <div className="bg-emerald-500/10 p-4 rounded-2xl text-emerald-500 mb-6 inline-block">
                         <Flame className="w-8 h-8" />
                     </div>
                     <h4 className="text-white font-black uppercase text-lg mb-2">Daily Scrims</h4>
                     <p className="text-sm text-gray-500">Train with top competitive squads daily.</p>
                 </div>
-                <div className="bg-gray-900/50 p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-yellow-500/50 transition-all hover:-translate-y-1">
+                <div className="bg-card/50 p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-yellow-500/50 transition-all hover:-translate-y-1">
                     <div className="bg-yellow-500/10 p-4 rounded-2xl text-yellow-500 mb-6 inline-block">
                         <Wallet className="w-8 h-8" />
                     </div>
                     <h4 className="text-white font-black uppercase text-lg mb-2">Secure Wallet</h4>
                     <p className="text-sm text-gray-500">Double-guarded entry escrows and fast logs.</p>
                 </div>
-                <div className="bg-gray-900/50 p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-purple-500/50 transition-all hover:-translate-y-1">
+                <div className="bg-card/50 p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-purple-500/50 transition-all hover:-translate-y-1">
                     <div className="bg-purple-500/10 p-4 rounded-2xl text-purple-500 mb-6 inline-block">
                         <Users className="w-8 h-8" />
                     </div>
@@ -302,7 +302,7 @@ const Home: React.FC = () => {
                     </div>
                     <button 
                         onClick={() => handleCtaClick('/tournaments', 'ViewAllFeatured')} 
-                        className="bg-gray-800/50 hover:bg-gray-700 text-white px-4 py-2 md:px-6 md:py-3 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 border border-gray-700"
+                        className="bg-surface/50 hover:bg-surface text-white px-4 py-2 md:px-6 md:py-3 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 border border-gray-700"
                         aria-label="View all scheduled tournaments"
                     >
                         View All <ChevronRight className="w-4 h-4" />
@@ -312,7 +312,7 @@ const Home: React.FC = () => {
                     {featuredTournaments.length > 0 ? (
                         featuredTournaments.map((t, idx) => <TournamentCard key={t.id || `feat-${idx}`} tournament={t} />)
                     ) : (
-                        <div className="col-span-full py-20 text-center text-gray-500 bg-gray-900/50 rounded-3xl border border-dashed border-gray-800">
+                        <div className="col-span-full py-20 text-center text-gray-500 bg-card/50 rounded-3xl border border-dashed border-gray-800">
                             <Trophy className="w-12 h-12 mx-auto mb-4 opacity-20 text-brand-500" />
                             <p className="font-bold uppercase tracking-widest text-sm text-gray-400">No active featured tournaments</p>
                             <p className="text-xs text-gray-600 mt-1">Check back later or explore other games.</p>
@@ -333,7 +333,7 @@ const Home: React.FC = () => {
                     </div>
                     <button 
                         onClick={() => handleCtaClick('/games', 'ViewAllGames')} 
-                        className="bg-gray-800/50 hover:bg-gray-700 text-white px-4 py-2 md:px-6 md:py-3 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 border border-gray-700"
+                        className="bg-surface/50 hover:bg-surface text-white px-4 py-2 md:px-6 md:py-3 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 border border-gray-700"
                         aria-label="Explore tournament categories by game"
                     >
                         Explore <ChevronRight className="w-4 h-4" />
@@ -343,7 +343,7 @@ const Home: React.FC = () => {
                     {popularGames.length > 0 ? (
                         popularGames.map((g, idx) => <GameCard key={g.id || `game-${idx}`} game={g} />)
                     ) : (
-                        <div className="col-span-full py-20 text-center text-gray-500 bg-gray-900/50 rounded-3xl border border-dashed border-gray-800">
+                        <div className="col-span-full py-20 text-center text-gray-500 bg-card/50 rounded-3xl border border-dashed border-gray-800">
                             <p className="font-bold uppercase tracking-widest text-sm text-gray-400">No games listed yet</p>
                         </div>
                     )}
@@ -363,7 +363,7 @@ const Home: React.FC = () => {
                         </div>
                         <button 
                             onClick={() => handleCtaClick('/results', 'ViewAllResults')} 
-                            className="bg-gray-800/50 hover:bg-gray-700 text-white px-4 py-2 md:px-6 md:py-3 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 border border-gray-700"
+                            className="bg-surface/50 hover:bg-surface text-white px-4 py-2 md:px-6 md:py-3 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 border border-gray-700"
                             aria-label="View all historic results"
                         >
                             View All <ChevronRight className="w-4 h-4" />
@@ -376,7 +376,7 @@ const Home: React.FC = () => {
                                 onClick={() => handleCtaClick(`/details/${t.id}`, `ConcludedTournament_${t.id}`)}
                                 className="bg-surface p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-brand-500/30 transition-all cursor-pointer group"
                             >
-                                <div className="flex gap-4 sm:gap-6 min-w-0">
+                                <div className="flex flex-wrap gap-4 sm:gap-6 min-w-0">
                                     <div className="w-24 h-24 rounded-2xl bg-dark overflow-hidden shrink-0 border border-gray-800">
                                         <img src={t.bannerUrl || `https://api.dicebear.com/7.x/identicon/svg?seed=${t.title}`} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" />
                                     </div>
@@ -386,7 +386,7 @@ const Home: React.FC = () => {
                                                 <h4 className="text-white font-black text-lg uppercase truncate">{t.title}</h4>
                                                 <p className="text-[10px] text-brand-500 font-black uppercase tracking-widest">{formatGameName(t.game)}</p>
                                             </div>
-                                            <span className="text-[10px] text-gray-500 font-bold bg-gray-900 px-2 py-1 rounded">COMPLETED</span>
+                                            <span className="text-[10px] text-gray-500 font-bold bg-card px-2 py-1 rounded">COMPLETED</span>
                                         </div>
                                         <div className="flex items-center gap-4 mt-4">
                                             {t.winners?.slice(0, 1).map((w, wIdx) => (

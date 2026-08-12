@@ -181,7 +181,7 @@ const Wallet: React.FC = () => {
             <Seo title="Wallet | NexPlay" description="Your wallet and transactions" noindex />
             <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-12 border-b border-gray-800 pb-8">
                 <div>
-                    <h1 className="text-4xl font-black text-white uppercase tracking-tighter mb-2">My Wallet</h1>
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white uppercase tracking-tighter mb-2">My Wallet</h1>
                     <p className="text-gray-400 font-bold">Manage your funds securely</p>
                 </div>
                 <div className="flex bg-black border border-gray-800 rounded-full pl-4 pr-5 py-2 items-center gap-3">
@@ -192,10 +192,10 @@ const Wallet: React.FC = () => {
 
             {/* Premium Balance Overview */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="col-span-1 lg:col-span-2 bg-gray-900/50 rounded-3xl p-10 border border-gray-800 shadow-2xl relative overflow-hidden">
+                <div className="col-span-1 lg:col-span-2 bg-card/50 rounded-3xl p-10 border border-gray-800 shadow-2xl relative overflow-hidden">
                     <div className="relative z-10">
                         <h2 className="text-xs font-black text-gray-500 uppercase tracking-widest mb-4">Total Balance</h2>
-                        <p className="text-6xl font-black text-white tracking-tighter mb-8">
+                        <p className="text-4xl sm:text-5xl md:text-6xl font-black text-white tracking-tighter mb-8">
                             {formatCurrency(profile.balance || 0)}
                         </p>
                         
@@ -230,7 +230,7 @@ const Wallet: React.FC = () => {
                             onClick={() => {
                                 setActiveModal('withdraw');
                             }}
-                            className="flex-1 bg-gray-900 hover:bg-gray-800 text-white p-5 sm:p-8 rounded-2xl sm:rounded-3xl font-black uppercase tracking-widest text-xs transition-all border border-gray-800 flex flex-col items-center justify-center gap-3 hover:-translate-y-1"
+                            className="flex-1 bg-card hover:bg-surface text-white p-5 sm:p-8 rounded-2xl sm:rounded-3xl font-black uppercase tracking-widest text-xs transition-all border border-gray-800 flex flex-col items-center justify-center gap-3 hover:-translate-y-1"
                         >
                             <ArrowUpRight className="w-8 h-8 text-red-400" />
                             Withdraw
@@ -239,7 +239,7 @@ const Wallet: React.FC = () => {
                             onClick={() => {
                                 setIsPromoModalOpen(true);
                             }}
-                            className="flex-1 bg-gray-900 hover:bg-gray-800 text-white p-5 sm:p-8 rounded-2xl sm:rounded-3xl font-black uppercase tracking-widest text-xs transition-all border border-gray-800 flex flex-col items-center justify-center gap-3 hover:-translate-y-1"
+                            className="flex-1 bg-card hover:bg-surface text-white p-5 sm:p-8 rounded-2xl sm:rounded-3xl font-black uppercase tracking-widest text-xs transition-all border border-gray-800 flex flex-col items-center justify-center gap-3 hover:-translate-y-1"
                         >
                             <Gift className="w-8 h-8 text-brand-400" />
                             Redeem
@@ -250,25 +250,25 @@ const Wallet: React.FC = () => {
 
             {/* Financial Insights Row (Derived from local data) */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-gray-900/50 border border-gray-800 rounded-3xl p-6 flex items-center justify-between">
+                <div className="bg-card/50 border border-gray-800 rounded-3xl p-6 flex items-center justify-between">
                     <div>
                         <p className="text-xs font-black uppercase text-gray-500 tracking-widest mb-2 flex items-center gap-2">Recent Deposits</p>
-                        <p className="text-3xl font-black text-white">{formatCurrency(analytics.recentDeposits)}</p>
+                        <p className="text-xl sm:text-2xl md:text-3xl font-black text-white truncate">{formatCurrency(analytics.recentDeposits)}</p>
                     </div>
                     <div className="w-14 h-14 rounded-2xl bg-green-500/10 flex items-center justify-center text-green-500">
                         <ArrowDownRight size={28} />
                     </div>
                 </div>
-                <div className="bg-gray-900/50 border border-gray-800 rounded-3xl p-6 flex items-center justify-between">
+                <div className="bg-card/50 border border-gray-800 rounded-3xl p-6 flex items-center justify-between">
                     <div>
                         <p className="text-xs font-black uppercase text-gray-500 tracking-widest mb-2 flex items-center gap-2">Recent Withdrawals</p>
-                        <p className="text-3xl font-black text-white">{formatCurrency(analytics.recentWithdrawals)}</p>
+                        <p className="text-xl sm:text-2xl md:text-3xl font-black text-white truncate">{formatCurrency(analytics.recentWithdrawals)}</p>
                     </div>
                     <div className="w-14 h-14 rounded-2xl bg-red-500/10 flex items-center justify-center text-red-500">
                         <ArrowUpRight size={28} />
                     </div>
                 </div>
-                <div className="bg-gray-900/50 border border-gray-800 rounded-3xl p-6 flex items-center justify-between">
+                <div className="bg-card/50 border border-gray-800 rounded-3xl p-6 flex items-center justify-between">
                     <div>
                         <p className="text-xs font-black uppercase text-gray-500 tracking-widest mb-2 flex items-center gap-2">Total Earnings</p>
                         <p className="text-3xl font-black text-white">{formatCurrency(profile.totalEarnings || 0)}</p>
@@ -281,7 +281,7 @@ const Wallet: React.FC = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
                 {/* Professional Transactions Ledger */}
-                <div className="xl:col-span-2 bg-gray-900/50 rounded-3xl border border-gray-800 overflow-hidden">
+                <div className="xl:col-span-2 bg-card/50 rounded-3xl border border-gray-800 overflow-hidden">
                     <div className="p-8 border-b border-gray-800 flex justify-between items-center">
                         <h3 className="text-sm font-black text-white uppercase tracking-widest">Transaction Ledger</h3>
                         <button 
@@ -307,7 +307,7 @@ const Wallet: React.FC = () => {
                         ) : transactions.length > 0 ? (
                             <div className="space-y-3">
                                 {transactions.map(tx => (
-                                    <div key={tx.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-6 bg-black rounded-2xl hover:bg-gray-900 transition-colors border border-gray-800 gap-4 group">
+                                    <div key={tx.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-6 bg-black rounded-2xl hover:bg-card transition-colors border border-gray-800 gap-4 group">
                                         <div className="flex items-center gap-5">
                                             <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 border border-gray-800 ${
                                                 tx.type === 'deposit' ? 'bg-green-500/10 text-green-500' : 
@@ -326,7 +326,7 @@ const Wallet: React.FC = () => {
                                                 </h4>
                                                 <div className="flex items-center gap-3 mt-1">
                                                     <span className="text-xs text-gray-500 font-bold uppercase">{formatDate(tx.timestamp)}</span>
-                                                    <span className="w-1 h-1 rounded-full bg-gray-700"></span>
+                                                    <span className="w-1 h-1 rounded-full bg-surface"></span>
                                                     <span className="text-xs text-gray-400 font-bold uppercase">{tx.method || 'System'}</span>
                                                 </div>
                                             </div>
@@ -370,7 +370,7 @@ const Wallet: React.FC = () => {
                                         <button 
                                             onClick={() => fetchTransactions(true)}
                                             disabled={loadingMore}
-                                            className="text-xs font-black uppercase text-gray-400 hover:text-white bg-black hover:bg-gray-900 py-4 px-8 rounded-2xl transition border border-gray-800 flex items-center gap-2 mx-auto disabled:opacity-50"
+                                            className="text-xs font-black uppercase text-gray-400 hover:text-white bg-black hover:bg-card py-4 px-8 rounded-2xl transition border border-gray-800 flex items-center gap-2 mx-auto disabled:opacity-50"
                                         >
                                             {loadingMore ? 'Loading...' : 'Load More History'}
                                         </button>
@@ -390,7 +390,7 @@ const Wallet: React.FC = () => {
                 {/* Right Column Stack */}
                 <div className="space-y-6">
                     {/* Spending Overview Profile */}
-                    <div ref={chartRef} className="bg-gray-900/50 rounded-3xl border border-gray-800 p-8">
+                    <div ref={chartRef} className="bg-card/50 rounded-3xl border border-gray-800 p-8">
                         <h3 className="text-xs font-black text-gray-500 uppercase tracking-widest mb-8 flex justify-between items-center">
                             Activity Overview
                             <span className="text-[10px] bg-black px-3 py-1 rounded-full text-gray-500 border border-gray-800">Recent</span>

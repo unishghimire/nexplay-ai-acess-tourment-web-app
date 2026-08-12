@@ -113,7 +113,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({ tournament }) => {
                                 <span className="text-xs sm:text-sm font-black text-brand-400">{tournament.currentPlayers} / {tournament.slots}</span>
                             </div>
                         </div>
-                        <div className="w-full bg-gray-900 rounded-full h-2 overflow-hidden border border-gray-800/50">
+                        <div className="w-full bg-card rounded-full h-2 overflow-hidden border border-gray-800/50">
                             <motion.div 
                                 initial={{ width: 0 }}
                                 animate={{ width: `${Math.min(100, Math.max(0, (tournament.currentPlayers / (tournament.slots || 1)) * 100))}%` }}

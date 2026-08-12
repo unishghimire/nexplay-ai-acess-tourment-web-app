@@ -13,7 +13,7 @@ const Terms: React.FC = () => {
         />
         <div className="animate-fade-in max-w-4xl mx-auto">
             <div className="bg-card p-5 sm:p-8 rounded-xl border border-gray-800 shadow-2xl">
-                <h1 className="text-3xl font-bold text-white mb-6 border-b border-gray-700 pb-4 flex items-center">
+                <h1 className="text-2xl sm:text-3xl font-bold text-white mb-6 border-b border-gray-700 pb-4 flex items-center">
                     <FileText className="mr-3 text-brand-500 w-8 h-8" /> Terms of Service
                 </h1>
                 <div className="space-y-6 text-gray-300 text-sm leading-relaxed h-[60vh] overflow-y-auto custom-scrollbar pr-2">

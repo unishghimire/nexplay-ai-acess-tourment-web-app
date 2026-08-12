@@ -53,7 +53,7 @@ const MatchRoomsTab: React.FC<MatchRoomsTabProps> = ({
       );
     }
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-800 text-slate-400 border border-gray-700">
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-surface text-slate-400 border border-gray-700">
         {status || 'Unknown'}
       </span>
     );
@@ -83,7 +83,7 @@ const MatchRoomsTab: React.FC<MatchRoomsTabProps> = ({
       );
     }
     return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-800 text-slate-400 border border-gray-700">
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-surface text-slate-400 border border-gray-700">
         {status || 'Unknown'}
       </span>
     );
@@ -251,12 +251,12 @@ const MatchRoomsTab: React.FC<MatchRoomsTabProps> = ({
                         {dispute.reportedBy ? `Reported by ${dispute.reportedBy}` : 'Dispute Report'}
                       </span>
                       {dispute.tournamentName && (
-                        <span className="text-xs text-slate-400 bg-gray-800 px-2 py-0.5 rounded">
+                        <span className="text-xs text-slate-400 bg-surface px-2 py-0.5 rounded">
                           {dispute.tournamentName}
                         </span>
                       )}
                       {dispute.matchRoom && (
-                        <span className="text-xs text-slate-400 bg-gray-800/80 px-2 py-0.5 rounded">
+                        <span className="text-xs text-slate-400 bg-surface/80 px-2 py-0.5 rounded">
                           Room #{dispute.matchRoom}
                         </span>
                       )}
@@ -277,7 +277,7 @@ const MatchRoomsTab: React.FC<MatchRoomsTabProps> = ({
 
                   <button
                     onClick={() => onResolveDispute(dispute.id, dispute.status || 'review')}
-                    className="bg-gray-800 hover:bg-gray-700 text-white font-medium text-xs px-3.5 py-2 rounded-lg transition-colors border border-gray-700 flex items-center gap-1.5 min-h-[44px]"
+                    className="bg-surface hover:bg-surface text-white font-medium text-xs px-3.5 py-2 rounded-lg transition-colors border border-gray-700 flex items-center gap-1.5 min-h-[44px]"
                   >
                     <ShieldAlert className="w-3.5 h-3.5 text-amber-400" /> Review Dispute
                   </button>

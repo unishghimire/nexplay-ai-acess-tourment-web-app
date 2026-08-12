@@ -718,7 +718,7 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
       <div className="mb-8">
         <div className="flex justify-between relative">
           {/* Progress Line */}
-          <div className="absolute top-5 left-0 w-full h-0.5 bg-gray-800 -z-10" />
+          <div className="absolute top-5 left-0 w-full h-0.5 bg-surface -z-10" />
           <div 
             className="absolute top-5 left-0 h-0.5 bg-brand-500 transition-all duration-300 -z-10" 
             style={{ width: `${((currentStep - 1) / (STEPS.length - 1)) * 100}%` }}
@@ -733,7 +733,7 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
               <div key={step.id} className="flex flex-col items-center group">
                 <div className={`
                   w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500
-                  ${isActive ? 'bg-brand-600 text-white shadow-[0_0_20px_rgba(var(--brand-primary-rgb),0.5)]' : 'bg-gray-800 text-gray-500'}
+                  ${isActive ? 'bg-brand-600 text-white shadow-[0_0_20px_rgba(var(--brand-primary-rgb),0.5)]' : 'bg-surface text-gray-500'}
                   ${isCurrent ? 'ring-4 ring-brand-500/20 scale-110' : ''}
                 `}>
                   {isActive && currentStep > step.id ? <CheckCircle2 className="w-6 h-6" /> : <Icon className="w-5 h-5" />}

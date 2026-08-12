@@ -421,7 +421,7 @@ const TeamDetails: React.FC = () => {
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                                 <div>
                                     <div className="flex items-center gap-3 mb-2">
-                                        <h1 className="text-4xl font-black text-white tracking-tight">{team.name}</h1>
+                                        <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight">{team.name}</h1>
                                         <span className="bg-brand-500/20 text-brand-400 text-[10px] font-black px-2 py-1 rounded border border-brand-500/30 uppercase tracking-widest">
                                             {team.tag || 'TEAM'}
                                         </span>
@@ -437,7 +437,7 @@ const TeamDetails: React.FC = () => {
                                     {isAdmin && !isEditing && (
                                         <button 
                                             onClick={() => setIsEditing(true)}
-                                            className="bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-xs transition flex items-center gap-2 border border-gray-700"
+                                            className="bg-surface hover:bg-surface text-white px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-xs transition flex items-center gap-2 border border-gray-700"
                                         >
                                             <Settings className="w-4 h-4" /> Settings
                                         </button>
@@ -502,7 +502,7 @@ const TeamDetails: React.FC = () => {
                             {members.map(member => (
                                 <div key={member.id} className="p-6 flex items-center justify-between hover:bg-white/5 transition group">
                                     <div className="flex items-center gap-4">
-                                        <Link to={`/user/${member.userId}`} className="w-14 h-14 rounded-2xl bg-gray-800 overflow-hidden border-2 border-gray-700 group-hover:border-brand-500 transition shrink-0">
+                                        <Link to={`/user/${member.userId}`} className="w-14 h-14 rounded-2xl bg-surface overflow-hidden border-2 border-gray-700 group-hover:border-brand-500 transition shrink-0">
                                             {member.user?.profilePicUrl ? (
                                                 <img src={member.user.profilePicUrl || undefined} alt={member.user.username} className="w-full h-full object-cover" />
                                             ) : (
@@ -517,7 +517,7 @@ const TeamDetails: React.FC = () => {
                                                 {member.userId === team.ownerId && <Crown className="w-4 h-4 text-yellow-500" />}
                                             </Link>
                                             <div className="flex items-center gap-2 mt-1">
-                                                <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${member.role === 'admin' ? 'bg-brand-500/20 text-brand-400' : 'bg-gray-800 text-gray-500'}`}>
+                                                <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${member.role === 'admin' ? 'bg-brand-500/20 text-brand-400' : 'bg-surface text-gray-500'}`}>
                                                     {member.roleInTeam || (member.userId === team.ownerId ? 'Captain' : 'Member')}
                                                 </span>
                                                 {member.user?.status === 'online' && <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>}
@@ -598,7 +598,7 @@ const TeamDetails: React.FC = () => {
                                         <button 
                                             onClick={handleInvite}
                                             disabled={inviting || !inviteUserId.trim()}
-                                            className="bg-brand-600 hover:bg-brand-500 disabled:bg-gray-700 text-white px-4 py-3 rounded-xl font-black uppercase tracking-widest text-xs transition shrink-0"
+                                            className="bg-brand-600 hover:bg-brand-500 disabled:bg-surface text-white px-4 py-3 rounded-xl font-black uppercase tracking-widest text-xs transition shrink-0"
                                         >
                                             {inviting ? '...' : 'Invite'}
                                         </button>

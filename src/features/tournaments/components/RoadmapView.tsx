@@ -72,7 +72,7 @@ const RoadmapView: React.FC<RoadmapViewProps> = ({ tournament }) => {
                         <span>Roadmap Progress</span>
                         <span>{progressPercent}%</span>
                     </div>
-                    <div className="h-3 rounded-full bg-gray-900 overflow-hidden border border-gray-800">
+                    <div className="h-3 rounded-full bg-card overflow-hidden border border-gray-800">
                         <div className="h-full rounded-full bg-gradient-to-r from-brand-500 via-amber-400 to-green-400 transition-all" style={{ width: `${progressPercent}%` }} />
                     </div>
                 </div>
@@ -96,7 +96,7 @@ const RoadmapView: React.FC<RoadmapViewProps> = ({ tournament }) => {
                             <div className={`absolute left-0 w-12 h-12 rounded-2xl flex items-center justify-center border-2 z-10 transition-colors ${
                                 step.status === 'completed' ? 'bg-green-600/20 border-green-500 text-green-500' :
                                 step.status === 'current' ? 'bg-brand-600/20 border-brand-500 text-brand-500 animate-pulse' :
-                                'bg-gray-900 border-gray-800 text-gray-700'
+                                'bg-card border-gray-800 text-gray-700'
                             }`}>
                                 {step.status === 'completed' ? <CheckCircle2 className="w-6 h-6" /> : 
                                  step.status === 'current' ? <ArrowRight className="w-6 h-6" /> : 
@@ -113,7 +113,7 @@ const RoadmapView: React.FC<RoadmapViewProps> = ({ tournament }) => {
                                             <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${
                                                 step.status === 'completed' ? 'bg-green-500/20 text-green-500' :
                                                 step.status === 'current' ? 'bg-brand-500/20 text-brand-500' :
-                                                'bg-gray-800 text-gray-500'
+                                                'bg-surface text-gray-500'
                                             }`}>
                                                 {step.status}
                                             </span>

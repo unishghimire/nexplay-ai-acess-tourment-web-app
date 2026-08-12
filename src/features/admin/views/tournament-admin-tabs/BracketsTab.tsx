@@ -67,7 +67,7 @@ export const BracketsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                                                         setMatchScore({ score1: match.score1, score2: match.score2, status: match.status, map: match.map || '' });
                                                                         setIsUpdateScoreModalOpen(true);
                                                                     }}
-                                                                    className="w-full mt-3 bg-dark hover:bg-gray-800 text-gray-400 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border border-gray-800"
+                                                                    className="w-full mt-3 bg-dark hover:bg-surface text-gray-400 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border border-gray-800"
                                                                 >
                                                                     Update
                                                                 </button>

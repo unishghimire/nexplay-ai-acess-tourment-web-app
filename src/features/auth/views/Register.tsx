@@ -174,11 +174,11 @@ const Register: React.FC = () => {
                     <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-brand-500/10 border border-brand-500/20 mb-6">
                         <ShieldCheck className="w-10 h-10 text-brand-500" />
                     </div>
-                    <h2 className="text-4xl font-black text-white tracking-tighter uppercase mb-2">Join NexPlay</h2>
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tighter uppercase mb-2">Join NexPlay</h2>
                     <p className="text-gray-400 font-bold">Create your account to start competing</p>
                 </div>
 
-                <div className="bg-gray-900/50 border border-gray-800 rounded-2xl sm:rounded-3xl p-5 sm:p-8 md:p-10 shadow-2xl relative">
+                <div className="bg-card/50 border border-gray-800 rounded-2xl sm:rounded-3xl p-5 sm:p-8 md:p-10 shadow-2xl relative">
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
                             <label htmlFor="username" className="block text-xs font-black text-gray-500 uppercase tracking-widest mb-2 ml-1">Username</label>
@@ -309,7 +309,7 @@ const Register: React.FC = () => {
                                                 className={`flex-grow rounded-full transition-colors ${
                                                     i <= passwordStrength 
                                                         ? passwordStrength <= 2 ? 'bg-red-500' : passwordStrength === 3 ? 'bg-yellow-500' : 'bg-green-500'
-                                                        : 'bg-gray-800'
+                                                        : 'bg-surface'
                                                 }`}
                                             ></div>
                                         ))}
@@ -408,7 +408,7 @@ const Register: React.FC = () => {
                             type="button"
                             onClick={handleGoogleSignIn}
                             disabled={isLoading || isGoogleLoading}
-                            className="w-full flex items-center justify-center py-5 px-6 border border-gray-800 rounded-2xl bg-black text-sm font-black text-white hover:bg-gray-900 focus:outline-none transition disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-widest"
+                            className="w-full flex items-center justify-center py-5 px-6 border border-gray-800 rounded-2xl bg-black text-sm font-black text-white hover:bg-card focus:outline-none transition disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-widest"
                         >
                             {isGoogleLoading ? (
                                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>

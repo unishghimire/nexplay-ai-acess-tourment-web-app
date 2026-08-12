@@ -167,7 +167,7 @@ const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
                     <button 
                         onClick={onClose} 
                         disabled={loading}
-                        className="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-3 rounded-xl font-bold transition uppercase text-sm disabled:opacity-50"
+                        className="flex-1 bg-surface hover:bg-surface text-white py-3 rounded-xl font-bold transition uppercase text-sm disabled:opacity-50"
                     >
                         Cancel
                     </button>

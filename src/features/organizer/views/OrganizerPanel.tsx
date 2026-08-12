@@ -278,7 +278,7 @@ const OrganizerPanel: React.FC = () => {
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all shrink-0 min-h-[44px] ${
                   activeTab === item.id
                     ? 'bg-brand-500 text-white shadow-xl shadow-brand-500/20'
-                    : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
+                    : 'text-gray-400 hover:bg-surface/50 hover:text-white'
                 }`}
               >
                 <item.icon className={`w-4 h-4 flex-shrink-0 ${activeTab === item.id ? 'text-white' : 'text-gray-500'}`} />

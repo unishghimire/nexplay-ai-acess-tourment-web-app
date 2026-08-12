@@ -192,7 +192,7 @@ const Leaderboard: React.FC = () => {
             {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-8 mb-8 sm:mb-12">
                 <div>
-                    <h1 className="text-4xl font-black text-white uppercase tracking-tighter mb-4">Leaderboard</h1>
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white uppercase tracking-tighter mb-4">Leaderboard</h1>
                     <p className="text-gray-400 font-bold">The elite of NexPlay. Updated in real-time.</p>
                 </div>
 
@@ -203,7 +203,7 @@ const Leaderboard: React.FC = () => {
                             aria-label="Select leaderboard season"
                             value={season}
                             onChange={(e) => setSeason(e.target.value)}
-                            className="appearance-none bg-gray-900/50 border border-gray-800 text-white px-6 py-3 pr-12 rounded-2xl font-black text-sm uppercase tracking-widest focus:border-brand-500 outline-none transition cursor-pointer"
+                            className="appearance-none bg-card/50 border border-gray-800 text-white px-6 py-3 pr-12 rounded-2xl font-black text-sm uppercase tracking-widest focus:border-brand-500 outline-none transition cursor-pointer"
                         >
                             <option>Season 4</option>
                             <option>Season 3</option>
@@ -213,7 +213,7 @@ const Leaderboard: React.FC = () => {
                     </div>
 
                     {/* View Toggle */}
-                    <div className="flex bg-gray-900/50 p-1.5 rounded-2xl border border-gray-800">
+                    <div className="flex bg-card/50 p-1.5 rounded-2xl border border-gray-800">
                         <button 
                             type="button"
                             aria-pressed={view === 'players'}
@@ -243,7 +243,7 @@ const Leaderboard: React.FC = () => {
                     placeholder={`Search ${view}...`}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-gray-900/50 border border-gray-800 rounded-3xl py-5 pl-16 pr-6 text-white font-black uppercase tracking-widest focus:border-brand-500 outline-none transition shadow-2xl"
+                    className="w-full bg-card/50 border border-gray-800 rounded-3xl py-5 pl-16 pr-6 text-white font-black uppercase tracking-widest focus:border-brand-500 outline-none transition shadow-2xl"
                 />
             </div>
 
@@ -292,7 +292,7 @@ const Leaderboard: React.FC = () => {
                                     onClick={() => {
                                         navigate(isPlayerView ? `/user/${itemId}` : `/team/${itemId}`);
                                     }}
-                                    className={`flex items-center justify-between p-4 sm:p-6 rounded-2xl sm:rounded-3xl border transition cursor-pointer group ${isUser ? 'bg-brand-500/10 border-brand-500/50' : 'bg-gray-900/50 border-gray-800 hover:border-gray-700 hover:bg-gray-900'}`}
+                                    className={`flex items-center justify-between p-4 sm:p-6 rounded-2xl sm:rounded-3xl border transition cursor-pointer group ${isUser ? 'bg-brand-500/10 border-brand-500/50' : 'bg-card/50 border-gray-800 hover:border-gray-700 hover:bg-card'}`}
                                 >
                                     <div className="flex items-center gap-3 sm:gap-6">
                                         <div className="w-12 text-center">

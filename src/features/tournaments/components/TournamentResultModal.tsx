@@ -70,7 +70,7 @@ const TournamentResultModal: React.FC<TournamentResultModalProps> = ({ isOpen, o
                 >
                     {/* Mobile Handle */}
                     <div className="w-full flex justify-center pt-3 pb-1 sm:hidden absolute top-0 left-0 z-30 pointer-events-none">
-                        <div className="w-12 h-1.5 bg-gray-700 rounded-full"></div>
+                        <div className="w-12 h-1.5 bg-surface rounded-full"></div>
                     </div>
 
                     {/* Header */}
@@ -85,7 +85,7 @@ const TournamentResultModal: React.FC<TournamentResultModalProps> = ({ isOpen, o
                                     <span className="flex items-center gap-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                                         <Calendar className="w-3 h-3" /> {formatDate(tournament.startTime || tournament.createdAt)}
                                     </span>
-                                    <span className="w-1 h-1 rounded-full bg-gray-700"></span>
+                                    <span className="w-1 h-1 rounded-full bg-surface"></span>
                                     <span className="flex items-center gap-1 text-[10px] font-bold text-green-400 uppercase tracking-widest bg-green-500/10 px-2 py-0.5 rounded-sm">
                                         <CheckCircle2 className="w-3 h-3" /> Finalized
                                     </span>
@@ -93,10 +93,10 @@ const TournamentResultModal: React.FC<TournamentResultModalProps> = ({ isOpen, o
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
-                            <button className="hidden sm:flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-xl text-xs font-bold uppercase transition">
+                            <button className="hidden sm:flex items-center gap-2 bg-surface hover:bg-surface text-white px-4 py-2 rounded-xl text-xs font-bold uppercase transition">
                                 <Share2 className="w-4 h-4" /> Share
                             </button>
-                            <button onClick={onClose} className="p-3 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white rounded-xl transition">
+                            <button onClick={onClose} className="p-3 bg-surface hover:bg-surface text-gray-400 hover:text-white rounded-xl transition">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
@@ -210,7 +210,7 @@ const TournamentResultModal: React.FC<TournamentResultModalProps> = ({ isOpen, o
                     <div className="bg-[#0b1120] border-t border-gray-800 p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0">
                         <button 
                             onClick={onClose}
-                            className="w-full sm:w-auto px-8 py-3 rounded-xl font-bold uppercase tracking-widest text-xs text-gray-400 bg-gray-900 border border-gray-800 hover:bg-gray-800 hover:text-white transition-colors"
+                            className="w-full sm:w-auto px-8 py-3 rounded-xl font-bold uppercase tracking-widest text-xs text-gray-400 bg-card border border-gray-800 hover:bg-surface hover:text-white transition-colors"
                         >
                             Close Panel
                         </button>

@@ -162,7 +162,7 @@ const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                             >
                                 Dashboard
                             </button>
-                            <button onClick={onClose} className="flex-1 bg-surface hover:bg-gray-700 text-white py-4 rounded-xl font-black transition-all uppercase tracking-widest text-sm">
+                            <button onClick={onClose} className="flex-1 bg-surface hover:bg-surface text-white py-4 rounded-xl font-black transition-all uppercase tracking-widest text-sm">
                                 Close
                             </button>
                         </div>

@@ -98,7 +98,7 @@ export default function ResultBoard({ results, config }: ResultBoardProps) {
                         <div className="absolute inset-0 opacity-30" style={{ background: `radial-gradient(circle at center, ${config.theme.primaryColor}, transparent)` }} />
                         <div className="relative z-10 p-10 text-center">
                             <Trophy className="w-16 h-16 mx-auto mb-4" style={{ color: config.theme.primaryColor }} />
-                            <h2 className="text-4xl font-black text-white uppercase tracking-tighter mb-2">{winner.team}</h2>
+                            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white uppercase tracking-tighter mb-2">{winner.team}</h2>
                             <p className="text-sm font-bold uppercase tracking-widest" style={{ color: config.theme.primaryColor }}>CHAMPIONS • {winner.score} PTS</p>
                         </div>
                     </div>

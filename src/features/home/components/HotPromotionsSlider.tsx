@@ -90,7 +90,7 @@ const HotPromotionsSlider: React.FC<HotPromotionsSliderProps> = ({ slides, varia
         const currentSlide = slides[currentIndex] as Slide;
         return (
             <div 
-                className="relative w-full h-[350px] md:h-[500px] rounded-3xl overflow-hidden bg-gray-900 border border-gray-800 shadow-2xl group"
+                className="relative w-full h-[350px] md:h-[500px] rounded-3xl overflow-hidden bg-card border border-gray-800 shadow-2xl group"
                 onMouseEnter={() => setIsPaused(true)}
                 onMouseLeave={() => setIsPaused(false)}
                 onTouchStart={onTouchStart}
@@ -212,7 +212,7 @@ const HotPromotionsSlider: React.FC<HotPromotionsSliderProps> = ({ slides, varia
                             onClick={() => goToSlide(idx)}
                             aria-label={`Go to slide ${idx + 1}`}
                             className={`w-2 h-2 rounded-full transition-all ${
-                                currentIndex === idx ? 'bg-brand-500 w-4' : 'bg-gray-600 hover:bg-gray-500'
+                                currentIndex === idx ? 'bg-brand-500 w-4' : 'bg-surface hover:bg-gray-500'
                             }`}
                         />
                     ))}
@@ -246,7 +246,7 @@ const HotPromotionsSlider: React.FC<HotPromotionsSliderProps> = ({ slides, varia
                                         </span>
                                         <span className={`text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider ${
                                             slide.status === 'UPCOMING' ? 'bg-green-600' : 
-                                            slide.status === 'LIVE' ? 'bg-red-600' : 'bg-gray-600'
+                                            slide.status === 'LIVE' ? 'bg-red-600' : 'bg-surface'
                                         }`}>
                                             {slide.status}
                                         </span>
@@ -283,7 +283,7 @@ const HotPromotionsSlider: React.FC<HotPromotionsSliderProps> = ({ slides, varia
                                         aria-label={slide.status === 'COMPLETED' ? 'View Results' : 'Join Now'}
                                         className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${
                                             slide.status === 'COMPLETED' 
-                                            ? 'bg-gray-700 hover:bg-gray-600 text-white' 
+                                            ? 'bg-surface hover:bg-surface text-white' 
                                             : 'bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white shadow-lg shadow-brand-500/25'
                                         } sm:w-auto w-full sm:ml-4 text-center`}
                                     >

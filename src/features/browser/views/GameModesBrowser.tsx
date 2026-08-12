@@ -98,7 +98,7 @@ const GameModesBrowser: React.FC = () => {
         <div className="animate-fade-in max-w-5xl mx-auto p-4 md:p-8">
             <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6 border-b border-gray-800 pb-8">
                 <div className="space-y-2">
-                    <h1 className="text-4xl font-black text-white uppercase tracking-tighter flex items-center gap-4">
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white uppercase tracking-tighter flex items-center gap-4">
                         <img src={game.logoUrl || 'https://picsum.photos/seed/gaming/400/300' || undefined} alt={gameLabel} className="w-14 h-14 object-cover rounded-2xl border border-gray-800" referrerPolicy="no-referrer" />
                         {gameLabel} Modes
                     </h1>
@@ -119,7 +119,7 @@ const GameModesBrowser: React.FC = () => {
                             transition={{ delay: idx * 0.1 }}
                             whileHover={{ y: -8 }}
                             onClick={() => navigate(`/tournaments?game=${encodeURIComponent(game.name)}&mode=${encodeURIComponent(mode)}`)}
-                            className="relative rounded-3xl overflow-hidden group border border-gray-800 bg-gray-900/50 text-left w-full h-full"
+                            className="relative rounded-3xl overflow-hidden group border border-gray-800 bg-card/50 text-left w-full h-full"
                         >
                             <div className="relative h-48 w-full overflow-hidden">
                                 <img 
@@ -141,7 +141,7 @@ const GameModesBrowser: React.FC = () => {
                         );
                     })
                 ) : (
-                    <div className="col-span-full py-20 bg-gray-900/50 rounded-3xl border border-gray-800 text-center">
+                    <div className="col-span-full py-20 bg-card/50 rounded-3xl border border-gray-800 text-center">
                         <Gamepad2 className="w-16 h-16 text-gray-700 mx-auto mb-6" />
                         <h3 className="text-xl font-black text-white uppercase tracking-widest">No Modes Found</h3>
                         <p className="text-gray-500 font-bold mt-2">This game currently has no active modes.</p>

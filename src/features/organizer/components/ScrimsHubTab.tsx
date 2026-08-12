@@ -133,7 +133,7 @@ export const ScrimsHubTab: React.FC<ScrimsHubTabProps> = ({
                           statusUpper === 'LIVE'
                             ? 'bg-red-500/10 text-red-400 border-red-500/20 animate-pulse'
                             : statusUpper === 'COMPLETED'
-                            ? 'bg-gray-800 text-slate-400 border-gray-700'
+                            ? 'bg-surface text-slate-400 border-gray-700'
                             : 'bg-green-500/10 text-green-400 border-green-500/20'
                         }`}
                       >
@@ -163,7 +163,7 @@ export const ScrimsHubTab: React.FC<ScrimsHubTabProps> = ({
                     <button
                       type="button"
                       onClick={() => onOpenSlotGrid(scrim)}
-                      className="self-start md:self-auto bg-card hover:bg-gray-800 text-slate-200 border border-slate-800 px-4 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center gap-2 cursor-pointer min-h-[44px]"
+                      className="self-start md:self-auto bg-card hover:bg-surface text-slate-200 border border-slate-800 px-4 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center gap-2 cursor-pointer min-h-[44px]"
                     >
                       View Slot Grid
                     </button>
@@ -178,7 +178,7 @@ export const ScrimsHubTab: React.FC<ScrimsHubTabProps> = ({
                       <span className="text-brand-400">{filledSlots}</span> / {totalSlots} Filled
                     </span>
                   </div>
-                  <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                  <div className="h-2 bg-surface rounded-full overflow-hidden">
                     <div
                       className="h-full bg-brand-500 rounded-full transition-all duration-300"
                       style={{ width: `${progressPercent}%` }}
@@ -189,7 +189,7 @@ export const ScrimsHubTab: React.FC<ScrimsHubTabProps> = ({
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1 border-t border-slate-800/60">
                   <div className="flex items-center gap-3 p-2.5 rounded-lg bg-card/40 border border-slate-800/50">
-                    <div className="w-8 h-8 rounded-lg bg-gray-800/80 flex items-center justify-center flex-shrink-0 text-brand-400">
+                    <div className="w-8 h-8 rounded-lg bg-surface/80 flex items-center justify-center flex-shrink-0 text-brand-400">
                       <Clock className="w-4 h-4" />
                     </div>
                     <div>
@@ -199,7 +199,7 @@ export const ScrimsHubTab: React.FC<ScrimsHubTabProps> = ({
                   </div>
 
                   <div className="flex items-center gap-3 p-2.5 rounded-lg bg-card/40 border border-slate-800/50">
-                    <div className="w-8 h-8 rounded-lg bg-gray-800/80 flex items-center justify-center flex-shrink-0 text-amber-400">
+                    <div className="w-8 h-8 rounded-lg bg-surface/80 flex items-center justify-center flex-shrink-0 text-amber-400">
                       <DollarSign className="w-4 h-4" />
                     </div>
                     <div>
@@ -209,7 +209,7 @@ export const ScrimsHubTab: React.FC<ScrimsHubTabProps> = ({
                   </div>
 
                   <div className="flex items-center gap-3 p-2.5 rounded-lg bg-card/40 border border-slate-800/50">
-                    <div className="w-8 h-8 rounded-lg bg-gray-800/80 flex items-center justify-center flex-shrink-0 text-emerald-400">
+                    <div className="w-8 h-8 rounded-lg bg-surface/80 flex items-center justify-center flex-shrink-0 text-emerald-400">
                       <Trophy className="w-4 h-4" />
                     </div>
                     <div>

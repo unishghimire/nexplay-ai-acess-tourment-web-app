@@ -151,7 +151,7 @@ function StandingsTable({ standings }: { standings: TeamStanding[] }) {
                                 </td>
                                 <td className="py-3.5">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-xl bg-gray-800 border border-gray-700 flex items-center justify-center font-black text-xs text-brand-400 overflow-hidden shrink-0">
+                                        <div className="w-8 h-8 rounded-xl bg-surface border border-gray-700 flex items-center justify-center font-black text-xs text-brand-400 overflow-hidden shrink-0">
                                             {s.logoUrl ? (
                                                 <img src={s.logoUrl} alt={s.name} className="w-full h-full object-cover" />
                                             ) : (
@@ -219,7 +219,7 @@ function StandingsTable({ standings }: { standings: TeamStanding[] }) {
                             </td>
                             <td className="py-3.5">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-xl bg-gray-800 border border-gray-700 flex items-center justify-center font-black text-xs text-brand-400 overflow-hidden shrink-0">
+                                    <div className="w-8 h-8 rounded-xl bg-surface border border-gray-700 flex items-center justify-center font-black text-xs text-brand-400 overflow-hidden shrink-0">
                                         {s.logoUrl ? (
                                             <img src={s.logoUrl} alt={s.name} className="w-full h-full object-cover" />
                                         ) : (
@@ -281,7 +281,7 @@ export default function GroupStandingsView({ tournament, participants }: GroupSt
 
     if (groups.length === 0) {
         return (
-            <div className="text-center py-16 bg-gray-900/50 rounded-3xl border border-dashed border-gray-800">
+            <div className="text-center py-16 bg-card/50 rounded-3xl border border-dashed border-gray-800">
                 <Trophy className="w-12 h-12 text-gray-700 mx-auto mb-4" />
                 <h3 className="text-white font-black text-lg uppercase tracking-tighter mb-2">Groups Not Published Yet</h3>
                 <p className="text-gray-500 font-bold text-sm max-w-xs mx-auto">
@@ -348,7 +348,7 @@ export default function GroupStandingsView({ tournament, participants }: GroupSt
             <div>
                 {myGroup && (
                     <div className="text-xs font-black text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-3">
-                        <span className="inline-block w-6 h-px bg-gray-700" />
+                        <span className="inline-block w-6 h-px bg-surface" />
                         All Groups
                     </div>
                 )}
@@ -390,7 +390,7 @@ function GroupCard({ group, participants, currentTeamId, isHighlighted, label }:
             className={`rounded-3xl border overflow-hidden ${isHighlighted ? 'border-brand-500/40 shadow-lg shadow-brand-500/10' : 'border-gray-800'}`}
         >
             {/* Header */}
-            <div className={`px-6 py-4 flex items-center justify-between ${isHighlighted ? 'bg-brand-500/10' : 'bg-gray-900/70'}`}>
+            <div className={`px-6 py-4 flex items-center justify-between ${isHighlighted ? 'bg-brand-500/10' : 'bg-card/70'}`}>
                 <div className="flex items-center gap-3">
                     <Trophy className={`w-5 h-5 ${isHighlighted ? 'text-brand-400' : 'text-gray-600'}`} />
                     <h3 className="text-white font-black text-lg uppercase tracking-tighter">{group.name}</h3>
@@ -407,7 +407,7 @@ function GroupCard({ group, participants, currentTeamId, isHighlighted, label }:
             </div>
 
             {/* Tab switcher */}
-            <div className="flex border-b border-gray-800/80 bg-gray-950/40 px-6 pt-2">
+            <div className="flex border-b border-gray-800/80 bg-dark/40 px-6 pt-2">
                 {(['standings', 'matches', 'teams'] as const).map(tab => (
                     <button
                         key={tab}
@@ -426,7 +426,7 @@ function GroupCard({ group, participants, currentTeamId, isHighlighted, label }:
             </div>
 
             {/* Content area */}
-            <div className="p-6 bg-gray-950/20">
+            <div className="p-6 bg-dark/20">
                 {/* ── Standings Table ── */}
                 {activeView === 'standings' && (
                     <StandingsTable standings={standings} />
@@ -458,7 +458,7 @@ function GroupCard({ group, participants, currentTeamId, isHighlighted, label }:
 
                                         <div className="px-3">
                                             {isDone ? (
-                                                <span className="font-mono font-black text-white bg-gray-800 px-3 py-1 rounded-xl text-sm border border-gray-700">
+                                                <span className="font-mono font-black text-white bg-surface px-3 py-1 rounded-xl text-sm border border-gray-700">
                                                     {m.score1 ?? 0} - {m.score2 ?? 0}
                                                 </span>
                                             ) : isLive ? (
@@ -482,7 +482,7 @@ function GroupCard({ group, participants, currentTeamId, isHighlighted, label }:
                                             </span>
                                         )}
                                         {!isDone && !isLive && (
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 bg-gray-900 border border-gray-800 px-2.5 py-1 rounded-full">
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 bg-card border border-gray-800 px-2.5 py-1 rounded-full">
                                                 Upcoming
                                             </span>
                                         )}
@@ -515,7 +515,7 @@ function GroupCard({ group, participants, currentTeamId, isHighlighted, label }:
                                             : 'bg-black/30 border-gray-800/80'
                                     }`}
                                 >
-                                    <div className="w-10 h-10 rounded-xl bg-gray-800 border border-gray-700 flex items-center justify-center font-black text-sm text-brand-400 overflow-hidden shrink-0">
+                                    <div className="w-10 h-10 rounded-xl bg-surface border border-gray-700 flex items-center justify-center font-black text-sm text-brand-400 overflow-hidden shrink-0">
                                         {participant?.logoUrl ? (
                                             <img src={participant.logoUrl} alt={t.name} className="w-full h-full object-cover" />
                                         ) : (

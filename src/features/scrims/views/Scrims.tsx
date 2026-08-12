@@ -102,12 +102,12 @@ const Scrims: React.FC = () => {
             <header className="mb-12 border-b border-gray-800 pb-8">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-6">
                     <div>
-                        <h1 className="text-4xl font-black text-white uppercase tracking-tighter leading-none mb-2">Daily Scrims</h1>
+                        <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white uppercase tracking-tighter leading-none mb-2">Daily Scrims</h1>
                         <p className="text-gray-400 font-bold max-w-lg">
                             Practice like a pro. Join high-tier scrims and test your team strategy.
                         </p>
                     </div>
-                    <div className="flex items-center gap-3 bg-gray-900/50 px-6 py-3 rounded-2xl border border-gray-800">
+                    <div className="flex items-center gap-3 bg-card/50 px-6 py-3 rounded-2xl border border-gray-800">
                         <Trophy className="w-5 h-5 text-yellow-500" />
                         <span className="text-white font-black tracking-widest uppercase text-sm">1,420 ELO</span>
                     </div>
@@ -115,7 +115,7 @@ const Scrims: React.FC = () => {
             </header>
 
             {/* Filters */}
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-12 bg-gray-900/50 p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-800">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-12 bg-card/50 p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-800">
                 <div className="md:col-span-8 relative">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                     <input 
@@ -149,7 +149,7 @@ const Scrims: React.FC = () => {
             {loading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {[1,2,3,4,5,6].map(i => (
-                        <div key={i} className="bg-gray-900/50 h-[400px] rounded-3xl animate-pulse border border-gray-800"></div>
+                        <div key={i} className="bg-card/50 h-[400px] rounded-3xl animate-pulse border border-gray-800"></div>
                     ))}
                 </div>
             ) : filteredScrims.length > 0 ? (
@@ -163,7 +163,7 @@ const Scrims: React.FC = () => {
                             onClick={() => {
                                 navigate(`/details/${scrim.tournamentId || scrim.id}`);
                             }}
-                            className="bg-gray-900/50 rounded-[2rem] border border-gray-800 overflow-hidden cursor-pointer group hover:border-brand-500/50 transition-all hover:bg-gray-900"
+                            className="bg-card/50 rounded-[2rem] border border-gray-800 overflow-hidden cursor-pointer group hover:border-brand-500/50 transition-all hover:bg-card"
                         >
                             <div className="h-48 relative overflow-hidden">
                                 <img 
@@ -218,7 +218,7 @@ const Scrims: React.FC = () => {
                     ))}
                 </div>
             ) : (
-                <div className="bg-gray-900/50 p-12 rounded-3xl border border-gray-800 text-center">
+                <div className="bg-card/50 p-12 rounded-3xl border border-gray-800 text-center">
                     <Gamepad2 className="w-16 h-16 text-gray-700 mx-auto mb-6" />
                     <h3 className="text-2xl font-black text-white uppercase mb-2">No Scrims Available</h3>
                     <p className="text-gray-500 font-bold max-w-sm mx-auto mb-8">

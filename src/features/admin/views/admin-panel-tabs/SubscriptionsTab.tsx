@@ -125,7 +125,7 @@ export const SubscriptionsTab: React.FC<AdminPanelTabProps> = (props) => {
                                     </div>
                                 </div>
                                 <div className="flex gap-4 pt-4">
-                                    <button onClick={() => setIsPlanModalOpen(false)} className="flex-1 bg-surface hover:bg-gray-700 text-white py-3 rounded-xl font-bold transition">Cancel</button>
+                                    <button onClick={() => setIsPlanModalOpen(false)} className="flex-1 bg-surface hover:bg-surface text-white py-3 rounded-xl font-bold transition">Cancel</button>
                                     <button onClick={handleSavePlan} className="flex-1 bg-brand-600 hover:bg-brand-500 text-white py-3 rounded-xl font-bold transition">Save Plan</button>
                                 </div>
                             </div>

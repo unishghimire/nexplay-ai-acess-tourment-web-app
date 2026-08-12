@@ -64,7 +64,7 @@ export const MatchesTab: React.FC<TournamentAdminTabProps> = (props) => {
                                                             setMatchScore({ score1: match.score1, score2: match.score2, status: match.status, map: match.map || '' });
                                                             setIsUpdateScoreModalOpen(true);
                                                         }}
-                                                        className="bg-dark hover:bg-gray-800 text-gray-400 py-2.5 min-h-[44px] rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border border-gray-800"
+                                                        className="bg-dark hover:bg-surface text-gray-400 py-2.5 min-h-[44px] rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border border-gray-800"
                                                     >
                                                         Score
                                                     </button>
@@ -154,7 +154,7 @@ export const MatchesTab: React.FC<TournamentAdminTabProps> = (props) => {
                         <div className="pt-4 flex gap-3">
                             <button
                                 onClick={() => setIsUpdateScoreModalOpen(false)}
-                                className="flex-1 bg-dark hover:bg-gray-800 text-white py-3 rounded-xl font-bold transition border border-gray-800"
+                                className="flex-1 bg-dark hover:bg-surface text-white py-3 rounded-xl font-bold transition border border-gray-800"
                             >
                                 Cancel
                             </button>
@@ -241,7 +241,7 @@ export const MatchesTab: React.FC<TournamentAdminTabProps> = (props) => {
                         <div className="pt-4 flex gap-3">
                             <button
                                 onClick={() => setIsAddMatchModalOpen(false)}
-                                className="flex-1 bg-dark hover:bg-gray-800 text-white py-3 rounded-xl font-bold transition border border-gray-800"
+                                className="flex-1 bg-dark hover:bg-surface text-white py-3 rounded-xl font-bold transition border border-gray-800"
                             >
                                 Cancel
                             </button>

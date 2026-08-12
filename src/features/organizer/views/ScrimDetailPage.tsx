@@ -155,7 +155,7 @@ export default function ScrimDetailPage() {
         <div className="flex items-center gap-2">
           {isEditing ? (
             <>
-              <button onClick={() => setIsEditing(false)} className="px-4 py-2 rounded-lg bg-gray-800 text-gray-300 text-sm hover:bg-gray-700 flex items-center gap-2 min-h-[44px]">
+              <button onClick={() => setIsEditing(false)} className="px-4 py-2 rounded-lg bg-surface text-gray-300 text-sm hover:bg-surface flex items-center gap-2 min-h-[44px]">
                 <X className="w-4 h-4" /> Cancel
               </button>
               <button onClick={handleSaveEdit} className="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm hover:bg-brand-400 flex items-center gap-2 min-h-[44px]">
@@ -163,7 +163,7 @@ export default function ScrimDetailPage() {
               </button>
             </>
           ) : (
-            <button onClick={() => { setEditForm({ title: scrim.title, startTime: scrim.startTime, entryFee: scrim.entryFee, prizePool: scrim.prizePool, slots: scrim.totalSlots || scrim.slots, map: scrim.map || '' }); setIsEditing(true); }} className="px-4 py-2 rounded-lg bg-gray-800 text-white text-sm hover:bg-gray-700 flex items-center gap-2 min-h-[44px]">
+            <button onClick={() => { setEditForm({ title: scrim.title, startTime: scrim.startTime, entryFee: scrim.entryFee, prizePool: scrim.prizePool, slots: scrim.totalSlots || scrim.slots, map: scrim.map || '' }); setIsEditing(true); }} className="px-4 py-2 rounded-lg bg-surface text-white text-sm hover:bg-surface flex items-center gap-2 min-h-[44px]">
               <Edit2 className="w-4 h-4" /> Edit Scrim
             </button>
           )}
@@ -174,7 +174,7 @@ export default function ScrimDetailPage() {
       <div className="flex items-center gap-3 flex-wrap">
         <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${
           scrim.status === 'live' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-          scrim.status === 'open' ? 'bg-gray-800 text-gray-300 border border-gray-700' :
+          scrim.status === 'open' ? 'bg-surface text-gray-300 border border-gray-700' :
           'bg-zinc-900 text-gray-500 border border-zinc-800'
         }`}>
           {scrim.status === 'live' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />}
@@ -187,12 +187,12 @@ export default function ScrimDetailPage() {
           </button>
         )}
         {scrim.status === 'live' && (
-          <button onClick={() => handleStatusChange('completed')} className="px-3 py-1.5 rounded-lg bg-gray-800 text-gray-300 border border-gray-700 text-xs font-medium hover:bg-gray-700 flex items-center gap-1.5">
+          <button onClick={() => handleStatusChange('completed')} className="px-3 py-1.5 rounded-lg bg-surface text-gray-300 border border-gray-700 text-xs font-medium hover:bg-surface flex items-center gap-1.5">
             <CheckCircle2 className="w-3.5 h-3.5" /> Finalize
           </button>
         )}
         {scrim.status === 'completed' && (
-          <button onClick={() => handleStatusChange('open')} className="px-3 py-1.5 rounded-lg bg-gray-800 text-gray-300 border border-gray-700 text-xs font-medium hover:bg-gray-700 flex items-center gap-1.5">
+          <button onClick={() => handleStatusChange('open')} className="px-3 py-1.5 rounded-lg bg-surface text-gray-300 border border-gray-700 text-xs font-medium hover:bg-surface flex items-center gap-1.5">
             <RotateCcw className="w-3.5 h-3.5" /> Reopen
           </button>
         )}
@@ -202,7 +202,7 @@ export default function ScrimDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left: Scrim info / edit form */}
         <div className="space-y-4">
-          <div className="bg-gray-950/50 border border-gray-800 rounded-lg p-5">
+          <div className="bg-dark/50 border border-gray-800 rounded-lg p-5">
             <h3 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
               <Gamepad2 className="w-4 h-4 text-brand-500" /> Scrim Details
             </h3>
@@ -269,7 +269,7 @@ export default function ScrimDetailPage() {
           </div>
 
           {/* Room dispatch */}
-          <div className="bg-gray-950/50 border border-gray-800 rounded-lg p-5">
+          <div className="bg-dark/50 border border-gray-800 rounded-lg p-5">
             <h3 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
               <Radio className="w-4 h-4 text-brand-500" /> Room Dispatch
             </h3>
@@ -278,7 +278,7 @@ export default function ScrimDetailPage() {
                 <label className="block text-xs text-gray-500 uppercase tracking-wider mb-1.5">Room ID</label>
                 <div className="flex gap-2">
                   <input value={roomId} onChange={e => setRoomId(e.target.value)} placeholder="5240212" className="flex-1 bg-black border border-gray-800 rounded-lg p-2.5 text-sm text-white font-mono outline-none focus:border-brand-500" />
-                  <button onClick={() => copyToClipboard(roomId, 'roomid')} className="px-3 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-400">
+                  <button onClick={() => copyToClipboard(roomId, 'roomid')} className="px-3 rounded-lg bg-surface hover:bg-surface text-gray-400">
                     {copied === 'roomid' ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
                   </button>
                 </div>
@@ -287,7 +287,7 @@ export default function ScrimDetailPage() {
                 <label className="block text-xs text-gray-500 uppercase tracking-wider mb-1.5">Room Password</label>
                 <div className="flex gap-2">
                   <input value={roomPass} onChange={e => setRoomPass(e.target.value)} placeholder="ffpro2026" className="flex-1 bg-black border border-gray-800 rounded-lg p-2.5 text-sm text-white font-mono outline-none focus:border-brand-500" />
-                  <button onClick={() => copyToClipboard(roomPass, 'roompass')} className="px-3 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-400">
+                  <button onClick={() => copyToClipboard(roomPass, 'roompass')} className="px-3 rounded-lg bg-surface hover:bg-surface text-gray-400">
                     {copied === 'roompass' ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
                   </button>
                 </div>
@@ -304,7 +304,7 @@ export default function ScrimDetailPage() {
         </div>
 
         {/* Right: Slot grid */}
-        <div className="bg-gray-950/50 border border-gray-800 rounded-lg p-5">
+        <div className="bg-dark/50 border border-gray-800 rounded-lg p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-base font-semibold text-white flex items-center gap-2">
               <Users className="w-4 h-4 text-brand-500" /> Slot Management
@@ -313,7 +313,7 @@ export default function ScrimDetailPage() {
           </div>
 
           {/* Progress bar */}
-          <div className="w-full h-2 bg-gray-800 rounded-full mb-4 overflow-hidden">
+          <div className="w-full h-2 bg-surface rounded-full mb-4 overflow-hidden">
             <div className="h-full bg-brand-500 rounded-full transition-all" style={{ width: `${fillPercent}%` }} />
           </div>
 
@@ -328,7 +328,7 @@ export default function ScrimDetailPage() {
                 className={`p-3 rounded-lg border text-xs font-medium transition-all min-h-[60px] flex flex-col items-center justify-center ${
                   slot.status === 'filled'
                     ? 'bg-green-500/10 border-green-500/30 text-green-400 hover:bg-green-500/20'
-                    : 'bg-gray-900 border-gray-800 border-dashed text-gray-500 hover:border-gray-600 hover:text-gray-300'
+                    : 'bg-card border-gray-800 border-dashed text-gray-500 hover:border-gray-600 hover:text-gray-300'
                 }`}
               >
                 <span className="text-[10px] text-gray-500 mb-0.5">Slot {slot.slotNumber}</span>

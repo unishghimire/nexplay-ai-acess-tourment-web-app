@@ -33,7 +33,7 @@ export const GamesTab: React.FC<AdminPanelTabProps> = (props) => {
                                 <div className="flex-grow">
                                     <h3 className="font-bold text-white">{formatGameName(game.name)}</h3>
                                     <div className="flex items-center gap-2 mt-1">
-                                        <span className={`w-2 h-2 rounded-full ${game.isPublished ? 'bg-green-500' : 'bg-gray-600'}`}></span>
+                                        <span className={`w-2 h-2 rounded-full ${game.isPublished ? 'bg-green-500' : 'bg-surface'}`}></span>
                                         <span className="text-[10px] text-gray-500 uppercase font-bold">{game.isPublished ? 'Published' : 'Draft'}</span>
                                     </div>
                                     <div className="text-[10px] text-gray-400 mt-1 truncate w-32">
@@ -151,7 +151,7 @@ export const GamesTab: React.FC<AdminPanelTabProps> = (props) => {
                                 <div className="flex gap-3 pt-4">
                                     <button 
                                         onClick={() => setIsGameModalOpen(false)}
-                                        className="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-3 rounded-xl font-bold transition"
+                                        className="flex-1 bg-surface hover:bg-surface text-white py-3 rounded-xl font-bold transition"
                                     >
                                         Cancel
                                     </button>

@@ -74,7 +74,7 @@ export const OrgOverlayManager: React.FC<OrgOverlayManagerProps> = ({
               Permanently delete <span className="text-white font-bold">"{deleteTarget}"</span>? All match data, registrations, and brackets will be removed.
             </p>
             <div className="flex gap-3">
-              <button onClick={onClose} className="flex-1 bg-gray-900 hover:bg-gray-800 text-white py-3 rounded-lg font-medium text-sm border border-gray-800 transition-colors min-h-[44px]">
+              <button onClick={onClose} className="flex-1 bg-card hover:bg-surface text-white py-3 rounded-lg font-medium text-sm border border-gray-800 transition-colors min-h-[44px]">
                 Cancel
               </button>
               <button onClick={onConfirmDelete} className="flex-1 bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg font-medium text-sm transition-colors min-h-[44px]">
@@ -103,7 +103,7 @@ export const OrgOverlayManager: React.FC<OrgOverlayManagerProps> = ({
               />
             </div>
             <div className="flex gap-3 pt-2">
-              <button onClick={onClose} className="flex-1 bg-gray-900 hover:bg-gray-800 text-white py-3 rounded-lg font-medium text-sm border border-gray-800 transition-colors min-h-[44px]">
+              <button onClick={onClose} className="flex-1 bg-card hover:bg-surface text-white py-3 rounded-lg font-medium text-sm border border-gray-800 transition-colors min-h-[44px]">
                 Cancel
               </button>
               <button onClick={onIssueWarning} className="flex-1 bg-amber-600 hover:bg-amber-500 text-white py-3 rounded-lg font-medium text-sm transition-colors min-h-[44px]">
@@ -175,7 +175,7 @@ export const OrgOverlayManager: React.FC<OrgOverlayManagerProps> = ({
             </div>
             <div className="bg-black/30 border border-gray-800 rounded-lg p-4">
               <p className="text-xs text-gray-500 uppercase tracking-wider mb-2">Dispute Evidence</p>
-              <div className="aspect-video bg-gray-900 rounded-lg flex items-center justify-center border border-gray-800">
+              <div className="aspect-video bg-card rounded-lg flex items-center justify-center border border-gray-800">
                 <p className="text-xs text-gray-600">Screenshot evidence preview</p>
               </div>
             </div>
@@ -194,7 +194,7 @@ export const OrgOverlayManager: React.FC<OrgOverlayManagerProps> = ({
               </button>
               <button
                 onClick={() => onResolveDispute?.('dismiss')}
-                className="bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 py-3 rounded-lg font-medium text-sm transition-colors min-h-[44px]"
+                className="bg-surface hover:bg-surface text-gray-300 border border-gray-700 py-3 rounded-lg font-medium text-sm transition-colors min-h-[44px]"
               >
                 Dismiss
               </button>
@@ -218,7 +218,7 @@ export const OrgOverlayManager: React.FC<OrgOverlayManagerProps> = ({
                   className={`p-3 rounded-lg border text-xs font-medium transition-all min-h-[44px] ${
                     slot.status === 'filled'
                       ? 'bg-green-500/10 border-green-500/30 text-green-400 hover:bg-green-500/20'
-                      : 'bg-gray-900 border-gray-800 text-gray-500 hover:border-gray-600 hover:text-gray-300'
+                      : 'bg-card border-gray-800 text-gray-500 hover:border-gray-600 hover:text-gray-300'
                   }`}
                 >
                   <span className="block text-[10px] text-gray-500 mb-1">Slot {slot.slotNumber}</span>

@@ -184,7 +184,7 @@ const Tournaments: React.FC = () => {
                         <span className={`text-[10px] px-2 py-0.5 rounded-full font-black tabular-nums ${
                             statusFilter === s.id
                                 ? s.id === 'live' ? 'bg-red-500/20 text-red-400' : 'bg-brand-500/20 text-brand-400'
-                                : 'bg-gray-800 text-gray-600'
+                                : 'bg-surface text-gray-600'
                         }`}>
                             {s.count}
                         </span>
@@ -193,7 +193,7 @@ const Tournaments: React.FC = () => {
             </div>
 
             {/* Filter Bar: Stacks on mobile, 2 columns on tablet, 4 columns on desktop */}
-            <div className="bg-gray-900/50 p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 mb-8 sm:mb-12 w-full">
+            <div className="bg-card/50 p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 mb-8 sm:mb-12 w-full">
                 <div className="flex items-center gap-2 sm:gap-3 mb-6 sm:mb-8">
                     <Filter className="w-4 h-4 sm:w-5 sm:h-5 text-brand-500 shrink-0" />
                     <h3 className="text-xs font-black text-white uppercase tracking-widest">Filter Options</h3>
@@ -266,7 +266,7 @@ const Tournaments: React.FC = () => {
                 {filteredTournaments.length > 0 ? (
                     filteredTournaments.map(t => <TournamentCard key={t.id} tournament={t} />)
                 ) : (
-                    <div className="col-span-full py-12 sm:py-20 bg-gray-900/50 rounded-2xl sm:rounded-3xl border border-gray-800 text-center p-4 sm:p-8">
+                    <div className="col-span-full py-12 sm:py-20 bg-card/50 rounded-2xl sm:rounded-3xl border border-gray-800 text-center p-4 sm:p-8">
                         <Search className="w-12 h-12 sm:w-16 sm:h-16 text-gray-700 mx-auto mb-4 sm:mb-6" />
                         <h3 className="text-base sm:text-xl font-black text-white uppercase tracking-widest">No Matches Found</h3>
                         <p className="text-xs sm:text-sm text-gray-500 font-bold mt-2">Adjust your filters to see more tournaments.</p>

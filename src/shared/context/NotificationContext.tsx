@@ -144,7 +144,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
                             toast.type === 'success' ? 'bg-green-900/90 border-green-500/50 text-green-100' :
                             toast.type === 'error' ? 'bg-red-900/90 border-red-500/50 text-red-100' :
                             toast.type === 'warning' ? 'bg-yellow-900/90 border-yellow-500/50 text-yellow-100' :
-                            'bg-gray-900/90 border-gray-700/50 text-gray-100'
+                            'bg-card/90 border-gray-700/50 text-gray-100'
                         }`}
                     >
                         <div className="flex-grow font-bold text-sm">{toast.message}</div>

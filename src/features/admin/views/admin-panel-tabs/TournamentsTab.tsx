@@ -41,7 +41,7 @@ export const TournamentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                                     t.status === 'upcoming' ? 'bg-blue-600/20 text-blue-400' :
                                                     t.status === 'live' ? 'bg-green-600/20 text-green-400' :
                                                     t.status === 'cancelled' ? 'bg-red-600/20 text-red-400' :
-                                                    'bg-gray-600/20 text-gray-400'
+                                                    'bg-surface/20 text-gray-400'
                                                 }`}>
                                                     {t.status}
                                                 </span>
@@ -65,7 +65,7 @@ export const TournamentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                                         className={`p-1.5 rounded-lg transition-all border ${
                                                             t.isFeatured 
                                                                 ? 'bg-yellow-600/20 text-yellow-500 border-yellow-500/30 hover:bg-yellow-600 hover:text-white' 
-                                                                : 'bg-gray-600/20 text-gray-400 border-gray-500/30 hover:bg-gray-600 hover:text-white'
+                                                                : 'bg-surface/20 text-gray-400 border-gray-500/30 hover:bg-surface hover:text-white'
                                                         }`}
                                                         title={t.isFeatured ? "Unfeature" : "Feature"}
                                                     >

@@ -145,7 +145,7 @@ const Dashboard: React.FC = () => {
         <div className="animate-fade-in max-w-5xl mx-auto p-4 md:p-8">
             <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6 border-b border-gray-800 pb-8">
             <Seo title="Dashboard | NexPlay" description="Your personal dashboard" noindex />
-                <h2 className="text-4xl font-black text-white uppercase tracking-tighter">My Dashboard</h2>
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white uppercase tracking-tighter">My Dashboard</h2>
             </header>
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-8 sm:mb-12">
@@ -162,7 +162,7 @@ const Dashboard: React.FC = () => {
                         <Component 
                             key={idx}
                             {...props}
-                            className="bg-gray-900/50 p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-brand-500/50 transition-all hover:-translate-y-1 cursor-pointer group shadow-2xl flex flex-col items-center text-center gap-5"
+                            className="bg-card/50 p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-brand-500/50 transition-all hover:-translate-y-1 cursor-pointer group shadow-2xl flex flex-col items-center text-center gap-5"
                         >
                             <div className="w-16 h-16 rounded-2xl bg-black flex items-center justify-center border border-gray-800 group-hover:bg-brand-500/10 group-hover:border-brand-500/50 transition duration-300">
                                 <item.icon className="w-7 h-7 text-brand-500" />
@@ -173,7 +173,7 @@ const Dashboard: React.FC = () => {
                 })}
             </div>
 
-            <h3 id="my-tournaments" className="text-3xl font-black text-white uppercase tracking-tighter mb-8 pt-4 border-t border-gray-800 pt-8">My Tournaments</h3>
+            <h3 id="my-tournaments" className="text-xl sm:text-2xl md:text-3xl font-black text-white uppercase tracking-tighter mb-8 pt-4 border-t border-gray-800 pt-8">My Tournaments</h3>
             <div className="grid gap-6">
                 {myTournaments.length > 0 ? (
                     myTournaments.map(t => {
@@ -182,7 +182,7 @@ const Dashboard: React.FC = () => {
                         const showRoom = isLive || (t.status === 'upcoming' && t.roomId);
 
                         return (
-                            <div key={t.id} className="bg-black border border-gray-800 p-4 sm:p-8 rounded-2xl sm:rounded-3xl transition duration-300 hover:border-gray-700 hover:bg-gray-900/50 group">
+                            <div key={t.id} className="bg-black border border-gray-800 p-4 sm:p-8 rounded-2xl sm:rounded-3xl transition duration-300 hover:border-gray-700 hover:bg-card/50 group">
                                 <div className="flex justify-between items-start gap-6">
                                     <div className="flex-1">
                                         <div className="flex items-center gap-3 mb-4 flex-wrap">
@@ -195,7 +195,7 @@ const Dashboard: React.FC = () => {
                                                     <User className="w-4 h-4" /> Participant
                                                 </span>
                                             )}
-                                            <span className="bg-gray-800 text-gray-400 text-xs font-black px-4 py-1.5 rounded-full border border-gray-700 uppercase tracking-widest">{formatGameName(t.game)}</span>
+                                            <span className="bg-surface text-gray-400 text-xs font-black px-4 py-1.5 rounded-full border border-gray-700 uppercase tracking-widest">{formatGameName(t.game)}</span>
                                             <span className="bg-brand-500/10 text-brand-300 text-xs font-black px-4 py-1.5 rounded-full border border-brand-500/20 uppercase tracking-widest">{t.teamType}</span>
                                         </div>
                                         <h3 
@@ -225,11 +225,11 @@ const Dashboard: React.FC = () => {
                                     </div>
                                 </div>
                                 {showRoom && (
-                                    <div className="mt-4 sm:mt-8 bg-gray-900/50 p-4 sm:p-6 rounded-2xl border border-gray-800 flex flex-wrap sm:flex-nowrap gap-4 sm:gap-8 text-sm font-mono items-center justify-center">
+                                    <div className="mt-4 sm:mt-8 bg-card/50 p-4 sm:p-6 rounded-2xl border border-gray-800 flex flex-wrap sm:flex-nowrap gap-4 sm:gap-8 text-sm font-mono items-center justify-center">
                                         <div>
                                             <span className="text-gray-500 uppercase text-xs font-black tracking-widest">Room ID:</span> <span className="text-white font-black select-all ml-3">{t.roomId || 'Wait'}</span>
                                         </div>
-                                        <div className="w-px h-6 bg-gray-800"></div>
+                                        <div className="w-px h-6 bg-surface"></div>
                                         <div>
                                             <span className="text-gray-500 uppercase text-xs font-black tracking-widest">Pass:</span> <span className="text-white font-black select-all ml-3">{t.roomPass || 'Wait'}</span>
                                         </div>
@@ -266,7 +266,7 @@ const Dashboard: React.FC = () => {
                         );
                     })
                 ) : (
-                    <div className="bg-gray-900/50 p-16 rounded-3xl border border-gray-800 text-center">
+                    <div className="bg-card/50 p-16 rounded-3xl border border-gray-800 text-center">
                         <p className="text-gray-500 font-bold uppercase tracking-widest">No matches found.</p>
                     </div>
                 )}

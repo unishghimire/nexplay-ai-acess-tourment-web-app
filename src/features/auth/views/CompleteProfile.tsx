@@ -138,7 +138,7 @@ const CompleteProfile: React.FC = () => {
                         <button 
                             type="submit"
                             disabled={isSaving}
-                            className="w-full bg-brand-600 hover:bg-brand-500 disabled:bg-gray-700 text-white py-4 rounded-xl font-black transition shadow-lg uppercase tracking-widest flex items-center justify-center gap-2"
+                            className="w-full bg-brand-600 hover:bg-brand-500 disabled:bg-surface text-white py-4 rounded-xl font-black transition shadow-lg uppercase tracking-widest flex items-center justify-center gap-2"
                         >
                             {isSaving ? (
                                 <>
@@ -155,7 +155,7 @@ const CompleteProfile: React.FC = () => {
                         <button 
                             type="button"
                             onClick={() => logout()}
-                            className="w-full bg-transparent hover:bg-gray-800 text-gray-500 py-3 rounded-xl font-bold transition uppercase text-xs tracking-widest flex items-center justify-center gap-2"
+                            className="w-full bg-transparent hover:bg-surface text-gray-500 py-3 rounded-xl font-bold transition uppercase text-xs tracking-widest flex items-center justify-center gap-2"
                         >
                             <LogOut className="w-4 h-4" /> Logout
                         </button>

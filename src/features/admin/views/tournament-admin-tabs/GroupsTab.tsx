@@ -167,7 +167,7 @@ export const GroupsTab: React.FC<TournamentAdminTabProps> = (props) => {
                         </div>
                         <button 
                             onClick={() => setNewGroup({...newGroup, isPublic: !newGroup.isPublic})}
-                            className={`w-12 h-6 rounded-full transition-colors relative ${newGroup.isPublic ? 'bg-brand-500' : 'bg-gray-700'}`}
+                            className={`w-12 h-6 rounded-full transition-colors relative ${newGroup.isPublic ? 'bg-brand-500' : 'bg-surface'}`}
                         >
                             <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${newGroup.isPublic ? 'translate-x-7' : 'translate-x-1'}`} />
                         </button>
@@ -187,7 +187,7 @@ export const GroupsTab: React.FC<TournamentAdminTabProps> = (props) => {
                     <div className="pt-4 flex gap-3">
                         <button 
                             onClick={() => setIsCreateGroupModalOpen(false)}
-                            className="flex-1 bg-dark hover:bg-gray-800 text-white py-3 rounded-xl font-bold transition border border-gray-800"
+                            className="flex-1 bg-dark hover:bg-surface text-white py-3 rounded-xl font-bold transition border border-gray-800"
                         >
                             Cancel
                         </button>
@@ -219,7 +219,7 @@ export const GroupsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                     selectedGroup.teams.map(team => (
                                         <div key={team.id} className="flex justify-between items-center p-3 bg-surface rounded-lg border border-gray-800">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-gray-800 overflow-hidden">
+                                                <div className="w-8 h-8 rounded-full bg-surface overflow-hidden">
                                                     {team.logoUrl ? (
                                                         <img src={team.logoUrl} alt={team.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                                                     ) : (
@@ -265,7 +265,7 @@ export const GroupsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                     availableTeams.map((team: any) => (
                                         <div key={team.id} className="flex justify-between items-center p-3 bg-surface rounded-lg border border-gray-800">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-gray-800 overflow-hidden">
+                                                <div className="w-8 h-8 rounded-full bg-surface overflow-hidden">
                                                     {team.logoUrl ? (
                                                         <img src={team.logoUrl} alt={team.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                                                     ) : (

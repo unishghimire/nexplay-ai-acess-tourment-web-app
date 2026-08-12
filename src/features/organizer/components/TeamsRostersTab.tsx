@@ -42,7 +42,7 @@ export const TeamsRostersTab: React.FC<TeamsRostersTabProps> = ({
   const renderStrikesBadge = (strikesCount: number = 0) => {
     if (strikesCount === 0) {
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-800/80 text-slate-400 border border-gray-700/60">
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-surface/80 text-slate-400 border border-gray-700/60">
           0 Strikes
         </span>
       );
@@ -166,7 +166,7 @@ export const TeamsRostersTab: React.FC<TeamsRostersTabProps> = ({
                           <button
                             type="button"
                             onClick={() => toggleExpand(teamId)}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-card hover:bg-gray-800 border border-gray-700/70 text-xs font-medium text-slate-200 transition-colors"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-card hover:bg-surface border border-gray-700/70 text-xs font-medium text-slate-200 transition-colors"
                           >
                             <Users className="w-3.5 h-3.5 text-brand-400" />
                             <span>{players.length} Players</span>
@@ -196,7 +196,7 @@ export const TeamsRostersTab: React.FC<TeamsRostersTabProps> = ({
                             >
                               <div
                                 className={`w-12 h-6 rounded-full p-1 transition-colors relative flex items-center ${
-                                  isLocked ? 'bg-green-500' : 'bg-gray-700'
+                                  isLocked ? 'bg-green-500' : 'bg-surface'
                                 }`}
                               >
                                 <div
@@ -247,7 +247,7 @@ export const TeamsRostersTab: React.FC<TeamsRostersTabProps> = ({
 
                       {/* Expanded Sub-row for Roster Players */}
                       {isExpanded && (
-                        <tr className="bg-gray-950/80">
+                        <tr className="bg-dark/80">
                           <td colSpan={6} className="p-4">
                             <div className="bg-card/90 border border-slate-800 rounded-2xl p-4 space-y-3">
                               <div className="flex items-center justify-between pb-2 border-b border-slate-800">
@@ -285,7 +285,7 @@ export const TeamsRostersTab: React.FC<TeamsRostersTabProps> = ({
                                                 Leader
                                               </span>
                                             ) : (
-                                              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-gray-800 text-slate-300 border border-gray-700/60 shrink-0">
+                                              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-surface text-slate-300 border border-gray-700/60 shrink-0">
                                                 Member
                                               </span>
                                             )}
@@ -371,7 +371,7 @@ export const TeamsRostersTab: React.FC<TeamsRostersTabProps> = ({
                       >
                         <div
                           className={`w-12 h-6 rounded-full p-1 transition-colors relative flex items-center ${
-                            isLocked ? 'bg-green-500' : 'bg-gray-700'
+                            isLocked ? 'bg-green-500' : 'bg-surface'
                           }`}
                         >
                           <div
@@ -402,7 +402,7 @@ export const TeamsRostersTab: React.FC<TeamsRostersTabProps> = ({
                     <button
                       type="button"
                       onClick={() => toggleExpand(teamId)}
-                      className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-card/80 border border-slate-800 text-xs font-semibold text-slate-300 hover:bg-gray-800 transition-colors"
+                      className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-card/80 border border-slate-800 text-xs font-semibold text-slate-300 hover:bg-surface transition-colors"
                     >
                       <div className="flex items-center gap-2">
                         <Users className="w-4 h-4 text-brand-400" />
@@ -417,7 +417,7 @@ export const TeamsRostersTab: React.FC<TeamsRostersTabProps> = ({
 
                     {/* Sub-card Player Roster */}
                     {isExpanded && (
-                      <div className="mt-3 p-3 bg-gray-950/90 rounded-lg border border-slate-800 space-y-2">
+                      <div className="mt-3 p-3 bg-dark/90 rounded-lg border border-slate-800 space-y-2">
                         <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-1.5 mb-2">
                           Registered Players
                         </div>
@@ -445,7 +445,7 @@ export const TeamsRostersTab: React.FC<TeamsRostersTabProps> = ({
                                       Leader
                                     </span>
                                   ) : (
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-gray-800 text-slate-300 border border-gray-700/60 shrink-0">
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-surface text-slate-300 border border-gray-700/60 shrink-0">
                                       Member
                                     </span>
                                   )}
