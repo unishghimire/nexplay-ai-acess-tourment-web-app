@@ -10,6 +10,7 @@ import { formatCurrency, formatDate, formatGameName, toDateSafe } from '../../..
 const Results: React.FC = () => {
     const [results, setResults] = useState<Tournament[]>([]);
     const [loading, setLoading] = useState(true);
+    const [fetchError, setFetchError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const navigate = useNavigate();
 
@@ -38,6 +39,7 @@ const Results: React.FC = () => {
                 setResults(resultsData);
             } catch (error) {
                 console.error("Error fetching results:", error);
+                setFetchError("Failed to load results. Please check your connection.");
             } finally {
                 setLoading(false);
             }
@@ -73,6 +75,24 @@ const Results: React.FC = () => {
             <div className="flex flex-col items-center justify-center min-h-[60vh]">
                 <div className="w-12 h-12 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mb-4"></div>
                 <p className="text-brand-500 text-xs font-black uppercase tracking-widest animate-pulse">Fetching Hall of Fame...</p>
+            </div>
+        </>
+        );
+    }
+
+    if (fetchError) {
+        return (
+        <>
+        <Seo
+            title="Tournament Results | NexPlay — Esports Nepal"
+            description="View completed esports tournament results, winners, and leaderboards on NexPlay."
+            canonicalPath="/results"
+        />
+            <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
+                <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-2xl max-w-md text-center">
+                    <p className="text-red-400 text-sm font-bold mb-4">{fetchError}</p>
+                    <button onClick={() => window.location.reload()} className="text-xs font-black uppercase tracking-widest text-red-400 hover:text-red-300 border border-red-500/30 rounded-lg px-4 py-2.5">Retry</button>
+                </div>
             </div>
         </>
         );

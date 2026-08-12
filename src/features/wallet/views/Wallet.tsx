@@ -15,6 +15,7 @@ const Wallet: React.FC = () => {
     const { showToast } = useNotification();
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [loading, setLoading] = useState(true);
+    const [fetchError, setFetchError] = useState<string | null>(null);
     const [loadingMore, setLoadingMore] = useState(false);
     const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot | null>(null);
     const [hasMore, setHasMore] = useState(true);
@@ -77,7 +78,8 @@ const Wallet: React.FC = () => {
             }
             setHasMore(snap.docs.length === (isLoadMore ? 10 : 5));
         } catch (error: any) {
-            // Error fetching transactions
+            console.error("Error fetching transactions:", error);
+            setFetchError("Failed to load transactions. Please check your connection.");
         } finally {
             setLoading(false);
             setLoadingMore(false);
@@ -292,6 +294,12 @@ const Wallet: React.FC = () => {
                     </div>
                     
                     <div className="p-2 sm:p-6">
+                        {fetchError && (
+                            <div className="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-2xl flex items-center justify-between gap-4">
+                                <p className="text-red-400 text-sm font-bold">{fetchError}</p>
+                                <button onClick={() => window.location.reload()} className="text-xs font-black uppercase tracking-widest text-red-400 hover:text-red-300 border border-red-500/30 rounded-lg px-3 py-2">Retry</button>
+                            </div>
+                        )}
                         {loading && transactions.length === 0 ? (
                             <div className="flex justify-center py-20">
                                 <div className="w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div>

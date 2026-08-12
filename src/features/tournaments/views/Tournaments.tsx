@@ -38,6 +38,7 @@ const Tournaments: React.FC = () => {
     const [teamTypeFilter, setTeamTypeFilter] = useState(searchParams.get('teamType') || 'all');
     
     const [loading, setLoading] = useState(true);
+    const [fetchError, setFetchError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -60,7 +61,8 @@ const Tournaments: React.FC = () => {
                 setTournaments(tours);
                 setGames(gamesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Game)));
             } catch (error: any) {
-                // Error fetching tournament data
+                console.error("Error fetching tournament data:", error);
+                setFetchError("Failed to load tournaments. Please check your connection.");
             } finally {
                 setLoading(false);
             }

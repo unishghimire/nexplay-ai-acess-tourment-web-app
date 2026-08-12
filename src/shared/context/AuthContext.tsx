@@ -119,9 +119,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     setProfile(null);
                 }
             } catch (error) {
-                // Error in auth state change
-                // If there's an error (e.g., permission denied), we should still stop loading
-                // and potentially clear the user state to prevent infinite loading
+                console.error("Auth state change error:", error);
                 setUser(null);
                 setProfile(null);
             } finally {
