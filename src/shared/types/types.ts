@@ -267,6 +267,17 @@ export interface Tournament {
     currentRound?: number;
     pointSystem?: PointRule; // Multi-match points
     registrationType?: 'auto' | 'manual';
+    // Frozen scoring snapshot — inherited from game at creation, never changes
+    scoringSnapshot?: {
+        gameId: string;
+        gameName: string;
+        killPoints: number;
+        placementPoints: Record<string, number>;
+        maxPlacement?: number;
+        scoringVersion: number;
+        source: 'game-default' | 'custom';
+        snapshotAt: Timestamp | any;
+    };
 }
 
 export interface Transaction {

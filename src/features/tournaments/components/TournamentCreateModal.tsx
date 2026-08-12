@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { collection, addDoc, getDocs, serverTimestamp, Timestamp, updateDoc, doc, writeBatch, where, query } from 'firebase/firestore';
 import { Tournament } from '../../../shared/types/types';
+import { createScoringSnapshot } from '../../../shared/services/scoringEngine';
+import { TournamentScoringSnapshot } from '../../../shared/types/scoring';
 import { db, auth } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
@@ -18,7 +20,7 @@ import {
   ChevronRight, 
   ChevronLeft,
   CheckCircle2,
-  Info
+  Info,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import PrizeDistributionInput from './PrizeDistributionInput';
@@ -212,8 +214,19 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
         await updateDoc(doc(db, 'tournaments', editTournament.id), tournamentData);
         showToast('Tournament updated successfully!', 'success');
       } else {
+        // Create scoring snapshot from the selected game's scoring config
+        let scoringSnapshot: TournamentScoringSnapshot | undefined;
+        if (selectedGame?.scoring?.enabled) {
+          scoringSnapshot = createScoringSnapshot({
+            gameId: selectedGame.id,
+            gameName: selectedGame.name,
+            scoring: selectedGame.scoring,
+          });
+        }
+
         const docRef = await addDoc(collection(db, 'tournaments'), {
           ...tournamentData,
+          ...(scoringSnapshot ? { scoringSnapshot } : {}),
           createdAt: serverTimestamp()
         });
         showToast('Tournament created successfully!', 'success');
@@ -653,6 +666,37 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
                 </div>
               </div>
             </div>
+            {selectedGame?.scoring?.enabled ? (
+              <div className="bg-amber-500/5 border border-amber-500/20 p-4 rounded-2xl">
+                <div className="flex items-center gap-2 mb-3">
+                  <Trophy className="w-4 h-4 text-amber-400" />
+                  <p className="text-[10px] font-black text-amber-400 uppercase tracking-widest">Scoring Config Inherited</p>
+                </div>
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  <div>
+                    <p className="text-lg font-black text-white">{selectedGame.scoring.killPoints}</p>
+                    <p className="text-[9px] text-gray-500 uppercase font-bold">Per Kill</p>
+                  </div>
+                  <div>
+                    <p className="text-lg font-black text-white">{Object.keys(selectedGame.scoring.placementPoints).length}</p>
+                    <p className="text-[9px] text-gray-500 uppercase font-bold">Placements</p>
+                  </div>
+                  <div>
+                    <p className="text-lg font-black text-white">v{selectedGame.scoring.scoringVersion || 1}</p>
+                    <p className="text-[9px] text-gray-500 uppercase font-bold">Version</p>
+                  </div>
+                </div>
+                <p className="text-[10px] text-gray-500 mt-2 text-center">Frozen at creation — changes to game scoring won't affect this tournament</p>
+              </div>
+            ) : (
+              <div className="bg-slate-800/30 border border-slate-800 p-4 rounded-2xl">
+                <div className="flex items-center gap-2">
+                  <Trophy className="w-4 h-4 text-slate-500" />
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">No Custom Scoring</p>
+                </div>
+                <p className="text-[10px] text-slate-500 mt-2">Free Fire default scoring will be used (1 pt/kill, 12 placements)</p>
+              </div>
+            )}
             <div className="flex items-center gap-3 p-4 bg-brand-500/5 border border-brand-500/20 rounded-xl">
               <CheckCircle2 className="w-6 h-6 text-brand-500" />
               <p className="text-xs text-gray-400">Everything looks good! Click launch to publish your tournament.</p>
