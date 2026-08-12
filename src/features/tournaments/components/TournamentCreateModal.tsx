@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { collection, addDoc, getDocs, serverTimestamp, Timestamp, updateDoc, doc, writeBatch, where, query } from 'firebase/firestore';
 import { Tournament } from '../../../shared/types/types';
 import { createScoringSnapshot } from '../../../shared/services/scoringEngine';
+import { generateDefaultRoadmap } from '../../../shared/services/tournamentEngine';
 import { TournamentScoringSnapshot } from '../../../shared/types/scoring';
 import { db, auth } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
@@ -224,9 +225,14 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
           });
         }
 
+        // Generate default roadmap based on slots + type
+        const defaultRoadmap = generateDefaultRoadmap(formData.slots, formData.type);
+
         const docRef = await addDoc(collection(db, 'tournaments'), {
           ...tournamentData,
           ...(scoringSnapshot ? { scoringSnapshot } : {}),
+          roadmap: defaultRoadmap,
+          currentRound: 1,
           createdAt: serverTimestamp()
         });
         showToast('Tournament created successfully!', 'success');

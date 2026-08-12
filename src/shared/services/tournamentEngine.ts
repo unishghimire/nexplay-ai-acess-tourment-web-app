@@ -912,3 +912,115 @@ export function calculateChampions(params: {
         thirdPlace: allStandings[2] || null,
     };
 }
+
+// ═══════════════════════════════════════════════════════════════
+// DEFAULT ROADMAP GENERATION
+// ponytail: derive from slots + type — no manual config needed for basic tourneys.
+// Organizers can override any round in the admin panel afterward.
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Generates a sensible default roadmap based on slot count and tournament type.
+ *
+ * For BR (Free Fire/PUBG): lobby-style rounds, top-N qualify per group.
+ * For 1v1: single-elimination bracket rounds.
+ *
+ * The roadmap scales down automatically for smaller tournaments.
+ */
+export function generateDefaultRoadmap(slots: number, _type: string): RoundConfig[] {
+    // ponytail: simple heuristic — don't over-engineer the bracket math.
+    // Slots → groups → qualification → until 1 final lobby remains.
+
+    const isBR = _type === 'Battle Royale' || _type === 'BR';
+
+    if (!isBR) {
+        // 1v1 single-elim: log2(slots) rounds
+        const numRounds = Math.ceil(Math.log2(Math.max(slots, 2)));
+        const roadmap: RoundConfig[] = [];
+        for (let r = 1; r <= numRounds; r++) {
+            const remaining = Math.ceil(slots / Math.pow(2, r - 1));
+            roadmap.push({
+                roundNumber: r,
+                numGroups: 1,
+                qualificationRule: Math.ceil(remaining / 2),
+                maps: [],
+                stageName: r === numRounds ? 'Grand Finals' : `Round ${r}`,
+                status: 'upcoming',
+                description: `${remaining} players → ${Math.ceil(remaining / 2)} advance`,
+                qualificationType: 'top_n_per_group',
+                distributionMethod: 'seeded',
+            });
+        }
+        return roadmap;
+    }
+
+    // BR: lobby-style — groups shrink each round until 1 final lobby
+    const roadmap: RoundConfig[] = [];
+    let remaining = slots;
+    let round = 1;
+
+    // For small tournaments (<=12), just 1 round (finals)
+    if (slots <= 12) {
+        return [{
+            roundNumber: 1,
+            numGroups: 1,
+            qualificationRule: 1,
+            maps: [],
+            stageName: 'Grand Finals',
+            status: 'upcoming',
+            description: `${slots} teams in a single lobby`,
+            qualificationType: 'final_ranking',
+        }];
+    }
+
+    // For 13-48: 2 rounds (groups → finals)
+    // For 49+: 3 rounds (groups → semis → finals)
+    const maxFinalLobbySize = 12; // Free Fire max lobby
+    const groupSize = 12; // ideal teams per group
+
+    while (remaining > maxFinalLobbySize) {
+        const numGroups = Math.ceil(remaining / groupSize);
+        const qualifiedPerGroup = Math.ceil(maxFinalLobbySize / numGroups);
+        const totalQualified = qualifiedPerGroup * numGroups;
+
+        const isLast = totalQualified <= maxFinalLobbySize;
+
+        roadmap.push({
+            roundNumber: round,
+            numGroups,
+            qualificationRule: qualifiedPerGroup,
+            maps: [],
+            stageName: round === 1 ? 'Group Stage' : (isLast ? 'Semi Finals' : `Round ${round}`),
+            status: 'upcoming',
+            description: `${numGroups} groups × ${Math.ceil(remaining / numGroups)} teams → top ${qualifiedPerGroup} qualify (${totalQualified} total)`,
+            qualificationType: 'top_n_per_group',
+            teamsPerGroup: Math.ceil(remaining / numGroups),
+            matchesPerGroup: 3, // default 3 matches per round
+            distributionMethod: 'random',
+            groupNamingStyle: 'alpha',
+        });
+
+        remaining = totalQualified;
+        round++;
+    }
+
+    // Final round — single lobby
+    if (roadmap.length > 0) {
+        roadmap.push({
+            roundNumber: round,
+            numGroups: 1,
+            qualificationRule: 1,
+            maps: [],
+            stageName: 'Grand Finals',
+            status: 'upcoming',
+            description: `${remaining} teams in the final lobby`,
+            qualificationType: 'final_ranking',
+            teamsPerGroup: remaining,
+            matchesPerGroup: 3,
+            distributionMethod: 'seeded',
+            groupNamingStyle: 'alpha',
+        });
+    }
+
+    return roadmap;
+}

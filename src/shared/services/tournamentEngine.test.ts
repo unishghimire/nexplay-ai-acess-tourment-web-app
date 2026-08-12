@@ -249,3 +249,38 @@ function assert(condition: boolean, message: string) {
 }
 
 console.log('\n═══ All tournament engine self-checks passed ═══');
+
+// ─── Test 8: Default roadmap generation ───────────────────────
+import { generateDefaultRoadmap } from './tournamentEngine';
+
+(function testDefaultRoadmap48() {
+    const roadmap = generateDefaultRoadmap(48, 'Battle Royale');
+    assert(roadmap.length >= 2, `48-slot BR should have >= 2 rounds, got ${roadmap.length}`);
+    assert(roadmap[0].stageName === 'Group Stage', `First stage should be Group Stage, got ${roadmap[0].stageName}`);
+    assert(roadmap[roadmap.length - 1].stageName === 'Grand Finals', `Last stage should be Grand Finals`);
+    // All rounds should have status 'upcoming' initially
+    assert(roadmap.every(r => r.status === 'upcoming'), 'All rounds should start as upcoming');
+    console.log(`✓ Default roadmap (48 BR): ${roadmap.length} rounds — ${roadmap.map(r => r.stageName).join(' → ')}`);
+})();
+
+(function testDefaultRoadmapSmall() {
+    const roadmap = generateDefaultRoadmap(8, 'Battle Royale');
+    assert(roadmap.length === 1, `8-slot BR should have 1 round, got ${roadmap.length}`);
+    assert(roadmap[0].stageName === 'Grand Finals', `Should be Grand Finals for small tournament`);
+    console.log('✓ Default roadmap (8 BR): 1 round — Grand Finals');
+})();
+
+(function testDefaultRoadmap100() {
+    const roadmap = generateDefaultRoadmap(100, 'Battle Royale');
+    assert(roadmap.length >= 3, `100-slot BR should have >= 3 rounds, got ${roadmap.length}`);
+    // Verify qualification chain: total qualified from round N should fit in round N+1
+    let remaining = 100;
+    for (const round of roadmap) {
+        const totalQualified = round.qualificationRule * round.numGroups;
+        if (round !== roadmap[roadmap.length - 1]) {
+            assert(totalQualified <= remaining, `Round ${round.roundNumber}: qualified ${totalQualified} > remaining ${remaining}`);
+        }
+        remaining = totalQualified;
+    }
+    console.log(`✓ Default roadmap (100 BR): ${roadmap.length} rounds — ${roadmap.map(r => r.stageName).join(' → ')}`);
+})();
