@@ -4,6 +4,8 @@ import { Trophy, CheckCircle2, Copy, EyeOff, Eye, Users, Sword, Lock } from 'luc
 import { Tournament, TournamentGroup, Participant } from '../../../shared/types/types';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { useAuth } from '../../../shared/context/AuthContext';
+import { aggregateStandings } from '../../../shared/services/scoringEngine';
+import type { TournamentStanding } from '../../../shared/types/scoring';
 
 interface GroupStandingsViewProps {
     tournament: Tournament;
@@ -19,13 +21,61 @@ interface TeamStanding {
     points: number;
     kills: number;
     isCurrentUser: boolean;
+    // BR scoring breakdown
+    placementPoints?: number;
+    killPoints?: number;
+    matches?: number;
+    bestPlacement?: number;
 }
 
 function computeStandings(group: TournamentGroup, participants: Participant[], currentTeamId?: string): TeamStanding[] {
+    const completedMatches = (group.matches ?? []).filter(m => m.status === 'completed');
+
+    // ponytail: detect BR format — matches have results[] array with TeamMatchResult
+    const hasBRResults = completedMatches.some(m => m.results && m.results.length > 0);
+
+    if (hasBRResults) {
+        // Battle Royale: use scoring engine aggregation
+        const matchResults = completedMatches
+            .filter(m => m.results && m.results.length > 0)
+            .map(m => m.results!.map(r => ({
+                teamId: r.teamId,
+                teamName: r.teamName,
+                placement: r.placement,
+                kills: r.kills,
+                placementPoints: 0, // recalculated by engine
+                killPoints: 0,
+                totalPoints: r.totalPoints,
+                scoringVersion: 1,
+            })));
+
+        const teams = group.teams.map(t => {
+            const p = participants.find(part => part.teamId === t.id || part.userId === t.id);
+            return { id: t.id, name: t.name, logoUrl: p?.logoUrl };
+        });
+
+        const standings = aggregateStandings({ matchResults, teams });
+
+        return standings.map(s => ({
+            id: s.teamId,
+            name: s.teamName,
+            logoUrl: s.logoUrl,
+            wins: 0,
+            losses: 0,
+            points: s.totalPoints,
+            kills: s.kills,
+            isCurrentUser: s.teamId === currentTeamId,
+            placementPoints: s.placementPoints,
+            killPoints: s.killPoints,
+            matches: s.matches,
+            bestPlacement: s.bestPlacement === Infinity ? undefined : s.bestPlacement,
+        }));
+    }
+
+    // Head-to-head format: wins/losses
     const map: Record<string, TeamStanding> = {};
 
     group.teams.forEach(t => {
-        // Try to resolve logo from participants
         const participant = participants.find(p => p.teamId === t.id || p.userId === t.id);
         map[t.id] = {
             id: t.id,
@@ -39,8 +89,7 @@ function computeStandings(group: TournamentGroup, participants: Participant[], c
         };
     });
 
-    (group.matches ?? []).forEach(m => {
-        if (m.status !== 'completed') return;
+    completedMatches.forEach(m => {
         const s1 = m.score1 ?? 0;
         const s2 = m.score2 ?? 0;
 
@@ -65,6 +114,144 @@ function resolveTeamName(id: string, group: TournamentGroup, participants: Parti
     if (team) return team.name;
     const p = participants.find(p => p.teamId === id || p.userId === id);
     return p?.teamName || p?.username || id;
+}
+
+// ─── Standings Table ──────────────────────────────────────────────────
+// ponytail: adapts columns based on whether we have BR scoring data or head-to-head.
+function StandingsTable({ standings }: { standings: TeamStanding[] }) {
+    const isBR = standings.some(s => s.placementPoints !== undefined);
+
+    if (isBR) {
+        return (
+            <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+                <table className="w-full text-left min-w-[600px]">
+                    <thead>
+                        <tr className="border-b border-gray-800 text-[10px] font-black uppercase tracking-widest text-gray-500">
+                            <th className="pb-3 pl-2 w-12">#</th>
+                            <th className="pb-3">Team / Player</th>
+                            <th className="pb-3 text-center w-16">Matches</th>
+                            <th className="pb-3 text-center w-16">Kills</th>
+                            <th className="pb-3 text-center w-20">Place Pts</th>
+                            <th className="pb-3 text-center w-20">Kill Pts</th>
+                            <th className="pb-3 text-center w-16">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-800/50">
+                        {standings.map((s, idx) => (
+                            <tr key={s.id} className={`transition ${s.isCurrentUser ? 'bg-brand-500/10 font-bold' : 'hover:bg-white/[0.02]'}`}>
+                                <td className="py-3.5 pl-2 font-black text-sm">
+                                    <span className={`inline-flex items-center justify-center w-6 h-6 rounded-lg text-xs font-black ${
+                                        idx === 0 ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
+                                        idx === 1 ? 'bg-gray-400/20 text-gray-300 border border-gray-400/30' :
+                                        idx === 2 ? 'bg-amber-800/20 text-amber-600 border border-amber-800/30' :
+                                        'text-gray-500'
+                                    }`}>
+                                        {idx + 1}
+                                    </span>
+                                </td>
+                                <td className="py-3.5">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-xl bg-gray-800 border border-gray-700 flex items-center justify-center font-black text-xs text-brand-400 overflow-hidden shrink-0">
+                                            {s.logoUrl ? (
+                                                <img src={s.logoUrl} alt={s.name} className="w-full h-full object-cover" />
+                                            ) : (
+                                                s.name.charAt(0).toUpperCase()
+                                            )}
+                                        </div>
+                                        <span className={`text-sm font-black truncate max-w-[180px] ${s.isCurrentUser ? 'text-brand-400' : 'text-white'}`}>
+                                            {s.name}
+                                        </span>
+                                        {s.isCurrentUser && (
+                                            <span className="bg-brand-500 text-white text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full shrink-0">
+                                                YOU
+                                            </span>
+                                        )}
+                                    </div>
+                                </td>
+                                <td className="py-3.5 text-center font-bold text-gray-300 text-sm">{s.matches ?? 0}</td>
+                                <td className="py-3.5 text-center font-bold text-red-400/80 text-sm">{s.kills}</td>
+                                <td className="py-3.5 text-center font-bold text-blue-400/80 text-sm">{s.placementPoints ?? 0}</td>
+                                <td className="py-3.5 text-center font-bold text-emerald-400/80 text-sm">{s.killPoints ?? 0}</td>
+                                <td className="py-3.5 text-center font-black text-brand-400 text-sm">{s.points}</td>
+                            </tr>
+                        ))}
+                        {standings.length === 0 && (
+                            <tr>
+                                <td colSpan={7} className="py-8 text-center text-gray-500 text-xs uppercase font-black tracking-widest">
+                                    No teams assigned yet
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+        );
+    }
+
+    // Head-to-head standings (wins/losses)
+    return (
+        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+            <table className="w-full text-left min-w-[550px]">
+                <thead>
+                    <tr className="border-b border-gray-800 text-[10px] font-black uppercase tracking-widest text-gray-500">
+                        <th className="pb-3 pl-2 w-12">#</th>
+                        <th className="pb-3">Team / Player</th>
+                        <th className="pb-3 text-center w-16">PTS</th>
+                        <th className="pb-3 text-center w-16">W</th>
+                        <th className="pb-3 text-center w-16">L</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-800/50">
+                    {standings.map((s, idx) => (
+                        <tr
+                            key={s.id}
+                            className={`transition ${s.isCurrentUser ? 'bg-brand-500/10 font-bold' : 'hover:bg-white/[0.02]'}`}
+                        >
+                            <td className="py-3.5 pl-2 font-black text-sm">
+                                <span className={`inline-flex items-center justify-center w-6 h-6 rounded-lg text-xs font-black ${
+                                    idx === 0 ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
+                                    idx === 1 ? 'bg-gray-400/20 text-gray-300 border border-gray-400/30' :
+                                    idx === 2 ? 'bg-amber-800/20 text-amber-600 border border-amber-800/30' :
+                                    'text-gray-500'
+                                }`}>
+                                    {idx + 1}
+                                </span>
+                            </td>
+                            <td className="py-3.5">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-xl bg-gray-800 border border-gray-700 flex items-center justify-center font-black text-xs text-brand-400 overflow-hidden shrink-0">
+                                        {s.logoUrl ? (
+                                            <img src={s.logoUrl} alt={s.name} className="w-full h-full object-cover" />
+                                        ) : (
+                                            s.name.charAt(0).toUpperCase()
+                                        )}
+                                    </div>
+                                    <span className={`text-sm font-black truncate max-w-[180px] ${s.isCurrentUser ? 'text-brand-400' : 'text-white'}`}>
+                                        {s.name}
+                                    </span>
+                                    {s.isCurrentUser && (
+                                        <span className="bg-brand-500 text-white text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full shrink-0">
+                                            YOU
+                                        </span>
+                                    )}
+                                </div>
+                            </td>
+                            <td className="py-3.5 text-center font-black text-brand-400 text-sm">{s.points}</td>
+                            <td className="py-3.5 text-center font-bold text-emerald-400 text-sm">{s.wins}</td>
+                            <td className="py-3.5 text-center font-bold text-red-400/80 text-sm">{s.losses}</td>
+                        </tr>
+                    ))}
+                    {standings.length === 0 && (
+                        <tr>
+                            <td colSpan={5} className="py-8 text-center text-gray-500 text-xs uppercase font-black tracking-widest">
+                                No teams assigned yet
+                            </td>
+                        </tr>
+                    )}
+                </tbody>
+            </table>
+        </div>
+    );
 }
 
 export default function GroupStandingsView({ tournament, participants }: GroupStandingsViewProps) {
@@ -242,67 +429,7 @@ function GroupCard({ group, participants, currentTeamId, isHighlighted, label }:
             <div className="p-6 bg-gray-950/20">
                 {/* ── Standings Table ── */}
                 {activeView === 'standings' && (
-                    <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-                        <table className="w-full text-left min-w-[550px]">
-                            <thead>
-                                <tr className="border-b border-gray-800 text-[10px] font-black uppercase tracking-widest text-gray-500">
-                                    <th className="pb-3 pl-2 w-12">#</th>
-                                    <th className="pb-3">Team / Player</th>
-                                    <th className="pb-3 text-center w-16">PTS</th>
-                                    <th className="pb-3 text-center w-16">W</th>
-                                    <th className="pb-3 text-center w-16">L</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-800/50">
-                                {standings.map((s, idx) => (
-                                    <tr
-                                        key={s.id}
-                                        className={`transition ${s.isCurrentUser ? 'bg-brand-500/10 font-bold' : 'hover:bg-white/[0.02]'}`}
-                                    >
-                                        <td className="py-3.5 pl-2 font-black text-sm">
-                                            <span className={`inline-flex items-center justify-center w-6 h-6 rounded-lg text-xs font-black ${
-                                                idx === 0 ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
-                                                idx === 1 ? 'bg-gray-400/20 text-gray-300 border border-gray-400/30' :
-                                                idx === 2 ? 'bg-amber-800/20 text-amber-600 border border-amber-800/30' :
-                                                'text-gray-500'
-                                            }`}>
-                                                {idx + 1}
-                                            </span>
-                                        </td>
-                                        <td className="py-3.5">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-xl bg-gray-800 border border-gray-700 flex items-center justify-center font-black text-xs text-brand-400 overflow-hidden shrink-0">
-                                                    {s.logoUrl ? (
-                                                        <img src={s.logoUrl} alt={s.name} className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        s.name.charAt(0).toUpperCase()
-                                                    )}
-                                                </div>
-                                                <span className={`text-sm font-black truncate max-w-[180px] ${s.isCurrentUser ? 'text-brand-400' : 'text-white'}`}>
-                                                    {s.name}
-                                                </span>
-                                                {s.isCurrentUser && (
-                                                    <span className="bg-brand-500 text-white text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full shrink-0">
-                                                        YOU
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </td>
-                                        <td className="py-3.5 text-center font-black text-brand-400 text-sm">{s.points}</td>
-                                        <td className="py-3.5 text-center font-bold text-emerald-400 text-sm">{s.wins}</td>
-                                        <td className="py-3.5 text-center font-bold text-red-400/80 text-sm">{s.losses}</td>
-                                    </tr>
-                                ))}
-                                {standings.length === 0 && (
-                                    <tr>
-                                        <td colSpan={5} className="py-8 text-center text-gray-500 text-xs uppercase font-black tracking-widest">
-                                            No teams assigned yet
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                    <StandingsTable standings={standings} />
                 )}
 
                 {/* ── Matches View ── */}

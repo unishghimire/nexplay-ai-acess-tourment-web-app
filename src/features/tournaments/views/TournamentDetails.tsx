@@ -15,6 +15,7 @@ import { useNotification } from '../../../shared/context/NotificationContext';
 import Seo from '../../../shared/components/Seo';
 import ProfileLink from '../../profile/components/ProfileLink';
 import PrizeBoard from '../components/PrizeBoard';
+import ScoringInfoCard from '../components/ScoringInfoCard';
 import TournamentResultModal from '../components/TournamentResultModal';
 import RoadmapView from '../components/RoadmapView';
 import GroupStandingsView from '../components/GroupStandingsView';
@@ -497,6 +498,9 @@ export default function TournamentDetails() {
                                         </div>
                                     ))}
                                 </div>
+
+                                {/* Scoring Info — show participants how points work */}
+                                <ScoringInfoCard tournament={tournament} />
 
                                 {showRoom && (
                                     <div className="bg-brand-500/10 border border-brand-500/20 p-4 sm:p-8 rounded-2xl sm:rounded-3xl relative overflow-hidden group">

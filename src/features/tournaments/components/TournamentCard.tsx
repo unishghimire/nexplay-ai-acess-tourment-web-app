@@ -5,6 +5,7 @@ import { DEFAULT_BANNER } from '../../../shared/constants/constants';
 import { formatCurrency, formatDate, formatGameName } from '../../../shared/utils/utils';
 import { Clock, Users, Trophy, ChevronRight, Gamepad2, MapPin } from 'lucide-react';
 import { motion } from 'motion/react';
+import { ScoringInfoCard } from './ScoringInfoCard';
 
 interface TournamentCardProps {
     tournament: Tournament;
@@ -94,6 +95,8 @@ const TournamentCard: React.FC<TournamentCardProps> = ({ tournament }) => {
                         </div>
                     </div>
                 </div>
+
+                <ScoringInfoCard tournament={tournament} compact />
 
                 <div className="space-y-3 sm:space-y-4 mt-auto">
                     {/* Progress Section */}

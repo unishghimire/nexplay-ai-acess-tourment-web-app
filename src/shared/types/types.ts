@@ -148,6 +148,9 @@ export interface Match {
     changeHistory?: MatchChangeLog[]; // Added
     winnerId?: string;
     replayLink?: string;
+    // Battle Royale results — populated by ResultUploader
+    results?: TeamMatchResult[];
+    screenshotUrl?: string;
 }
 
 export interface Team {
