@@ -23,23 +23,55 @@ export const __dirname = path.dirname(__filename);
 const configPath = path.join(process.cwd(), "firebase-applet-config.json");
 const firebaseConfig = JSON.parse(fs.readFileSync(configPath, "utf-8"));
 
-// Use service account from env on Vercel/serverless; fall back to ADC for local dev
-const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
-const credential = serviceAccountJson
-  ? admin.credential.cert(JSON.parse(serviceAccountJson))
-  : undefined;
+// ═══════════════════════════════════════════════════════════════
+// FIREBASE ADMIN INITIALIZATION — production-safe credential handling
+// Priority: FIREBASE_SERVICE_ACCOUNT env var → service-account.json file → ADC
+// ponytail: file fallback covers local dev + Vercel if env var missing
+// ═══════════════════════════════════════════════════════════════
+function getFirebaseCredential(): admin.credential.Credential | undefined {
+  // 1. Env var (Vercel production — JSON string)
+  const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
+  if (serviceAccountJson) {
+    try {
+      return admin.credential.cert(JSON.parse(serviceAccountJson));
+    } catch (e) {
+      console.error("FIREBASE_SERVICE_ACCOUNT env var is set but invalid JSON:", e);
+    }
+  }
 
-export const firebaseApp = admin.initializeApp({
-  credential,
+  // 2. Local file (dev environment)
+  const saPath = path.join(process.cwd(), "service-account.json");
+  if (fs.existsSync(saPath)) {
+    try {
+      return admin.credential.cert(saPath);
+    } catch (e) {
+      console.error("service-account.json exists but is invalid:", e);
+    }
+  }
+
+  // 3. Fall back to Application Default Credentials (if running on GCP)
+  console.warn("Firebase Admin: No explicit credential found, using Application Default Credentials");
+  return undefined;
+}
+
+const credential = getFirebaseCredential();
+
+// Build app options — only include credential if we have one
+const appOptions: admin.AppOptions = {
   projectId: firebaseConfig.projectId,
   storageBucket: firebaseConfig.storageBucket,
-});
+};
+if (credential) {
+  appOptions.credential = credential;
+}
+
+export const firebaseApp = admin.initializeApp(appOptions);
 
 export const db = getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId);
 export const bucket = admin.storage().bucket();
 export const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
-  throw new Error("CRITICAL CONFIGURATION ERROR: JWT_SECRET environment variable is missing.");
+  console.error("CRITICAL: JWT_SECRET environment variable is missing. JWT auth will fail.");
 }
 
 export { admin, jwt, bcrypt, Type };
@@ -189,6 +221,9 @@ export const authenticateToken = async (req: any, res: any, next: any) => {
         return next();
       }
     } catch (firebaseErr) {
+      if (!JWT_SECRET) {
+        return res.status(500).json({ success: false, message: "Server auth not configured (JWT_SECRET missing)" });
+      }
       try {
         const decoded: any = jwt.verify(token, JWT_SECRET);
         req.user = { userId: decoded.uid, email: decoded.email, username: decoded.username, role: decoded.role };
@@ -202,10 +237,11 @@ export const authenticateToken = async (req: any, res: any, next: any) => {
   }
 };
 
-
 // ═══════════════════════════════════════════════════════════════
-// RATE LIMITER — simple in-memory, no dependency
-// ponytail: single-instance rate limiting; for multi-instance, use Redis-backed limiter
+// RATE LIMITER — simple in-memory,
+// ponytail: per-instance, not global — on Vercel serverless each
+// function invocation gets its own memory. Ceiling: rate limiting is
+// per-cold-start, not global. Upgrade: use Vercel KV or Upstash.
 // ═══════════════════════════════════════════════════════════════
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
@@ -224,6 +260,7 @@ export function rateLimit(maxRequests: number = 10, windowMs: number = 15 * 60 *
     if (entry.count > maxRequests) {
       return res.status(429).json({ success: false, message: "Too many requests. Please try again later." });
     }
+
     next();
   };
 }
