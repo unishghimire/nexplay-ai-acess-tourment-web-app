@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../shared/context/AuthContext';
 
@@ -6,6 +6,10 @@ const ProfileCompletionGuard: React.FC<{ children: React.ReactNode }> = ({ child
     const { user, profile, loading } = useAuth();
     const location = useLocation();
     const navigate = useNavigate();
+    // ponytail: 5s timeout — if profile never loads (Firestore issue), stop blocking.
+    // Ceiling: user with truly missing profile doc won't get redirected to complete-profile.
+    // Upgrade: server-side profile creation on first login.
+    const [profileTimeout, setProfileTimeout] = useState(false);
 
     useEffect(() => {
         if (!loading && user && profile) {
@@ -18,7 +22,16 @@ const ProfileCompletionGuard: React.FC<{ children: React.ReactNode }> = ({ child
         }
     }, [user, profile, loading, location.pathname, navigate]);
 
-    if (loading || (user && !profile)) {
+    useEffect(() => {
+        if (user && !profile && !loading) {
+            const timer = setTimeout(() => setProfileTimeout(true), 5000);
+            return () => clearTimeout(timer);
+        }
+        setProfileTimeout(false);
+    }, [user, profile, loading]);
+
+    // Only block if loading AND not timed out
+    if (loading || (user && !profile && !profileTimeout)) {
         return (
             <div className="min-h-screen bg-dark flex items-center justify-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-brand-500"></div>

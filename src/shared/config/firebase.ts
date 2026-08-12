@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-import { getFirestore, enableNetwork } from 'firebase/firestore';
+import { getFirestore, enableNetwork, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getAnalytics, isSupported } from 'firebase/analytics';
 import firebaseConfig from '../../../firebase-applet-config.json';
@@ -9,7 +9,23 @@ import firebaseConfig from '../../../firebase-applet-config.json';
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
-export const db = (firebaseConfig as any).firestoreDatabaseId ? getFirestore(app, (firebaseConfig as any).firestoreDatabaseId) : getFirestore(app);
+
+// ponytail: use initializeFirestore with offline persistence when available.
+// Ceiling: persistentLocalCache uses IndexedDB — not available in SSR/Node.
+// Upgrade: none needed, guard handles it.
+let db;
+if (typeof window !== 'undefined' && typeof window.indexedDB !== 'undefined') {
+    try {
+        db = initializeFirestore(app, {
+            localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+        }, (firebaseConfig as any).firestoreDatabaseId);
+    } catch {
+        db = (firebaseConfig as any).firestoreDatabaseId ? getFirestore(app, (firebaseConfig as any).firestoreDatabaseId) : getFirestore(app);
+    }
+} else {
+    db = (firebaseConfig as any).firestoreDatabaseId ? getFirestore(app, (firebaseConfig as any).firestoreDatabaseId) : getFirestore(app);
+}
+export { db };
 export const storage = getStorage(app);
 
 export let analytics: any = null;
@@ -18,6 +34,11 @@ if (typeof window !== 'undefined') {
         if (supported) {
             analytics = getAnalytics(app);
         }
+    });
+
+    // Reconnect Firestore when network comes back online
+    window.addEventListener('online', () => {
+        enableNetwork(db).catch((e) => console.error('Failed to re-enable Firestore network:', e));
     });
 }
 

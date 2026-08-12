@@ -294,7 +294,7 @@ const PublicProfile: React.FC = () => {
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                                 <div>
                                     <div className="flex items-center gap-3 mb-2">
-                                        <h1 className="text-4xl font-black text-white tracking-tight">{profile.username}</h1>
+                                        <h1 className="text-4xl font-black text-white tracking-tight break-words [overflow-wrap:anywhere]">{profile.username}</h1>
                                         {profile.isVerified && <CheckCircle2 className="w-6 h-6 text-blue-400 fill-blue-400/10" />}
                                         {profile.isChampion && <Award className="w-6 h-6 text-yellow-500" />}
                                     </div>

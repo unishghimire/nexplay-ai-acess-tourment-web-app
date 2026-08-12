@@ -66,12 +66,19 @@ export function useTournamentAdmin(
                 navigate('/');
             }
             setLoading(false);
+        }, (error) => {
+            console.error('Tournament snapshot error:', error);
+            showToast('Failed to load tournament data.', 'error');
+            setLoading(false);
         });
 
         // Participants Listener
         const q = query(collection(db, 'participants'), where('tournamentId', '==', id));
         const unsubParticipants = onSnapshot(q, (partSnap) => {
             setParticipants(partSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+            setFetchingParticipants(false);
+        }, (error) => {
+            console.error('Participants snapshot error:', error);
             setFetchingParticipants(false);
         });
 

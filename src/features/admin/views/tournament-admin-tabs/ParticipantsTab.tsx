@@ -106,7 +106,7 @@ export const ParticipantsTab: React.FC<TournamentAdminTabProps> = (props) => {
 
                     {/* Desktop table view */}
                     <div className="hidden sm:block overflow-x-auto">
-                        <table className="w-full text-left">
+                        <table className="w-full text-left min-w-[600px]">
                             <thead>
                                 <tr className="border-b border-gray-800">
                                     <th className="pb-4 text-[10px] font-black text-gray-500 uppercase tracking-widest">Player / Team</th>

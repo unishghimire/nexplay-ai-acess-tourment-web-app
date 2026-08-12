@@ -66,7 +66,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
         setSettings(settingsSnap.data() as SiteSettings);
       }
     } catch (error) {
-      // Error fetching wallet data
+      console.error('Error fetching wallet data:', error);
     } finally {
       setLoading(false);
     }
@@ -230,7 +230,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm animate-fade-in" onClick={onClose}></div>
       <div className="relative w-full sm:max-w-lg bg-gray-900 rounded-t-3xl sm:rounded-3xl border border-gray-800 shadow-2xl overflow-hidden animate-slide-up sm:animate-scale-in max-h-[90vh] flex flex-col">
-        <div className="p-6 border-b border-gray-800 flex justify-between items-center bg-gradient-to-r from-gray-900 to-black shrink-0">
+        <div className="p-4 sm:p-6 border-b border-gray-800 flex justify-between items-center bg-gradient-to-r from-gray-900 to-black shrink-0">
           <h2 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-2">
             <CreditCard className="w-5 h-5 text-brand-500" /> {activeTab === 'deposit' ? 'Deposit Funds' : 'Withdraw Funds'}
           </h2>
@@ -239,7 +239,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
           </button>
         </div>
 
-        <div className="p-6 overflow-y-auto custom-scrollbar flex-grow">
+        <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar flex-grow">
           {loading ? (
             <div className="py-20 flex flex-col items-center justify-center">
               <div className="w-10 h-10 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mb-4"></div>

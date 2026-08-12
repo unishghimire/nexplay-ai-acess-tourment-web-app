@@ -243,7 +243,7 @@ function GroupCard({ group, participants, currentTeamId, isHighlighted, label }:
                 {/* ── Standings Table ── */}
                 {activeView === 'standings' && (
                     <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-                        <table className="w-full text-left min-w-[500px] sm:min-w-0">
+                        <table className="w-full text-left min-w-[550px]">
                             <thead>
                                 <tr className="border-b border-gray-800 text-[10px] font-black uppercase tracking-widest text-gray-500">
                                     <th className="pb-3 pl-2 w-12">#</th>

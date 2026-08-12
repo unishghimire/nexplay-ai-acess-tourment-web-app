@@ -15,7 +15,7 @@ export default function ResultBoard({ results, config }: ResultBoardProps) {
 
     if (config.template === 'classic') {
         return (
-            <div className="bg-dark-900 rounded-2xl border border-gray-800 overflow-hidden">
+            <div className="bg-dark-900 rounded-2xl border border-gray-800 overflow-x-auto custom-scrollbar">
                 <table className="w-full text-left">
                     <thead className="bg-dark-800 border-b border-gray-800">
                         <tr>

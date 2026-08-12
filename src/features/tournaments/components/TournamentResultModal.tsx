@@ -136,7 +136,7 @@ const TournamentResultModal: React.FC<TournamentResultModalProps> = ({ isOpen, o
                         </div>
 
                         {/* Match Summary Stats */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
                             <div className="bg-[#1e293b]/50 border border-gray-800 rounded-2xl p-5 text-center">
                                 <Users className="w-6 h-6 text-indigo-400 mx-auto mb-2 opacity-50" />
                                 <div className="text-2xl font-black text-white">{tournament.currentPlayers || 0}</div>

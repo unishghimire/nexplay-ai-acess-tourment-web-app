@@ -38,7 +38,7 @@ const Navbar: React.FC = () => {
                 <div className="relative flex items-center justify-between h-16 sm:h-20">
                     {/* Logo */}
                     <Link to="/" className="flex items-center gap-3 shrink-0 group z-10">
-                        <img src="/logo.png" alt="Nexplay Logo" className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg shadow-md group-hover:scale-105 transition-transform" />
+                        <img src="/logo.png" alt="Nexplay Logo" className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg shrink-0 object-cover shadow-md group-hover:scale-105 transition-transform" />
                         <span className="text-xl sm:text-2xl font-black tracking-widest text-white leading-none">NEX<span className="text-brand-500">PLAY</span></span>
                     </Link>
 
@@ -62,16 +62,16 @@ const Navbar: React.FC = () => {
                         {user ? (
                             <>
                                 <NotificationDropdown />
-                                <div className="hidden sm:block">
+                                <div>
                                     <WalletDisplay balance={profile?.balance || 0} onClick={() => navigate('/wallet')} />
                                 </div>
-                                <div className="hidden sm:block">
+                                <div>
                                     <ProfileDropdown username={profile?.username || 'User'} avatarUrl={profile?.profilePicUrl} onLogout={handleLogout} />
                                 </div>
                             </>
                         ) : (
-                            <div className="hidden sm:block">
-                                <Link to="/login" className="bg-brand-500 hover:bg-brand-600 text-white h-11 px-6 flex items-center justify-center rounded-full font-black tracking-widest text-sm transition-all shadow-lg hover:shadow-brand-500/25 whitespace-nowrap shrink-0">
+                            <div>
+                                <Link to="/login" className="bg-brand-500 hover:bg-brand-600 text-white h-9 px-3.5 sm:h-11 sm:px-6 flex items-center justify-center rounded-full font-black tracking-widest text-xs sm:text-sm transition-all shadow-lg hover:shadow-brand-500/25 whitespace-nowrap shrink-0">
                                     LOGIN
                                 </Link>
                             </div>

@@ -285,7 +285,7 @@ const Teams: React.FC = () => {
                                         />
                                     </div>
                                     <div>
-                                        <h3 className="text-xl font-black text-white group-hover:text-brand-400 transition">{team.name}</h3>
+                                        <h3 className="text-xl font-black text-white group-hover:text-brand-400 transition truncate">{team.name}</h3>
                                         {team.ownerId === user.uid && (
                                             <span className="inline-block text-[10px] bg-brand-500/10 text-brand-400 px-3 py-1 rounded-full uppercase font-black tracking-widest border border-brand-500/20 mt-2">Owner</span>
                                         )}

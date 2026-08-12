@@ -338,7 +338,8 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
 
                 setStats({ totalBalance: totalBal, todayDep: dep, todayWith: withdr });
             } catch (error) {
-                // Error fetching admin data
+                console.error('Error fetching admin data:', error);
+                showToast('Failed to load admin data', 'error');
             }
         };
 

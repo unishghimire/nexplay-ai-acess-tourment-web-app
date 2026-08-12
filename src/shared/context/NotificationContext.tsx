@@ -140,7 +140,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
                 {toasts.map(toast => (
                     <div 
                         key={toast.id} 
-                        className={`pointer-events-auto min-w-[280px] p-4 rounded-xl shadow-2xl border flex items-center gap-3 animate-slide-in-right ${
+                        className={`pointer-events-auto w-full max-w-[calc(100vw-2rem)] sm:min-w-[280px] sm:w-auto p-4 rounded-xl shadow-2xl border flex items-center gap-3 animate-slide-in-right ${
                             toast.type === 'success' ? 'bg-green-900/90 border-green-500/50 text-green-100' :
                             toast.type === 'error' ? 'bg-red-900/90 border-red-500/50 text-red-100' :
                             toast.type === 'warning' ? 'bg-yellow-900/90 border-yellow-500/50 text-yellow-100' :

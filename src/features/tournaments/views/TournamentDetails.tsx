@@ -68,7 +68,7 @@ export default function TournamentDetails() {
         // 2. Participants Listener
         const unsubParticipants = onSnapshot(query(collection(db, 'participants'), where('tournamentId', '==', id)), (snapshot) => {
             setParticipants(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
-        });
+        }, (err) => console.warn('Participants subscription failed:', err));
 
         // 3. Related Tournaments & Host Profile (One-time fetch is okay)
         const fetchMeta = async () => {
@@ -131,7 +131,7 @@ export default function TournamentDetails() {
                 if (!teamSnap.empty) joined = true;
             }
             setIsJoined(joined);
-        });
+        }, (err) => console.warn('Join status subscription failed:', err));
 
         return () => unsubJoin();
     }, [id, user, profile?.teamId]);
@@ -483,7 +483,7 @@ export default function TournamentDetails() {
                                     </div>
                                 )}
 
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
                                     {[
                                         { label: 'Prize Pool', value: formatCurrency(tournament.prizePool), icon: Trophy, color: 'text-yellow-500' },
                                         { label: 'Entry Fee', value: tournament.entryFee > 0 ? formatCurrency(tournament.entryFee) : 'FREE', icon: Medal, color: 'text-brand-500' },

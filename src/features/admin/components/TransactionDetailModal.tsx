@@ -55,7 +55,7 @@ const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                             <Layout className="w-3 h-3" /> Dashboard
                         </button>
                     </div>
-                    <button onClick={onClose} className="text-gray-500 hover:text-white bg-dark p-2 rounded-full transition"><X className="w-5 h-5" /></button>
+                    <button onClick={onClose} className="text-gray-500 hover:text-white bg-dark min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full transition"><X className="w-5 h-5" /></button>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

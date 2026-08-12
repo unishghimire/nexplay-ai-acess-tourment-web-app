@@ -82,7 +82,7 @@ export const PendingDepositsTab: React.FC<AdminPanelTabProps> = (props) => {
                                             <div className="mb-3">
                                                 <a href={t.proofUrl} target="_blank" rel="noreferrer" className="block group/img">
                                                     <div className="relative rounded-xl overflow-hidden border border-gray-800 hover:border-brand-500 transition">
-                                                        <img src={t.proofUrl} alt="Payment proof" className="w-full max-h-32 object-cover" referrerPolicy="no-referrer" />
+                                                        <img src={t.proofUrl} alt="Payment proof" className="w-full max-h-48 object-contain bg-black/50 rounded-lg" referrerPolicy="no-referrer" />
                                                         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/img:opacity-100 transition flex items-center justify-center">
                                                             <span className="text-white text-xs font-bold uppercase tracking-wider flex items-center gap-1">
                                                                 <Eye className="w-3 h-3" /> View Full
