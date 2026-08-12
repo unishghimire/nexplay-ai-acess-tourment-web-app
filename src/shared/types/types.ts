@@ -390,6 +390,16 @@ export interface Game {
     modes: string[];
     isPublished: boolean;
     createdAt: Timestamp | any;
+    // Game-level scoring config (admin configures, new tournaments inherit)
+    scoring?: {
+        enabled: boolean;
+        killPoints: number;
+        placementPoints: Record<string, number>;
+        maxPlacement?: number;
+        scoringVersion: number;
+        updatedAt?: Timestamp | any;
+        updatedBy?: string;
+    };
 }
 
 export interface SiteSettings {

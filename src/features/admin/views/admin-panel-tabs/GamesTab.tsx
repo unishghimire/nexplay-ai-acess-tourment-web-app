@@ -1,11 +1,12 @@
 import React from 'react';
-import {Trash, Edit, Plus} from 'lucide-react';
+import {Trash, Edit, Plus, Trophy} from 'lucide-react';
 import { DEFAULT_BANNER, NEXPLAY_LOGO } from '../../../../shared/constants/constants';
 
 import { AdminPanelTabProps } from './types';
+import ScoringConfigModal from '../../components/ScoringConfigModal';
 
 export const GamesTab: React.FC<AdminPanelTabProps> = (props) => {
-    const { DEFAULT_BANNER, NEXPLAY_LOGO, editingGame, formatGameName, gameLogo, gameModes, gameName, games, handleDeleteGame, handleSaveGame, isGameModalOpen, isPublished, openEditGame, setEditingGame, setGameLogo, setGameModes, setGameName, setIsGameModalOpen, setIsPublished, uploading, handlePasteGame, handleDropGame, handleDragOverGame, processAndUploadGame } = props;
+    const { DEFAULT_BANNER, NEXPLAY_LOGO, editingGame, formatGameName, gameLogo, gameModes, gameName, games, handleDeleteGame, handleSaveGame, handleSaveScoring, isGameModalOpen, isScoringModalOpen, isPublished, openEditGame, setEditingGame, setGameLogo, setGameModes, setGameName, setIsGameModalOpen, setIsPublished, uploading, handlePasteGame, handleDropGame, handleDragOverGame, processAndUploadGame, scoringModalGame, setScoringModalGame, setIsScoringModalOpen } = props;
     return (
                 <div className="space-y-6">
                     <div className="flex justify-between items-center">
@@ -38,10 +39,22 @@ export const GamesTab: React.FC<AdminPanelTabProps> = (props) => {
                                     <div className="text-[10px] text-gray-400 mt-1 truncate w-32">
                                         {game.modes.join(', ')}
                                     </div>
+                                    {(game as any).scoring?.enabled && (
+                                        <span className="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 bg-amber-500/10 text-amber-400 rounded text-[8px] font-bold uppercase">
+                                            <Trophy className="w-2 h-2" /> Scoring v{(game as any).scoring?.scoringVersion || 1}
+                                        </span>
+                                    )}
                                 </div>
                                 <div className="flex flex-col gap-2">
-                                    <button onClick={() => openEditGame(game)} className="text-blue-400 hover:text-white"><Edit className="w-4 h-4" /></button>
-                                    <button onClick={() => handleDeleteGame(game.id)} className="text-red-400 hover:text-white"><Trash className="w-4 h-4" /></button>
+                                    <button onClick={() => openEditGame(game)} className="text-blue-400 hover:text-white" title="Edit Game"><Edit className="w-4 h-4" /></button>
+                                    <button
+                                        onClick={() => { setScoringModalGame(game); setIsScoringModalOpen(true); }}
+                                        className="text-amber-400 hover:text-white"
+                                        title="Scoring Settings"
+                                    >
+                                        <Trophy className="w-4 h-4" />
+                                    </button>
+                                    <button onClick={() => handleDeleteGame(game.id)} className="text-red-400 hover:text-white" title="Delete Game"><Trash className="w-4 h-4" /></button>
                                 </div>
                             </div>
                         ))}
@@ -152,6 +165,17 @@ export const GamesTab: React.FC<AdminPanelTabProps> = (props) => {
                             </div>
                         </div>
                     )}
+
+                {isScoringModalOpen && scoringModalGame && (
+                    <ScoringConfigModal
+                        isOpen={isScoringModalOpen}
+                        onClose={() => { setIsScoringModalOpen(false); setScoringModalGame(null); }}
+                        gameName={scoringModalGame.name}
+                        gameId={scoringModalGame.id}
+                        currentScoring={(scoringModalGame as any).scoring || null}
+                        onSave={handleSaveScoring}
+                    />
+                )}
                 </div>
     );
 };

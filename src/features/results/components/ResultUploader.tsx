@@ -1,10 +1,18 @@
-import React, { useState } from 'react';
+// ═══════════════════════════════════════════════════════════════
+// RESULT UPPLIER (v2) — uses scoring engine for auto-calculation
+// ponytail: replaces inline pointSystem math with scoringEngine calls.
+// Falls back: tournament.scoringSnapshot → tournament.pointSystem → FF defaults.
+// ═══════════════════════════════════════════════════════════════
+
+import React, { useState, useMemo, useCallback } from 'react';
 import { Tournament, TournamentGroup, Match, TeamMatchResult } from '../../../shared/types/types';
-import { CheckCircle2, Camera, Shield } from 'lucide-react';
+import { Camera, Shield, AlertTriangle, Trophy, Hash, Target, CheckCircle2 } from 'lucide-react';
 import Modal from '../../../shared/components/Modal';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { doc, updateDoc, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
 import { db, auth } from '../../../shared/config/firebase';
+import { calculateTeamScore, validateResult } from '../../../shared/services/scoringEngine';
+import { GameScoringConfig, FREE_FIRE_DEFAULT_SCORING, TournamentScoringSnapshot } from '../../../shared/types/scoring';
 
 interface ResultUploaderProps {
     isOpen: boolean;
@@ -15,7 +23,26 @@ interface ResultUploaderProps {
     onSuccess: () => void;
 }
 
-const ResultUploader: React.FC<ResultUploaderProps> = ({ isOpen, onClose, tournament, group, match, onSuccess }) => {
+// Convert legacy PointRule to GameScoringConfig format
+function pointRuleToScoringConfig(pointSystem: any): GameScoringConfig {
+    const placementPoints: Record<string, number> = {};
+    if (pointSystem?.placementPoints) {
+        for (const p of pointSystem.placementPoints) {
+            placementPoints[String(p.rank)] = p.points;
+        }
+    }
+    return {
+        enabled: true,
+        killPoints: pointSystem?.pointsPerKill ?? 1,
+        placementPoints,
+        maxPlacement: Object.keys(placementPoints).length > 0
+            ? Math.max(...Object.keys(placementPoints).map(Number))
+            : 12,
+        scoringVersion: 1,
+    };
+}
+
+export const ResultUploader: React.FC<ResultUploaderProps> = ({ isOpen, onClose, tournament, group, match, onSuccess }) => {
     const { showToast } = useNotification();
     const [loading, setLoading] = useState(false);
     const [screenshot, setScreenshot] = useState<File | null>(null);
@@ -30,6 +57,83 @@ const ResultUploader: React.FC<ResultUploaderProps> = ({ isOpen, onClose, tourna
         }))
     );
 
+    // Resolve which scoring config to use — cascade: snapshot → pointSystem → FF defaults
+    const scoringConfig: GameScoringConfig = useMemo(() => {
+        // 1. Tournament scoring snapshot (frozen at creation)
+        if ((tournament as any).scoringSnapshot) {
+            const snap = (tournament as any).scoringSnapshot as TournamentScoringSnapshot;
+            return {
+                enabled: true,
+                killPoints: snap.killPoints,
+                placementPoints: snap.placementPoints,
+                maxPlacement: snap.maxPlacement || 12,
+                scoringVersion: snap.scoringVersion,
+            };
+        }
+        // 2. Legacy tournament.pointSystem
+        if (tournament.pointSystem) {
+            return pointRuleToScoringConfig(tournament.pointSystem);
+        }
+        // 3. Free Fire defaults
+        return { ...FREE_FIRE_DEFAULT_SCORING, scoringVersion: 1 };
+    }, [tournament]);
+
+    const scoringSource = useMemo(() => {
+        if ((tournament as any).scoringSnapshot) return 'Tournament Snapshot';
+        if (tournament.pointSystem) return 'Custom Point System';
+        return 'Free Fire Default';
+    }, [tournament]);
+
+    // Live recompute all results when scoring config or any input changes
+    const scoredResults = useMemo(() => {
+        return results.map(r => {
+            const scored = calculateTeamScore({
+                position: r.placement,
+                kills: r.kills,
+                scoring: scoringConfig,
+            });
+            return {
+                ...r,
+                totalPoints: scored.totalPoints,
+                placementPoints: scored.placementPoints,
+                killPoints: scored.killPoints,
+            };
+        });
+    }, [results, scoringConfig]);
+
+    // Sort by totalPoints desc for live standings preview
+    const standings = useMemo(() => {
+        return [...scoredResults].sort((a, b) => {
+            if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+            if (b.killPoints !== a.killPoints) return b.killPoints - a.killPoints;
+            return a.placement - b.placement;
+        });
+    }, [scoredResults]);
+
+    // Check for duplicate placements
+    const placementErrors = useMemo(() => {
+        const seen = new Map<number, string[]>();
+        scoredResults.forEach(r => {
+            const existing = seen.get(r.placement) || [];
+            existing.push(r.teamName);
+            seen.set(r.placement, existing);
+        });
+        const dupes: string[] = [];
+        seen.forEach((teams, pos) => {
+            if (teams.length > 1) dupes.push(`Position ${pos}: ${teams.join(', ')}`);
+        });
+        return dupes;
+    }, [scoredResults]);
+
+    // Validate a single result entry
+    const validateEntry = useCallback((placement: number, kills: number) => {
+        return validateResult({
+            position: placement,
+            kills,
+            maxPlacement: scoringConfig.maxPlacement,
+        });
+    }, [scoringConfig]);
+
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
@@ -41,27 +145,32 @@ const ResultUploader: React.FC<ResultUploaderProps> = ({ isOpen, onClose, tourna
     const handleUpdateResult = (teamId: string, field: 'kills' | 'placement', value: number) => {
         setResults(prev => prev.map(r => {
             if (r.teamId === teamId) {
-                const updated = { ...r, [field]: value };
-                // Calculate points if point system exists
-                if (tournament.pointSystem) {
-                    const killPoints = updated.kills * tournament.pointSystem.pointsPerKill;
-                    const placementPoints = tournament.pointSystem.placementPoints?.find(p => p.rank === updated.placement)?.points || 0;
-                    updated.totalPoints = killPoints + placementPoints;
-                }
-                return updated;
+                return { ...r, [field]: value };
             }
             return r;
         }));
     };
 
     const handleSubmit = async () => {
+        // Validate all entries
+        for (const r of scoredResults) {
+            const v = validateEntry(r.placement, r.kills);
+            if (!v.valid) {
+                showToast(`${r.teamName}: ${v.errors[0]}`, 'error');
+                return;
+            }
+        }
+        if (placementErrors.length > 0) {
+            showToast('Duplicate placements detected — fix before submitting', 'error');
+            return;
+        }
+
         if (!screenshot && !window.confirm("Continue without screenshot proof?")) {
             return;
         }
 
         setLoading(true);
         try {
-            // Upload screenshot proof file via api/process-image (which uses ImgBB)
             let screenshotUrl = '';
             if (screenshot) {
                 try {
@@ -71,7 +180,7 @@ const ResultUploader: React.FC<ResultUploaderProps> = ({ isOpen, onClose, tourna
                         reader.onload = () => resolve(reader.result as string);
                         reader.onerror = error => reject(error);
                     });
-                    
+
                     const currentUser = auth.currentUser;
                     if (!currentUser) {
                         console.error('No authenticated user for screenshot upload');
@@ -89,7 +198,7 @@ const ResultUploader: React.FC<ResultUploaderProps> = ({ isOpen, onClose, tourna
                             folder: `matches/${match.id}`
                         })
                     });
-                    
+
                     if (response.ok) {
                         const json = await response.json();
                         screenshotUrl = json.url;
@@ -101,11 +210,8 @@ const ResultUploader: React.FC<ResultUploaderProps> = ({ isOpen, onClose, tourna
                 }
             }
 
-            // 2. Submit the result directly to Firestore
             const tournamentRef = doc(db, 'tournaments', tournament.id);
-            
-            // Check if we are updating a group in the main tournament doc or a subcollection
-            // Based on TournamentAdminPanel, it's currently in the main doc's 'groups' array.
+
             const updatedGroups = tournament.groups?.map(g => {
                 if (g.id === group.id) {
                     return {
@@ -115,7 +221,13 @@ const ResultUploader: React.FC<ResultUploaderProps> = ({ isOpen, onClose, tourna
                                 return {
                                     ...m,
                                     status: 'completed' as const,
-                                    results: results,
+                                    results: scoredResults.map(r => ({
+                                        teamId: r.teamId,
+                                        teamName: r.teamName,
+                                        placement: r.placement,
+                                        kills: r.kills,
+                                        totalPoints: r.totalPoints,
+                                    })),
                                     screenshotUrl
                                 };
                             }
@@ -130,13 +242,12 @@ const ResultUploader: React.FC<ResultUploaderProps> = ({ isOpen, onClose, tourna
                 groups: updatedGroups
             });
 
-            // 3. Update participant totals/stats if needed
+            // Update participant stats
             const batch = writeBatch(db);
-            for (const res of results) {
-                // Find participant doc
-                const q = query(collection(db, 'participants'), 
+            for (const res of scoredResults) {
+                const q = query(collection(db, 'participants'),
                     where('tournamentId', '==', tournament.id),
-                    where('userId', '==', res.teamId) // Assuming teamId is userId for solo or primary lead
+                    where('userId', '==', res.teamId)
                 );
                 const snap = await getDocs(q);
                 if (!snap.empty) {
@@ -165,12 +276,26 @@ const ResultUploader: React.FC<ResultUploaderProps> = ({ isOpen, onClose, tourna
     return (
         <Modal isOpen={isOpen} onClose={onClose} title={`Upload Match Result - ${group.name}`}>
             <div className="space-y-6 max-h-[70vh] overflow-y-auto px-1 custom-scrollbar">
+                {/* Scoring Info Bar */}
+                <div className="flex items-center justify-between bg-brand-500/5 border border-brand-500/20 rounded-2xl px-4 py-3">
+                    <div className="flex items-center gap-2">
+                        <Shield className="w-4 h-4 text-brand-500" />
+                        <span className="text-xs font-black text-brand-500 uppercase tracking-widest">Auto-Calc Active</span>
+                    </div>
+                    <div className="text-right">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase">{scoringSource}</span>
+                        <span className="text-[10px] text-slate-500 ml-2">
+                            {scoringConfig.killPoints} pt/kill · {Object.keys(scoringConfig.placementPoints).length} placements
+                        </span>
+                    </div>
+                </div>
+
                 {/* Screenshot Upload */}
-                <div className="space-y-4">
-                    <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest">Match Screenshot (Proof)</label>
-                    <div 
+                <div className="space-y-3">
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Match Screenshot (Proof)</label>
+                    <div
                         onClick={() => document.getElementById('result-screenshot')?.click()}
-                        className="relative h-48 rounded-3xl border-2 border-dashed border-gray-800 hover:border-brand-500 transition-all cursor-pointer overflow-hidden flex flex-col items-center justify-center bg-dark group"
+                        className="relative h-48 rounded-3xl border-2 border-dashed border-slate-800 hover:border-brand-500 transition-all cursor-pointer overflow-hidden flex flex-col items-center justify-center bg-dark group"
                     >
                         {previewUrl ? (
                             <>
@@ -181,68 +306,145 @@ const ResultUploader: React.FC<ResultUploaderProps> = ({ isOpen, onClose, tourna
                             </>
                         ) : (
                             <>
-                                <Camera className="w-10 h-10 text-gray-700 mb-2 group-hover:text-brand-500 transition-colors" />
-                                <p className="text-gray-500 text-xs font-bold">CLICK TO UPLOAD PROOF</p>
+                                <Camera className="w-10 h-10 text-slate-600 mb-2 group-hover:text-brand-500 transition-colors" />
+                                <p className="text-slate-500 text-xs font-bold">CLICK TO UPLOAD PROOF</p>
                             </>
                         )}
                         <input id="result-screenshot" type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
                     </div>
                 </div>
 
-                {/* Team Results Table */}
-                <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                        <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest tracking-widest">Team Performance</label>
-                        <div className="flex items-center gap-2 text-[10px] text-brand-400 font-bold">
-                            <Shield className="w-3 h-3" /> Auto-Calculation Active
+                {/* Duplicate placement warnings */}
+                {placementErrors.length > 0 && (
+                    <div className="flex items-start gap-2 bg-red-500/10 border border-red-500/30 p-3 rounded-xl">
+                        <AlertTriangle className="w-4 h-4 text-red-400 mt-0.5 shrink-0" />
+                        <div className="text-xs text-red-300">
+                            <p className="font-bold mb-1">Duplicate Placements:</p>
+                            {placementErrors.map((e, i) => <p key={i}>{e}</p>)}
                         </div>
                     </div>
-                    
-                    <div className="space-y-2">
-                        {results.map((res) => (
-                            <div key={res.teamId} className="bg-dark p-4 rounded-2xl border border-gray-800 flex items-center gap-4">
-                                <div className="flex-1">
+                )}
+
+                {/* Team Results — with live score breakdown */}
+                <div className="space-y-3">
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Team Performance</label>
+
+                    {scoredResults.map((res) => {
+                        const validation = validateEntry(res.placement, res.kills);
+                        return (
+                            <div key={res.teamId} className="bg-dark p-4 rounded-2xl border border-slate-800 space-y-3">
+                                {/* Team name + total */}
+                                <div className="flex items-center justify-between">
                                     <p className="text-sm font-black text-white truncate">{res.teamName}</p>
-                                    <p className="text-[10px] text-gray-500 font-bold">Total Points: <span className="text-brand-500">{res.totalPoints}</span></p>
-                                </div>
-                                <div className="flex gap-3">
-                                    <div className="w-20">
-                                        <label className="block text-[8px] font-black text-gray-600 uppercase mb-1">Kills</label>
-                                        <input 
-                                            type="number" 
-                                            value={res.kills}
-                                            onChange={(e) => handleUpdateResult(res.teamId, 'kills', parseInt(e.target.value) || 0)}
-                                            className="w-full bg-surface border border-gray-800 text-white rounded-lg p-2 text-sm font-bold focus:border-brand-500 outline-none"
-                                        />
+                                    <div className="text-right">
+                                        <span className="text-lg font-black text-brand-500">{res.totalPoints}</span>
+                                        <span className="text-[10px] text-slate-500 ml-1">pts</span>
                                     </div>
-                                    <div className="w-20">
-                                        <label className="block text-[8px] font-black text-gray-600 uppercase mb-1">Rank</label>
-                                        <input 
-                                            type="number" 
-                                            value={res.placement}
+                                </div>
+
+                                {/* Input row */}
+                                <div className="flex gap-3 items-center">
+                                    {/* Placement */}
+                                    <div className="flex-1">
+                                        <label className="text-[9px] text-slate-500 font-bold uppercase mb-1 block flex items-center gap-1">
+                                            <Trophy className="w-2.5 h-2.5" /> Placement
+                                        </label>
+                                        <input
+                                            type="number"
                                             min="1"
-                                            onChange={(e) => handleUpdateResult(res.teamId, 'placement', parseInt(e.target.value) || 1)}
-                                            className="w-full bg-surface border border-gray-800 text-white rounded-lg p-2 text-sm font-bold focus:border-brand-500 outline-none"
+                                            value={res.placement}
+                                            onChange={e => handleUpdateResult(res.teamId, 'placement', parseInt(e.target.value) || 1)}
+                                            className={`w-full bg-surface border rounded-xl p-2.5 text-white text-sm font-bold text-center focus:outline-none transition ${
+                                                validation.valid
+                                                    ? 'border-slate-800 focus:border-brand-500'
+                                                    : 'border-red-500/50 focus:border-red-500'
+                                            }`}
+                                        />
+                                    </div>
+                                    {/* Kills */}
+                                    <div className="flex-1">
+                                        <label className="text-[9px] text-slate-500 font-bold uppercase mb-1 block flex items-center gap-1">
+                                            <Target className="w-2.5 h-2.5" /> Kills
+                                        </label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            value={res.kills}
+                                            onChange={e => handleUpdateResult(res.teamId, 'kills', parseInt(e.target.value) || 0)}
+                                            className={`w-full bg-surface border rounded-xl p-2.5 text-white text-sm font-bold text-center focus:outline-none transition ${
+                                                validation.valid
+                                                    ? 'border-slate-800 focus:border-brand-500'
+                                                    : 'border-red-500/50 focus:border-red-500'
+                                            }`}
                                         />
                                     </div>
                                 </div>
+
+                                {/* Live score breakdown */}
+                                <div className="flex items-center gap-2 text-[10px] font-mono">
+                                    <span className="bg-slate-800/50 text-slate-400 px-2 py-1 rounded-lg">
+                                        Place: <span className="text-white font-bold">{res.placementPoints}</span>
+                                    </span>
+                                    <span className="text-slate-600">+</span>
+                                    <span className="bg-slate-800/50 text-slate-400 px-2 py-1 rounded-lg">
+                                        Kills: <span className="text-white font-bold">{res.killPoints}</span>
+                                        <span className="text-slate-500"> ({res.kills}×{scoringConfig.killPoints})</span>
+                                    </span>
+                                    <span className="text-slate-600">=</span>
+                                    <span className="bg-brand-500/10 text-brand-500 px-2 py-1 rounded-lg font-bold">
+                                        {res.totalPoints}
+                                    </span>
+                                </div>
+
+                                {/* Validation error */}
+                                {!validation.valid && (
+                                    <p className="text-[10px] text-red-400 font-bold flex items-center gap-1">
+                                        <AlertTriangle className="w-2.5 h-2.5" /> {validation.errors[0]}
+                                    </p>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+
+                {/* Live Standings Preview */}
+                <div className="bg-dark p-4 rounded-2xl border border-slate-800">
+                    <p className="text-[10px] font-black text-brand-500 uppercase tracking-widest mb-3 flex items-center gap-1">
+                        <Hash className="w-3 h-3" /> Live Standings Preview
+                    </p>
+                    <div className="space-y-1">
+                        {standings.map((s, i) => (
+                            <div key={s.teamId} className="flex items-center gap-3 py-1.5 px-2 rounded-lg hover:bg-slate-800/30 transition">
+                                <span className={`w-6 text-center text-xs font-black ${i === 0 ? 'text-amber-400' : i === 1 ? 'text-slate-300' : i === 2 ? 'text-orange-400' : 'text-slate-500'}`}>
+                                    {i + 1}
+                                </span>
+                                <span className="flex-1 text-sm font-bold text-white truncate">{s.teamName}</span>
+                                <span className="text-[10px] text-slate-500 font-mono">{s.kills} kills</span>
+                                <span className="text-sm font-black text-brand-500 w-10 text-right">{s.totalPoints}</span>
                             </div>
                         ))}
                     </div>
                 </div>
 
-                <div className="pt-4 sticky bottom-0 bg-surface">
-                    <button 
+                {/* Submit */}
+                <div className="flex gap-3 sticky bottom-0 bg-card pt-2">
+                    <button
+                        onClick={onClose}
+                        className="flex-1 py-3 rounded-xl border border-slate-700 text-slate-400 font-bold text-sm uppercase tracking-widest hover:bg-slate-800/50 transition"
+                    >
+                        Cancel
+                    </button>
+                    <button
                         onClick={handleSubmit}
-                        disabled={loading}
-                        className="w-full bg-brand-600 hover:bg-brand-500 disabled:opacity-50 text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-brand-600/20 transition-all active:scale-95 flex items-center justify-center gap-2"
+                        disabled={loading || placementErrors.length > 0}
+                        className="flex-1 py-3 rounded-xl bg-brand-600 hover:bg-brand-500 disabled:opacity-50 text-white font-black text-sm uppercase tracking-widest transition flex items-center justify-center gap-2"
                     >
                         {loading ? (
-                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         ) : (
-                            <CheckCircle2 className="w-5 h-5" />
+                            <CheckCircle2 className="w-4 h-4" />
                         )}
-                        Submit Result
+                        Submit Results
                     </button>
                 </div>
             </div>
