@@ -40,11 +40,11 @@ export const ParticipantsTab: React.FC<TournamentAdminTabProps> = (props) => {
                 </div>
                 <div className="flex gap-2 sm:gap-4">
                     <div className="bg-dark px-4 sm:px-6 py-2 sm:py-3 rounded-xl sm:rounded-2xl border border-gray-800 text-center flex-1 sm:flex-none">
-                        <div className="text-[9px] sm:text-[10px] text-gray-500 font-black uppercase tracking-widest mb-1">Approved</div>
+                        <div className="text-[10px] sm:text-[10px] text-gray-500 font-black uppercase tracking-widest mb-1">Approved</div>
                         <div className="text-lg sm:text-xl font-black text-white">{participants.filter(p => p.status === 'approved').length}</div>
                     </div>
                     <div className="bg-dark px-4 sm:px-6 py-2 sm:py-3 rounded-xl sm:rounded-2xl border border-gray-800 text-center flex-1 sm:flex-none">
-                        <div className="text-[9px] sm:text-[10px] text-yellow-500/50 font-black uppercase tracking-widest mb-1">Pending</div>
+                        <div className="text-[10px] sm:text-[10px] text-yellow-500/50 font-black uppercase tracking-widest mb-1">Pending</div>
                         <div className="text-lg sm:text-xl font-black text-yellow-500">{participants.filter(p => p.status === 'pending').length}</div>
                     </div>
                 </div>
@@ -74,7 +74,7 @@ export const ParticipantsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                         <p className="text-sm font-black text-white truncate">{p.username}</p>
                                         <p className="text-[10px] text-brand-500 font-bold uppercase truncate">{p.teamName || 'Solo'}</p>
                                     </div>
-                                    <span className={`px-2 py-1 rounded text-[8px] font-black uppercase tracking-widest shrink-0 ${
+                                    <span className={`px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest shrink-0 ${
                                         p.status === 'approved' ? 'bg-green-500/10 text-green-500' :
                                         p.status === 'rejected' ? 'bg-red-500/10 text-red-500' :
                                         'bg-yellow-500/10 text-yellow-500'
@@ -140,7 +140,7 @@ export const ParticipantsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                             <p className="text-[10px] text-gray-500 font-mono break-anywhere">{p.inGameId}</p>
                                         </td>
                                         <td className="py-4 text-center">
-                                            <span className={`px-2 py-1 rounded text-[8px] font-black uppercase tracking-widest ${
+                                            <span className={`px-2 py-1 rounded text-[10px] font-black uppercase tracking-widest ${
                                                 p.status === 'approved' ? 'bg-green-500/10 text-green-500' :
                                                 p.status === 'rejected' ? 'bg-red-500/10 text-red-500' :
                                                 'bg-yellow-500/10 text-yellow-500'

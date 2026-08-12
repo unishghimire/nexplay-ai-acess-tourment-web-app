@@ -64,7 +64,7 @@ export const MatchesTab: React.FC<TournamentAdminTabProps> = (props) => {
                                                             setMatchScore({ score1: match.score1, score2: match.score2, status: match.status, map: match.map || '' });
                                                             setIsUpdateScoreModalOpen(true);
                                                         }}
-                                                        className="bg-dark hover:bg-gray-800 text-gray-400 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all border border-gray-800"
+                                                        className="bg-dark hover:bg-gray-800 text-gray-400 py-2.5 min-h-[44px] rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border border-gray-800"
                                                     >
                                                         Score
                                                     </button>
@@ -77,7 +77,7 @@ export const MatchesTab: React.FC<TournamentAdminTabProps> = (props) => {
                                                                 setIsResultUploaderOpen(true);
                                                             }
                                                         }}
-                                                        className="bg-brand-600/10 hover:bg-brand-600 text-brand-500 hover:text-white py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all border border-brand-500/20"
+                                                        className="bg-brand-600/10 hover:bg-brand-600 text-brand-500 hover:text-white py-2.5 min-h-[44px] rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border border-brand-500/20"
                                                     >
                                                         Result
                                                     </button>

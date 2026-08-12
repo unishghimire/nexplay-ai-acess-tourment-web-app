@@ -261,27 +261,27 @@ const OrganizerPanel: React.FC = () => {
       {/* Mobile nav toggle */}
       <button
         onClick={() => setMobileNavOpen(!mobileNavOpen)}
-        className="lg:hidden flex items-center gap-2 text-sm text-gray-400 mb-4"
+        className="lg:hidden flex items-center justify-between bg-card p-4 rounded-2xl border border-gray-800 w-full mb-4"
       >
-        {mobileNavOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        {mobileNavOpen ? 'Close' : 'Menu'}
+        <span className="font-bold text-white text-sm uppercase tracking-widest">Organizer Menu</span>
+        {mobileNavOpen ? <X className="w-5 h-5 text-gray-400" /> : <Menu className="w-5 h-5 text-gray-400" />}
       </button>
 
       <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
         {/* Sidebar Navigation */}
-        <aside className={`w-full lg:w-56 flex-shrink-0 ${mobileNavOpen ? 'block' : 'hidden lg:block'}`}>
-          <nav className="space-y-1 flex flex-row lg:flex-col overflow-x-auto lg:overflow-visible gap-2 lg:gap-1 pb-2 lg:pb-0">
+        <aside className={`w-full lg:w-60 flex-shrink-0 ${mobileNavOpen ? 'block' : 'hidden lg:block'}`}>
+          <nav className="space-y-2 bg-card p-4 rounded-2xl border border-gray-800 h-fit lg:sticky lg:top-24">
             {NAV_ITEMS.map((item) => (
               <button
                 key={item.id}
                 onClick={() => handleTabChange(item.id)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors shrink-0 lg:w-full min-h-[44px] ${
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all shrink-0 min-h-[44px] ${
                   activeTab === item.id
-                    ? 'bg-brand-500 text-white'
-                    : 'text-gray-400 hover:bg-gray-900 hover:text-white'
+                    ? 'bg-brand-500 text-white shadow-xl shadow-brand-500/20'
+                    : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
                 }`}
               >
-                <item.icon className="w-4 h-4 flex-shrink-0" />
+                <item.icon className={`w-4 h-4 flex-shrink-0 ${activeTab === item.id ? 'text-white' : 'text-gray-500'}`} />
                 <span className="whitespace-nowrap">{item.label}</span>
               </button>
             ))}

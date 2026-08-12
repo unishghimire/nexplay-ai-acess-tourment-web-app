@@ -142,7 +142,7 @@ const MatchRoomsTab: React.FC<MatchRoomsTabProps> = ({
                   </div>
 
                   {/* Room ID & Password Key-Value Grid */}
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {/* Room ID Box */}
                     <div className="bg-black/40 border border-gray-800 rounded-lg p-3 flex flex-col justify-between">
                       <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
@@ -152,7 +152,7 @@ const MatchRoomsTab: React.FC<MatchRoomsTabProps> = ({
                         <button
                           onClick={() => handleCopy(room.roomId, roomIdKey)}
                           className="text-xs text-gray-400 hover:text-white transition-colors flex items-center gap-1 font-medium min-h-[44px] px-2"
-                          title="Copy Room ID"
+                          aria-label="Copy Room ID" title="Copy Room ID"
                         >
                           {isIdCopied ? (
                             <span className="text-emerald-400 flex items-center gap-1">
@@ -179,7 +179,7 @@ const MatchRoomsTab: React.FC<MatchRoomsTabProps> = ({
                         <button
                           onClick={() => handleCopy(room.roomPass, roomPassKey)}
                           className="text-xs text-gray-400 hover:text-white transition-colors flex items-center gap-1 font-medium min-h-[44px] px-2"
-                          title="Copy Room Password"
+                          aria-label="Copy Room Password" title="Copy Room Password"
                         >
                           {isPassCopied ? (
                             <span className="text-emerald-400 flex items-center gap-1">
@@ -212,7 +212,7 @@ const MatchRoomsTab: React.FC<MatchRoomsTabProps> = ({
                         href={room.streamUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs sm:text-sm text-blue-400 hover:text-blue-300 font-medium flex items-center gap-1.5 transition-colors"
+                        className="min-h-[44px] px-3 py-2 text-xs sm:text-sm text-brand-400 hover:text-brand-300 font-medium flex items-center gap-1.5 transition-colors rounded-lg hover:bg-brand-500/10"
                       >
                         View Stream <ExternalLink className="w-4 h-4" />
                       </a>

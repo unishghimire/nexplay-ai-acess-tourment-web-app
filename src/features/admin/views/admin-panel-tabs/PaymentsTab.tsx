@@ -19,14 +19,18 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                     setCategoryActive(true);
                                     setIsCategoryModalOpen(true);
                                 }}
-                                className="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2"
+                                className="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2.5 min-h-[44px] rounded-lg font-bold text-sm transition flex items-center gap-2 flex items-center gap-2"
                             >
                                 <Plus className="w-4 h-4" /> Add Category
                             </button>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {paymentCategories.map(cat => (
+                            {paymentCategories.length === 0 ? (
+                            <div className="py-8 text-center bg-dark/50 rounded-2xl border border-gray-800">
+                                <p className="text-sm text-gray-500 font-bold uppercase tracking-widest">No categories configured.</p>
+                            </div>
+                        ) : paymentCategories.map(cat => (
                                 <div key={cat.id} className="bg-card p-4 rounded-xl border border-gray-800 flex flex-col gap-4">
                                     <div className="flex justify-between items-start">
                                         <div>
@@ -44,7 +48,7 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                                 setCategoryActive(cat.isActive);
                                                 setIsCategoryModalOpen(true);
                                             }} className="text-blue-400 hover:text-white"><Edit className="w-4 h-4" /></button>
-                                            <button onClick={() => handleDeleteCategory(cat.id)} className="text-red-400 hover:text-white"><Trash className="w-4 h-4" /></button>
+                                            <button aria-label="Delete category" onClick={() => handleDeleteCategory(cat.id)} className="text-red-400 hover:text-white p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-all"><Trash className="w-4 h-4" /></button>
                                         </div>
                                     </div>
                                     <div className="text-[10px] text-gray-500 bg-dark p-2 rounded border border-gray-700 h-16 overflow-y-auto">
@@ -70,7 +74,7 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                     setPaymentActive(true);
                                     setIsPaymentModalOpen(true);
                                 }}
-                                className="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-lg font-bold text-sm transition flex items-center gap-2"
+                                className="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2.5 min-h-[44px] rounded-lg font-bold text-sm transition flex items-center gap-2 flex items-center gap-2"
                             >
                                 <Plus className="w-4 h-4" /> Add Method
                             </button>
@@ -187,7 +191,11 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                             className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none transition"
                                         >
                                             <option value="">Select a category</option>
-                                            {paymentCategories.map(cat => (
+                                            {paymentCategories.length === 0 ? (
+                            <div className="py-8 text-center bg-dark/50 rounded-2xl border border-gray-800">
+                                <p className="text-sm text-gray-500 font-bold uppercase tracking-widest">No categories configured.</p>
+                            </div>
+                        ) : paymentCategories.map(cat => (
                                                 <option key={cat.id} value={cat.id}>{cat.name}</option>
                                             ))}
                                         </select>

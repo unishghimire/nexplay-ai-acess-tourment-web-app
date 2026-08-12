@@ -25,16 +25,16 @@ export const OrgApprovalsTab: React.FC<AdminPanelTabProps> = (props) => {
                                     </div>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                                         <div className="bg-black/30 p-3 rounded-xl border border-gray-800">
-                                            <div className="text-gray-500 uppercase font-bold text-[9px] mb-1">WhatsApp</div>
+                                            <div className="text-gray-500 uppercase font-bold text-[10px] mb-1">WhatsApp</div>
                                             <div className="text-white">{app.whatsapp}</div>
                                         </div>
                                         <div className="bg-black/30 p-3 rounded-xl border border-gray-800">
-                                            <div className="text-gray-500 uppercase font-bold text-[9px] mb-1">Email</div>
+                                            <div className="text-gray-500 uppercase font-bold text-[10px] mb-1">Email</div>
                                             <div className="text-white truncate">{app.email}</div>
                                         </div>
                                     </div>
                                     <div className="bg-black/30 p-3 rounded-xl border border-gray-800">
-                                        <div className="text-gray-500 uppercase font-bold text-[9px] mb-1">Proof Link</div>
+                                        <div className="text-gray-500 uppercase font-bold text-[10px] mb-1">Proof Link</div>
                                         <a href={app.proofLink} target="_blank" rel="noreferrer" className="text-brand-400 hover:text-brand-300 flex items-center gap-2 truncate">
                                             <ExternalLink className="w-3 h-3" /> {app.proofLink}
                                         </a>

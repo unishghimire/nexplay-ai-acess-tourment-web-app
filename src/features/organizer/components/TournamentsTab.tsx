@@ -118,7 +118,7 @@ const TournamentsTab: React.FC<TournamentsTabProps> = ({
           </span>
         </div>
 
-        <div className="overflow-x-auto pb-2 scrollbar-thin -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="overflow-x-auto pb-2 custom-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
           <div className="flex gap-4 min-w-max p-1">
             {rounds.map((roundNum) => {
               const roundMatches = matches.filter((m) => m.round === roundNum);
@@ -314,7 +314,7 @@ const TournamentsTab: React.FC<TournamentsTabProps> = ({
                     onClick={() => onOpenRoomDispatch(tournament)}
                     className="min-h-[44px] px-3.5 py-2 rounded-lg text-sm font-medium border border-gray-700 hover:border-gray-600 hover:bg-zinc-800/80 text-zinc-200 transition-colors flex items-center justify-center gap-2"
                   >
-                    <Radio className="w-4 h-4 text-indigo-400" />
+                    <Radio className="w-4 h-4 text-brand-400" />
                     <span>Room Details</span>
                   </button>
 
@@ -340,7 +340,7 @@ const TournamentsTab: React.FC<TournamentsTabProps> = ({
                   {/* Delete */}
                   <button
                     onClick={() => onDelete(tournament.id, tournament.title)}
-                    className="min-h-[44px] px-3.5 py-2 rounded-lg text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 border border-red-500/20 transition-colors flex items-center justify-center gap-2 ml-auto sm:ml-0"
+                    className="min-h-[44px] px-3.5 py-2 rounded-lg text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 border border-red-500/20 transition-colors flex items-center justify-center gap-2 w-full sm:w-auto"
                   >
                     <Trash2 className="w-4 h-4" />
                     <span>Delete</span>

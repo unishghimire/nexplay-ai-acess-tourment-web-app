@@ -24,7 +24,9 @@ const AdminPanel: React.FC = () => {
         <div className="animate-fade-in max-w-7xl mx-auto flex flex-col md:flex-row gap-6 relative">
             {/* Mobile Sidebar Toggle */}
             <button 
-                className="md:hidden flex items-center justify-between bg-card p-4 rounded-2xl border border-gray-800 w-full"
+                aria-label="Toggle admin navigation menu"
+                aria-expanded={isSidebarOpen}
+                className="md:hidden flex items-center justify-between bg-card p-4 rounded-2xl border border-gray-800 w-full min-h-[44px]"
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             >
                 <span className="font-bold text-white">Admin Menu</span>
@@ -281,7 +283,7 @@ const AdminPanel: React.FC = () => {
                     <div className="bg-card w-full max-w-md rounded-2xl border border-gray-800 p-6 space-y-6 shadow-2xl overflow-y-auto max-h-[90vh] custom-scrollbar">
                         <div className="flex justify-between items-center border-b border-gray-800 pb-4">
                             <h3 className="text-xl font-bold text-white uppercase tracking-widest">Manage User</h3>
-                            <button onClick={() => setSelectedUser(null)} className="text-gray-500 hover:text-white bg-dark p-2 rounded-full transition"><X className="w-5 h-5" /></button>
+                            <button aria-label="Close user modal" onClick={() => setSelectedUser(null)} className="text-gray-500 hover:text-white bg-dark min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full transition"><X className="w-5 h-5" /></button>
                         </div>
 
                         <div className="bg-dark p-4 rounded-xl border border-gray-800">

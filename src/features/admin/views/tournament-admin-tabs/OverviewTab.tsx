@@ -53,7 +53,7 @@ export const OverviewTab: React.FC<TournamentAdminTabProps> = (props) => {
                                          <div>
                                              <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-2">Your Share (85%)</p>
                                              <p className="text-2xl font-black text-brand-400 font-mono">{formatCurrency(tournamentEarning.orgShare)}</p>
-                                             <span className={`inline-block mt-2 text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${
+                                             <span className={`inline-block mt-2 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${
                                                  tournamentEarning.status === 'released' ? 'bg-green-500/10 text-green-500' :
                                                  tournamentEarning.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500' :
                                                  'bg-gray-800 text-gray-500'

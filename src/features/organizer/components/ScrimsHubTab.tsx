@@ -234,7 +234,8 @@ export const ScrimsHubTab: React.FC<ScrimsHubTabProps> = ({
                           key={slot.slotNumber}
                           type="button"
                           onClick={() => handleSlotClick(scrim.id, slot.slotNumber)}
-                          title={`Slot ${slot.slotNumber}: ${isFilled ? slot.teamName || 'Filled' : 'Open'}`}
+                          aria-label={`Slot ${slot.slotNumber}, ${isFilled ? `reserved by ${slot.teamName || 'team'}` : 'open for reservation'}`}
+        title={`Slot ${slot.slotNumber}: ${isFilled ? slot.teamName || 'Filled' : 'Open'}`}
                           className={`min-h-[44px] min-w-[44px] rounded flex items-center justify-center px-1 text-xs font-mono transition-all cursor-pointer select-none ${
                             isFilled
                               ? 'bg-green-500/20 border border-green-500/30 text-green-400 hover:bg-green-500/30'

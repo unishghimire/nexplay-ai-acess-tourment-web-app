@@ -26,7 +26,7 @@ export const OrganizersTab: React.FC<AdminPanelTabProps> = (props) => {
                                             <h3 className="font-bold text-white">{org.username}</h3>
                                             <div className="flex items-center gap-2">
                                                 <p className="text-[10px] text-gray-500 uppercase font-bold">{org.orgName || 'No Org Name'}</p>
-                                                <span className="text-[8px] bg-brand-600/10 text-brand-400 px-1.5 py-0.5 rounded border border-brand-500/20 uppercase font-black">{org.role}</span>
+                                                <span className="text-[10px] bg-brand-600/10 text-brand-400 px-1.5 py-0.5 rounded border border-brand-500/20 uppercase font-black">{org.role}</span>
                                             </div>
                                             <button
                                                 onClick={() => togglePowerOrganizer(org)}

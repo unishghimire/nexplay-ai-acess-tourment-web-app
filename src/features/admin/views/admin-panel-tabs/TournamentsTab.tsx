@@ -2,6 +2,7 @@ import React from 'react';
 import {Users, X, Search, Edit, Megaphone, Trophy} from 'lucide-react';
 
 import { AdminPanelTabProps } from './types';
+import { DEFAULT_BANNER } from '../../../../shared/constants/constants';
 
 export const TournamentsTab: React.FC<AdminPanelTabProps> = (props) => {
     const { allTournaments, formatGameName, handleCancelTournament, handleEditTournament, handleToggleFeatured, handleViewParticipants, searchQuery, setSearchQuery } = props;
@@ -19,7 +20,7 @@ export const TournamentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                     placeholder="Search tournaments..." 
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="bg-dark border border-gray-700 rounded-lg pl-10 pr-4 py-2 text-white text-sm focus:border-brand-500 outline-none w-64"
+                                    className="bg-dark border border-gray-700 rounded-lg pl-10 pr-4 py-2.5 min-h-[44px] text-white text-sm focus:border-brand-500 outline-none w-full sm:w-64"
                                 />
                             </div>
                         </div>
@@ -30,7 +31,7 @@ export const TournamentsTab: React.FC<AdminPanelTabProps> = (props) => {
                             .filter(t => t.title.toLowerCase().includes(searchQuery.toLowerCase()))
                             .map(t => (
                                 <div key={t.id} className="bg-dark p-4 rounded-xl border border-gray-800 space-y-3">
-                                    <img src={t.bannerUrl || undefined} className="w-full aspect-video object-cover rounded-lg" alt={t.title} />
+                                    <img src={t.bannerUrl || undefined} onError={(e) => { e.currentTarget.src = DEFAULT_BANNER; }} className="w-full aspect-video object-cover rounded-lg" alt={t.title} />
                                     <div>
                                         <h3 className="font-bold text-white truncate">{t.title}</h3>
                                         <div className="flex justify-between items-center mt-2">
@@ -47,17 +48,17 @@ export const TournamentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                                 <div className="flex gap-1">
                                                     <button 
                                                         onClick={() => handleViewParticipants(t)}
-                                                        className="p-1.5 bg-brand-600/20 hover:bg-brand-600 text-brand-500 hover:text-white rounded-lg transition-all border border-brand-500/30"
+                                                        className="p-2.5 min-w-[44px] min-h-[44px] bg-brand-600/20 hover:bg-brand-600 text-brand-500 hover:text-white rounded-lg transition-all border border-brand-500/30"
                                                         title="View Participants"
                                                     >
-                                                        <Users className="w-3 h-3" />
+                                                        <Users className="w-4 h-4" />
                                                     </button>
                                                     <button 
                                                         onClick={() => handleEditTournament(t)}
-                                                        className="p-1.5 bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white rounded-lg transition-all border border-blue-500/30"
+                                                        className="p-2.5 min-w-[44px] min-h-[44px] bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white rounded-lg transition-all border border-blue-500/30"
                                                         title="Edit Tournament"
                                                     >
-                                                        <Edit className="w-3 h-3" />
+                                                        <Edit className="w-4 h-4" />
                                                     </button>
                                                     <button 
                                                         onClick={() => handleToggleFeatured(t)}
@@ -73,10 +74,10 @@ export const TournamentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                                     {t.status !== 'cancelled' && t.status !== 'completed' && (
                                                         <button 
                                                             onClick={() => handleCancelTournament(t)}
-                                                            className="p-1.5 bg-red-600/20 hover:bg-red-600 text-red-500 hover:text-white rounded-lg transition-all border border-red-500/30"
+                                                            className="p-2.5 min-w-[44px] min-h-[44px] bg-red-600/20 hover:bg-red-600 text-red-500 hover:text-white rounded-lg transition-all border border-red-500/30"
                                                             title="Cancel Tournament"
                                                         >
-                                                            <X className="w-3 h-3" />
+                                                            <X className="w-4 h-4" />
                                                         </button>
                                                     )}
                                                 </div>

@@ -124,11 +124,11 @@ const TransactionHistoryTab: React.FC<TransactionHistoryTabProps> = ({
                                 </td>
                                 <td className="py-3 px-4">
                                     <div className="text-white font-bold">{t.username || t.userId.slice(0, 8)}</div>
-                                    <div className="text-[9px] text-gray-500 truncate max-w-[100px]">{t.userEmail}</div>
-                                    {t.confirmedByUsername && <div className="text-[9px] text-brand-400 uppercase font-black">By: {t.confirmedByUsername}</div>}
+                                    <div className="text-[10px] text-gray-500 truncate max-w-[100px]">{t.userEmail}</div>
+                                    {t.confirmedByUsername && <div className="text-[10px] text-brand-400 uppercase font-black">By: {t.confirmedByUsername}</div>}
                                 </td>
                                 <td className="py-3 px-4">
-                                    <span className={`px-2 py-0.5 rounded font-bold uppercase text-[9px] ${
+                                    <span className={`px-2 py-0.5 rounded font-bold uppercase text-[10px] ${
                                         t.type === 'deposit' ? 'bg-green-900/30 text-green-400 border border-green-500/30' :
                                         t.type === 'withdrawal' ? 'bg-red-900/30 text-red-400 border border-red-500/30' :
                                         t.type === 'refund' ? 'bg-orange-900/30 text-orange-400 border border-orange-500/30' :
@@ -142,7 +142,7 @@ const TransactionHistoryTab: React.FC<TransactionHistoryTabProps> = ({
                                     {formatCurrency(t.amount)}
                                 </td>
                                 <td className="py-3 px-4">
-                                    <span className={`px-2 py-0.5 rounded font-bold uppercase text-[9px] ${
+                                    <span className={`px-2 py-0.5 rounded font-bold uppercase text-[10px] ${
                                         t.status === 'success' ? 'bg-green-600 text-white' :
                                         t.status === 'pending' ? 'bg-yellow-600 text-white' :
                                         t.status === 'refunded' ? 'bg-orange-600 text-white' :

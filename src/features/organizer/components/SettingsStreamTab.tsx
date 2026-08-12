@@ -195,7 +195,7 @@ export const SettingsStreamTab: React.FC<SettingsStreamTabProps> = ({
             {/* Discord Webhook URL */}
             <div>
               <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                <Link2 className="w-3.5 h-3.5 text-indigo-400" /> Discord Webhook URL
+                <Link2 className="w-3.5 h-3.5 text-brand-400" /> Discord Webhook URL
               </label>
               <input
                 type="url"
@@ -248,7 +248,7 @@ export const SettingsStreamTab: React.FC<SettingsStreamTabProps> = ({
             {/* Twitch URL (Using Radio icon as requested) */}
             <div>
               <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                <Radio className="w-4 h-4 text-purple-400" /> Twitch Broadcast URL
+                <Radio className="w-4 h-4 text-brand-400" /> Twitch Broadcast URL
               </label>
               <input
                 type="url"

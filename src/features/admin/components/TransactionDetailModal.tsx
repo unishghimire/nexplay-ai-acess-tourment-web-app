@@ -55,7 +55,7 @@ const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                             <Layout className="w-3 h-3" /> Dashboard
                         </button>
                     </div>
-                    <button onClick={onClose} className="text-gray-500 hover:text-white bg-dark min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full transition"><X className="w-5 h-5" /></button>
+                    <button aria-label="Close modal" onClick={onClose} className="text-gray-500 hover:text-white bg-dark min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full transition"><X className="w-5 h-5" /></button>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -81,11 +81,11 @@ const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                                 </div>
                                 <div className="flex justify-between border-b border-gray-800/50 pb-2">
                                     <span className="text-gray-500">User ID</span>
-                                    <span className="text-gray-400 text-[10px]">{selectedTx.userId}</span>
+                                    <span className="text-gray-400 text-[10px] truncate select-all max-w-[160px] sm:max-w-[220px]">{selectedTx.userId}</span>
                                 </div>
                                 <div className="flex justify-between border-b border-gray-800/50 pb-2">
                                     <span className="text-gray-500">Ref ID</span>
-                                    <span className="text-brand-300 text-xs">{selectedTx.refId}</span>
+                                    <span className="text-brand-300 text-xs truncate select-all max-w-[160px] sm:max-w-[220px]">{selectedTx.refId}</span>
                                 </div>
                                 {selectedTx.confirmedByUsername && (
                                     <div className="flex justify-between border-b border-gray-800/50 pb-2">
@@ -120,7 +120,7 @@ const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                         <div className="text-[10px] text-gray-500 uppercase font-bold tracking-widest mb-2">Proof of Payment</div>
                         {selectedTx.proofUrl ? (
                             <div className="relative group rounded-2xl overflow-hidden border border-gray-800 bg-black">
-                                <img src={selectedTx.proofUrl || undefined} className="w-full aspect-square object-contain" alt="Proof" referrerPolicy="no-referrer" />
+                                <img src={selectedTx.proofUrl || undefined} onError={(e) => { e.currentTarget.style.display = "none"; }} className="w-full aspect-square object-contain" alt="Payment proof screenshot" referrerPolicy="no-referrer" />
                                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
                                     <a href={selectedTx.proofUrl} target="_blank" rel="noreferrer" className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all border border-white/10">
                                         <Eye className="w-5 h-5" /> View Full Image

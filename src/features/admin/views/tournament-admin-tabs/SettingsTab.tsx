@@ -175,7 +175,7 @@ export const SettingsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                                         (newList[idx] as any).status = e.target.value;
                                                         setTournament({...tournament, roadmap: newList});
                                                     }}
-                                                    className="bg-black/50 border border-white/10 rounded text-[8px] font-black uppercase text-gray-400 px-1"
+                                                    className="bg-black/50 border border-white/10 rounded text-[10px] font-black uppercase text-gray-400 px-1"
                                                 >
                                                     <option value="upcoming">Upcoming</option>
                                                     <option value="current">Current</option>
@@ -195,7 +195,7 @@ export const SettingsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                             />
                                             <div className="flex gap-2">
                                                 <div className="flex-1">
-                                                    <label className="block text-[8px] text-gray-600 font-black uppercase mb-1">Qualifiers</label>
+                                                    <label className="block text-[10px] text-gray-600 font-black uppercase mb-1">Qualifiers</label>
                                                     <input 
                                                         type="number"
                                                         value={step.qualificationRule}
@@ -208,7 +208,7 @@ export const SettingsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                                     />
                                                 </div>
                                                 <div className="flex-1">
-                                                    <label className="block text-[8px] text-gray-600 font-black uppercase mb-1">Groups</label>
+                                                    <label className="block text-[10px] text-gray-600 font-black uppercase mb-1">Groups</label>
                                                     <input 
                                                         type="number"
                                                         value={step.numGroups}

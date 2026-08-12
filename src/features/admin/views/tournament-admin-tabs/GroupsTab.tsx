@@ -98,7 +98,7 @@ export const GroupsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                                         setSelectedGroup(group);
                                                         setIsAddMatchModalOpen(true);
                                                     }}
-                                                    className="flex-1 min-w-[80px] min-h-[44px] flex items-center justify-center bg-purple-600/10 hover:bg-purple-600/20 text-purple-500 py-2.5 rounded-lg text-[10px] sm:text-[9px] font-black uppercase tracking-widest transition-all border border-purple-500/10"
+                                                    className="flex-1 min-w-[80px] min-h-[44px] flex items-center justify-center bg-purple-600/10 hover:bg-purple-600/20 text-purple-500 py-2.5 rounded-lg text-[10px] sm:text-[10px] font-black uppercase tracking-widest transition-all border border-purple-500/10"
                                                 >
                                                     Match
                                                 </button>
@@ -107,7 +107,7 @@ export const GroupsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                                         setSelectedGroup(group);
                                                         setIsManageTeamsModalOpen(true);
                                                     }}
-                                                    className="flex-1 min-w-[80px] min-h-[44px] flex items-center justify-center bg-brand-600/10 hover:bg-brand-600/20 text-brand-500 py-2.5 rounded-lg text-[10px] sm:text-[9px] font-black uppercase tracking-widest transition-all border border-brand-500/10"
+                                                    className="flex-1 min-w-[80px] min-h-[44px] flex items-center justify-center bg-brand-600/10 hover:bg-brand-600/20 text-brand-500 py-2.5 rounded-lg text-[10px] sm:text-[10px] font-black uppercase tracking-widest transition-all border border-brand-500/10"
                                                 >
                                                     Teams
                                                 </button>
@@ -120,7 +120,7 @@ export const GroupsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                                         }
                                                     }}
                                                     disabled={group.teams.length < 2}
-                                                    className="w-full min-h-[44px] flex items-center justify-center bg-blue-600/10 hover:bg-blue-600/20 text-blue-500 disabled:opacity-50 disabled:cursor-not-allowed py-2.5 rounded-lg text-[10px] sm:text-[9px] font-black uppercase tracking-widest transition-all border border-blue-500/10"
+                                                    className="w-full min-h-[44px] flex items-center justify-center bg-blue-600/10 hover:bg-blue-600/20 text-blue-500 disabled:opacity-50 disabled:cursor-not-allowed py-2.5 rounded-lg text-[10px] sm:text-[10px] font-black uppercase tracking-widest transition-all border border-blue-500/10"
                                                 >
                                                     GENERATE MATCHES
                                                 </button>

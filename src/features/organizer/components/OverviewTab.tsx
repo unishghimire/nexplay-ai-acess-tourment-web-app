@@ -110,7 +110,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
   hostedTournaments = [],
 }) => {
   return (
-    <div className="space-y-6 bg-[#09090b] text-gray-200 text-sm p-2 sm:p-4 rounded-lg">
+    <div className="space-y-6 text-sm p-2 sm:p-4">
       {/* Top Bar with Demo Mode Badge */}
       <div className="flex items-center justify-between">
         <div>
@@ -122,53 +122,71 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
       </div>
 
       {/* 1. KPI Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* Active Tournaments */}
-        <div className="bg-gray-950/50 border border-gray-800 rounded-lg p-5">
-          <div className="text-xs text-gray-500 uppercase tracking-wider font-medium">
-            Active Tournaments
-          </div>
-          <div className="text-2xl font-semibold text-white mt-2">
-            {kpis?.activeTournaments ?? 0}
-          </div>
+        <div className="relative overflow-hidden bg-gradient-to-br from-indigo-900/40 to-indigo-900/10 p-4 sm:p-5 rounded-2xl border border-indigo-500/20 group">
+          <div className="absolute -right-4 -top-4 w-20 h-20 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition-all" />
+          <div className="text-[10px] text-indigo-200/70 uppercase font-bold tracking-wider mb-2">Active Tournaments</div>
+          <div className="text-2xl font-black text-white tracking-tight">{kpis?.activeTournaments ?? 0}</div>
         </div>
 
-        {/* Live Scrims with Green Dot */}
-        <div className="bg-gray-950/50 border border-gray-800 rounded-lg p-5">
-          <div className="flex items-center gap-1.5 text-xs text-gray-500 uppercase tracking-wider font-medium">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+        {/* Live Scrims */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-emerald-900/40 to-emerald-900/10 p-4 sm:p-5 rounded-2xl border border-emerald-500/20 group">
+          <div className="absolute -right-4 -top-4 w-20 h-20 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all" />
+          <div className="flex items-center gap-1.5 text-[10px] text-emerald-200/70 uppercase font-bold tracking-wider mb-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span>Live Scrims</span>
           </div>
-          <div className="text-2xl font-semibold text-white mt-2">
-            {kpis?.liveScrims ?? 0}
-          </div>
+          <div className="text-2xl font-black text-white tracking-tight">{kpis?.liveScrims ?? 0}</div>
         </div>
 
         {/* Total Teams */}
-        <div className="bg-gray-950/50 border border-gray-800 rounded-lg p-5">
-          <div className="text-xs text-gray-500 uppercase tracking-wider font-medium">
-            Total Teams
-          </div>
-          <div className="text-2xl font-semibold text-white mt-2">
-            {kpis?.totalTeams ?? 0}
-          </div>
+        <div className="relative overflow-hidden bg-gradient-to-br from-blue-900/40 to-blue-900/10 p-4 sm:p-5 rounded-2xl border border-blue-500/20 group">
+          <div className="absolute -right-4 -top-4 w-20 h-20 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-all" />
+          <div className="text-[10px] text-blue-200/70 uppercase font-bold tracking-wider mb-2">Total Teams</div>
+          <div className="text-2xl font-black text-white tracking-tight">{kpis?.totalTeams ?? 0}</div>
         </div>
 
         {/* Prize Pool */}
-        <div className="bg-gray-950/50 border border-gray-800 rounded-lg p-5">
-          <div className="text-xs text-gray-500 uppercase tracking-wider font-medium">
-            Prize Pool
-          </div>
-          <div className="text-2xl font-semibold text-white mt-2">
-            {formatRupees(kpis?.prizePool ?? 0)}
-          </div>
+        <div className="relative overflow-hidden bg-gradient-to-br from-amber-900/40 to-amber-900/10 p-4 sm:p-5 rounded-2xl border border-amber-500/20 group">
+          <div className="absolute -right-4 -top-4 w-20 h-20 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all" />
+          <div className="text-[10px] text-amber-200/70 uppercase font-bold tracking-wider mb-2">Prize Pool</div>
+          <div className="text-2xl font-black text-white tracking-tight">{formatRupees(kpis?.prizePool ?? 0)}</div>
+        </div>
+
+        {/* Org Wallet */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-purple-900/40 to-purple-900/10 p-4 sm:p-5 rounded-2xl border border-purple-500/20 group">
+          <div className="absolute -right-4 -top-4 w-20 h-20 bg-purple-500/10 rounded-full blur-2xl group-hover:bg-purple-500/20 transition-all" />
+          <div className="text-[10px] text-purple-200/70 uppercase font-bold tracking-wider mb-2">Org Wallet</div>
+          <div className="text-2xl font-black text-white tracking-tight">{formatRupees(kpis?.orgWalletBalance ?? 0)}</div>
+        </div>
+
+        {/* Escrow Balance */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-cyan-900/40 to-cyan-900/10 p-4 sm:p-5 rounded-2xl border border-cyan-500/20 group">
+          <div className="absolute -right-4 -top-4 w-20 h-20 bg-cyan-500/10 rounded-full blur-2xl group-hover:bg-cyan-500/20 transition-all" />
+          <div className="text-[10px] text-cyan-200/70 uppercase font-bold tracking-wider mb-2">Escrow Balance</div>
+          <div className="text-2xl font-black text-white tracking-tight">{formatRupees(kpis?.escrowBalance ?? 0)}</div>
+        </div>
+
+        {/* Monthly Revenue */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-green-900/40 to-green-900/10 p-4 sm:p-5 rounded-2xl border border-green-500/20 group">
+          <div className="absolute -right-4 -top-4 w-20 h-20 bg-green-500/10 rounded-full blur-2xl group-hover:bg-green-500/20 transition-all" />
+          <div className="text-[10px] text-green-200/70 uppercase font-bold tracking-wider mb-2">Monthly Revenue</div>
+          <div className="text-2xl font-black text-white tracking-tight">{formatRupees(kpis?.monthlyRevenue ?? 0)}</div>
+        </div>
+
+        {/* Pending Payouts */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-red-900/40 to-red-900/10 p-4 sm:p-5 rounded-2xl border border-red-500/20 group">
+          <div className="absolute -right-4 -top-4 w-20 h-20 bg-red-500/10 rounded-full blur-2xl group-hover:bg-red-500/20 transition-all" />
+          <div className="text-[10px] text-red-200/70 uppercase font-bold tracking-wider mb-2">Pending Payouts</div>
+          <div className="text-2xl font-black text-white tracking-tight">{formatRupees(kpis?.pendingPayouts ?? 0)}</div>
         </div>
       </div>
 
       {/* 2. Two-column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column (lg:col-span-2): Live Tournaments Data Table */}
-        <div className="lg:col-span-2 bg-gray-950/50 border border-gray-800 rounded-lg p-5">
+        <div className="lg:col-span-2 bg-card border border-gray-800 rounded-2xl p-4 sm:p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-base font-semibold text-white">Live Tournaments</h3>
           </div>
@@ -232,7 +250,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
         </div>
 
         {/* Right Column: Recent Activity Feed */}
-        <div className="bg-gray-950/50 border border-gray-800 rounded-lg p-5">
+        <div className="bg-card border border-gray-800 rounded-2xl p-4 sm:p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-base font-semibold text-white">Recent Activity</h3>
           </div>

@@ -145,7 +145,7 @@ export const MediaTab: React.FC<AdminPanelTabProps> = (props) => {
                                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                                                     referrerPolicy="no-referrer"
                                                 />
-                                                <div className="absolute top-2 left-2 bg-black/75 px-2.5 py-1 rounded text-[9px] font-bold text-brand-400 uppercase tracking-wider border border-brand-500/10">
+                                                <div className="absolute top-2 left-2 bg-black/75 px-2.5 py-1 rounded text-[10px] font-bold text-brand-400 uppercase tracking-wider border border-brand-500/10">
                                                     {item.category ? item.category.replace("_", " ") : "OTHER"}
                                                 </div>
                                                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">

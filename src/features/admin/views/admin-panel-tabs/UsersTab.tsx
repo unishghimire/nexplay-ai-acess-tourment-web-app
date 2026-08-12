@@ -58,7 +58,7 @@ export const UsersTab: React.FC<AdminPanelTabProps> = (props) => {
                                             <select 
                                                 value={u.role}
                                                 onChange={(e) => handleUpdateUserRole(u.uid, e.target.value as any)}
-                                                className="bg-dark border border-gray-700 rounded-lg px-2 py-1 text-xs text-white outline-none focus:border-brand-500"
+                                                className="bg-dark border border-gray-700 rounded-lg px-2 py-2 text-xs text-white outline-none focus:border-brand-500"
                                             >
                                                 <option value="player">Player</option>
                                                 <option value="organizer">Organizer</option>
@@ -77,14 +77,14 @@ export const UsersTab: React.FC<AdminPanelTabProps> = (props) => {
                                             <div className="flex justify-end gap-2">
                                                 <button 
                                                     onClick={() => setSelectedUser(u)}
-                                                    className="p-1.5 bg-blue-600/20 text-blue-400 border border-blue-500/30 hover:bg-blue-600 hover:text-white rounded-lg transition-all"
+                                                    className="p-2.5 bg-blue-600/20 text-blue-400 border border-blue-500/30 hover:bg-blue-600 hover:text-white rounded-lg transition-all"
                                                     title="Manage Balance & Role"
                                                 >
                                                     <Edit className="w-3.5 h-3.5" />
                                                 </button>
                                                 <button 
                                                     onClick={() => handleSuspendOrg(u.uid, !u.isBanned)}
-                                                    className={`p-1.5 rounded-lg border transition-all ${
+                                                    className={`p-2.5 rounded-lg border transition-all ${
                                                         u.isBanned 
                                                             ? 'bg-green-600/20 text-green-400 border-green-500/30 hover:bg-green-600 hover:text-white' 
                                                             : 'bg-red-600/20 text-red-400 border-red-500/30 hover:bg-red-600 hover:text-white'
@@ -98,6 +98,15 @@ export const UsersTab: React.FC<AdminPanelTabProps> = (props) => {
                                 ))}
                             </tbody>
                         </table>
+                        {users.filter(u => 
+                            u.username.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                            u.email.toLowerCase().includes(searchQuery.toLowerCase())
+                        ).length === 0 && (
+                            <div className="py-12 text-center">
+                                <Users className="w-10 h-10 text-gray-700 mx-auto mb-3" />
+                                <p className="text-sm text-gray-500 font-bold">No users found.</p>
+                            </div>
+                        )}
                     </div>
                 </div>
     );

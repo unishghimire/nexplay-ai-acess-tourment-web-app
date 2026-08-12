@@ -44,7 +44,7 @@ export const PendingDepositsTab: React.FC<AdminPanelTabProps> = (props) => {
                                 </button>
                             )}
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-[500px] overflow-y-auto custom-scrollbar content-start pr-2">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[600px] overflow-y-auto custom-scrollbar content-start pr-2">
                             {allTransactions.filter(t => t.type === 'deposit' && t.status === 'pending').length > 0 ? (
                                 allTransactions.filter(t => t.type === 'deposit' && t.status === 'pending').map(t => (
                                     <div key={t.id} className="bg-dark/50 hover:bg-dark p-5 rounded-2xl border border-gray-800 hover:border-gray-700 transition-all shadow-md group">
@@ -62,18 +62,18 @@ export const PendingDepositsTab: React.FC<AdminPanelTabProps> = (props) => {
                                         <div className="text-[11px] text-gray-400 mb-3 space-y-2">
                                             <div className="bg-black/30 p-2 rounded-lg border border-gray-800/50 font-mono flex justify-between items-center">
                                                 <span className="text-gray-600">REF:</span> 
-                                                <span className="text-brand-300 select-all">{t.refId}</span>
+                                                <span className="text-brand-300 select-all break-all">{t.refId}</span>
                                             </div>
                                             {t.transactionCode && (
                                                 <div className="bg-black/30 p-2 rounded-lg border border-gray-800/50 font-mono flex justify-between items-center">
                                                     <span className="text-gray-600">TX CODE:</span> 
-                                                    <span className="text-brand-300 select-all">{t.transactionCode}</span>
+                                                    <span className="text-brand-300 select-all break-all">{t.transactionCode}</span>
                                                 </div>
                                             )}
                                             {t.accountDetails && (
                                                 <div className="bg-black/30 p-2 rounded-lg border border-gray-800/50 font-mono flex justify-between items-center">
                                                     <span className="text-gray-600">ACC:</span> 
-                                                    <span className="text-brand-300 select-all">{t.accountDetails}</span>
+                                                    <span className="text-brand-300 select-all break-all">{t.accountDetails}</span>
                                                 </div>
                                             )}
                                         </div>
@@ -82,7 +82,7 @@ export const PendingDepositsTab: React.FC<AdminPanelTabProps> = (props) => {
                                             <div className="mb-3">
                                                 <a href={t.proofUrl} target="_blank" rel="noreferrer" className="block group/img">
                                                     <div className="relative rounded-xl overflow-hidden border border-gray-800 hover:border-brand-500 transition">
-                                                        <img src={t.proofUrl} alt="Payment proof" className="w-full max-h-48 object-contain bg-black/50 rounded-lg" referrerPolicy="no-referrer" />
+                                                        <img src={t.proofUrl} alt="Payment proof" className="w-full max-h-48 object-contain bg-black/50 rounded-lg" referrerPolicy="no-referrer" onError={(e) => { e.currentTarget.style.display = "none"; }} />
                                                         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/img:opacity-100 transition flex items-center justify-center">
                                                             <span className="text-white text-xs font-bold uppercase tracking-wider flex items-center gap-1">
                                                                 <Eye className="w-3 h-3" /> View Full
@@ -93,10 +93,10 @@ export const PendingDepositsTab: React.FC<AdminPanelTabProps> = (props) => {
                                             </div>
                                         )}
                                         <div className="grid grid-cols-2 gap-3">
-                                            <button onClick={async () => { setProcessingId(t.id); try { await handleApproveTx(t); } finally { setProcessingId(null); } }} disabled={processingId === t.id} className="bg-green-600/20 hover:bg-green-600 text-green-400 hover:text-white border border-green-500/30 hover:border-green-500 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all">
+                                            <button onClick={async () => { setProcessingId(t.id); try { await handleApproveTx(t); } finally { setProcessingId(null); } }} disabled={processingId === t.id} className="bg-green-600/20 hover:bg-green-600 text-green-400 hover:text-white border border-green-500/30 hover:border-green-500 py-2.5 min-h-[44px] rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all">
                                                 <Check className="w-4 h-4" /> Approve
                                             </button>
-                                            <button onClick={() => setSelectedTx(t)} className="bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30 hover:border-blue-500 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all">
+                                            <button onClick={() => setSelectedTx(t)} className="bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30 hover:border-blue-500 py-2.5 min-h-[44px] rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all">
                                                 <Eye className="w-4 h-4" /> Review
                                             </button>
                                         </div>

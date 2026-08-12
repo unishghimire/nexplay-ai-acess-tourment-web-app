@@ -73,7 +73,7 @@ export const SubscriptionsTab: React.FC<AdminPanelTabProps> = (props) => {
                                     <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Features</h4>
                                     <div className="flex flex-wrap gap-1">
                                         {plan.features.map((f, i) => (
-                                            <span key={i} className="text-[9px] bg-dark px-2 py-0.5 rounded-full border border-gray-800 text-gray-400">{f}</span>
+                                            <span key={i} className="text-[10px] bg-dark px-2 py-0.5 rounded-full border border-gray-800 text-gray-400">{f}</span>
                                         ))}
                                     </div>
                                 </div>
