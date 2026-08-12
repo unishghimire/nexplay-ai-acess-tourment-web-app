@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { RotateCcw, DollarSign, TrendingUp, TrendingDown, Play, Pause, Send } from 'lucide-react';
 import { formatCurrency } from '../../../../shared/utils/utils';
 import { TournamentAdminTabProps } from './types';
+import { TournamentRoadmap } from '../../../tournaments/components/TournamentRoadmap';
+import { QualificationPanel } from '../../../tournaments/components/QualificationPanel';
+import { isRoundComplete } from '../../../../shared/services/tournamentEngine';
 
 export const OverviewTab: React.FC<TournamentAdminTabProps> = (props) => {
     const {
@@ -11,6 +14,14 @@ export const OverviewTab: React.FC<TournamentAdminTabProps> = (props) => {
         handleDiscord,
         handleGenerateGroupMatches, showToast,
     } = props;
+
+    const [showQualification, setShowQualification] = useState(false);
+
+    // Check if current round is complete enough to show qualification preview
+    const roundStatus = tournament?.groups?.length
+        ? isRoundComplete({ groups: tournament.groups, tournament })
+        : { complete: false, totalMatches: 0, completedMatches: 0 };
+
     return (
                         <motion.div 
                             key="overview"
@@ -19,7 +30,12 @@ export const OverviewTab: React.FC<TournamentAdminTabProps> = (props) => {
                             exit={{ opacity: 0, y: -10 }}
                             className="space-y-4 sm:space-y-6"
                         >
-                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+                             {/* Dynamic roadmap — derived from actual tournament state */}
+                             <div className="rounded-xl bg-card border border-gray-800 p-4">
+                                 <TournamentRoadmap tournament={tournament} />
+                             </div>
+
+                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                                  <h2 className="text-xl font-black uppercase tracking-tighter text-white">Tournament Controls</h2>
                                  <button 
                                      onClick={() => window.location.reload()}
@@ -63,6 +79,18 @@ export const OverviewTab: React.FC<TournamentAdminTabProps> = (props) => {
                                          </div>
                                      </div>
                                  </div>
+                             )}
+
+                             {/* Qualification panel — show when round is complete */}
+                             {showQualification && tournament && (
+                                 <QualificationPanel
+                                     tournament={tournament}
+                                     onPublish={(preview) => {
+                                         setShowQualification(false);
+                                         handleAdvanceRound();
+                                     }}
+                                     onClose={() => setShowQualification(false)}
+                                 />
                              )}
 
                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -113,13 +141,27 @@ export const OverviewTab: React.FC<TournamentAdminTabProps> = (props) => {
                                          >
                                              Generate All Matches
                                          </button>
-                                         <button 
-                                             onClick={handleAdvanceRound}
-                                             className="flex-1 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/20 py-4 rounded-full text-[10px] font-black uppercase tracking-widest transition-all"
-                                         >
-                                             Advance Stage
-                                         </button>
+                                         {roundStatus.complete && roundStatus.totalMatches > 0 ? (
+                                             <button 
+                                                 onClick={() => setShowQualification(true)}
+                                                 className="flex-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 py-4 rounded-full text-[10px] font-black uppercase tracking-widest transition-all"
+                                             >
+                                                 Review Qualification
+                                             </button>
+                                         ) : (
+                                             <button 
+                                                 onClick={handleAdvanceRound}
+                                                 className="flex-1 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/20 py-4 rounded-full text-[10px] font-black uppercase tracking-widest transition-all"
+                                             >
+                                                 Advance Stage
+                                             </button>
+                                         )}
                                      </div>
+                                     {roundStatus.totalMatches > 0 && !roundStatus.complete && (
+                                         <p className="text-[10px] text-gray-500 mt-2 text-center">
+                                             {roundStatus.completedMatches}/{roundStatus.totalMatches} matches completed
+                                         </p>
+                                     )}
                                  </div>
                              </div>
 
@@ -144,6 +186,7 @@ export const OverviewTab: React.FC<TournamentAdminTabProps> = (props) => {
                                              Target Group (for Game Start / Reminder)
                                          </label>
                                          <select
+                                             id="target-group"
                                              value={gameStartGroupId}
                                              onChange={e => setGameStartGroupId(e.target.value)}
                                              aria-label="Select group for Discord announcement"

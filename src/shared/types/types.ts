@@ -111,6 +111,9 @@ export interface TournamentGroup {
     isPublic: boolean;
     passCode?: string;
     inviteLink?: string;
+    // ─── Engine fields (optional, backward compat) ───
+    status?: 'draft' | 'preview' | 'locked' | 'active' | 'completed';
+    roundNumber?: number;
 }
 
 export interface RoundConfig {
@@ -122,6 +125,13 @@ export interface RoundConfig {
     status?: 'upcoming' | 'current' | 'completed';
     description?: string;
     date?: any;
+    // ─── Tournament engine fields (optional, backward compat) ───
+    teamsPerGroup?: number;
+    matchesPerGroup?: number;
+    qualificationType?: 'top_n_per_group' | 'total_top_n' | 'final_ranking';
+    distributionMethod?: 'random' | 'seeded' | 'balanced';
+    groupNamingStyle?: 'alpha' | 'numeric';
+    locked?: boolean;
 }
 
 export interface MatchChangeLog {
@@ -270,6 +280,8 @@ export interface Tournament {
     currentRound?: number;
     pointSystem?: PointRule; // Multi-match points
     registrationType?: 'auto' | 'manual';
+    // ─── Engine fields (optional, backward compat) ───
+    participantMode?: 'team' | 'solo';
     // Frozen scoring snapshot — inherited from game at creation, never changes
     scoringSnapshot?: {
         gameId: string;

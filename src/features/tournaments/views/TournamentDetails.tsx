@@ -17,7 +17,7 @@ import ProfileLink from '../../profile/components/ProfileLink';
 import PrizeBoard from '../components/PrizeBoard';
 import ScoringInfoCard from '../components/ScoringInfoCard';
 import TournamentResultModal from '../components/TournamentResultModal';
-import RoadmapView from '../components/RoadmapView';
+import { TournamentRoadmap } from '../components/TournamentRoadmap';
 import GroupStandingsView from '../components/GroupStandingsView';
 
 export default function TournamentDetails() {
@@ -688,7 +688,7 @@ export default function TournamentDetails() {
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -10 }}
                             >
-                                <RoadmapView tournament={tournament} />
+                                <TournamentRoadmap tournament={tournament} />
                             </motion.div>
                         )}
                         {activeTab === 'groups' && (

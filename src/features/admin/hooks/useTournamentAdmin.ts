@@ -16,6 +16,21 @@ import {
     announceScrimLive,
     announceScrimCompleted,
 } from '../../../shared/services/DiscordService';
+import {
+    generateGroups,
+    generateMatchesForRound,
+    calculateGroupStandings,
+    generateQualificationPreview,
+    getQualifiedTeams,
+    createNextRound,
+    isBRTournament,
+    isRoundComplete,
+    computeRoadmap,
+    computeTournamentProgress,
+    getCurrentStage,
+    getNextStage,
+    validateGroupAssignment,
+} from '../../../shared/services/tournamentEngine';
 
 export function useTournamentAdmin(
     id: string | undefined,
@@ -155,45 +170,53 @@ export function useTournamentAdmin(
             return;
         }
 
-        if (!window.confirm(`Auto-generate groups for ${approvedParticipants.length} players? This will reset existing groups.`)) return;
+        // ponytail: validate before generating
+        if (!window.confirm(`Auto-generate groups for ${approvedParticipants.length} participants? This will reset existing groups.`)) return;
 
         try {
             setLoading(true);
             const round1Config = tournament.roadmap?.[0];
-            const teamsPerGroup = round1Config?.numGroups ? Math.ceil(approvedParticipants.length / round1Config.numGroups) : 16;
-            const numGroups = round1Config?.numGroups || Math.ceil(approvedParticipants.length / teamsPerGroup);
-            
-            const shuffled = [...approvedParticipants].sort(() => Math.random() - 0.5);
-            
-            const newGroups: TournamentGroup[] = [];
-            for (let i = 0; i < numGroups; i++) {
-                const groupParticipants = shuffled.slice(i * teamsPerGroup, (i + 1) * teamsPerGroup);
-                if (groupParticipants.length === 0) continue;
+            const numGroups = round1Config?.numGroups || Math.ceil(approvedParticipants.length / 12);
+            const teamsPerGroup = round1Config?.teamsPerGroup || Math.ceil(approvedParticipants.length / numGroups);
+            const namingStyle = (round1Config as any)?.groupNamingStyle || 'alpha';
+            const distributionMethod = (round1Config as any)?.distributionMethod || 'random';
 
-                const teams: Team[] = groupParticipants.map(p => ({
-                    id: p.teamId || p.userId,
-                    name: p.teamName || p.username,
-                    players: p.teammates ? [p.username, ...p.teammates] : [p.username],
-                    logoUrl: p.logoUrl
-                }));
+            // Use the engine — single source of truth for group generation
+            const result = generateGroups({
+                participants: approvedParticipants,
+                numGroups,
+                teamsPerGroup,
+                distributionMethod,
+                namingStyle,
+                roundNumber: 1,
+                maps: round1Config?.maps,
+            });
 
-                newGroups.push({
-                    id: `group-${Date.now()}-${i}`,
-                    name: `Group ${String.fromCharCode(65 + i)}`,
-                    teamLimit: teamsPerGroup,
-                    teams: teams,
-                    matches: [],
-                    isPublic: true
-                });
+            // Validate no duplicates
+            const validation = validateGroupAssignment(result.groups as TournamentGroup[]);
+            if (!validation.valid) {
+                showToast(`Group validation failed: ${validation.errors.join(', ')}`, 'error');
+                return;
             }
 
+            // Auto-generate matches for each group
+            const isBR = isBRTournament(tournament);
+            const matchesPerGroup = round1Config?.matchesPerGroup || (isBR ? 3 : 0);
+            const groupsWithMatches = generateMatchesForRound({
+                groups: result.groups as TournamentGroup[],
+                matchesPerGroup,
+                isBR,
+                roundNumber: 1,
+                maps: round1Config?.maps,
+            });
+
             await updateDoc(doc(db, 'tournaments', tournament.id), {
-                groups: newGroups,
+                groups: groupsWithMatches,
                 stage: 'group_stage',
                 currentRound: 1
             });
 
-            showToast('Groups generated successfully!', 'success');
+            showToast(`Groups generated: ${result.groups.length} groups, ${result.totalAssigned} teams assigned`, 'success');
         } catch (error) {
             console.error(error);
             showToast('Failed to generate groups', 'error');
@@ -216,72 +239,61 @@ export function useTournamentAdmin(
                     throw new Error("No groups found to advance from.");
                 }
 
-                // Calculate qualifiers based on current roadmap rule or default top 2
-                const qualificationCount = currentRoundConfig?.qualificationRule || 2;
-                const qualifiers: Team[] = [];
-                
-                tournament.groups.forEach(group => {
-                    const groupStandings = group.teams.map(team => {
-                        let wins = 0;
-                        let points = 0;
-                        group.matches.forEach(m => {
-                            if (m.status === 'completed') {
-                                if (tournament.type.toLowerCase().includes('br') || tournament.game.toLowerCase().includes('bgmi') || tournament.game.toLowerCase().includes('pubg')) {
-                                    // For BR, points are usually summed from multi-team matches
-                                    // Current Match structure might only store 1v1? 
-                                    // Actually, let's stick to the 1v1 logic for now as per Match type
-                                    if (m.team1Id === team.id && m.score1 > m.score2) wins++;
-                                    if (m.team2Id === team.id && m.score2 > m.score1) wins++;
-                                    if (m.team1Id === team.id) points += m.score1;
-                                    if (m.team2Id === team.id) points += m.score2;
-                                } else {
-                                    // Standard 1v1
-                                    if (m.team1Id === team.id && m.score1 > m.score2) wins++;
-                                    if (m.team2Id === team.id && m.score2 > m.score1) wins++;
-                                    if (m.team1Id === team.id) points += m.score1;
-                                    if (m.team2Id === team.id) points += m.score2;
-                                }
-                            }
-                        });
-                        return { team, wins, points };
-                    });
+                // ponytail: use the engine — single source of truth for standings + qualification
+                // CRITICAL FIX: was using m.score1/score2 (1v1) instead of m.results[] (BR)
+                const roundStatus = isRoundComplete({ groups: tournament.groups, tournament });
+                if (!roundStatus.complete) {
+                    throw new Error(`Cannot advance: ${roundStatus.completedMatches}/${roundStatus.totalMatches} matches completed.`);
+                }
 
-                    // Sort by Points (Primary for BR) then Wins
-                    groupStandings.sort((a, b) => b.points - a.points || b.wins - a.wins);
-                    qualifiers.push(...groupStandings.slice(0, qualificationCount).map(s => s.team));
+                // Generate qualification preview using the scoring engine
+                const qualificationCount = currentRoundConfig?.qualificationRule || 2;
+                const preview = generateQualificationPreview({
+                    groups: tournament.groups,
+                    tournament,
+                    roundNumber: tournament.currentRound || 1,
+                    qualificationCount,
+                    qualificationType: (currentRoundConfig as any)?.qualificationType || 'top_n_per_group',
                 });
 
+                // Check for ties requiring review
+                if (preview.tiesRequiringReview.length > 0) {
+                    const tieNames = preview.tiesRequiringReview.map(t => t.teamName).join(', ');
+                    throw new Error(`Tie at qualification cutoff requires admin review: ${tieNames}`);
+                }
+
+                const qualifiers = getQualifiedTeams(preview);
                 if (qualifiers.length < 2) {
                     throw new Error("Not enough teams qualified for the next stage.");
                 }
 
                 if (nextRoundConfig) {
-                    // Advance to next group stage round
-                    const teamsPerGroup = Math.ceil(qualifiers.length / nextRoundConfig.numGroups);
-                    const newGroups: TournamentGroup[] = [];
-                    
-                    for (let i = 0; i < nextRoundConfig.numGroups; i++) {
-                        newGroups.push({
-                            id: `group-r${currentRoundIdx + 2}-${i}`,
-                            name: `Round ${currentRoundIdx + 2} - Group ${String.fromCharCode(65 + i)}`,
-                            teamLimit: teamsPerGroup,
-                            teams: qualifiers.slice(i * teamsPerGroup, (i + 1) * teamsPerGroup),
-                            matches: [],
-                            isPublic: true
-                        });
-                    }
+                    // Build qualifiersByGroup for cross-group distribution
+                    const qualifiersByGroup = preview.groups.map(g => ({
+                        groupName: g.groupName,
+                        teams: g.standings
+                            .filter(s => s.qualificationStatus === 'qualified')
+                            .map(s => ({ id: s.teamId, name: s.teamName, logoUrl: s.logoUrl } as Team)),
+                    }));
+
+                    // Use the engine to create the next round with cross-group distribution
+                    const nextRound = createNextRound({
+                        qualifiedTeams: qualifiers,
+                        qualifiersByGroup,
+                        nextRoundConfig: nextRoundConfig as any,
+                        tournament,
+                    });
 
                     await updateDoc(doc(db, 'tournaments', tournament.id), {
-                        groups: newGroups,
-                        currentRound: (tournament.currentRound || 1) + 1
+                        groups: nextRound.groups,
+                        currentRound: nextRound.roundNumber,
                     });
-                    showToast(`Advanced to ${nextRoundConfig.stageName || 'Next Round'}!`, 'success');
+                    showToast(`Advanced to ${nextRoundConfig.stageName || 'Round ' + nextRound.roundNumber}! ${qualifiers.length} teams qualified, ${preview.totalEliminated} eliminated.`, 'success');
                 } else {
-                    // No more rounds in roadmap, generate knockout bracket
+                    // No more rounds in roadmap — generate knockout bracket from qualifiers
                     const bracketSize = Math.pow(2, Math.ceil(Math.log2(qualifiers.length)));
                     const bracketMatches: Match[] = [];
                     
-                    // Fill Round 1 of Bracket
                     for (let i = 0; i < bracketSize / 2; i++) {
                         const team1 = qualifiers[i * 2];
                         const team2 = qualifiers[(i * 2) + 1];
@@ -296,7 +308,6 @@ export function useTournamentAdmin(
                         });
                     }
 
-                    // Fill dummy rounds for the rest of the bracket
                     let matchesInRound = bracketSize / 2;
                     let roundNum = 2;
                     while (matchesInRound > 1) {
@@ -724,38 +735,19 @@ export function useTournamentAdmin(
         }
 
         try {
-            let matchIdCounter = 1;
-            const matches: Match[] = [];
+            // ponytail: use the engine — no more ALL_TEAMS hack
+            const isBR = isBRTournament(tournament);
+            const roundConfig = tournament.roadmap?.[((tournament.currentRound || 1) - 1)];
+            const matchesPerGroup = roundConfig?.matchesPerGroup || (isBR ? (mode === 'single' ? 1 : 3) : 0);
+            const maps = roundConfig?.maps || (tournament.map ? [tournament.map] : []);
 
-            if (mode === 'round-robin') {
-                // Simple Round Robin generation
-                for (let i = 0; i < group.teams.length; i++) {
-                    for (let j = i + 1; j < group.teams.length; j++) {
-                        matches.push({
-                            id: `match-${Date.now()}-${matchIdCounter++}`,
-                            team1Id: group.teams[i].id,
-                            team2Id: group.teams[j].id,
-                            status: 'scheduled',
-                            score1: 0,
-                            score2: 0,
-                            round: tournament.currentRound || 1
-                        });
-                    }
-                }
-            } else {
-                // Single match for physical group (everyone plays together - BR/PUBG style)
-                // We use dummy team IDs but the ResultUploader handles the full team list
-                matches.push({
-                    id: `group-match-${Date.now()}`,
-                    team1Id: 'ALL_TEAMS',
-                    team2Id: 'ALL_TEAMS',
-                    status: 'scheduled',
-                    score1: 0,
-                    score2: 0,
-                    round: tournament.currentRound || 1,
-                    map: tournament.map || ''
-                });
-            }
+            const matches = generateMatchesForRound({
+                groups: [group],
+                matchesPerGroup: isBR ? matchesPerGroup : 0, // 0 = round-robin for 1v1
+                isBR,
+                roundNumber: tournament.currentRound || 1,
+                maps,
+            })[0].matches;
 
             const updatedGroups = tournament.groups?.map(g => {
                 if (g.id === groupId) {
@@ -768,7 +760,7 @@ export function useTournamentAdmin(
                 groups: updatedGroups
             });
 
-            showToast(`${mode === 'single' ? 'Group Match' : 'Round Robin'} generated`, 'success');
+            showToast(`${matches.length} ${isBR ? 'lobby' : 'round-robin'} match(es) generated`, 'success');
         } catch (error) {
             console.error("Error generating matches:", error);
             showToast('Failed to generate matches', 'error');
