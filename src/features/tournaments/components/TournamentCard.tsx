@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Tournament } from '../../../shared/types/types';
 import { DEFAULT_BANNER } from '../../../shared/constants/constants';
 import { formatCurrency, formatDate, formatGameName } from '../../../shared/utils/utils';
-import { Clock, Users, Trophy, ChevronRight, Gamepad2, MapPin } from 'lucide-react';
+import { Clock, Users, Trophy, ChevronRight, Gamepad2, MapPin, Target } from 'lucide-react';
 import { motion } from 'motion/react';
 import { ScoringInfoCard } from './ScoringInfoCard';
 
@@ -47,11 +47,16 @@ const TournamentCard: React.FC<TournamentCardProps> = ({ tournament }) => {
                     </div>
                 </div>
 
-                {/* Team Size Badge - Floating Right */}
-                <div className="absolute top-2 sm:top-4 right-2 sm:right-4 z-20">
+                {/* Badges - Floating Right */}
+                <div className="absolute top-2 sm:top-4 right-2 sm:right-4 z-20 flex flex-col gap-1 items-end">
                     <div className="bg-white/10 backdrop-blur-md px-2.5 sm:px-3 py-1 rounded-full border border-white/10 text-[9px] sm:text-[10px] font-black text-white uppercase tracking-widest min-h-[24px] flex items-center justify-center">
                         {tournament.teamType}
                     </div>
+                    {(tournament as any).tournamentMode === 'PER_KILL_REWARD' && (
+                        <div className="bg-brand-500/20 backdrop-blur-md px-2.5 sm:px-3 py-1 rounded-full border border-brand-500/30 text-[9px] sm:text-[10px] font-black text-brand-400 uppercase tracking-widest min-h-[24px] flex items-center gap-1">
+                            <Target className="w-2.5 h-2.5" /> Per-Kill
+                        </div>
+                    )}
                 </div>
 
                 {/* Prize Pool - Large Overlay */}

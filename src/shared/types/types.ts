@@ -1,4 +1,5 @@
 import { Timestamp } from 'firebase/firestore';
+import { TournamentMode, RewardConfig, RewardSnapshot, PlayerKillReward, RewardAuditEntry } from './per-kill';
 
 export interface SubscriptionPlan {
     id: string;
@@ -296,6 +297,13 @@ export interface Tournament {
         source: 'game-default' | 'custom';
         snapshotAt: Timestamp | any;
     };
+    // ─── Per-Kill Reward fields (optional, backward compat) ───
+    tournamentMode?: TournamentMode;           // 'POINTS' (default) | 'PER_KILL_REWARD'
+    rewardSnapshot?: RewardSnapshot;           // Frozen reward config from game defaults
+    // Individual kill ledger — one entry per player per match
+    killRewards?: PlayerKillReward[];
+    // Audit trail for reward changes
+    rewardAuditLog?: RewardAuditEntry[];
     // ─── Audit log — tracks all major tournament operations ───
     auditLog?: {
         timestamp: Timestamp | any;

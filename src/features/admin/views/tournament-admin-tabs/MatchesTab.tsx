@@ -4,6 +4,7 @@ import { Calendar } from 'lucide-react';
 import { TournamentAdminTabProps } from './types';
 import Modal from '../../../../shared/components/Modal';
 import ResultUploader from '../../../results/components/ResultUploader';
+import PerKillResultUploader from '../../../tournaments/components/PerKillResultUploader';
 
 export const MatchesTab: React.FC<TournamentAdminTabProps> = (props) => {
     const {

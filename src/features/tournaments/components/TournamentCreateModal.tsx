@@ -4,6 +4,8 @@ import { Tournament } from '../../../shared/types/types';
 import { createScoringSnapshot } from '../../../shared/services/scoringEngine';
 import { generateDefaultRoadmap } from '../../../shared/services/tournamentEngine';
 import { TournamentScoringSnapshot } from '../../../shared/types/scoring';
+import { TournamentMode, RewardConfig, RewardSnapshot, DEFAULT_REWARD_CONFIG } from '../../../shared/types/per-kill';
+import { createRewardSnapshot } from '../../../shared/services/perKillEngine';
 import { db, auth } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
@@ -22,6 +24,7 @@ import {
   ChevronLeft,
   CheckCircle2,
   Info,
+  Target,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import PrizeDistributionInput from './PrizeDistributionInput';
@@ -83,7 +86,12 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
     ] as any[],
     matchType: 'scrims' as 'scrims' | 'tournament',
     scheduleType: 'auto' as 'auto' | 'manual',
-    registrationType: 'auto' as 'auto' | 'manual'
+    registrationType: 'auto' as 'auto' | 'manual',
+    tournamentMode: 'POINTS' as TournamentMode,
+    rewardPerKill: 10,
+    rewardCurrency: 'NPR',
+    minimumKillsForReward: 0,
+    maximumRewardPerPlayer: 0,
   });
 
   const [selectedGame, setSelectedGame] = useState<any>(null);
@@ -122,6 +130,11 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
         matchType: editTournament.matchType || 'tournament',
         scheduleType: editTournament.scheduleType || 'auto',
         registrationType: editTournament.registrationType || 'auto',
+        tournamentMode: (editTournament as any).tournamentMode || 'POINTS',
+        rewardPerKill: (editTournament as any).rewardSnapshot?.rewardPerKill || (editTournament as any).rewardSnapshot?.rewardPerKill !== undefined ? (editTournament as any).rewardSnapshot?.rewardPerKill : 10,
+        rewardCurrency: (editTournament as any).rewardSnapshot?.currency || 'NPR',
+        minimumKillsForReward: (editTournament as any).rewardSnapshot?.minimumKillsForReward || 0,
+        maximumRewardPerPlayer: (editTournament as any).rewardSnapshot?.maximumRewardPerPlayer || 0,
         prizeDistribution: editTournament.prizeDistribution && editTournament.prizeDistribution.length > 0 
           ? editTournament.prizeDistribution.map(p => ({
               id: p.id || `prize-${Date.now()}-${Math.random()}`,
@@ -153,6 +166,11 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
         matchType: defaultMatchType,
         scheduleType: 'auto',
         registrationType: 'auto',
+        tournamentMode: 'POINTS' as TournamentMode,
+        rewardPerKill: 10,
+        rewardCurrency: 'NPR',
+        minimumKillsForReward: 0,
+        maximumRewardPerPlayer: 0,
         prizeDistribution: [
           { id: 'prize-initial-1', rank: 1, label: '1st', amount: 0 },
         ]
@@ -202,6 +220,7 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
     try {
       const tournamentData = {
         ...formData,
+        tournamentMode: formData.tournamentMode,
         hostUid: editTournament ? editTournament.hostUid : user.uid,
         currentPlayers: editTournament ? editTournament.currentPlayers : 0,
         status: editTournament ? editTournament.status : 'upcoming',
@@ -225,12 +244,30 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
           });
         }
 
+        // Create reward snapshot for PER_KILL_REWARD tournaments
+        let rewardSnapshot: RewardSnapshot | undefined;
+        if (formData.tournamentMode === 'PER_KILL_REWARD') {
+          rewardSnapshot = createRewardSnapshot({
+            gameId: selectedGame?.id || '',
+            gameName: selectedGame?.name || formData.game,
+            rewardConfig: {
+              enabled: true,
+              rewardPerKill: formData.rewardPerKill,
+              currency: formData.rewardCurrency,
+              minimumKillsForReward: formData.minimumKillsForReward,
+              maximumRewardPerPlayer: formData.maximumRewardPerPlayer > 0 ? formData.maximumRewardPerPlayer : undefined,
+            },
+          });
+        }
+
         // Generate default roadmap based on slots + type
         const defaultRoadmap = generateDefaultRoadmap(formData.slots, formData.type);
 
         const docRef = await addDoc(collection(db, 'tournaments'), {
           ...tournamentData,
+          tournamentMode: formData.tournamentMode,
           ...(scoringSnapshot ? { scoringSnapshot } : {}),
+          ...(rewardSnapshot ? { rewardSnapshot } : {}),
           roadmap: defaultRoadmap,
           currentRound: 1,
           createdAt: serverTimestamp()
@@ -280,6 +317,11 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
           matchType: 'tournament',
           scheduleType: 'auto',
           registrationType: 'auto',
+          tournamentMode: 'POINTS' as TournamentMode,
+          rewardPerKill: 10,
+          rewardCurrency: 'NPR',
+          minimumKillsForReward: 0,
+          maximumRewardPerPlayer: 0,
           prizeDistribution: [
             { id: 'prize-initial-1', rank: 1, label: '1st', amount: 0 },
           ] as any[]

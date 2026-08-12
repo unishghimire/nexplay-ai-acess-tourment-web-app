@@ -6,6 +6,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { X, Save, Plus, Trash2, AlertTriangle } from 'lucide-react';
 import { GameScoringConfig, FREE_FIRE_DEFAULT_SCORING } from '../../../shared/types/scoring';
+import { RewardConfig } from '../../../shared/types/per-kill';
+import { Target } from 'lucide-react';
 import { validateScoringConfig, generateScoringPreview } from '../../../shared/services/scoringEngine';
 
 interface ScoringConfigModalProps {
@@ -24,6 +26,10 @@ export const ScoringConfigModal: React.FC<ScoringConfigModalProps> = ({
     const [placementPoints, setPlacementPoints] = useState<Record<string, number>>({});
     const [maxPlacement, setMaxPlacement] = useState(12);
     const [enabled, setEnabled] = useState(true);
+    const [rewardEnabled, setRewardEnabled] = useState(false);
+    const [rewardPerKill, setRewardPerKill] = useState(10);
+    const [rewardCurrency, setRewardCurrency] = useState('NPR');
+    const [minimumKillsForReward, setMinimumKillsForReward] = useState(0);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
 
@@ -34,6 +40,13 @@ export const ScoringConfigModal: React.FC<ScoringConfigModalProps> = ({
             setPlacementPoints({ ...currentScoring.placementPoints });
             setMaxPlacement(currentScoring.maxPlacement || 12);
             setEnabled(currentScoring.enabled);
+            // Load reward config if exists
+            if (currentScoring.rewardConfig) {
+                setRewardEnabled(currentScoring.rewardConfig.enabled);
+                setRewardPerKill(currentScoring.rewardConfig.rewardPerKill);
+                setRewardCurrency(currentScoring.rewardConfig.currency);
+                setMinimumKillsForReward(currentScoring.rewardConfig.minimumKillsForReward || 0);
+            }
         } else {
             // Default to Free Fire scoring for new configs
             setKillPoints(FREE_FIRE_DEFAULT_SCORING.killPoints);
@@ -44,15 +57,23 @@ export const ScoringConfigModal: React.FC<ScoringConfigModalProps> = ({
         setError('');
     }, [currentScoring, isOpen]);
 
+    const rewardConfig: RewardConfig = useMemo(() => ({
+        enabled: rewardEnabled,
+        rewardPerKill,
+        currency: rewardCurrency,
+        minimumKillsForReward,
+    }), [rewardEnabled, rewardPerKill, rewardCurrency, minimumKillsForReward]);
+
     const config: GameScoringConfig = useMemo(() => ({
         enabled,
         killPoints,
         placementPoints,
         maxPlacement,
         scoringVersion: (currentScoring?.scoringVersion || 0) + 1,
+        rewardConfig,
         updatedAt: new Date() as any,
         updatedBy: '',
-    }), [enabled, killPoints, placementPoints, maxPlacement, currentScoring]);
+    }), [enabled, killPoints, placementPoints, maxPlacement, rewardConfig, currentScoring]);
 
     const preview = useMemo(() => generateScoringPreview(config), [config]);
     const validation = useMemo(() => validateScoringConfig(config), [config]);

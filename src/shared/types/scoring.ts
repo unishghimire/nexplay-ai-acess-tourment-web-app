@@ -5,6 +5,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { Timestamp } from 'firebase/firestore';
+import { RewardConfig } from './per-kill';
 
 /**
  * Scoring configuration stored on the Game document.
@@ -16,6 +17,8 @@ export interface GameScoringConfig {
     placementPoints: Record<string, number>;  // "1" → 12, "2" → 9, etc.
     maxPlacement?: number;       // Highest position with defined points (e.g. 12)
     scoringVersion: number;      // Incremented on every admin change
+    // ─── Per-Kill Reward defaults (optional, game-level) ───
+    rewardConfig?: RewardConfig;  // Default per-kill reward for this game
     updatedAt?: Timestamp | any;
     updatedBy?: string;
 }
@@ -99,4 +102,10 @@ export const FREE_FIRE_DEFAULT_SCORING: Omit<GameScoringConfig, 'updatedAt' | 'u
     },
     maxPlacement: 12,
     scoringVersion: 1,
+    rewardConfig: {
+        enabled: false,
+        rewardPerKill: 10,
+        currency: 'NPR',
+        minimumKillsForReward: 0,
+    },
 };

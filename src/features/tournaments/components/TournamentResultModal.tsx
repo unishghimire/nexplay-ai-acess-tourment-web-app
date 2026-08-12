@@ -5,6 +5,7 @@ import { Tournament } from '../../../shared/types/types';
 import { formatCurrency, formatDate } from '../../../shared/utils/utils';
 import PrizeBoard from './PrizeBoard';
 import ResultBoard from '../../results/components/ResultBoard';
+import PerKillResultView from './PerKillResultView';
 import { useNotification } from '../../../shared/context/NotificationContext';
 
 interface TournamentResultModalProps {
@@ -162,6 +163,18 @@ const TournamentResultModal: React.FC<TournamentResultModalProps> = ({ isOpen, o
                                 <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Match MVP {mvp ? `(${mvp.kills})` : ''}</div>
                             </div>
                         </div>
+
+                        {/* Per-Kill Reward Results */}
+                        {(tournament as any).tournamentMode === 'PER_KILL_REWARD' && (
+                            <div className="space-y-4">
+                                <h4 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
+                                    <Target className="w-5 h-5 text-brand-500" /> Per-Kill Reward Results
+                                </h4>
+                                <div className="bg-[#1e293b]/30 rounded-3xl border border-gray-800 overflow-hidden shadow-xl p-4 sm:p-6">
+                                    <PerKillResultView tournament={tournament} />
+                                </div>
+                            </div>
+                        )}
 
                         {/* Professional Scoreboard */}
                         {tournament.manualResults && tournament.manualResults.length > 0 && tournament.resultTemplate && (

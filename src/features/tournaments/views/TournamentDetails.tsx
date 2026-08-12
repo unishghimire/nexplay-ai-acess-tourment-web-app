@@ -6,7 +6,7 @@ import { Tournament, UserProfile } from '../../../shared/types/types';
 import { DEFAULT_BANNER } from '../../../shared/constants/constants';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { formatCurrency, formatDate, formatGameName, getYoutubeId, toDateSafe, sanitizeUrl } from '../../../shared/utils/utils';
-import { Clock, Users, Trophy, Lock, Eye, EyeOff, Play, Share2, Calendar, MapPin, Info, Medal, ExternalLink, ChevronRight, AlertCircle, CheckCircle2, Search, Building2 } from 'lucide-react';
+import { Clock, Users, Trophy, Lock, Eye, EyeOff, Play, Share2, Calendar, MapPin, Info, Medal, ExternalLink, ChevronRight, AlertCircle, CheckCircle2, Search, Building2 , Target} from 'lucide-react';
 import RegistrationModal from '../components/RegistrationModal';
 import JoinTournamentModal from '../components/JoinTournamentModal';
 import { motion, AnimatePresence } from 'motion/react';
@@ -17,6 +17,8 @@ import ProfileLink from '../../profile/components/ProfileLink';
 import PrizeBoard from '../components/PrizeBoard';
 import ScoringInfoCard from '../components/ScoringInfoCard';
 import TournamentResultModal from '../components/TournamentResultModal';
+import PerKillResultView from '../components/PerKillResultView';
+import PerKillLeaderboard from '../components/PerKillLeaderboard';
 import { TournamentRoadmap } from '../components/TournamentRoadmap';
 import GroupStandingsView from '../components/GroupStandingsView';
 import { fetchRoomCredentials } from '../../../shared/services/roomCredentials';
@@ -30,7 +32,7 @@ export default function TournamentDetails() {
     const [tournament, setTournament] = useState<Tournament | null>(null);
     const [isJoined, setIsJoined] = useState(false);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<'overview' | 'description' | 'participants' | 'groups' | 'roadmap' | 'results'>(
+    const [activeTab, setActiveTab] = useState<'overview' | 'description' | 'participants' | 'groups' | 'roadmap' | 'results' | 'killrewards'>(
         (searchParams.get('tab') as any) || 'overview'
     );
     const [isResultModalOpen, setIsResultModalOpen] = useState(false);
@@ -440,7 +442,8 @@ export default function TournamentDetails() {
                             { id: 'participants', label: 'Players', icon: Users },
                             { id: 'roadmap', label: 'Roadmap', icon: Calendar },
                             { id: 'groups', label: 'Match Groups', icon: Trophy },
-                            tournament.status === 'completed' ? { id: 'results', label: 'Results', icon: Trophy } : null
+                            tournament.status === 'completed' ? { id: 'results', label: 'Results', icon: Trophy } : null,
+                            (tournament as any).tournamentMode === 'PER_KILL_REWARD' && (tournament as any).killRewards?.length > 0 ? { id: 'killrewards', label: 'Kill Rewards', icon: Target } : null
                         ].filter((tab): tab is {id: string, label: string, icon: any} => tab !== null).map((tab) => (
                             <button 
                                 key={tab.id}
@@ -710,7 +713,24 @@ export default function TournamentDetails() {
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -10 }}
                             >
-                                <GroupStandingsView tournament={tournament} participants={participants} />
+                                {(tournament as any).tournamentMode === 'PER_KILL_REWARD' ? (
+                                    <div className="space-y-6">
+                                        <PerKillLeaderboard tournament={tournament} />
+                                        <GroupStandingsView tournament={tournament} participants={participants} />
+                                    </div>
+                                ) : (
+                                    <GroupStandingsView tournament={tournament} participants={participants} />
+                                )}
+                            </motion.div>
+                        )}
+                        {activeTab === 'killrewards' && (
+                            <motion.div
+                                key="killrewards"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                            >
+                                <PerKillResultView tournament={tournament} />
                             </motion.div>
                         )}
                     </AnimatePresence>
@@ -913,11 +933,19 @@ export default function TournamentDetails() {
                 />
             )}
 
-            <TournamentResultModal
-                isOpen={isResultModalOpen}
-                onClose={() => setIsResultModalOpen(false)}
-                tournament={tournament}
-            />
+            {(tournament as any).tournamentMode === 'PER_KILL_REWARD' ? (
+                <TournamentResultModal
+                    isOpen={isResultModalOpen}
+                    onClose={() => setIsResultModalOpen(false)}
+                    tournament={tournament}
+                />
+            ) : (
+                <TournamentResultModal
+                    isOpen={isResultModalOpen}
+                    onClose={() => setIsResultModalOpen(false)}
+                    tournament={tournament}
+                />
+            )}
         </div>
     );
 }
