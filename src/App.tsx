@@ -13,35 +13,51 @@ import ScrollToTop from './shared/components/ScrollToTop';
 import ProfileCompletionGuard from './features/auth/components/ProfileCompletionGuard';
 import ProtectedRoute from './shared/components/ProtectedRoute';
 
+
+// ponytail: auto-retry chunk loads on new deployment hash mismatches — one reload, then let it throw
+const lazyWithRetry = (componentImport: () => Promise<any>) =>
+  lazy(async () => {
+    const reloaded = sessionStorage.getItem('chunk-reloaded');
+    try {
+      return await componentImport();
+    } catch (error: any) {
+      if (!reloaded) {
+        sessionStorage.setItem('chunk-reloaded', 'true');
+        window.location.reload();
+      }
+      throw error;
+    }
+  });
+
 // Lazy load views
-const Home = lazy(() => import('./features/home/views/Home'));
-const Tournaments = lazy(() => import('./features/tournaments/views/Tournaments'));
-const TournamentDetails = lazy(() => import('./features/tournaments/views/TournamentDetails'));
-const Dashboard = lazy(() => import('./features/dashboard/views/Dashboard'));
-const Profile = lazy(() => import('./features/profile/views/Profile'));
-const Scrims = lazy(() => import('./features/scrims/views/Scrims'));
-const Wallet = lazy(() => import('./features/wallet/views/Wallet'));
-const Leaderboard = lazy(() => import('./features/leaderboard/views/Leaderboard'));
-const AdminPanel = lazy(() => import('./features/admin/views/AdminPanel'));
-const OrganizerPanel = lazy(() => import('./features/organizer/views/OrganizerPanel'));
-const TournamentAdminPanel = lazy(() => import('./features/admin/views/TournamentAdminPanel'));
-const ScrimDetailPage = lazy(() => import('./features/organizer/views/ScrimDetailPage'));
-const About = lazy(() => import('./features/home/views/About'));
-const Contact = lazy(() => import('./features/home/views/Contact'));
-const Privacy = lazy(() => import('./features/home/views/Privacy'));
-const Terms = lazy(() => import('./features/home/views/Terms'));
-const Teams = lazy(() => import('./features/teams/views/Teams'));
-const TeamDetails = lazy(() => import('./features/teams/views/TeamDetails'));
-const OrgBrowser = lazy(() => import('./features/browser/views/OrgBrowser'));
-const PublicProfile = lazy(() => import('./features/profile/views/PublicProfile'));
-const CompleteProfile = lazy(() => import('./features/auth/views/CompleteProfile'));
-const PostDetails = lazy(() => import('./features/browser/views/PostDetails'));
-const GameBrowser = lazy(() => import('./features/browser/views/GameBrowser'));
-const Results = lazy(() => import('./features/results/views/Results'));
-const GameModesBrowser = lazy(() => import('./features/browser/views/GameModesBrowser'));
-const Login = lazy(() => import('./features/auth/views/Login'));
-const Register = lazy(() => import('./features/auth/views/Register'));
-const NotFound = lazy(() => import('./features/home/views/NotFound'));
+const Home = lazyWithRetry(() => import('./features/home/views/Home'));
+const Tournaments = lazyWithRetry(() => import('./features/tournaments/views/Tournaments'));
+const TournamentDetails = lazyWithRetry(() => import('./features/tournaments/views/TournamentDetails'));
+const Dashboard = lazyWithRetry(() => import('./features/dashboard/views/Dashboard'));
+const Profile = lazyWithRetry(() => import('./features/profile/views/Profile'));
+const Scrims = lazyWithRetry(() => import('./features/scrims/views/Scrims'));
+const Wallet = lazyWithRetry(() => import('./features/wallet/views/Wallet'));
+const Leaderboard = lazyWithRetry(() => import('./features/leaderboard/views/Leaderboard'));
+const AdminPanel = lazyWithRetry(() => import('./features/admin/views/AdminPanel'));
+const OrganizerPanel = lazyWithRetry(() => import('./features/organizer/views/OrganizerPanel'));
+const TournamentAdminPanel = lazyWithRetry(() => import('./features/admin/views/TournamentAdminPanel'));
+const ScrimDetailPage = lazyWithRetry(() => import('./features/organizer/views/ScrimDetailPage'));
+const About = lazyWithRetry(() => import('./features/home/views/About'));
+const Contact = lazyWithRetry(() => import('./features/home/views/Contact'));
+const Privacy = lazyWithRetry(() => import('./features/home/views/Privacy'));
+const Terms = lazyWithRetry(() => import('./features/home/views/Terms'));
+const Teams = lazyWithRetry(() => import('./features/teams/views/Teams'));
+const TeamDetails = lazyWithRetry(() => import('./features/teams/views/TeamDetails'));
+const OrgBrowser = lazyWithRetry(() => import('./features/browser/views/OrgBrowser'));
+const PublicProfile = lazyWithRetry(() => import('./features/profile/views/PublicProfile'));
+const CompleteProfile = lazyWithRetry(() => import('./features/auth/views/CompleteProfile'));
+const PostDetails = lazyWithRetry(() => import('./features/browser/views/PostDetails'));
+const GameBrowser = lazyWithRetry(() => import('./features/browser/views/GameBrowser'));
+const Results = lazyWithRetry(() => import('./features/results/views/Results'));
+const GameModesBrowser = lazyWithRetry(() => import('./features/browser/views/GameModesBrowser'));
+const Login = lazyWithRetry(() => import('./features/auth/views/Login'));
+const Register = lazyWithRetry(() => import('./features/auth/views/Register'));
+const NotFound = lazyWithRetry(() => import('./features/home/views/NotFound'));
 
 const LoadingFallback = () => (
   <div className="min-h-[60vh] flex flex-col items-center justify-center">

@@ -81,7 +81,7 @@ export const DashboardTab: React.FC<AdminPanelTabProps> = (props) => {
                                                 <span className="text-gray-600">REF:</span> 
                                                 <span className="text-brand-300 select-all">{t.refId}</span>
                                             </div>
-                                            <div className="grid grid-cols-3 gap-2">
+                                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                                 <button onClick={() => handleApproveTx(t)} className="bg-green-600/20 hover:bg-green-600 text-green-400 hover:text-white border border-green-500/30 hover:border-green-500 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-all">
                                                     <Check className="w-4 h-4" /> Approve
                                                 </button>

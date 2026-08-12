@@ -342,7 +342,7 @@ const AdminPanel: React.FC = () => {
 
                         <div className="space-y-4 border-t border-gray-800 pt-6">
                             <label className="text-xs text-gray-500 uppercase font-bold block">Update Role</label>
-                            <div className="grid grid-cols-3 gap-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                 {(['player', 'organizer', 'admin'] as const).map(role => (
                                     <button 
                                         key={role}

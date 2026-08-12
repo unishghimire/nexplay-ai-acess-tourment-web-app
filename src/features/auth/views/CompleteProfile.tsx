@@ -85,7 +85,7 @@ const CompleteProfile: React.FC = () => {
                         <label className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-3 block text-center">
                             Choose Your Gaming Avatar
                         </label>
-                        <div className="grid grid-cols-3 gap-3 mb-6">
+                        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-3 mb-6">
                             {PRESET_AVATARS.map((url, idx) => (
                                 <button
                                     key={idx}

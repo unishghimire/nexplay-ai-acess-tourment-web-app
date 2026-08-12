@@ -231,7 +231,7 @@ const ResultUploadModal: React.FC<ResultUploadModalProps> = ({ isOpen, onClose, 
                                     onDragOver={handleDragOver}
                                     onClick={() => document.getElementById('result-proof-file-input')?.click()}
                                     className={`
-                                        border-2 border-dashed rounded-3xl p-10 text-center transition-all duration-300 cursor-pointer
+                                        border-2 border-dashed rounded-2xl sm:rounded-3xl p-4 sm:p-8 md:p-10 text-center transition-all duration-300 cursor-pointer
                                         ${resultUrl ? 'border-green-500/50 bg-green-500/5' : 'border-gray-800 bg-dark group-hover:border-brand-500/50 group-hover:bg-brand-500/5'}
                                         ${isProcessing ? 'border-brand-500 bg-brand-500/10' : ''}
                                     `}

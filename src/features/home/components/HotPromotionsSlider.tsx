@@ -221,7 +221,7 @@ const HotPromotionsSlider: React.FC<HotPromotionsSliderProps> = ({ slides, varia
 
             {/* Slider Container */}
             <div 
-                className="relative w-full h-[320px] sm:h-[160px] md:h-[200px] rounded-[14px] overflow-hidden bg-[#12162a] border border-brand-500/30 shadow-[0_0_15px_rgba(124,58,237,0.15)] group"
+                className="relative w-full min-h-[320px] sm:min-h-0 sm:h-[160px] md:h-[200px] rounded-[14px] overflow-hidden bg-[#12162a] border border-brand-500/30 shadow-[0_0_15px_rgba(124,58,237,0.15)] group"
                 onMouseEnter={() => setIsPaused(true)}
                 onMouseLeave={() => setIsPaused(false)}
                 onTouchStart={onTouchStart}

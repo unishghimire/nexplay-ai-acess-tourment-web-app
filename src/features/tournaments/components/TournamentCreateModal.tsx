@@ -380,7 +380,7 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
               </div>
                 <div className="mt-4">
                   <p className="text-[10px] text-gray-500 font-bold uppercase mb-2">Or Choose a Preset</p>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     {PRESET_TOURNAMENT_BANNERS.map((url, idx) => (
                       <button
                         key={url}

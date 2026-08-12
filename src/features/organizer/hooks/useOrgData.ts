@@ -28,7 +28,7 @@ export function useOrgData() {
       });
       setHostedTournaments(tours);
     } catch (err) {
-      // Error fetching hosted tournaments
+      console.error("Error fetching hosted tournaments:", err)
     } finally {
       setLoading(false);
     }
@@ -71,7 +71,7 @@ export function useOrgData() {
       });
       setParticipants(list);
     } catch (err) {
-      // Error fetching participants
+      console.error("Error fetching participants:", err)
     }
   }, [user]);
 
@@ -89,7 +89,7 @@ export function useOrgData() {
       const txs = snap.docs.map(d => ({ id: d.id, ...d.data() } as Transaction));
       setTransactions(txs);
     } catch (err) {
-      // Error fetching transactions
+      console.error("Error fetching transactions:", err)
     }
   }, [user]);
 
