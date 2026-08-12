@@ -17,7 +17,6 @@ const PublicProfile: React.FC = () => {
     
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [teams, setTeams] = useState<Team[]>([]);
-    const [, setTournaments] = useState<Tournament[]>([]);
     const [orgPosts, setOrgPosts] = useState<OrgPost[]>([]);
     const [matchHistory, setMatchHistory] = useState<MatchHistory[]>([]);
     const [loading, setLoading] = useState(true);
@@ -61,11 +60,6 @@ const PublicProfile: React.FC = () => {
                         }
                         setTeams(teamsData);
                     }
-                }));
-
-                // 3. Fetch Tournaments
-                promises.push(getDocs(query(collection(db, 'tournaments'), where('hostUid', '==', id))).then(snap => {
-                    setTournaments(snap.docs.map(d => ({ id: d.id, ...d.data() } as Tournament)));
                 }));
 
                 // 4. Fetch Match History

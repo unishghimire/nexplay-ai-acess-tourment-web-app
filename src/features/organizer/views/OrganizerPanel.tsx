@@ -194,7 +194,7 @@ const OrganizerPanel: React.FC = () => {
       case 'overview':
         return <OverviewTab
           kpis={org.kpis}
-          activityFeed={[]}
+          activityFeed={org.activityFeed}
           hostedTournaments={org.hostedTournaments}
         />;
       case 'tournaments':
@@ -209,21 +209,21 @@ const OrganizerPanel: React.FC = () => {
         />;
       case 'scrims':
         return <ScrimsHubTab
-          scrims={[]}
+          scrims={org.scrims}
           onOpenSlotGrid={handleOpenSlotGrid}
           onToggleSlot={handleToggleSlot}
           onViewDetails={handleViewScrimDetails}
         />;
       case 'rooms':
         return <MatchRoomsTab
-          matchRooms={[]}
+          matchRooms={org.matchRooms}
           disputes={[]}
           onOpenRoomDispatch={handleOpenRoomDispatch}
           onResolveDispute={handleResolveDispute}
         />;
       case 'teams':
         return <TeamsRostersTab
-          teams={[]}
+          teams={org.teams}
           onToggleRosterLock={handleToggleRosterLock}
           onIssueWarning={handleIssueWarning}
           onBanTeam={handleBanTeam}

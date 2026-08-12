@@ -15,7 +15,12 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, maxWidt
         if (!isOpen) return;
         const handleEscape = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
         document.addEventListener('keydown', handleEscape);
-        return () => document.removeEventListener('keydown', handleEscape);
+        // Lock body scroll when modal is open
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.removeEventListener('keydown', handleEscape);
+            document.body.style.overflow = '';
+        };
     }, [isOpen, onClose]);
 
     const location = useLocation();

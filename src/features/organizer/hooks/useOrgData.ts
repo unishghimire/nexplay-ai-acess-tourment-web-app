@@ -34,6 +34,59 @@ export function useOrgData() {
     }
   }, [user]);
 
+  // ponytail: derive scrims, matchRooms, teams, activityFeed from hostedTournaments — no extra Firestore reads
+  const scrims = useMemo(() =>
+    hostedTournaments.filter(t => (t as any).matchType === 'scrims' || (t as any).isScrim === true),
+    [hostedTournaments]
+  );
+
+  const matchRooms = useMemo(() =>
+    hostedTournaments.filter(t => t.status === 'live' && t.roomId),
+    [hostedTournaments]
+  );
+
+  // ponytail: teams derived from participants already loaded for active tournaments — ceiling: only covers tournaments whose participants were fetched via fetchParticipants. Upgrade: add a dedicated teams query if full roster coverage is needed.
+  const teams = useMemo(() => {
+    const teamMap: Record<string, { id: string; name: string; logoUrl?: string; players?: string[]; tournamentId?: string }> = {};
+    participants.forEach(p => {
+      const teamId = p.teamId || p.userId;
+      if (!teamMap[teamId]) {
+        teamMap[teamId] = {
+          id: teamId,
+          name: p.teamName || p.username,
+          logoUrl: p.logoUrl,
+          players: p.teammates ? [p.username, ...p.teammates] : [p.username],
+          tournamentId: p.tournamentId,
+        };
+      }
+    });
+    return Object.values(teamMap);
+  }, [participants]);
+
+  const activityFeed = useMemo(() => {
+    // ponytail: derive activity from recent tournaments — no extra reads. Ceiling: only shows tournament events, not participant joins. Upgrade: add onSnapshot listeners for richer feed.
+    const iconFor = (status: string) => {
+      if (status === 'live') return 'radio';
+      if (status === 'completed') return 'trophy';
+      if (status === 'published') return 'trophy';
+      return 'activity';
+    };
+    const timeFor = (ts: any) => {
+      if (!ts) return '';
+      const d = ts.toMillis ? new Date(ts.toMillis()) : new Date(ts);
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    };
+    return hostedTournaments
+      .slice(0, 10)
+      .map(t => ({
+        id: t.id,
+        icon: iconFor(t.status),
+        text: `${t.title} — ${t.status}`,
+        time: timeFor(t.createdAt),
+        type: 'tournament',
+      }));
+  }, [hostedTournaments]);
+
   // Compute KPIs from real tournament data
   const kpis = useMemo(() => {
     const active = hostedTournaments.filter(t => t.status === 'live' || t.status === 'upcoming' || t.status === 'published').length;
@@ -43,8 +96,8 @@ export function useOrgData() {
     const pendingPayouts = transactions.filter(t => t.type === 'withdrawal' && t.status === 'pending').reduce((sum, t) => sum + Math.abs(t.amount || 0), 0);
     return {
       activeTournaments: active,
-      liveScrims: 0,
-      totalTeams: 0,
+      liveScrims: scrims.filter(s => s.status === 'live').length,
+      totalTeams: teams.length,
       totalSlots,
       filledSlots,
       prizePool,
@@ -53,7 +106,7 @@ export function useOrgData() {
       orgWalletBalance: profile?.orgWalletBalance || 0,
       escrowBalance: 0,
     };
-  }, [hostedTournaments, transactions, profile]);
+  }, [hostedTournaments, transactions, profile, scrims, teams]);
 
   const fetchParticipants = useCallback(async (tournamentId: string) => {
     if (!tournamentId || !user) {
@@ -78,7 +131,6 @@ export function useOrgData() {
   const fetchTransactions = useCallback(async () => {
     if (!user) return;
     try {
-      // ponytail: was fetching ALL transactions without limit/orderBy — now uses indexed query with limit
       const q = query(
         collection(db, 'transactions'),
         where('userId', '==', user.uid),
@@ -156,10 +208,11 @@ export function useOrgData() {
     await updateDoc(doc(db, 'users', user.uid), settings);
   }, [user]);
 
-  // Auto-fetch on mount
+  // Auto-fetch on mount — fetch both tournaments AND transactions
   useEffect(() => {
     fetchHostedTournaments();
-  }, [fetchHostedTournaments]);
+    fetchTransactions();
+  }, [fetchHostedTournaments, fetchTransactions]);
 
   return {
     hostedTournaments,
@@ -167,6 +220,11 @@ export function useOrgData() {
     transactions,
     loading,
     kpis,
+    // Derived data (no extra Firestore reads)
+    scrims,
+    matchRooms,
+    teams,
+    activityFeed,
     // Actions
     fetchHostedTournaments,
     fetchParticipants,
