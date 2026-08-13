@@ -137,6 +137,70 @@ router.post("/api/tournaments/:id/advance", authenticateToken, rateLimit(10, 15 
   }
 });
 
+// DELETE /api/tournaments/:id — delete tournament with child cleanup
+// Uses Admin SDK (bypasses Firestore rules) after verifying ownership
+router.delete("/api/tournaments/:id",
+  authenticateToken,
+  rateLimit(3, 15 * 60 * 1000),
+  async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      if (!id || id.length > 128) return res.status(400).json({ success: false, message: "Invalid tournament ID" });
+
+      const uid = req.user.userId;
+      const tourneyRef = db.collection("tournaments").doc(id);
+      const tourneySnap = await tourneyRef.get();
+
+      if (!tourneySnap.exists) return res.status(404).json({ success: false, message: "Tournament not found" });
+
+      const tourneyData = tourneySnap.data();
+      if (!tourneyData) return res.status(404).json({ success: false, message: "Tournament not found" });
+
+      // Authorization: only tournament host or admin can delete
+      if (tourneyData.hostUid !== uid && req.user.role !== "admin") {
+        return res.status(403).json({ success: false, message: "Unauthorized — only the tournament host can delete this tournament" });
+      }
+
+      // Block deletion of live tournaments
+      if (tourneyData.status === "live") {
+        return res.status(400).json({ success: false, message: "Cannot delete a live tournament. End or cancel it first." });
+      }
+
+      // Atomic-ish cleanup: delete tournament + child collections via Admin SDK
+      const batch = db.batch();
+
+      // Delete participants
+      const partsSnap = await db.collection("participants").where("tournamentId", "==", id).get();
+      partsSnap.docs.forEach(d => batch.delete(d.ref));
+
+      // Delete results
+      const resultsSnap = await db.collection("results").where("tournamentId", "==", id).get();
+      resultsSnap.docs.forEach(d => batch.delete(d.ref));
+
+      // Delete tournament earnings
+      const earningsSnap = await db.collection("tournamentEarnings").where("tournamentId", "==", id).get();
+      earningsSnap.docs.forEach(d => batch.delete(d.ref));
+
+      // Delete credentials subcollection
+      const credsSnap = await tourneyRef.collection("credentials").get();
+      credsSnap.docs.forEach(d => batch.delete(d.ref));
+
+      // Delete groups subcollection
+      const groupsSnap = await tourneyRef.collection("groups").get();
+      groupsSnap.docs.forEach(d => batch.delete(d.ref));
+
+      // Delete the tournament document itself
+      batch.delete(tourneyRef);
+
+      await batch.commit();
+      res.json({ success: true, message: "Tournament deleted successfully", deletedChildren: partsSnap.size + resultsSnap.size + earningsSnap.size + credsSnap.size + groupsSnap.size });
+    } catch (error: any) {
+      console.error("Tournament delete error:", error);
+      res.status(500).json({ success: false, message: error.message || "Internal server error" });
+    }
+  }
+);
+
 // Scrims API
 router.get("/api/scrims", async (req, res) => {
   try {

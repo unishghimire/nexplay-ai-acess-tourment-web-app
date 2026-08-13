@@ -190,22 +190,17 @@ export function useOrgData() {
   // --- Write operations ---
 
   const deleteTournament = useCallback(async (id: string) => {
-    // ponytail: Firestore rules allow delete for admin only — organizers need server API.
-    // For now, this will throw for non-admins, caught by the caller.
-    // TODO: create /api/tournaments/:id/delete server endpoint with ownership check
-    await deleteDoc(doc(db, 'tournaments', id));
-    // Clean up participants (best-effort — Firestore rules allow organizer to read/write participants for own tournaments)
-    try {
-      const pQuery = query(collection(db, 'participants'), where('tournamentId', '==', id));
-      const pSnap = await getDocs(pQuery);
-      const batch = writeBatch(db);
-      pSnap.docs.forEach(d => batch.delete(d.ref));
-      await batch.commit();
-    } catch (err) {
-      console.error("Failed to clean up participants:", err);
-    }
+    if (!user) throw new Error('Not authenticated');
+    const token = await auth.currentUser?.getIdToken();
+    if (!token) throw new Error('Authentication required');
+    const res = await fetch(`/api/tournaments/${id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Failed to delete tournament');
     setHostedTournaments(prev => prev.filter(t => t.id !== id));
-  }, []);
+  }, [user]);
 
   const updateTournamentStatus = useCallback(async (id: string, status: Tournament['status']) => {
     await updateDoc(doc(db, 'tournaments', id), { status });
