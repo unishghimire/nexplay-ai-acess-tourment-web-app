@@ -168,6 +168,9 @@ const Tournaments: React.FC = () => {
                     )}
                 </div>
             </header>
+            {fetchError && (
+                <div className="p-4 mb-6 text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-2xl">{fetchError}</div>
+            )}
 
             <div className="flex items-center gap-1 sm:gap-2 border-b border-gray-800 mb-8 sm:mb-10 overflow-x-auto py-1 w-full no-scrollbar">
                 {statusTabs.map(s => (
@@ -222,7 +225,7 @@ const Tournaments: React.FC = () => {
                             aria-label="Filter tournaments by mode"
                             value={modeFilter}
                             onChange={(e) => setModeFilter(e.target.value)}
-                            className="w-full min-h-[44px] bg-black border border-gray-800 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white focus:border-brand-500 outline-none transition text-sm font-bold cursor-pointer"
+                            className="w-full min-h-[44px] bg-black border border-gray-800 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white focus:border-brand-500 outline-none transition text-sm font-bold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                             disabled={gameFilter === 'all' && availableModes.length === 0}
                         >
                             <option value="all">All Modes</option>

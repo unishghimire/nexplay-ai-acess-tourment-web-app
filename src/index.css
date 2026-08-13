@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&family=Inter:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -24,13 +23,14 @@
   body {
     -webkit-text-size-adjust: 100%;
     text-wrap: pretty;
+    -webkit-tap-highlight-color: transparent;
   }
 }
 
 body {
   background-color: #0b1120;
   color: #e2e8f0;
-  font-family: 'Segoe UI', 'Roboto', sans-serif;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   overflow-x: hidden;
 }
 
@@ -43,6 +43,10 @@ body {
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: #0f172a; }
 ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+
+/* ponytail: hide scrollbar but keep scrollable — used in navbar pill + tab bars */
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
 
 .glass-panel {
   background: rgba(15, 23, 42, 0.9);

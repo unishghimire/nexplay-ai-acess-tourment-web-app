@@ -3,37 +3,38 @@ import { Link, useLocation } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 
+// ponytail: protected routes that should NOT appear in breadcrumbs or SEO schema.
+// Users reach these only by navigating through the app flow, not via direct links.
+const HIDDEN_ROUTES = ['admin', 'organizer', 'wallet', 'dashboard', 'complete-profile', 'tournament-admin'];
+
 const Breadcrumbs: React.FC = () => {
     const location = useLocation();
     const pathnames = location.pathname.split('/').filter((x) => x);
 
     if (pathnames.length === 0) return null;
 
+    // Don't render breadcrumbs or schema on protected routes
+    const isHidden = pathnames.some((p) => HIDDEN_ROUTES.includes(p));
+    if (isHidden) return null;
+
     const breadcrumbNameMap: Record<string, string> = {
         'tournaments': 'Tournaments',
         'games': 'Games',
         'scrims': 'Scrims',
-        'results': 'Results',
-        'dashboard': 'Dashboard',
-        'profile': 'Profile',
-        'user': 'User',
         'teams': 'Teams',
         'team': 'Team Details',
         'leaderboard': 'Leaderboard',
-        'admin': 'Admin Panel',
-        'organizer': 'Organizer Panel',
         'organizations': 'Organizations',
         'news': 'News',
         'post': 'Article',
+        'user': 'Profile',
         'organization': 'Organization',
-        'wallet': 'Wallet',
         'login': 'Login',
         'register': 'Register',
         'about': 'About',
         'contact': 'Contact',
         'privacy': 'Privacy',
         'terms': 'Terms',
-        'complete-profile': 'Complete Profile',
     };
 
     const baseUrl = 'https://www.nexplayorg.app';

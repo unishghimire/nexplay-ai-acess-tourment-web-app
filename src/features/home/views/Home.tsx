@@ -228,12 +228,12 @@ const Home: React.FC = () => {
                 },
             }]}
         />
-        <div className="animate-fade-in space-y-16 pb-20 relative">
+        <div className="animate-fade-in space-y-16 pb-20 relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             
             {/* Real-time Status and Security Badges Banner */}
             <div className="bg-gradient-to-br from-gray-900 to-black border border-gray-800 rounded-2xl sm:rounded-3xl p-5 sm:p-8 flex flex-col md:flex-row justify-between items-center gap-4 sm:gap-6 shadow-2xl">
                 <div className="flex items-center gap-4">
-                    <div className="bg-brand-500/10 p-3 rounded-2xl">
+                    <div className="bg-brand-500/10 p-3 rounded-2xl shrink-0">
                         <CheckCircle2 className="text-brand-400 w-8 h-8" />
                     </div>
                     <div>
@@ -305,7 +305,7 @@ const Home: React.FC = () => {
                     </div>
                     <button 
                         onClick={() => handleCtaClick('/tournaments', 'ViewAllFeatured')} 
-                        className="bg-surface/50 hover:bg-surface text-white px-4 py-2 md:px-6 md:py-3 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 border border-gray-700"
+                        className="bg-surface/50 hover:bg-surface text-white min-h-[44px] px-4 py-2.5 md:px-6 md:py-3 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 border border-gray-700 shrink-0"
                         aria-label="View all scheduled tournaments"
                     >
                         View All <ChevronRight className="w-4 h-4" />
@@ -336,7 +336,7 @@ const Home: React.FC = () => {
                     </div>
                     <button 
                         onClick={() => handleCtaClick('/games', 'ViewAllGames')} 
-                        className="bg-surface/50 hover:bg-surface text-white px-4 py-2 md:px-6 md:py-3 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 border border-gray-700"
+                        className="bg-surface/50 hover:bg-surface text-white min-h-[44px] px-4 py-2.5 md:px-6 md:py-3 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 border border-gray-700 shrink-0"
                         aria-label="Explore tournament categories by game"
                     >
                         Explore <ChevronRight className="w-4 h-4" />
@@ -366,7 +366,7 @@ const Home: React.FC = () => {
                         </div>
                         <button 
                             onClick={() => handleCtaClick('/results', 'ViewAllResults')} 
-                            className="bg-surface/50 hover:bg-surface text-white px-4 py-2 md:px-6 md:py-3 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 border border-gray-700"
+                            className="bg-surface/50 hover:bg-surface text-white min-h-[44px] px-4 py-2.5 md:px-6 md:py-3 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 border border-gray-700 shrink-0"
                             aria-label="View all historic results"
                         >
                             View All <ChevronRight className="w-4 h-4" />
@@ -384,14 +384,14 @@ const Home: React.FC = () => {
                                         <img src={t.bannerUrl || `https://api.dicebear.com/7.x/identicon/svg?seed=${t.title}`} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <div className="flex justify-between items-start mb-2">
+                                        <div className="flex justify-between items-start mb-2 min-w-0 gap-2">
                                             <div>
-                                                <h4 className="text-white font-black text-lg uppercase truncate">{t.title}</h4>
+                                                <h4 className="text-white font-black text-lg uppercase truncate min-w-0">{t.title}</h4>
                                                 <p className="text-[10px] text-brand-500 font-black uppercase tracking-widest">{formatGameName(t.game)}</p>
                                             </div>
                                             <span className="text-[10px] text-gray-500 font-bold bg-card px-2 py-1 rounded">COMPLETED</span>
                                         </div>
-                                        <div className="flex items-center gap-4 mt-4">
+                                        <div className="flex flex-wrap items-center gap-3 sm:gap-4 mt-4 min-w-0">
                                             {t.winners?.slice(0, 1).map((w, wIdx) => (
                                                 <div key={w.uid || `winner-${wIdx}`} className="flex items-center gap-3 bg-brand-600/10 px-4 py-2 rounded-xl border border-brand-500/20">
                                                     <Trophy className="w-4 h-4 text-yellow-500" />

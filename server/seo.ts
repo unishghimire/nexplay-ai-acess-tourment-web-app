@@ -15,7 +15,6 @@ export async function generateSitemapXml(db: any): Promise<string> {
     { loc: `${baseUrl}/tournaments`, changefreq: "daily", priority: "0.9" },
     { loc: `${baseUrl}/scrims`, changefreq: "daily", priority: "0.9" },
     { loc: `${baseUrl}/games`, changefreq: "weekly", priority: "0.9" },
-    { loc: `${baseUrl}/results`, changefreq: "daily", priority: "0.7" },
     { loc: `${baseUrl}/organizations`, changefreq: "daily", priority: "0.7" },
     { loc: `${baseUrl}/news`, changefreq: "daily", priority: "0.8" },
     { loc: `${baseUrl}/teams`, changefreq: "daily", priority: "0.7" },
@@ -95,7 +94,7 @@ export async function generateSitemapXml(db: any): Promise<string> {
     snap.forEach((doc: any) => {
       const data = doc.data() || {};
       dynamicItems.push({
-        loc: `${baseUrl}/organization/${doc.id}`,
+        loc: `${baseUrl}/user/${doc.id}`,
         changefreq: "weekly", priority: "0.7",
         lastmod: formatLastMod(data),
       });

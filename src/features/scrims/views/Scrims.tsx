@@ -147,13 +147,13 @@ const Scrims: React.FC = () => {
             </div>
 
             {loading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
                     {[1,2,3,4,5,6].map(i => (
                         <div key={i} className="bg-card/50 h-[400px] rounded-3xl animate-pulse border border-gray-800"></div>
                     ))}
                 </div>
             ) : filteredScrims.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
                     {filteredScrims.map((scrim) => (
                         <motion.div 
                             key={scrim.id}
@@ -172,7 +172,7 @@ const Scrims: React.FC = () => {
                                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/20 to-transparent"></div>
-                                <div className="absolute top-4 left-4 flex gap-2">
+                                <div className="absolute top-4 left-4 right-4 flex flex-wrap gap-2">
                                     <span className="bg-brand-500/10 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-brand-300 border border-brand-500/20">
                                         {formatGameName(scrim.game)}
                                     </span>
@@ -180,7 +180,7 @@ const Scrims: React.FC = () => {
                                         {scrim.type}
                                     </span>
                                 </div>
-                                <div className="absolute bottom-4 left-4 right-4 justify-between items-end">
+                                <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
                                     <div className="text-[10px] text-brand-400 font-black uppercase tracking-widest mb-1 flex items-center gap-1">
                                         <Calendar className="w-3 h-3" /> {formatDate(scrim.time)}
                                     </div>
@@ -210,7 +210,7 @@ const Scrims: React.FC = () => {
                                     </div>
                                 </div>
 
-                                <button className="w-full bg-brand-500/10 group-hover:bg-brand-500 text-brand-300 group-hover:text-white py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all border border-brand-500/20 group-hover:border-brand-500">
+                                <button className="w-full min-h-[44px] bg-brand-500/10 group-hover:bg-brand-500 text-brand-300 group-hover:text-white py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all border border-brand-500/20 group-hover:border-brand-500">
                                     Join Scrim
                                 </button>
                             </div>
@@ -218,7 +218,7 @@ const Scrims: React.FC = () => {
                     ))}
                 </div>
             ) : (
-                <div className="bg-card/50 p-12 rounded-3xl border border-gray-800 text-center">
+                <div className="bg-card/50 p-6 sm:p-12 rounded-3xl border border-gray-800 text-center">
                     <Gamepad2 className="w-16 h-16 text-gray-700 mx-auto mb-6" />
                     <h3 className="text-2xl font-black text-white uppercase mb-2">No Scrims Available</h3>
                     <p className="text-gray-500 font-bold max-w-sm mx-auto mb-8">
@@ -226,7 +226,7 @@ const Scrims: React.FC = () => {
                     </p>
                     <button 
                         onClick={() => setFilterGame('All')}
-                        className="text-brand-500 font-black uppercase tracking-widest hover:text-brand-400 transition-colors"
+                        className="min-h-[44px] inline-flex items-center px-4 py-2.5 text-brand-500 font-black uppercase tracking-widest hover:text-brand-400 transition-colors"
                     >
                         Clear Filters
                     </button>

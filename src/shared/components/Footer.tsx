@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, MessageCircle, Trophy, Users, Gamepad2, BarChart3 } from 'lucide-react';
+import { Mail, MessageCircle, Trophy, Users, Gamepad2 } from 'lucide-react';
 
 const Footer: React.FC = () => {
     return (
@@ -22,7 +22,6 @@ const Footer: React.FC = () => {
                             <li><Link to="/tournaments" className="text-gray-400 hover:text-white transition">Tournaments</Link></li>
                             <li><Link to="/scrims" className="text-gray-400 hover:text-white transition">Scrims</Link></li>
                             <li><Link to="/leaderboard" className="text-gray-400 hover:text-white transition">Leaderboard</Link></li>
-                            <li><Link to="/results" className="text-gray-400 hover:text-white transition">Results</Link></li>
                         </ul>
                     </div>
 
@@ -33,6 +32,7 @@ const Footer: React.FC = () => {
                             <li><Link to="/teams" className="text-gray-400 hover:text-white transition">Teams</Link></li>
                             <li><Link to="/organizations" className="text-gray-400 hover:text-white transition">Organizations</Link></li>
                             <li><Link to="/games" className="text-gray-400 hover:text-white transition">Games</Link></li>
+                            <li><Link to="/news" className="text-gray-400 hover:text-white transition">News</Link></li>
                         </ul>
                     </div>
 

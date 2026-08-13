@@ -70,7 +70,7 @@ const Results: React.FC = () => {
         <Seo
             title="Tournament Results | NexPlay — Esports Nepal"
             description="View completed esports tournament results, winners, and leaderboards on NexPlay."
-            canonicalPath="/results"
+            canonicalPath="/results" noindex
             jsonLd={{
                 "@context": "https://schema.org",
                 "@type": "ItemList",
@@ -93,7 +93,7 @@ const Results: React.FC = () => {
         <Seo
             title="Tournament Results | NexPlay — Esports Nepal"
             description="View completed esports tournament results, winners, and leaderboards on NexPlay."
-            canonicalPath="/results"
+            canonicalPath="/results" noindex
             jsonLd={{
                 "@context": "https://schema.org",
                 "@type": "ItemList",
