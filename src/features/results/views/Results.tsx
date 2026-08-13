@@ -71,6 +71,13 @@ const Results: React.FC = () => {
             title="Tournament Results | NexPlay — Esports Nepal"
             description="View completed esports tournament results, winners, and leaderboards on NexPlay."
             canonicalPath="/results"
+            jsonLd={{
+                "@context": "https://schema.org",
+                "@type": "ItemList",
+                "name": "Esports Tournament Results in Nepal",
+                "description": "View completed esports tournament results, winners, and leaderboards on NexPlay.",
+                "url": `https://www.nexplayorg.app/results`
+            }}
         />
             <div className="flex flex-col items-center justify-center min-h-[60vh]">
                 <div className="w-12 h-12 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mb-4"></div>
@@ -87,6 +94,13 @@ const Results: React.FC = () => {
             title="Tournament Results | NexPlay — Esports Nepal"
             description="View completed esports tournament results, winners, and leaderboards on NexPlay."
             canonicalPath="/results"
+            jsonLd={{
+                "@context": "https://schema.org",
+                "@type": "ItemList",
+                "name": "Esports Tournament Results in Nepal",
+                "description": "View completed esports tournament results, winners, and leaderboards on NexPlay.",
+                "url": `https://www.nexplayorg.app/results`
+            }}
         />
             <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
                 <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-2xl max-w-md text-center">

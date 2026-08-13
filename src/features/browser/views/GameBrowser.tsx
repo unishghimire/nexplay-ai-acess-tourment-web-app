@@ -54,6 +54,13 @@ export default function GameBrowser() {
             title="Games | NexPlay — Esports Tournaments in Nepal"
             description="Explore esports games on NexPlay — PUBG Mobile, Free Fire, Valorant and more. Find tournaments and scrims for your favorite games."
             canonicalPath="/games"
+            jsonLd={{
+                "@context": "https://schema.org",
+                "@type": "ItemList",
+                "name": "Esports Games on NexPlay",
+                "description": "Explore esports games on NexPlay — PUBG Mobile, Free Fire, Valorant and more.",
+                "url": `https://www.nexplayorg.app/games`
+            }}
         />
             <div className="flex flex-col items-center justify-center min-h-[60vh]">
                 <div className="w-12 h-12 border-4 border-brand-500/20 border-t-brand-500 rounded-full animate-spin mb-4"></div>

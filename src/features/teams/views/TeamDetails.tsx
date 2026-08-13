@@ -384,7 +384,19 @@ const TeamDetails: React.FC = () => {
 
     return (
         <div className="max-w-6xl mx-auto animate-fade-in pb-20 px-4">
-            <Seo title="Esports Team | NexPlay" description="View esports team roster, stats, and tournament history on NexPlay" canonicalPath={`/team/${id}`} />
+            <Seo
+                title="Esports Team | NexPlay"
+                description="View esports team roster, stats, and tournament history on NexPlay"
+                canonicalPath={`/team/${id}`}
+                jsonLd={{
+                    "@context": "https://schema.org",
+                    "@type": "SportsTeam",
+                    "name": team?.name || "Esports Team",
+                    "sport": "Esports",
+                    "url": `https://www.nexplayorg.app/team/${id}`,
+                    "description": "View esports team roster, stats, and tournament history on NexPlay"
+                }}
+            />
             {/* Breadcrumbs & Back Button */}
             <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-gray-500">

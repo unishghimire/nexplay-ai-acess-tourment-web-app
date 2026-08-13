@@ -94,6 +94,14 @@ const GameModesBrowser: React.FC = () => {
             title={`${gameLabel} Tournaments & Scrims in Nepal | NexPlay`}
             description={`Find ${gameLabel} tournaments and scrims in Nepal on NexPlay.`}
             canonicalPath={`/games/${id}`}
+            jsonLd={{
+                "@context": "https://schema.org",
+                "@type": "VideoGame",
+                "name": gameLabel,
+                "genre": "Esports",
+                "url": `https://www.nexplayorg.app/games/${id}`,
+                "description": `Find ${gameLabel} tournaments and scrims in Nepal on NexPlay.`
+            }}
         />
         <div className="animate-fade-in max-w-5xl mx-auto p-4 md:p-8">
             <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6 border-b border-gray-800 pb-8">

@@ -97,6 +97,13 @@ const OrgBrowser: React.FC = () => {
             title="Esports Organizers in Nepal | NexPlay"
             description="Browse esports tournament organizers in Nepal on NexPlay."
             canonicalPath="/organizations"
+            jsonLd={{
+                "@context": "https://schema.org",
+                "@type": "ItemList",
+                "name": "Esports Organizers in Nepal",
+                "description": "Browse esports tournament organizers in Nepal on NexPlay.",
+                "url": `https://www.nexplayorg.app/organizations`
+            }}
         />
         <div className="max-w-6xl mx-auto animate-fade-in pb-20">
             {/* Header */}

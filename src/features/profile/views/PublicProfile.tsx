@@ -188,6 +188,13 @@ const PublicProfile: React.FC = () => {
                 title={`${profile.username} | NexPlay Profile`}
                 description={`${profile.username} on NexPlay — Nepal esports platform. View profile, stats, and tournament history.`}
                 canonicalPath={`/user/${id}`}
+                jsonLd={{
+                    "@context": "https://schema.org",
+                    "@type": "Person",
+                    "name": profile.username,
+                    "url": `https://www.nexplayorg.app/user/${id}`,
+                    "description": `${profile.username} on NexPlay — Nepal esports platform. View profile, stats, and tournament history.`
+                }}
             />
 
             {/* Breadcrumbs & Back Button */}

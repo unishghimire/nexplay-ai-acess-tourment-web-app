@@ -43,6 +43,13 @@ const News: React.FC = () => {
                 title="Esports News Nepal — Latest Tournament Updates | NexPlay"
                 description="Latest Nepal esports news, tournament announcements, match results, and community updates from NexPlay."
                 canonicalPath="/news"
+                jsonLd={{
+                    "@context": "https://schema.org",
+                    "@type": "Blog",
+                    "name": "NexPlay Esports News",
+                    "description": "Latest Nepal esports news, tournament announcements, match results, and community updates from NexPlay.",
+                    "url": `https://www.nexplayorg.app/news`
+                }}
             />
             <div className="max-w-4xl mx-auto pb-20">
                 <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tighter text-white mb-2 flex items-center gap-3">

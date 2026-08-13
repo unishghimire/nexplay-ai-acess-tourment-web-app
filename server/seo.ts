@@ -28,7 +28,6 @@ export async function generateSitemapXml(db: any): Promise<string> {
   ];
 
   const dynamicItems: SitemapUrl[] = [];
-  const diagnostics: string[] = [];
 
   const formatLastMod = (data: any): string => {
     if (!data) return new Date().toISOString();
@@ -57,9 +56,8 @@ export async function generateSitemapXml(db: any): Promise<string> {
         lastmod: formatLastMod(data),
       });
     });
-    diagnostics.push(`<!-- tournaments: ${snap.size} items -->`);
   } catch (e: any) {
-    diagnostics.push(`<!-- tournaments: ERROR ${e?.message || String(e)} -->`);
+    console.error("Sitemap: failed to fetch tournaments:", e);
   }
 
   // 2. Games
@@ -73,9 +71,8 @@ export async function generateSitemapXml(db: any): Promise<string> {
         lastmod: formatLastMod(data),
       });
     });
-    diagnostics.push(`<!-- games: ${snap.size} items -->`);
   } catch (e: any) {
-    diagnostics.push(`<!-- games: ERROR ${e?.message || String(e)} -->`);
+    console.error("Sitemap: failed to fetch games:", e);
   }
 
   // 3. Teams
@@ -89,9 +86,8 @@ export async function generateSitemapXml(db: any): Promise<string> {
         lastmod: formatLastMod(data),
       });
     });
-    diagnostics.push(`<!-- teams: ${snap.size} items -->`);
   } catch (e: any) {
-    diagnostics.push(`<!-- teams: ERROR ${e?.message || String(e)} -->`);
+    console.error("Sitemap: failed to fetch teams:", e);
   }
 
   // 4. Organizations (users with role === organizer)
@@ -105,9 +101,8 @@ export async function generateSitemapXml(db: any): Promise<string> {
         lastmod: formatLastMod(data),
       });
     });
-    diagnostics.push(`<!-- organizations: ${snap.size} items -->`);
   } catch (e: any) {
-    diagnostics.push(`<!-- organizations: ERROR ${e?.message || String(e)} -->`);
+    console.error("Sitemap: failed to fetch organizations:", e);
   }
 
   // 5. Posts (org_posts)
@@ -121,9 +116,8 @@ export async function generateSitemapXml(db: any): Promise<string> {
         lastmod: formatLastMod(data),
       });
     });
-    diagnostics.push(`<!-- posts: ${snap.size} items -->`);
   } catch (e: any) {
-    diagnostics.push(`<!-- posts: ERROR ${e?.message || String(e)} -->`);
+    console.error("Sitemap: failed to fetch posts:", e);
   }
 
   const allItems: SitemapUrl[] = [...staticItems, ...dynamicItems];
@@ -135,8 +129,7 @@ export async function generateSitemapXml(db: any): Promise<string> {
     })
     .join("\n");
 
-  const diagXml = diagnostics.length > 0 ? "\n" + diagnostics.join("\n") : "";
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${diagXml}\n${xmlUrls}\n</urlset>`;
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${xmlUrls}\n</urlset>`;
 }
 
 export async function handleIndexNow(req: Request, res: Response): Promise<any> {
