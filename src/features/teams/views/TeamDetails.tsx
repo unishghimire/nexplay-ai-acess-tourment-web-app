@@ -7,6 +7,7 @@ import { useNotification } from '../../../shared/context/NotificationContext';
 import { Team, TeamMember, UserProfile, TeamInvite, TeamActivity } from '../../../shared/types/types';
 import {Users, UserPlus, Settings, LogOut, X, ArrowLeft, Crown, Activity, Globe, Calendar, Trophy, Zap, ChevronRight, Star, Camera} from 'lucide-react';
 import { useInvisibleImage } from '../../../shared/hooks/useInvisibleImage';
+import { MediaCategory } from '../../../shared/services/mediaService';
 import { timeAgo, formatDate, formatCurrency } from '../../../shared/utils/utils';
 import Modal from '../../../shared/components/Modal';
 import { Seo } from '../../../shared/components/Seo';
@@ -48,6 +49,7 @@ const TeamDetails: React.FC = () => {
 
     const logoUpload = useInvisibleImage({
         folder: 'teams/logos',
+        category: MediaCategory.TEAM_LOGO,
         onUploadStart: () => setIsUploadingLogo(true),
         onUploadEnd: () => setIsUploadingLogo(false),
         onUploadSuccess: (url) => setEditLogo(url)
@@ -55,6 +57,7 @@ const TeamDetails: React.FC = () => {
 
     const bannerUpload = useInvisibleImage({
         folder: 'teams/banners',
+        category: MediaCategory.TEAM_BANNER,
         onUploadStart: () => setIsUploadingBanner(true),
         onUploadEnd: () => setIsUploadingBanner(false),
         onUploadSuccess: (url) => setEditBanner(url)

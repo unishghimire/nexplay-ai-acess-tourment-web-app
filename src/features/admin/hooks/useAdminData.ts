@@ -147,21 +147,24 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
         onUploadStart: () => setUploading(true),
         onUploadEnd: () => setUploading(false),
         onUploadSuccess: (url) => setSlideImage(url),
-        onError: (err) => showToast(err, 'error')
+        onError: (err) => showToast(err, 'error'),
+        category: MediaCategory.OVERLAY_GRAPHIC,
     });
 
     const { handlePaste: handlePasteGame, handleDrop: handleDropGame, handleDragOver: handleDragOverGame, processAndUpload: processAndUploadGame } = useInvisibleImage({
         onUploadStart: () => setUploading(true),
         onUploadEnd: () => setUploading(false),
         onUploadSuccess: (url) => setGameLogo(url),
-        onError: (err) => showToast(err, 'error')
+        onError: (err) => showToast(err, 'error'),
+        category: MediaCategory.OTHER,
     });
 
     const { handlePaste: handlePastePayment, handleDrop: handleDropPayment, handleDragOver: handleDragOverPayment, processAndUpload: processAndUploadPayment } = useInvisibleImage({
         onUploadStart: () => setUploading(true),
         onUploadEnd: () => setUploading(false),
         onUploadSuccess: (url) => setPaymentQr(url),
-        onError: (err) => showToast(err, 'error')
+        onError: (err) => showToast(err, 'error'),
+        category: MediaCategory.OTHER,
     });
 
     // Transaction Review State

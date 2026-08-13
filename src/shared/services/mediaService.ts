@@ -1,7 +1,8 @@
 // FILE_ID: services/mediaService.ts
 // MODULE: Centralized Media Management
-// PURPOSE: Handles single-source-of-truth frontend media uploads, validation, replacement, and deletion using Cloudinary proxy
+// PURPOSE: Single-source-of-truth frontend image uploads, validation, replacement, and deletion
 // DEPENDENCIES: firebase.ts
+// ponytail: all image uploads go through this service — no component does its own upload
 
 import { getAuth } from "firebase/auth";
 import { doc, collection, setDoc, deleteDoc } from "firebase/firestore";
@@ -28,6 +29,9 @@ export interface MediaRecord {
   userId: string;
   url: string;
   publicId: string;
+  thumbUrl?: string;
+  mediumUrl?: string;
+  provider?: string;
   fileName: string;
   fileSize: number;
   mimeType: string;
@@ -36,23 +40,46 @@ export interface MediaRecord {
 }
 
 export const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
+
+// Per-category size limits (bytes)
+const CATEGORY_SIZE_LIMITS: Partial<Record<MediaCategory, number>> = {
+  [MediaCategory.USER_AVATAR]: 5 * 1024 * 1024,       // 5MB
+  [MediaCategory.TEAM_LOGO]: 5 * 1024 * 1024,          // 5MB
+  [MediaCategory.TEAM_BANNER]: 10 * 1024 * 1024,       // 10MB
+  [MediaCategory.ORG_LOGO]: 5 * 1024 * 1024,           // 5MB
+  [MediaCategory.ORG_BANNER]: 10 * 1024 * 1024,       // 10MB
+  [MediaCategory.TOURNAMENT_BANNER]: 10 * 1024 * 1024, // 10MB
+  [MediaCategory.TOURNAMENT_THUMBNAIL]: 5 * 1024 * 1024, // 5MB
+  [MediaCategory.SCRIM_BANNER]: 10 * 1024 * 1024,      // 10MB
+  [MediaCategory.NEWS_IMAGE]: 10 * 1024 * 1024,       // 10MB
+  [MediaCategory.PRODUCT_IMAGE]: 5 * 1024 * 1024,     // 5MB
+  [MediaCategory.SPONSOR_LOGO]: 5 * 1024 * 1024,      // 5MB
+  [MediaCategory.OVERLAY_GRAPHIC]: 10 * 1024 * 1024,  // 10MB
+  [MediaCategory.OTHER]: 10 * 1024 * 1024,            // 10MB
+};
+
+export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB global default
 
 /**
- * Validates file type and size on client side before upload
+ * Validates file type, extension, and size based on category
  */
-export function validateImage(file: File): { isValid: boolean; error?: string } {
+export function validateImage(file: File, category?: MediaCategory): { isValid: boolean; error?: string } {
+  if (!file) return { isValid: false, error: "No file selected." };
+
   if (!ALLOWED_MIME_TYPES.includes(file.type)) {
     return {
       isValid: false,
-      error: "Invalid file type. Only JPEG, PNG, WEBP, and GIF are allowed."
+      error: `Invalid file type (${file.type}). Only JPEG, PNG, WEBP, and GIF are allowed.`,
     };
   }
 
-  if (file.size > MAX_FILE_SIZE_BYTES) {
+  const maxSize = (category && CATEGORY_SIZE_LIMITS[category]) || MAX_FILE_SIZE_BYTES;
+  if (file.size > maxSize) {
+    const maxMB = (maxSize / (1024 * 1024)).toFixed(0);
+    const fileMB = (file.size / (1024 * 1024)).toFixed(2);
     return {
       isValid: false,
-      error: `File is too large. Maximum size allowed is 10MB (Selected file size: ${(file.size / (1024 * 1024)).toFixed(2)}MB).`
+      error: `File is too large (${fileMB}MB). Maximum for this image type is ${maxMB}MB.`,
     };
   }
 
@@ -60,132 +87,98 @@ export function validateImage(file: File): { isValid: boolean; error?: string } 
 }
 
 /**
- * Direct secure proxy image upload to Cloudinary backend
+ * Upload image via server proxy to ImgBB (primary) with Cloudinary/Storage fallback.
+ * API key stays server-side — never exposed to client.
  */
 export async function uploadImage(
   file: File,
   category: MediaCategory,
   onProgress?: (progress: number) => void
-): Promise<{ success: boolean; url: string; publicId: string; mediaData?: Partial<MediaRecord>; error?: string }> {
+): Promise<{ success: boolean; url: string; publicId: string; thumbUrl?: string; mediumUrl?: string; mediaData?: Partial<MediaRecord>; error?: string }> {
   try {
-    const check = validateImage(file);
+    const check = validateImage(file, category);
     if (!check.isValid) {
       return { success: false, url: "", publicId: "", error: check.error };
     }
 
     const auth = getAuth();
     const token = await auth.currentUser?.getIdToken();
-
     if (!token) {
       return { success: false, url: "", publicId: "", error: "You must be logged in to upload images." };
     }
+
+    if (onProgress) onProgress(15);
 
     const formData = new FormData();
     formData.append("image", file);
     formData.append("category", category);
 
-    if (onProgress) {
-      onProgress(15);
-      setTimeout(() => onProgress(50), 200);
-      setTimeout(() => onProgress(80), 450);
-    }
-
     const response = await fetch("/api/upload/image", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`
-      },
-      body: formData
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
     });
 
-    if (onProgress) {
-      onProgress(100);
-    }
+    if (onProgress) onProgress(100);
 
     const result = await response.json();
 
     if (!response.ok || !result.success) {
       return {
-        success: false,
-        url: "",
-        publicId: "",
-        error: result.message || "Failed to upload image to Cloudinary proxy backend."
+        success: false, url: "", publicId: "",
+        error: result.message || "Failed to upload image.",
       };
     }
 
     const userId = auth.currentUser?.uid || "unknown";
     const mediaId = result.media?.id || doc(collection(db, "media")).id;
-    const publicId = result.public_id || result.media?.publicId || "";
 
     const mediaRecord: MediaRecord = {
-      id: mediaId,
-      userId,
-      url: result.url,
-      publicId,
-      fileName: file.name,
-      fileSize: file.size,
-      mimeType: file.type,
-      category,
-      createdAt: new Date().toISOString()
+      id: mediaId, userId, url: result.url, publicId: result.public_id || "",
+      thumbUrl: result.media?.thumbUrl, mediumUrl: result.media?.mediumUrl,
+      provider: result.media?.provider || "imgbb",
+      fileName: file.name, fileSize: file.size, mimeType: file.type,
+      category, createdAt: new Date().toISOString(),
     };
 
-    // Catalog locally in Firestore media collection for easy UI rendering
-    try {
-      await setDoc(doc(db, "media", mediaId), mediaRecord);
-    } catch (dbErr) {
-      console.warn("[Media Service] Could not index media record client-side:", dbErr);
-    }
+    try { await setDoc(doc(db, "media", mediaId), mediaRecord); }
+    catch (dbErr) { console.warn("[Media Service] Could not index media record client-side:", dbErr); }
 
     return {
-      success: true,
-      url: result.url,
-      publicId,
-      mediaData: mediaRecord
+      success: true, url: result.url, publicId: result.public_id || "",
+      thumbUrl: mediaRecord.thumbUrl, mediumUrl: mediaRecord.mediumUrl,
+      mediaData: mediaRecord,
     };
-  } catch (err: any) {
-    console.error("[Media Service] Upload failed:", err);
-    return {
-      success: false,
-      url: "",
-      publicId: "",
-      error: err.message || "An unexpected error occurred during image upload."
-    };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "An unexpected error occurred during image upload.";
+    console.error("[Media Service] Upload failed:", msg);
+    return { success: false, url: "", publicId: "", error: msg };
   }
 }
 
 /**
- * Removes an asset from Cloudinary and deletes catalog indexed entry from Firestore
+ * Removes an asset from the provider and deletes the Firestore catalog entry.
+ * For ImgBB: uses the delete_url stored as publicId. If the delete_url is expired
+ * or invalid, only the Firestore reference is removed (physical file may persist).
  */
 export async function deleteImage(mediaId: string, publicId: string): Promise<boolean> {
   try {
     const auth = getAuth();
     const token = await auth.currentUser?.getIdToken();
+    if (!token) { console.error("[Media Service] Unauthorized deletion attempt"); return false; }
 
-    if (!token) {
-      console.error("[Media Service] Unauthorized deletion attempt");
-      return false;
-    }
-
-    // Call Cloudinary API proxy delete
     const response = await fetch("/api/media/delete", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify({ mediaId, publicId })
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ mediaId, publicId }),
     });
 
     const result = await response.json();
     if (!response.ok || !result.success) {
-      console.warn("[Media Service] Server-side Cloudinary delete failed, fallback to client Firestore purge:", result.message);
+      console.warn("[Media Service] Server-side delete failed, falling back to client Firestore purge:", result.message);
     }
 
-    // Always attempt local catalog purge as fallback
-    if (mediaId) {
-      await deleteDoc(doc(db, "media", mediaId));
-    }
-
+    if (mediaId) { await deleteDoc(doc(db, "media", mediaId)).catch(() => {}); }
     return true;
   } catch (err) {
     console.error("[Media Service] Failed to complete media deletion:", err);
@@ -194,7 +187,9 @@ export async function deleteImage(mediaId: string, publicId: string): Promise<bo
 }
 
 /**
- * Seamless replacement of an old image with a new one
+ * Replace an old image with a new one.
+ * Uploads new image first — only deletes old image after new upload succeeds.
+ * If new upload fails, old image is preserved.
  */
 export async function replaceImage(
   oldMediaId: string,
@@ -202,17 +197,17 @@ export async function replaceImage(
   newFile: File,
   category: MediaCategory,
   onProgress?: (progress: number) => void
-): Promise<{ success: boolean; url: string; publicId: string; mediaData?: Partial<MediaRecord>; error?: string }> {
-  // 1. Upload new asset
+): Promise<{ success: boolean; url: string; publicId: string; thumbUrl?: string; mediumUrl?: string; mediaData?: Partial<MediaRecord>; error?: string }> {
+  // 1. Upload new asset first
   const uploadResult = await uploadImage(newFile, category, onProgress);
   if (!uploadResult.success) {
-    return uploadResult;
+    return uploadResult; // old image preserved
   }
 
-  // 2. Safely destroy the old asset in the background to prevent orphan storage
+  // 2. Delete old asset in background — new image already confirmed
   if (oldPublicId || oldMediaId) {
     deleteImage(oldMediaId, oldPublicId).catch(err => {
-      console.warn("[Media Service] Async old image cleanup failed during replacement:", err);
+      console.warn("[Media Service] Async old image cleanup failed:", err);
     });
   }
 
@@ -220,36 +215,43 @@ export async function replaceImage(
 }
 
 /**
- * Returns raw image URL. Accepts full URLs or Cloudinary public IDs.
+ * Returns the best URL for a given display size.
+ * Uses ImgBB thumbnail/medium URLs when available for performance.
+ * Falls back to the full URL for non-ImgBB images.
  */
-export function getImageUrl(urlOrPublicId: string): string {
-  if (!urlOrPublicId) return "";
-  if (urlOrPublicId.startsWith("http://") || urlOrPublicId.startsWith("https://")) {
-    return urlOrPublicId;
-  }
-  // Public ID only — cannot safely reconstruct without cloud name; return empty
-  return "";
+export function getDisplayUrl(
+  url: string,
+  size: "thumb" | "medium" | "full" = "full",
+  thumbUrl?: string,
+  mediumUrl?: string
+): string {
+  if (!url) return "";
+  if (size === "thumb" && thumbUrl) return thumbUrl;
+  if (size === "medium" && mediumUrl) return mediumUrl;
+  return url;
 }
 
 /**
- * Performs on-the-fly Cloudinary responsive image scaling and transformations via URL modification
+ * Legacy: generateOptimizedUrl was for Cloudinary URL transforms.
+ * ImgBB provides thumb/medium URLs at upload time — use getDisplayUrl instead.
+ * Kept for backward compat with existing Cloudinary URLs in the database.
  */
 export function generateOptimizedUrl(url: string, width?: number, height?: number): string {
-  if (!url || !url.includes("cloudinary.com")) {
-    return url; // Non-Cloudinary/Fallback placeholder URL
-  }
-
+  if (!url || !url.includes("cloudinary.com")) return url;
   const parts = url.split("/upload/");
   if (parts.length !== 2) return url;
-
-  let transformations = "f_auto,q_auto"; // Default format and quality optimization
-  if (width && height) {
-    transformations += `,w_${width},h_${height},c_fill`;
-  } else if (width) {
-    transformations += `,w_${width},c_scale`;
-  } else if (height) {
-    transformations += `,h_${height},c_scale`;
-  }
-
+  let transformations = "f_auto,q_auto";
+  if (width && height) transformations += `,w_${width},h_${height},c_fill`;
+  else if (width) transformations += `,w_${width},c_scale`;
+  else if (height) transformations += `,h_${height},c_scale`;
   return `${parts[0]}/upload/${transformations}/${parts[1]}`;
+}
+
+/**
+ * Returns raw image URL. Accepts full URLs.
+ */
+export function getImageUrl(urlOrPublicId: string): string {
+  if (!urlOrPublicId) return "";
+  if (urlOrPublicId.startsWith("http://") || urlOrPublicId.startsWith("https://")) return urlOrPublicId;
+  return "";
 }

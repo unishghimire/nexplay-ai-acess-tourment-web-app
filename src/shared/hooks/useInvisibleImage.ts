@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import imageCompression from 'browser-image-compression';
 import { useNotification } from '../context/NotificationContext';
-import { auth } from '../config/firebase';
+import { uploadImage, MediaCategory, validateImage } from '../services/mediaService';
 
 interface UseInvisibleImageOptions {
     onUploadSuccess: (url: string) => void;
@@ -9,33 +9,25 @@ interface UseInvisibleImageOptions {
     onUploadEnd?: () => void;
     onError?: (error: string) => void;
     folder?: string;
+    category?: MediaCategory;
 }
 
+/**
+ * useInvisibleImage — paste/drop/file-select hook for image uploads.
+ * All uploads go through mediaService.uploadImage() → server → ImgBB.
+ * ponytail: unified through mediaService so there's one upload path, not two.
+ */
 export const useInvisibleImage = (options: UseInvisibleImageOptions) => {
-    const { onUploadSuccess, onUploadStart, onUploadEnd, onError, folder = 'gallery' } = options;
+    const { onUploadSuccess, onUploadStart, onUploadEnd, onError, folder = 'gallery', category = MediaCategory.OTHER } = options;
     const { showToast } = useNotification();
     const [isProcessing, setIsProcessing] = useState(false);
 
     const processAndUpload = useCallback(async (file: File) => {
-        if (!file.type.startsWith('image/')) {
-            const err = 'Only image files are allowed';
-            showToast(err, 'error');
-            onError?.(err);
-            return;
-        }
-
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-        if (!allowedTypes.includes(file.type)) {
-            const err = 'Only JPG, PNG, and WEBP are allowed';
-            showToast(err, 'error');
-            onError?.(err);
-            return;
-        }
-
-        if (file.size > 10 * 1024 * 1024) {
-            const err = 'File size too large. Max 10MB allowed.';
-            showToast(err, 'error');
-            onError?.(err);
+        // 1. Client validation
+        const validation = validateImage(file, category);
+        if (!validation.isValid) {
+            showToast(validation.error || 'Invalid image', 'error');
+            onError?.(validation.error || 'Invalid image');
             return;
         }
 
@@ -43,60 +35,35 @@ export const useInvisibleImage = (options: UseInvisibleImageOptions) => {
         setIsProcessing(true);
 
         try {
-            // Compress image
+            // 2. Compress image before upload (reduces bandwidth + ImgBB payload)
             const compressionOptions = {
                 maxSizeMB: 1,
                 maxWidthOrHeight: 1920,
-                useWebWorker: true
+                useWebWorker: true,
             };
             const compressedFile = await imageCompression(file, compressionOptions);
 
-            // Convert to base64
-            const reader = new FileReader();
-            reader.readAsDataURL(compressedFile);
-            reader.onloadend = async () => {
-                const base64data = reader.result as string;
+            // 3. Upload via mediaService → server → ImgBB
+            const result = await uploadImage(compressedFile, category);
 
-                // Upload to server
-                const token = auth.currentUser ? await auth.currentUser.getIdToken() : null;
-                if (!token) {
-                    const err = 'Not authenticated';
-                    showToast(err, 'error');
-                    onError?.(err);
-                    onUploadEnd?.();
-                    setIsProcessing(false);
-                    return;
-                }
-                const response = await fetch('/api/process-image', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ base64: base64data, folder })
-                });
-
-                const result = await response.json();
-                if (result.success) {
-                    onUploadSuccess(result.url);
-                    showToast('Image processed successfully!', 'success');
-                } else {
-                    const err = result.message || 'Failed to process image';
-                    showToast(err, 'error');
-                    onError?.(err);
-                }
-                onUploadEnd?.();
-                setIsProcessing(false);
-            };
+            if (result.success && result.url) {
+                onUploadSuccess(result.url);
+                showToast('Image uploaded successfully!', 'success');
+            } else {
+                const err = result.error || 'Failed to upload image';
+                showToast(err, 'error');
+                onError?.(err);
+            }
         } catch (error) {
             console.error('Image processing error:', error);
-            const err = 'Error processing image';
-            showToast(err, 'error');
-            onError?.(err);
+            const msg = error instanceof Error ? error.message : 'Error processing image';
+            showToast(msg, 'error');
+            onError?.(msg);
+        } finally {
             onUploadEnd?.();
             setIsProcessing(false);
         }
-    }, [onUploadSuccess, onUploadStart, onUploadEnd, onError, folder, showToast]);
+    }, [onUploadSuccess, onUploadStart, onUploadEnd, onError, category, showToast]);
 
     const handlePaste = useCallback((e: React.ClipboardEvent) => {
         const items = e.clipboardData.items;

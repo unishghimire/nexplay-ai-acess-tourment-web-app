@@ -106,7 +106,7 @@ const HotPromotionsSlider: React.FC<HotPromotionsSliderProps> = ({ slides, varia
                         className="absolute inset-0"
                     >
                         <img 
-                            src={currentSlide.imageUrl || (currentSlide as any).image || 'https://picsum.photos/seed/promo/1920/1080'} 
+                            src={currentSlide.imageUrl || (currentSlide as any).image || ''} 
                             alt={currentSlide.title || (currentSlide as any).tournamentName || ''} 
                             className="w-full h-full object-cover"
                             referrerPolicy="no-referrer"

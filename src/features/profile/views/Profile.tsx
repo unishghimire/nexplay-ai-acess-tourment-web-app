@@ -8,6 +8,7 @@ import { formatCurrency, formatDate, calculateLevel, getLevelProgress, getXPForN
 import ConfirmModal from '../../../shared/components/ConfirmModal';
 import Modal from '../../../shared/components/Modal';
 import { useInvisibleImage } from '../../../shared/hooks/useInvisibleImage';
+import { MediaCategory } from '../../../shared/services/mediaService';
 import { DEFAULT_AVATAR, NEXPLAY_LOGO, PRESET_AVATARS, PRESET_PLAYER_BANNERS } from '../../../shared/constants/constants';
 import { User, Mail, Phone, Shield, Trophy, Wallet as WalletIcon, Save, Info, Briefcase, Users, Hash, Clock, ArrowDown, ArrowUp, Copy, CheckCircle2, Image as ImageIcon, Settings as SettingsIcon, X } from 'lucide-react';
 import { Transaction, SiteSettings } from '../../../shared/types/types';
@@ -50,6 +51,7 @@ const Profile: React.FC = () => {
 
     const { handlePaste, handleDrop, handleDragOver, processAndUpload } = useInvisibleImage({
         folder: `profiles/${user?.uid}`,
+        category: MediaCategory.USER_AVATAR,
         onUploadStart: () => {
             setIsUploading(true);
         },

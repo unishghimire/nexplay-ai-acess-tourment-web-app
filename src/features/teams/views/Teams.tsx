@@ -8,6 +8,7 @@ import { Team } from '../../../shared/types/types';
 import { Users, Plus, Search, ArrowRight, Image as ImageIcon, CheckCircle2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useInvisibleImage } from '../../../shared/hooks/useInvisibleImage';
+import { MediaCategory } from '../../../shared/services/mediaService';
 import { DEFAULT_TEAM_LOGO, NEXPLAY_LOGO, PRESET_TEAM_LOGOS } from '../../../shared/constants/constants';
 import Modal from '../../../shared/components/Modal';
 

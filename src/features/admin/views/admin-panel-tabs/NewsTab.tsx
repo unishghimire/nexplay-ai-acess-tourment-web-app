@@ -4,6 +4,7 @@ import { db } from '../../../../shared/config/firebase';
 import { useAuth } from '../../../../shared/context/AuthContext';
 import { useNotification } from '../../../../shared/context/NotificationContext';
 import { useInvisibleImage } from '../../../../shared/hooks/useInvisibleImage';
+import { MediaCategory } from '../../../../shared/services/mediaService';
 import { OrgPost } from '../../../../shared/types/types';
 import { Plus, Trash2, Newspaper, Camera } from 'lucide-react';
 import { formatDate } from '../../../../shared/utils/utils';
@@ -30,6 +31,7 @@ const NewsTab: React.FC<AdminPanelTabProps> = ({ showToast }) => {
         onUploadEnd: () => setIsUploading(false),
         onUploadSuccess: (url) => setImageUrl(url),
         folder: 'news',
+        category: MediaCategory.NEWS_IMAGE,
     });
 
     const fetchPosts = useCallback(async () => {

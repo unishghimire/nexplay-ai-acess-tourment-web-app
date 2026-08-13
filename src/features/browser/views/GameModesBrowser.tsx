@@ -99,7 +99,7 @@ const GameModesBrowser: React.FC = () => {
             <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6 border-b border-gray-800 pb-8">
                 <div className="space-y-2">
                     <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white uppercase tracking-tighter flex items-center gap-4">
-                        <img src={game.logoUrl || 'https://picsum.photos/seed/gaming/400/300' || undefined} alt={gameLabel} className="w-14 h-14 object-cover rounded-2xl border border-gray-800" referrerPolicy="no-referrer" />
+                        <img src={game.logoUrl || ''} alt={gameLabel} className="w-14 h-14 object-cover rounded-2xl border border-gray-800" referrerPolicy="no-referrer" />
                         {gameLabel} Modes
                     </h1>
                     <p className="text-gray-400 font-bold uppercase tracking-widest text-sm">Select a mode to view tournaments</p>

@@ -127,6 +127,122 @@ export const uploadBase64ToCloudinary = (base64String: string, folder: string): 
   });
 };
 
+// ═══════════════════════════════════════════════════════════════
+// IMGBB — primary image hosting provider
+// ponytail: Cloudinary stays as fallback for existing data continuity
+// ═══════════════════════════════════════════════════════════════
+
+export interface ImgBBResult {
+  url: string;
+  thumbUrl: string;
+  mediumUrl: string;
+  deleteUrl: string;
+  imageId: string;
+  fileName: string;
+  fileSize: number;
+  mimeType: string;
+}
+
+/**
+ * Upload a buffer to ImgBB.
+ * ImgBB accepts base64-encoded image data via POST to api.imgbb.com/1/upload
+ */
+export async function uploadToImgBB(buffer: Buffer, originalName: string): Promise<ImgBBResult> {
+  const apiKey = process.env.IMGBB_API_KEY;
+  if (!apiKey) throw new Error("IMGBB_API_KEY environment variable is not set.");
+
+  const base64 = buffer.toString("base64");
+  const formData = new FormData();
+  formData.append("key", apiKey);
+  formData.append("image", base64);
+  formData.append("name", originalName.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9-_]/g, "_") || `img_${Date.now()}`);
+
+  const resp = await fetch("https://api.imgbb.com/1/upload", {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!resp.ok) {
+    const errText = await resp.text().catch(() => resp.statusText);
+    throw new Error(`ImgBB upload failed (${resp.status}): ${errText}`);
+  }
+
+  const json = await resp.json() as any;
+  if (!json?.success || !json?.data) {
+    throw new Error("ImgBB returned unexpected response format");
+  }
+
+  const d = json.data;
+  return {
+    url: d.url,
+    thumbUrl: d.thumb?.url || d.url,
+    mediumUrl: d.medium?.url || d.thumb?.url || d.url,
+    deleteUrl: d.delete_url || "",
+    imageId: d.id || "",
+    fileName: d.title || originalName,
+    fileSize: d.size || buffer.length,
+    mimeType: d.mime || "image/jpeg",
+  };
+}
+
+/**
+ * Upload a base64 data URI to ImgBB.
+ * Strips the data:image/...;base64, prefix before sending.
+ */
+export async function uploadBase64ToImgBB(base64String: string): Promise<ImgBBResult> {
+  const apiKey = process.env.IMGBB_API_KEY;
+  if (!apiKey) throw new Error("IMGBB_API_KEY environment variable is not set.");
+
+  // Strip data URI prefix if present
+  const base64Data = base64String.replace(/^data:[^;]+;base64,/, "");
+
+  const formData = new FormData();
+  formData.append("key", apiKey);
+  formData.append("image", base64Data);
+
+  const resp = await fetch("https://api.imgbb.com/1/upload", {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!resp.ok) {
+    const errText = await resp.text().catch(() => resp.statusText);
+    throw new Error(`ImgBB upload failed (${resp.status}): ${errText}`);
+  }
+
+  const json = await resp.json() as any;
+  if (!json?.success || !json?.data) {
+    throw new Error("ImgBB returned unexpected response format");
+  }
+
+  const d = json.data;
+  return {
+    url: d.url,
+    thumbUrl: d.thumb?.url || d.url,
+    mediumUrl: d.medium?.url || d.thumb?.url || d.url,
+    deleteUrl: d.delete_url || "",
+    imageId: d.id || "",
+    fileName: d.title || `img_${Date.now()}`,
+    fileSize: d.size || 0,
+    mimeType: d.mime || "image/jpeg",
+  };
+}
+
+/**
+ * Delete an image from ImgBB using the delete_url returned at upload time.
+ * ImgBB does NOT support deletion by public ID — only via the delete_url.
+ * ponytail: if delete_url is missing or expired, we cannot delete the physical file. Document this limitation.
+ */
+export async function deleteFromImgBB(deleteUrl: string): Promise<boolean> {
+  if (!deleteUrl || !deleteUrl.startsWith("http")) return false;
+  try {
+    const resp = await fetch(deleteUrl, { method: "GET" });
+    return resp.ok;
+  } catch {
+    return false;
+  }
+}
+
 export const escapeXml = (value: string): string =>
   value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&apos;");
 

@@ -8,6 +8,7 @@ import { NotificationService } from '../../../shared/services/NotificationServic
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { useInvisibleImage } from '../../../shared/hooks/useInvisibleImage';
+import { MediaCategory } from '../../../shared/services/mediaService';
 import ManualResultManager from './ManualResultManager';
 import { useAuth } from '../../../shared/context/AuthContext';
 
