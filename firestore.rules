@@ -363,9 +363,10 @@ service cloud.firestore {
     }
 
     match /tournamentEarnings/{earningId} {
-      // Financial data — only org owner and admins can read
+      // Financial data — org owner can read their own earnings, admins see all
       allow get:  if isAdmin() || (isSignedIn() && existing().orgId == request.auth.uid);
-      allow list: if isAdmin();
+      // FIX: allow organizers to list their own earnings (filtered by orgId in client query)
+      allow list: if isAdmin() || (isSignedIn() && query.orgId == request.auth.uid);
       allow write: if isAdmin();
     }
 

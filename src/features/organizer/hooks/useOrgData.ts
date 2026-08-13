@@ -218,9 +218,12 @@ export function useOrgData() {
   }, []);
 
   const updateParticipantStatus = useCallback(async (participantId: string, status: 'approved' | 'rejected', tournamentId: string) => {
-    await updateDoc(doc(db, 'participants', participantId), { status });
+    // FIX: atomic batch write — prevents player count corruption on double-approve
+    const batch = writeBatch(db);
+    batch.update(doc(db, 'participants', participantId), { status });
     const inc = status === 'approved' ? 1 : -1;
-    await updateDoc(doc(db, 'tournaments', tournamentId), { currentPlayers: increment(inc) });
+    batch.update(doc(db, 'tournaments', tournamentId), { currentPlayers: increment(inc) });
+    await batch.commit();
     setParticipants(prev => prev.map(p => p.id === participantId ? { ...p, status } : p));
   }, []);
 
@@ -362,11 +365,20 @@ export function useOrgData() {
     setDisputes(prev => prev.map(d => d.id === disputeId ? { ...d, status } : d));
   }, [user]);
 
-  // Auto-fetch on mount — fetch both tournaments AND transactions
+  // Auto-fetch on mount — fetch tournaments AND transactions
   useEffect(() => {
     fetchHostedTournaments();
     fetchTransactions();
   }, [fetchHostedTournaments, fetchTransactions]);
+
+  // FIX: auto-fetch participants for the most recent active tournament so Teams tab isn't empty on initial load
+  useEffect(() => {
+    if (hostedTournaments.length > 0 && participants.length === 0) {
+      const active = hostedTournaments.find(t => t.status === 'live' || t.status === 'upcoming' || t.status === 'published');
+      const target = active || hostedTournaments[0];
+      fetchParticipants(target.id);
+    }
+  }, [hostedTournaments, participants.length, fetchParticipants]);
 
   // Fetch disputes after tournaments are loaded
   useEffect(() => {
