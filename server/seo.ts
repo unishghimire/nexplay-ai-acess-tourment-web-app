@@ -10,7 +10,7 @@ export async function generateSitemapXml(db: any): Promise<string> {
     lastmod?: string;
   }
 
-  // Static URLs with appropriate priorities and change frequencies
+  // Static URLs
   const staticItems: SitemapUrl[] = [
     { loc: `${baseUrl}/`, changefreq: "daily", priority: "1.0" },
     { loc: `${baseUrl}/tournaments`, changefreq: "daily", priority: "0.9" },
@@ -28,21 +28,16 @@ export async function generateSitemapXml(db: any): Promise<string> {
   ];
 
   const dynamicItems: SitemapUrl[] = [];
+  const diagnostics: string[] = [];
 
   const formatLastMod = (data: any): string => {
     if (!data) return new Date().toISOString();
     const candidate = data.updatedAt || data.created_date || data.createdAt;
     if (candidate) {
       if (typeof candidate.toDate === "function") {
-        try {
-          return candidate.toDate().toISOString();
-        } catch {
-          // ignore error and try other conversions
-        }
+        try { return candidate.toDate().toISOString(); } catch {}
       }
-      if (candidate instanceof Date) {
-        return candidate.toISOString();
-      }
+      if (candidate instanceof Date) return candidate.toISOString();
       if (typeof candidate === "string" || typeof candidate === "number") {
         const d = new Date(candidate);
         if (!isNaN(d.getTime())) return d.toISOString();
@@ -51,84 +46,84 @@ export async function generateSitemapXml(db: any): Promise<string> {
     return new Date().toISOString();
   };
 
-  // 1. Dynamic tournaments (/tournaments/:id)
+  // 1. Tournaments
   try {
     const snap = await db.collection("tournaments").get();
     snap.forEach((doc: any) => {
       const data = doc.data() || {};
       dynamicItems.push({
         loc: `${baseUrl}/tournaments/${doc.id}`,
-        changefreq: "daily",
-        priority: "0.9",
+        changefreq: "daily", priority: "0.9",
         lastmod: formatLastMod(data),
       });
     });
-  } catch (e) {
-    console.error("Sitemap: failed to fetch tournaments:", e);
+    diagnostics.push(`<!-- tournaments: ${snap.size} items -->`);
+  } catch (e: any) {
+    diagnostics.push(`<!-- tournaments: ERROR ${e?.message || String(e)} -->`);
   }
 
-  // 2. Dynamic games (/games/:id)
+  // 2. Games
   try {
     const snap = await db.collection("games").get();
     snap.forEach((doc: any) => {
       const data = doc.data() || {};
       dynamicItems.push({
         loc: `${baseUrl}/games/${doc.id}`,
-        changefreq: "weekly",
-        priority: "0.9",
+        changefreq: "weekly", priority: "0.9",
         lastmod: formatLastMod(data),
       });
     });
-  } catch (e) {
-    console.error("Sitemap: failed to fetch games:", e);
+    diagnostics.push(`<!-- games: ${snap.size} items -->`);
+  } catch (e: any) {
+    diagnostics.push(`<!-- games: ERROR ${e?.message || String(e)} -->`);
   }
 
-  // 3. Public teams (/team/:id)
+  // 3. Teams
   try {
     const snap = await db.collection("teams").get();
     snap.forEach((doc: any) => {
       const data = doc.data() || {};
       dynamicItems.push({
         loc: `${baseUrl}/team/${doc.id}`,
-        changefreq: "weekly",
-        priority: "0.7",
+        changefreq: "weekly", priority: "0.7",
         lastmod: formatLastMod(data),
       });
     });
-  } catch (e) {
-    console.error("Sitemap: failed to fetch teams:", e);
+    diagnostics.push(`<!-- teams: ${snap.size} items -->`);
+  } catch (e: any) {
+    diagnostics.push(`<!-- teams: ERROR ${e?.message || String(e)} -->`);
   }
 
-  // 4. Public organizations (/organization/:id) - users with role === organizer
+  // 4. Organizations (users with role === organizer)
   try {
     const snap = await db.collection("users").where("role", "==", "organizer").get();
     snap.forEach((doc: any) => {
       const data = doc.data() || {};
       dynamicItems.push({
         loc: `${baseUrl}/organization/${doc.id}`,
-        changefreq: "weekly",
-        priority: "0.7",
+        changefreq: "weekly", priority: "0.7",
         lastmod: formatLastMod(data),
       });
     });
-  } catch (e) {
-    console.error("Sitemap: failed to fetch organizations:", e);
+    diagnostics.push(`<!-- organizations: ${snap.size} items -->`);
+  } catch (e: any) {
+    diagnostics.push(`<!-- organizations: ERROR ${e?.message || String(e)} -->`);
   }
 
-  // 5. Public posts (/post/:id)
+  // 5. Posts (org_posts)
   try {
     const snap = await db.collection("org_posts").get();
     snap.forEach((doc: any) => {
       const data = doc.data() || {};
       dynamicItems.push({
         loc: `${baseUrl}/post/${doc.id}`,
-        changefreq: "weekly",
-        priority: "0.7",
+        changefreq: "weekly", priority: "0.7",
         lastmod: formatLastMod(data),
       });
     });
-  } catch (e) {
-    console.error("Sitemap: failed to fetch posts:", e);
+    diagnostics.push(`<!-- posts: ${snap.size} items -->`);
+  } catch (e: any) {
+    diagnostics.push(`<!-- posts: ERROR ${e?.message || String(e)} -->`);
   }
 
   const allItems: SitemapUrl[] = [...staticItems, ...dynamicItems];
@@ -136,15 +131,12 @@ export async function generateSitemapXml(db: any): Promise<string> {
   const xmlUrls = allItems
     .map((item) => {
       const lastmodTag = item.lastmod ? `\n    <lastmod>${item.lastmod}</lastmod>` : "";
-      return `  <url>
-    <loc>${item.loc}</loc>${lastmodTag}
-    <changefreq>${item.changefreq}</changefreq>
-    <priority>${item.priority}</priority>
-  </url>`;
+      return `  <url>\n    <loc>${item.loc}</loc>${lastmodTag}\n    <changefreq>${item.changefreq}</changefreq>\n    <priority>${item.priority}</priority>\n  </url>`;
     })
     .join("\n");
 
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${xmlUrls}\n</urlset>`;
+  const diagXml = diagnostics.length > 0 ? "\n" + diagnostics.join("\n") : "";
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${diagXml}\n${xmlUrls}\n</urlset>`;
 }
 
 export async function handleIndexNow(req: Request, res: Response): Promise<any> {
@@ -157,7 +149,8 @@ export async function handleIndexNow(req: Request, res: Response): Promise<any> 
     });
   }
 
-  const { urls } = req.body || {};
+  const body = (req as any).body || {};
+  const { urls } = body;
   if (!urls || !Array.isArray(urls) || urls.length === 0) {
     return res.status(400).json({
       error: "Invalid request body. 'urls' must be a non-empty array of strings."
@@ -184,26 +177,25 @@ export async function handleIndexNow(req: Request, res: Response): Promise<any> 
   try {
     const response = await fetch("https://api.indexnow.org/IndexNow", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json; charset=utf-8"
-      },
+      headers: { "Content-Type": "application/json; charset=utf-8" },
       body: JSON.stringify(payload)
     });
 
-    if (response.ok || response.status === 200 || response.status === 202) {
-      console.log(`[IndexNow] Successfully submitted ${validUrls.length} URLs to IndexNow. Status: ${response.status}`);
+    const status = (response as any).status;
+    if (response.ok || status === 200 || status === 202) {
+      console.log(`[IndexNow] Successfully submitted ${validUrls.length} URLs. Status: ${status}`);
       return res.status(200).json({
         success: true,
         message: `Successfully submitted ${validUrls.length} URLs to IndexNow`,
         submittedCount: validUrls.length,
-        status: response.status
+        status
       });
     } else {
       const responseText = await response.text();
-      console.error(`[IndexNow] Submission failed with status ${response.status}: ${responseText}`);
-      return res.status(response.status >= 400 && response.status < 600 ? response.status : 500).json({
+      console.error(`[IndexNow] Submission failed with status ${status}: ${responseText}`);
+      return res.status(status >= 400 && status < 600 ? status : 500).json({
         success: false,
-        error: `IndexNow API request failed with status ${response.status}`,
+        error: `IndexNow API request failed with status ${status}`,
         details: responseText
       });
     }
