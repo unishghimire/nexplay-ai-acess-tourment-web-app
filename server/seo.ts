@@ -1,4 +1,3 @@
-import { Request, Response } from "express";
 
 export async function generateSitemapXml(db: any): Promise<string> {
   const baseUrl = "https://www.nexplayorg.app";
@@ -132,7 +131,7 @@ export async function generateSitemapXml(db: any): Promise<string> {
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${xmlUrls}\n</urlset>`;
 }
 
-export async function handleIndexNow(req: Request, res: Response): Promise<any> {
+export async function handleIndexNow(req: any, res: any): Promise<any> {
   const apiKey = process.env.INDEXNOW_KEY;
 
   if (!apiKey) {
