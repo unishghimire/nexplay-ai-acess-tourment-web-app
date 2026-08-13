@@ -9,7 +9,11 @@ import MobileMenu from './navbar/MobileMenu';
 
 const navLinks = [
     { name: 'Home', path: '/' },
+    { name: 'Tournaments', path: '/tournaments' },
+    { name: 'Scrims', path: '/scrims' },
     { name: 'Games', path: '/games' },
+    { name: 'Teams', path: '/teams' },
+    { name: 'Leaderboard', path: '/leaderboard' },
     { name: 'Organizations', path: '/organizations' },
     { name: 'News', path: '/news' }
 ];

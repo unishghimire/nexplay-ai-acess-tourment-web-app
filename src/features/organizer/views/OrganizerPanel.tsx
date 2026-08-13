@@ -62,6 +62,7 @@ const OrganizerPanel: React.FC = () => {
   // Tournament create modal
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editTournament, setEditTournament] = useState<any>(null);
+  const [createMatchType, setCreateMatchType] = useState<'tournament' | 'scrims'>('tournament');
 
   // Loading states for async operations
   const [isTogglingSlot, setIsTogglingSlot] = useState(false);
@@ -107,8 +108,9 @@ const OrganizerPanel: React.FC = () => {
     }
   }, [org, showToast, isUpdatingStatus]);
 
-  const handleCreateTournament = useCallback(() => {
+  const handleCreateTournament = useCallback((matchType: 'tournament' | 'scrims' = 'tournament') => {
     setEditTournament(null);
+    setCreateMatchType(matchType);
     setShowCreateModal(true);
   }, []);
 
@@ -265,7 +267,7 @@ const OrganizerPanel: React.FC = () => {
           hostedTournaments={org.hostedTournaments}
           onDelete={handleDelete}
           onUpdateStatus={handleUpdateStatus}
-          onCreateTournament={handleCreateTournament}
+          onCreateTournament={() => handleCreateTournament('tournament')}
           onOpenRoomDispatch={handleOpenRoomDispatch}
           onManageTournament={handleManageTournament}
           onEditTournament={handleEditTournament}
@@ -276,7 +278,7 @@ const OrganizerPanel: React.FC = () => {
           onOpenSlotGrid={handleOpenSlotGrid}
           onToggleSlot={handleToggleSlot}
           onViewDetails={handleViewScrimDetails}
-          onCreateScrim={handleCreateTournament}
+          onCreateScrim={() => handleCreateTournament('scrims')}
         />;
       case 'rooms':
         return <MatchRoomsTab
@@ -411,6 +413,7 @@ const OrganizerPanel: React.FC = () => {
           onClose={() => { setShowCreateModal(false); setEditTournament(null); }}
           onSuccess={() => { setShowCreateModal(false); setEditTournament(null); org.fetchHostedTournaments(); }}
           editTournament={editTournament}
+          defaultMatchType={createMatchType}
         />
       )}
     </DashboardLayout>
