@@ -6,6 +6,7 @@ export interface ScrimsHubTabProps {
   onOpenSlotGrid: (scrim: any) => void;
   onToggleSlot: (scrimId: any, slotNumber?: any) => void;
   onViewDetails?: (id: string) => void;
+  onCreateScrim?: () => void;
 }
 
 export const ScrimsHubTab: React.FC<ScrimsHubTabProps> = ({
@@ -13,6 +14,7 @@ export const ScrimsHubTab: React.FC<ScrimsHubTabProps> = ({
   onOpenSlotGrid,
   onToggleSlot,
   onViewDetails,
+  onCreateScrim,
 }) => {
   const formatTime = (timeStr?: string) => {
     if (!timeStr) return 'TBD';
@@ -46,7 +48,6 @@ export const ScrimsHubTab: React.FC<ScrimsHubTabProps> = ({
   };
 
   const handleSlotClick = (scrimId: string, slotNumber: number) => {
-    // Call onToggleSlot safely matching either (scrimId, slotNumber) or (slotNumber) signature
     if (typeof onToggleSlot === 'function') {
       onToggleSlot(scrimId, slotNumber);
     }
@@ -65,13 +66,10 @@ export const ScrimsHubTab: React.FC<ScrimsHubTabProps> = ({
           </p>
         </div>
 
+        {/* BUG-010 FIX: "Schedule Scrim" now opens create modal instead of slot grid */}
         <button
           type="button"
-          onClick={() => {
-            if (scrims && scrims.length > 0) {
-              onOpenSlotGrid(scrims[0]);
-            }
-          }}
+          onClick={() => onCreateScrim?.()}
           className="inline-flex items-center justify-center gap-2 bg-brand-500 hover:bg-brand-400 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors shadow-lg shadow-brand-500/10 self-start sm:self-auto cursor-pointer min-h-[44px]"
         >
           <Plus className="w-4 h-4" />
@@ -91,7 +89,6 @@ export const ScrimsHubTab: React.FC<ScrimsHubTabProps> = ({
           </p>
         </div>
       ) : (
-        /* Scrim Cards Grid / List */
         <div className="grid grid-cols-1 gap-6">
           {scrims.map((scrim) => {
             const totalSlots = scrim.totalSlots || scrim.slots?.length || 20;
@@ -103,7 +100,6 @@ export const ScrimsHubTab: React.FC<ScrimsHubTabProps> = ({
                 : 0;
             const progressPercent = Math.min(100, Math.max(0, (filledSlots / totalSlots) * 100));
 
-            // Generate or normalization of slots for inline grid preview
             const slotList: Array<{ slotNumber: number; status: string; teamName?: string | null }> =
               scrim.slots && scrim.slots.length > 0
                 ? scrim.slots
@@ -120,7 +116,6 @@ export const ScrimsHubTab: React.FC<ScrimsHubTabProps> = ({
                 key={scrim.id}
                 className="bg-dark/50 border border-slate-800 rounded-2xl p-5 space-y-5 transition-colors hover:border-gray-700/80"
               >
-                {/* Card Top: Title, Format Badge, Status, Action */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="space-y-1.5">
                     <div className="flex flex-wrap items-center gap-2.5">
@@ -141,7 +136,6 @@ export const ScrimsHubTab: React.FC<ScrimsHubTabProps> = ({
                       </span>
                     </div>
 
-                    {/* Recurring Pattern */}
                     {(scrim.recurring || scrim.recurrencePattern) && (
                       <div className="flex items-center gap-1.5 text-xs text-brand-400/90 font-medium">
                         <RefreshCw className="w-3.5 h-3.5" />
@@ -170,7 +164,6 @@ export const ScrimsHubTab: React.FC<ScrimsHubTabProps> = ({
                   </div>
                 </div>
 
-                {/* Slot Progress Bar */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs font-semibold">
                     <span className="text-slate-400">Slot Reservations</span>
@@ -186,7 +179,6 @@ export const ScrimsHubTab: React.FC<ScrimsHubTabProps> = ({
                   </div>
                 </div>
 
-                {/* Stats Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1 border-t border-slate-800/60">
                   <div className="flex items-center gap-3 p-2.5 rounded-lg bg-card/40 border border-slate-800/50">
                     <div className="w-8 h-8 rounded-lg bg-surface/80 flex items-center justify-center flex-shrink-0 text-brand-400">
@@ -214,40 +206,28 @@ export const ScrimsHubTab: React.FC<ScrimsHubTabProps> = ({
                     </div>
                     <div>
                       <div className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Prize Pool</div>
-                      <div className="text-xs font-bold text-emerald-400">{formatCurrency(scrim.prizePool)}</div>
+                      <div className="text-xs font-bold text-slate-200">{formatCurrency(scrim.prizePool)}</div>
                     </div>
                   </div>
                 </div>
 
-                {/* Inline Slot Preview */}
-                <div className="space-y-2 pt-1">
-                  <div className="text-xs text-slate-400 font-medium flex items-center justify-between">
-                    <span>Inline Slot Grid</span>
-                    <span className="text-[11px] text-slate-400">Click slot to toggle reservation</span>
-                  </div>
-
-                  <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-1.5">
-                    {slotList.map((slot) => {
-                      const isFilled = slot.status === 'filled';
-                      return (
-                        <button
-                          key={slot.slotNumber}
-                          type="button"
-                          onClick={() => handleSlotClick(scrim.id, slot.slotNumber)}
-                          aria-label={`Slot ${slot.slotNumber}, ${isFilled ? `reserved by ${slot.teamName || 'team'}` : 'open for reservation'}`}
-        title={`Slot ${slot.slotNumber}: ${isFilled ? slot.teamName || 'Filled' : 'Open'}`}
-                          className={`min-h-[44px] min-w-[44px] rounded flex items-center justify-center px-1 text-xs font-mono transition-all cursor-pointer select-none ${
-                            isFilled
-                              ? 'bg-green-500/20 border border-green-500/30 text-green-400 hover:bg-green-500/30'
-                              : 'bg-card border border-slate-800 border-dashed text-slate-400 hover:border-gray-700 hover:text-slate-300'
-                          }`}
-                        >
-                          <span className="truncate max-w-full">
-                            {isFilled ? (slot.teamName ? slot.teamName.slice(0, 6) : `#${slot.slotNumber}`) : `#${slot.slotNumber}`}
-                          </span>
-                        </button>
-                      );
-                    })}
+                {/* Inline Slot Grid Preview */}
+                <div className="pt-2">
+                  <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2">
+                    {slotList.slice(0, 20).map((slot) => (
+                      <button
+                        key={slot.slotNumber}
+                        onClick={() => handleSlotClick(scrim.id, slot.slotNumber)}
+                        className={`p-2 rounded-lg border text-[10px] font-medium transition-all min-h-[44px] ${
+                          slot.status === 'filled'
+                            ? 'bg-green-500/10 border-green-500/30 text-green-400'
+                            : 'bg-card border-gray-800 text-gray-500 hover:border-gray-600'
+                        }`}
+                        title={slot.teamName ? `Slot ${slot.slotNumber}: ${slot.teamName}` : `Slot ${slot.slotNumber}: Open`}
+                      >
+                        {slot.slotNumber}
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -258,5 +238,4 @@ export const ScrimsHubTab: React.FC<ScrimsHubTabProps> = ({
     </div>
   );
 };
-
 export default ScrimsHubTab;

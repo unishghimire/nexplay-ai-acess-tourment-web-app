@@ -3,13 +3,7 @@ import { Settings, Radio, UserCog, Save, Link2, Youtube } from 'lucide-react';
 
 export interface SettingsStreamTabProps {
   profile: any;
-  onSaveSettings: (settings: {
-    orgName?: string;
-    bio?: string;
-    whatsapp?: string;
-    contactInfo?: string;
-    discord?: string;
-  }) => void;
+  onSaveSettings: (settings: any) => void;
 }
 
 export const SettingsStreamTab: React.FC<SettingsStreamTabProps> = ({
@@ -85,6 +79,12 @@ export const SettingsStreamTab: React.FC<SettingsStreamTabProps> = ({
         whatsapp,
         contactInfo,
         discord,
+        youtubeUrl,
+        twitchUrl,
+        refereeName,
+        refereeEnabled,
+        casterName,
+        casterEnabled,
       });
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);

@@ -63,6 +63,11 @@ const OrganizerPanel: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editTournament, setEditTournament] = useState<any>(null);
 
+  // Loading states for async operations
+  const [isTogglingSlot, setIsTogglingSlot] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [isResolvingDispute, setIsResolvingDispute] = useState(false);
+
   // --- Handlers ---
 
   const handleTabChange = (tabId: TabId) => {
@@ -80,8 +85,9 @@ const OrganizerPanel: React.FC = () => {
     try {
       await org.deleteTournament(deleteTarget.id);
       showToast('Tournament deleted', 'success');
-    } catch {
-      showToast('Failed to delete tournament', 'error');
+    } catch (err: any) {
+      const msg = err?.message || 'Failed to delete tournament';
+      showToast(msg.includes('permission') ? 'Only admins can delete tournaments' : msg, 'error');
     } finally {
       setActiveOverlay(null);
       setDeleteTarget(null);
@@ -89,15 +95,20 @@ const OrganizerPanel: React.FC = () => {
   }, [deleteTarget, org, showToast]);
 
   const handleUpdateStatus = useCallback(async (id: string, status: string) => {
+    if (isUpdatingStatus) return; // Duplicate-submit protection (BUG-012 fix)
+    setIsUpdatingStatus(true);
     try {
       await org.updateTournamentStatus(id, status as any);
       showToast(`Tournament status: ${status.toUpperCase()}`, 'success');
     } catch {
-      showToast('Failed to update status', 'error');
+      showToast('Failed to update status — you may not own this tournament', 'error');
+    } finally {
+      setIsUpdatingStatus(false);
     }
-  }, [org, showToast]);
+  }, [org, showToast, isUpdatingStatus]);
 
   const handleCreateTournament = useCallback(() => {
+    setEditTournament(null);
     setShowCreateModal(true);
   }, []);
 
@@ -140,35 +151,87 @@ const OrganizerPanel: React.FC = () => {
     setActiveOverlay('SCRIM_SLOTS');
   }, []);
 
-  const handleToggleSlot = useCallback((slotNumber: number) => {
-    showToast(`Slot ${slotNumber} toggled`, 'info');
-  }, [showToast]);
+  // BUG-003 FIX: Real Firestore write for slot toggle
+  const handleToggleSlot = useCallback(async (slotNumber: number) => {
+    if (!scrimSlotTarget || isTogglingSlot) return;
+    setIsTogglingSlot(true);
+    try {
+      await org.toggleScrimSlot(scrimSlotTarget.id, slotNumber);
+      showToast(`Slot ${slotNumber} toggled`, 'info');
+      // Update local state
+      setScrimSlotTarget((prev: any) => {
+        if (!prev) return prev;
+        const newSlots = (prev.slots || []).map((s: any) => {
+          if (s.slotNumber !== slotNumber) return s;
+          if (s.status === 'filled') return { ...s, status: 'open', teamName: null, teamId: null };
+          return { ...s, status: 'filled', teamName: 'Reserved', teamId: null };
+        });
+        return { ...prev, slots: newSlots };
+      });
+    } catch (err: any) {
+      showToast(err?.message || 'Failed to toggle slot', 'error');
+    } finally {
+      setIsTogglingSlot(false);
+    }
+  }, [scrimSlotTarget, isTogglingSlot, org, showToast]);
 
-  const handleToggleRosterLock = useCallback((teamId: string) => {
-    showToast(`Roster lock toggled for ${teamId}`, 'success');
-  }, [showToast]);
+  // BUG-003 FIX: Real Firestore write for roster lock toggle
+  const handleToggleRosterLock = useCallback(async (teamId: string) => {
+    try {
+      await org.toggleRosterLock(teamId);
+      showToast(`Roster lock toggled for ${teamId}`, 'success');
+    } catch (err: any) {
+      showToast(err?.message || 'Failed to toggle roster lock', 'error');
+    }
+  }, [org, showToast]);
 
   const handleIssueWarning = useCallback((teamName: string) => {
     setWarningTeam(teamName);
     setActiveOverlay('TEAM_WARNING');
   }, []);
 
-  const confirmWarning = useCallback(() => {
-    showToast(`Warning issued to ${warningTeam}`, 'success');
-    setActiveOverlay(null);
-    setWarningTeam(null);
-    setWarningReason('');
-  }, [warningTeam, showToast]);
+  // BUG-003 FIX: Real Firestore write for warning issuance
+  const confirmWarning = useCallback(async () => {
+    if (!warningTeam || !warningReason.trim()) {
+      showToast('Please enter a violation description', 'error');
+      return;
+    }
+    try {
+      await org.issueWarning(warningTeam, warningReason);
+      showToast(`Warning issued to ${warningTeam}`, 'success');
+      setActiveOverlay(null);
+      setWarningTeam(null);
+      setWarningReason('');
+    } catch (err: any) {
+      showToast(err?.message || 'Failed to issue warning', 'error');
+    }
+  }, [warningTeam, warningReason, org, showToast]);
 
-  const handleBanTeam = useCallback((teamId: string, teamName: string) => {
-    showToast(`${teamName} ban toggled`, 'success');
-  }, [showToast]);
+  // BUG-003 FIX: Real Firestore write for team ban toggle
+  const handleBanTeam = useCallback(async (teamId: string, teamName: string) => {
+    try {
+      await org.toggleBanTeam(teamId, teamName);
+      showToast(`${teamName} ban toggled`, 'success');
+    } catch (err: any) {
+      showToast(err?.message || 'Failed to ban team', 'error');
+    }
+  }, [org, showToast]);
 
-  const handleResolveDispute = useCallback((action: 'warn' | 'ban' | 'dismiss') => {
-    showToast(`Dispute ${action === 'dismiss' ? 'dismissed' : `resolved — ${action} issued`}`, 'success');
-    setActiveOverlay(null);
-    setDisputeTarget(null);
-  }, [showToast]);
+  // BUG-003 FIX: Real Firestore write for dispute resolution
+  const handleResolveDispute = useCallback(async (action: 'warn' | 'ban' | 'dismiss') => {
+    if (!disputeTarget || isResolvingDispute) return;
+    setIsResolvingDispute(true);
+    try {
+      await org.resolveDispute(disputeTarget, action);
+      showToast(`Dispute ${action === 'dismiss' ? 'dismissed' : `resolved — ${action} issued`}`, 'success');
+      setActiveOverlay(null);
+      setDisputeTarget(null);
+    } catch (err: any) {
+      showToast(err?.message || 'Failed to resolve dispute', 'error');
+    } finally {
+      setIsResolvingDispute(false);
+    }
+  }, [disputeTarget, isResolvingDispute, org, showToast]);
 
   const handleRequestWithdraw = useCallback(async (amount: number, method: string, details: string) => {
     try {
@@ -213,11 +276,12 @@ const OrganizerPanel: React.FC = () => {
           onOpenSlotGrid={handleOpenSlotGrid}
           onToggleSlot={handleToggleSlot}
           onViewDetails={handleViewScrimDetails}
+          onCreateScrim={handleCreateTournament}
         />;
       case 'rooms':
         return <MatchRoomsTab
           matchRooms={org.matchRooms}
-          disputes={[]}
+          disputes={org.disputes}
           onOpenRoomDispatch={handleOpenRoomDispatch}
           onResolveDispute={handleResolveDispute}
         />;
@@ -255,9 +319,27 @@ const OrganizerPanel: React.FC = () => {
     );
   }
 
+  // BUG-011 FIX: Show error state with retry
+  if (org.error && hostedTournamentsEmpty(org)) {
+    return (
+      <DashboardLayout title="Organizer Panel">
+        <Seo title="Organizer Panel | NexPlay" description="Tournament organizer dashboard" noindex />
+        <div className="flex flex-col items-center justify-center min-h-[40vh] text-center">
+          <p className="text-red-400 font-medium mb-4">{org.error}</p>
+          <button
+            onClick={() => org.fetchHostedTournaments()}
+            className="bg-brand-500 hover:bg-brand-400 text-white rounded-lg px-6 py-2 text-sm font-medium transition-colors min-h-[44px]"
+          >
+            Retry
+          </button>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout title="Organizer Panel">
-            <Seo title="Organizer Panel | NexPlay" description="Tournament organizer dashboard" noindex />
+        <Seo title="Organizer Panel | NexPlay" description="Tournament organizer dashboard" noindex />
       {/* Mobile nav toggle */}
       <button
         onClick={() => setMobileNavOpen(!mobileNavOpen)}
@@ -334,5 +416,10 @@ const OrganizerPanel: React.FC = () => {
     </DashboardLayout>
   );
 };
+
+// Helper to check if tournaments are empty (for error state display)
+function hostedTournamentsEmpty(org: ReturnType<typeof useOrgData>): boolean {
+  return org.hostedTournaments.length === 0;
+}
 
 export default OrganizerPanel;

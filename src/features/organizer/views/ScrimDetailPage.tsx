@@ -16,7 +16,7 @@ const SCRIM_COLLECTION = 'tournaments'; // scrims stored as tournaments with mat
 export default function ScrimDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { showToast } = useNotification();
 
   const [scrim, setScrim] = useState<any>(null);
@@ -37,7 +37,13 @@ export default function ScrimDetailPage() {
 
     const unsub = onSnapshot(doc(db, SCRIM_COLLECTION, id), (snap) => {
       if (snap.exists()) {
-        const data = { id: snap.id, ...snap.data() };
+        const data = { id: snap.id, ...snap.data() } as any;
+        // BUG-007 FIX: ownership check — redirect unauthorized organizers
+        if (data.hostUid !== user.uid && profile?.role !== 'admin') {
+          showToast('Unauthorized — you do not own this scrim', 'error');
+          navigate('/organizer?tab=scrims');
+          return;
+        }
         setScrim(data);
         setRoomId((data as any).roomId || '');
         setRoomPass((data as any).roomPass || '');

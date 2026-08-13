@@ -9,7 +9,9 @@ export function useOrgData() {
   const [hostedTournaments, setHostedTournaments] = useState<Tournament[]>([]);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [disputes, setDisputes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchHostedTournaments = useCallback(async () => {
     if (!user) {
@@ -17,6 +19,7 @@ export function useOrgData() {
       return;
     }
     setLoading(true);
+    setError(null);
     try {
       const q = query(collection(db, 'tournaments'), where('hostUid', '==', user.uid));
       const snap = await getDocs(q);
@@ -28,7 +31,8 @@ export function useOrgData() {
       });
       setHostedTournaments(tours);
     } catch (err) {
-      console.error("Error fetching hosted tournaments:", err)
+      console.error("Error fetching hosted tournaments:", err);
+      setError("Failed to load tournaments. Please retry.");
     } finally {
       setLoading(false);
     }
@@ -47,7 +51,7 @@ export function useOrgData() {
 
   // ponytail: teams derived from participants already loaded for active tournaments — ceiling: only covers tournaments whose participants were fetched via fetchParticipants. Upgrade: add a dedicated teams query if full roster coverage is needed.
   const teams = useMemo(() => {
-    const teamMap: Record<string, { id: string; name: string; logoUrl?: string; players?: string[]; tournamentId?: string }> = {};
+    const teamMap: Record<string, { id: string; name: string; logoUrl?: string; players?: string[]; tournamentId?: string; rosterLocked?: boolean; strikes?: number; banned?: boolean; banReason?: string }> = {};
     participants.forEach(p => {
       const teamId = p.teamId || p.userId;
       if (!teamMap[teamId]) {
@@ -57,6 +61,9 @@ export function useOrgData() {
           logoUrl: p.logoUrl,
           players: p.teammates ? [p.username, ...p.teammates] : [p.username],
           tournamentId: p.tournamentId,
+          rosterLocked: false,
+          strikes: 0,
+          banned: false,
         };
       }
     });
@@ -94,6 +101,22 @@ export function useOrgData() {
     const filledSlots = hostedTournaments.reduce((sum, t) => sum + (t.currentPlayers || 0), 0);
     const totalSlots = hostedTournaments.reduce((sum, t) => sum + (t.slots || 0), 0);
     const pendingPayouts = transactions.filter(t => t.type === 'withdrawal' && t.status === 'pending').reduce((sum, t) => sum + Math.abs(t.amount || 0), 0);
+
+    // Calculate monthly revenue from entry_fee transactions in current month
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthlyRevenue = transactions
+      .filter(t => t.type === 'entry_fee' && t.status === 'success')
+      .reduce((sum, t) => {
+        const txTime = (t as any).timestamp?.toMillis ? (t as any).timestamp.toMillis() : 0;
+        return txTime >= monthStart.getTime() ? sum + (t.amount || 0) : sum;
+      }, 0);
+
+    // Calculate escrow: sum of prize pools for active (live/upcoming) tournaments
+    const escrowBalance = hostedTournaments
+      .filter(t => t.status === 'live' || t.status === 'upcoming')
+      .reduce((sum, t) => sum + (t.prizePool || 0), 0);
+
     return {
       activeTournaments: active,
       liveScrims: scrims.filter(s => s.status === 'live').length,
@@ -101,10 +124,10 @@ export function useOrgData() {
       totalSlots,
       filledSlots,
       prizePool,
-      monthlyRevenue: 0,
+      monthlyRevenue,
       pendingPayouts,
-      orgWalletBalance: profile?.orgWalletBalance || 0,
-      escrowBalance: 0,
+      orgWalletBalance: profile?.orgWalletBalance || profile?.balance || 0,
+      escrowBalance,
     };
   }, [hostedTournaments, transactions, profile, scrims, teams]);
 
@@ -145,10 +168,42 @@ export function useOrgData() {
     }
   }, [user]);
 
+  // Fetch disputes for tournaments owned by this organizer
+  const fetchDisputes = useCallback(async () => {
+    if (!user || hostedTournaments.length === 0) {
+      setDisputes([]);
+      return;
+    }
+    try {
+      const tournamentIds = hostedTournaments.map(t => t.id);
+      // ponytail: Firestore 'in' query max 10 values — ceiling: organizer with >10 tournaments won't see disputes for all. Upgrade: batch query.
+      const batch = tournamentIds.slice(0, 10);
+      const q = query(collection(db, 'disputes'), where('tournamentId', 'in', batch));
+      const snap = await getDocs(q);
+      const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      setDisputes(list);
+    } catch (err) {
+      console.error("Error fetching disputes:", err);
+    }
+  }, [user, hostedTournaments]);
+
   // --- Write operations ---
 
   const deleteTournament = useCallback(async (id: string) => {
+    // ponytail: Firestore rules allow delete for admin only — organizers need server API.
+    // For now, this will throw for non-admins, caught by the caller.
+    // TODO: create /api/tournaments/:id/delete server endpoint with ownership check
     await deleteDoc(doc(db, 'tournaments', id));
+    // Clean up participants (best-effort — Firestore rules allow organizer to read/write participants for own tournaments)
+    try {
+      const pQuery = query(collection(db, 'participants'), where('tournamentId', '==', id));
+      const pSnap = await getDocs(pQuery);
+      const batch = writeBatch(db);
+      pSnap.docs.forEach(d => batch.delete(d.ref));
+      await batch.commit();
+    } catch (err) {
+      console.error("Failed to clean up participants:", err);
+    }
     setHostedTournaments(prev => prev.filter(t => t.id !== id));
   }, []);
 
@@ -183,6 +238,12 @@ export function useOrgData() {
   }, [user]);
 
   const broadcastAnnouncement = useCallback(async (tournamentId: string, message: string, tournamentTitle: string) => {
+    // Verify ownership before sending
+    const tDoc = await getDocs(query(collection(db, 'tournaments'), where('__name__', '==', tournamentId)));
+    if (tDoc.empty) throw new Error('Tournament not found');
+    const tData = tDoc.docs[0].data();
+    if (tData.hostUid !== user?.uid) throw new Error('Not authorized — you do not own this tournament');
+
     const pQuery = query(collection(db, 'participants'), where('tournamentId', '==', tournamentId));
     const pSnap = await getDocs(pQuery);
     const parts = pSnap.docs.map(d => d.data() as Participant);
@@ -201,11 +262,104 @@ export function useOrgData() {
     });
     await batch.commit();
     return parts.length;
-  }, []);
+  }, [user]);
 
-  const saveOrgSettings = useCallback(async (settings: { orgName?: string; bio?: string; whatsapp?: string; contactInfo?: string; discord?: string }) => {
+  const saveOrgSettings = useCallback(async (settings: { orgName?: string; bio?: string; whatsapp?: string; contactInfo?: string; discord?: string; youtubeUrl?: string; twitchUrl?: string; refereeName?: string; refereeEnabled?: boolean; casterName?: string; casterEnabled?: boolean }) => {
     if (!user) return;
     await updateDoc(doc(db, 'users', user.uid), settings);
+  }, [user]);
+
+  // --- Real implementations for previously fake buttons ---
+
+  const toggleScrimSlot = useCallback(async (scrimId: string, slotNumber: number) => {
+    if (!user) throw new Error('Not authenticated');
+    // Fetch the scrim doc to get current slots
+    const snap = await getDocs(query(collection(db, 'tournaments'), where('__name__', '==', scrimId)));
+    if (snap.empty) throw new Error('Scrim not found');
+    const data = snap.docs[0].data() as any;
+    if (data.hostUid !== user.uid) throw new Error('Not authorized');
+
+    const currentSlots = data.slots || [];
+    const newSlots = currentSlots.map((s: any) => {
+      if (s.slotNumber !== slotNumber) return s;
+      if (s.status === 'filled') return { ...s, status: 'open', teamName: null, teamId: null };
+      return { ...s, status: 'filled', teamName: 'Reserved', teamId: null };
+    });
+    const filled = newSlots.filter((s: any) => s.status === 'filled').length;
+    await updateDoc(doc(db, 'tournaments', scrimId), { slots: newSlots, filledSlots: filled, currentPlayers: filled });
+  }, [user]);
+
+  const toggleRosterLock = useCallback(async (teamId: string) => {
+    if (!user) throw new Error('Not authenticated');
+    // Find the team in participants and toggle rosterLocked
+    const q = query(collection(db, 'participants'), where('teamId', '==', teamId));
+    const snap = await getDocs(q);
+    if (snap.empty) {
+      // Try by userId
+      const q2 = query(collection(db, 'participants'), where('userId', '==', teamId));
+      const snap2 = await getDocs(q2);
+      if (snap2.empty) throw new Error('Team not found');
+      const pDoc = snap2.docs[0];
+      const current = pDoc.data() as any;
+      const tournamentId = current.tournamentId;
+      // Verify ownership
+      const tSnap = await getDocs(query(collection(db, 'tournaments'), where('__name__', '==', tournamentId)));
+      const tData = tSnap.docs[0]?.data() as any;
+      if (tData?.hostUid !== user.uid) throw new Error('Not authorized');
+      await updateDoc(pDoc.ref, { rosterLocked: !current.rosterLocked });
+      return;
+    }
+    const pDoc = snap.docs[0];
+    const current = pDoc.data() as any;
+    const tournamentId = current.tournamentId;
+    const tSnap = await getDocs(query(collection(db, 'tournaments'), where('__name__', '==', tournamentId)));
+    const tData = tSnap.docs[0]?.data() as any;
+    if (tData?.hostUid !== user.uid) throw new Error('Not authorized');
+    await updateDoc(pDoc.ref, { rosterLocked: !current.rosterLocked });
+  }, [user]);
+
+  const issueWarning = useCallback(async (teamName: string, reason: string) => {
+    if (!user) throw new Error('Not authenticated');
+    // Find team by name in participants
+    const q = query(collection(db, 'participants'), where('teamName', '==', teamName));
+    const snap = await getDocs(q);
+    if (snap.empty) throw new Error('Team not found');
+    const pDoc = snap.docs[0];
+    const current = pDoc.data() as any;
+    const tournamentId = current.tournamentId;
+    // Verify ownership
+    const tSnap = await getDocs(query(collection(db, 'tournaments'), where('__name__', '==', tournamentId)));
+    const tData = tSnap.docs[0]?.data() as any;
+    if (tData?.hostUid !== user.uid) throw new Error('Not authorized');
+    const newStrikes = (current.strikes || 0) + 1;
+    await updateDoc(pDoc.ref, { strikes: newStrikes, lastWarning: reason, lastWarningAt: serverTimestamp() });
+  }, [user]);
+
+  const toggleBanTeam = useCallback(async (teamId: string, teamName: string) => {
+    if (!user) throw new Error('Not authenticated');
+    const q = query(collection(db, 'participants'), where('teamId', '==', teamId));
+    const snap = await getDocs(q);
+    if (snap.empty) throw new Error('Team not found');
+    const pDoc = snap.docs[0];
+    const current = pDoc.data() as any;
+    const tournamentId = current.tournamentId;
+    const tSnap = await getDocs(query(collection(db, 'tournaments'), where('__name__', '==', tournamentId)));
+    const tData = tSnap.docs[0]?.data() as any;
+    if (tData?.hostUid !== user.uid) throw new Error('Not authorized');
+    await updateDoc(pDoc.ref, { banned: !current.banned });
+  }, [user]);
+
+  const resolveDispute = useCallback(async (disputeId: string, action: 'warn' | 'ban' | 'dismiss') => {
+    if (!user) throw new Error('Not authenticated');
+    const dRef = doc(db, 'disputes', disputeId);
+    const status = action === 'dismiss' ? 'dismissed' : 'resolved';
+    await updateDoc(dRef, {
+      status,
+      resolvedAt: serverTimestamp(),
+      resolvedBy: user.uid,
+      resolutionAction: action,
+    });
+    setDisputes(prev => prev.map(d => d.id === disputeId ? { ...d, status } : d));
   }, [user]);
 
   // Auto-fetch on mount — fetch both tournaments AND transactions
@@ -214,11 +368,20 @@ export function useOrgData() {
     fetchTransactions();
   }, [fetchHostedTournaments, fetchTransactions]);
 
+  // Fetch disputes after tournaments are loaded
+  useEffect(() => {
+    if (hostedTournaments.length > 0) {
+      fetchDisputes();
+    }
+  }, [fetchDisputes]);
+
   return {
     hostedTournaments,
     participants,
     transactions,
+    disputes,
     loading,
+    error,
     kpis,
     // Derived data (no extra Firestore reads)
     scrims,
@@ -229,6 +392,7 @@ export function useOrgData() {
     fetchHostedTournaments,
     fetchParticipants,
     fetchTransactions,
+    fetchDisputes,
     deleteTournament,
     updateTournamentStatus,
     broadcastLobby,
@@ -236,5 +400,11 @@ export function useOrgData() {
     requestWithdrawal,
     broadcastAnnouncement,
     saveOrgSettings,
+    // Real implementations for previously fake buttons
+    toggleScrimSlot,
+    toggleRosterLock,
+    issueWarning,
+    toggleBanTeam,
+    resolveDispute,
   };
 }
