@@ -358,7 +358,7 @@ const Profile: React.FC = () => {
                                     referrerPolicy="no-referrer"
                                 />
                                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-white text-center px-4">Click to Update</span>
+                                    <span className="text-xs font-black uppercase tracking-widest text-white text-center px-4">Click to Update</span>
                                 </div>
                             </div>
                             <input 
@@ -474,9 +474,9 @@ const Profile: React.FC = () => {
                                 </div>
                                 <span className="text-xs text-gray-500 font-bold uppercase tracking-widest">Player Level</span>
                             </div>
-                            <div className="flex items-end justify-between">
+                            <div className="flex items-start sm:items-end justify-between">
                                 <div className="text-2xl font-black text-white">LVL {calculateLevel(profile.xp)}</div>
-                                <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
+                                <div className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">
                                     {profile.xp || 0} / {getXPForNextLevel(calculateLevel(profile.xp))} XP
                                 </div>
                             </div>
@@ -486,7 +486,7 @@ const Profile: React.FC = () => {
                     {/* Bio & Skills */}
                     <div className="bg-card p-4 sm:p-8 rounded-2xl border border-gray-800 shadow-2xl space-y-6">
                         <div>
-                            <h3 className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-3 flex items-center gap-2">
+                            <h3 className="text-xs text-gray-500 uppercase font-black tracking-widest mb-3 flex items-center gap-2">
                                 <Info className="w-3 h-3" /> About Me
                             </h3>
                             <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">
@@ -496,7 +496,7 @@ const Profile: React.FC = () => {
                         
                         {profile.skills && profile.skills.length > 0 && (
                             <div className="pt-6 border-t border-gray-800">
-                                <h3 className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-3 flex items-center gap-2">
+                                <h3 className="text-xs text-gray-500 uppercase font-black tracking-widest mb-3 flex items-center gap-2">
                                     <Briefcase className="w-3 h-3" /> Skills
                                 </h3>
                                 <div className="flex flex-wrap gap-2">
@@ -539,14 +539,14 @@ const Profile: React.FC = () => {
                                             </div>
                                             <div>
                                                 <div className="text-sm font-black text-white capitalize">{item.type}</div>
-                                                <div className="text-[10px] text-gray-500">{formatDate(item.timestamp)}</div>
+                                                <div className="text-xs text-gray-500">{formatDate(item.timestamp)}</div>
                                             </div>
                                         </div>
                                         <div className="text-right">
                                             <div className={`text-sm font-black ${item.amount > 0 ? 'text-green-400' : 'text-red-400'}`}>
                                                 {item.amount > 0 ? '+' : ''}{formatCurrency(item.amount)}
                                             </div>
-                                            <div className="text-[10px] text-gray-600 uppercase font-bold">{item.status}</div>
+                                            <div className="text-xs text-gray-600 uppercase font-bold">{item.status}</div>
                                         </div>
                                     </div>
                                 ))
@@ -607,7 +607,7 @@ const Profile: React.FC = () => {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                             <div className="space-y-4">
                                 <div>
-                                    <label htmlFor="profileInGameId" className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 block flex items-center gap-1">
+                                    <label htmlFor="profileInGameId" className="text-xs text-gray-500 uppercase font-black tracking-widest mb-2 block flex items-center gap-1">
                                         <Hash className="w-3 h-3" /> In-Game ID (UID) * {isUidLocked && <span className="text-brand-500 font-normal">(Locked)</span>}
                                     </label>
                                     <input 
@@ -621,7 +621,7 @@ const Profile: React.FC = () => {
                                     />
                                 </div>
                                 <div>
-                                    <label htmlFor="profileInGameName" className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 block flex items-center gap-1">
+                                    <label htmlFor="profileInGameName" className="text-xs text-gray-500 uppercase font-black tracking-widest mb-2 block flex items-center gap-1">
                                         <User className="w-3 h-3" /> In-Game Name
                                     </label>
                                     <input 
@@ -634,7 +634,7 @@ const Profile: React.FC = () => {
                                     />
                                 </div>
                                 <div>
-                                    <label htmlFor="profileTeamName" className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 block flex items-center gap-1">
+                                    <label htmlFor="profileTeamName" className="text-xs text-gray-500 uppercase font-black tracking-widest mb-2 block flex items-center gap-1">
                                         <Users className="w-3 h-3" /> Team Name
                                     </label>
                                     <input 
@@ -649,7 +649,7 @@ const Profile: React.FC = () => {
                                 {profile?.role === 'organizer' && (
                                     <>
                                         <div>
-                                            <label htmlFor="profileOrgName" className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 block flex items-center gap-1">
+                                            <label htmlFor="profileOrgName" className="text-xs text-gray-500 uppercase font-black tracking-widest mb-2 block flex items-center gap-1">
                                                 <Briefcase className="w-3 h-3" /> Organization Name
                                             </label>
                                             <input 
@@ -662,7 +662,7 @@ const Profile: React.FC = () => {
                                             />
                                         </div>
                                         <div>
-                                            <label htmlFor="profileOrgName" className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 block flex items-center gap-1">
+                                            <label htmlFor="profileOrgName" className="text-xs text-gray-500 uppercase font-black tracking-widest mb-2 block flex items-center gap-1">
                                                 <Phone className="w-3 h-3" /> WhatsApp
                                             </label>
                                             <input 
@@ -675,7 +675,7 @@ const Profile: React.FC = () => {
                                             />
                                         </div>
                                         <div>
-                                            <label htmlFor="profileWhatsApp" className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 block flex items-center gap-1">
+                                            <label htmlFor="profileWhatsApp" className="text-xs text-gray-500 uppercase font-black tracking-widest mb-2 block flex items-center gap-1">
                                                 Discord
                                             </label>
                                             <input 
@@ -688,7 +688,7 @@ const Profile: React.FC = () => {
                                             />
                                         </div>
                                         <div>
-                                            <label htmlFor="profileYouTube" className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 block flex items-center gap-1">
+                                            <label htmlFor="profileYouTube" className="text-xs text-gray-500 uppercase font-black tracking-widest mb-2 block flex items-center gap-1">
                                                 YouTube
                                             </label>
                                             <input 
@@ -703,7 +703,7 @@ const Profile: React.FC = () => {
                                     </>
                                 )}
                                 <div>
-                                    <label htmlFor="profilePhone" className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 block flex items-center gap-1">
+                                    <label htmlFor="profilePhone" className="text-xs text-gray-500 uppercase font-black tracking-widest mb-2 block flex items-center gap-1">
                                         <Phone className="w-3 h-3" /> Phone Number
                                     </label>
                                     <input 
@@ -719,7 +719,7 @@ const Profile: React.FC = () => {
 
                             <div className="space-y-4">
                                 <div>
-                                    <label htmlFor="profileBio" className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 block flex items-center gap-1">
+                                    <label htmlFor="profileBio" className="text-xs text-gray-500 uppercase font-black tracking-widest mb-2 block flex items-center gap-1">
                                         <Info className="w-3 h-3" /> Bio / Description
                                     </label>
                                     <textarea 
@@ -730,7 +730,7 @@ const Profile: React.FC = () => {
                                     />
                                 </div>
                                 <div>
-                                    <label htmlFor="profileSkills" className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 block flex items-center gap-1">
+                                    <label htmlFor="profileSkills" className="text-xs text-gray-500 uppercase font-black tracking-widest mb-2 block flex items-center gap-1">
                                         <Briefcase className="w-3 h-3" /> Skills (Comma separated)
                                     </label>
                                     <input 
@@ -744,7 +744,7 @@ const Profile: React.FC = () => {
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label htmlFor="profileStatus" className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 block flex items-center gap-1">
+                                        <label htmlFor="profileStatus" className="text-xs text-gray-500 uppercase font-black tracking-widest mb-2 block flex items-center gap-1">
                                             Status
                                         </label>
                                         <select 
@@ -759,7 +759,7 @@ const Profile: React.FC = () => {
                                         </select>
                                     </div>
                                     <div>
-                                        <label htmlFor="profileStatus" className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-2 block flex items-center gap-1">
+                                        <label htmlFor="profileStatus" className="text-xs text-gray-500 uppercase font-black tracking-widest mb-2 block flex items-center gap-1">
                                             Custom Activity
                                         </label>
                                         <input 
@@ -840,7 +840,7 @@ const Profile: React.FC = () => {
                                     <button 
                                         onClick={handleUpdateEmail} 
                                         disabled={isUpdatingEmail || !newEmail}
-                                        className="bg-brand-600 px-4 rounded-xl hover:bg-brand-500 disabled:bg-surface text-white text-[10px] font-black transition uppercase tracking-widest shadow-lg whitespace-nowrap"
+                                        className="bg-brand-600 px-4 rounded-xl hover:bg-brand-500 disabled:bg-surface text-white text-xs font-black transition uppercase tracking-widest shadow-lg whitespace-nowrap"
                                     >
                                         {isUpdatingEmail ? 'Updating...' : 'Update'}
                                     </button>
@@ -863,7 +863,7 @@ const Profile: React.FC = () => {
                                 <div className="space-y-4">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="text-[10px] text-gray-500 uppercase font-black mb-1 block ml-1">Organization Name</label>
+                                            <label className="text-xs text-gray-500 uppercase font-black mb-1 block ml-1">Organization Name</label>
                                             <input 
                                                 id="profileOrgName"
                                                 type="text"
@@ -874,7 +874,7 @@ const Profile: React.FC = () => {
                                             />
                                         </div>
                                         <div>
-                                            <label className="text-[10px] text-gray-500 uppercase font-black mb-1 block ml-1">Contact Email</label>
+                                            <label className="text-xs text-gray-500 uppercase font-black mb-1 block ml-1">Contact Email</label>
                                             <input 
                                                 type="email" 
                                                 value={orgEmail}
@@ -886,7 +886,7 @@ const Profile: React.FC = () => {
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
-                                            <label className="text-[10px] text-gray-500 uppercase font-black mb-1 block ml-1">WhatsApp Number</label>
+                                            <label className="text-xs text-gray-500 uppercase font-black mb-1 block ml-1">WhatsApp Number</label>
                                             <input 
                                                 id="profileWhatsApp"
                                                 type="text"
@@ -897,7 +897,7 @@ const Profile: React.FC = () => {
                                             />
                                         </div>
                                         <div>
-                                            <label className="text-[10px] text-gray-500 uppercase font-black mb-1 block ml-1">Portfolio / Proof Link</label>
+                                            <label className="text-xs text-gray-500 uppercase font-black mb-1 block ml-1">Portfolio / Proof Link</label>
                                             <input 
                                                 type="url" 
                                                 value={orgProofLink}

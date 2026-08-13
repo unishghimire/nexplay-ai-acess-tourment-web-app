@@ -377,10 +377,10 @@ export default function TournamentDetails() {
                 <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/60 to-transparent"></div>
                 
                 <div className="absolute top-3 left-3 sm:top-8 sm:left-8 flex flex-wrap gap-1.5 sm:gap-3 z-10 max-w-[calc(100%-4rem)]">
-                    <span className="bg-white/10 backdrop-blur-md text-white text-[10px] sm:text-xs font-black px-2.5 sm:px-4 py-1 sm:py-2 rounded-full uppercase tracking-widest border border-white/10 shadow-xl truncate">
+                    <span className="bg-white/10 backdrop-blur-md text-white text-xs sm:text-xs font-black px-2.5 sm:px-4 py-1 sm:py-2 rounded-full uppercase tracking-widest border border-white/10 shadow-xl truncate">
                         {formatGameName(tournament.game)}
                     </span>
-                    <span className={`backdrop-blur-md text-white text-[10px] sm:text-xs font-black px-2.5 sm:px-4 py-1 sm:py-2 rounded-full uppercase tracking-widest shadow-xl border ${
+                    <span className={`backdrop-blur-md text-white text-xs sm:text-xs font-black px-2.5 sm:px-4 py-1 sm:py-2 rounded-full uppercase tracking-widest shadow-xl border ${
                         tournament.status === 'live' ? 'bg-red-600/90 border-red-500/30' : 
                         tournament.status === 'completed' ? 'bg-blue-600/90 border-blue-500/30' : 
                         'bg-green-600/90 border-green-500/30'
@@ -388,7 +388,7 @@ export default function TournamentDetails() {
                         {tournament.status}
                     </span>
                     {tournament.ytLink && tournament.status === 'live' && (
-                        <span className="bg-red-600 animate-pulse text-white text-[10px] sm:text-xs font-black px-2.5 sm:px-4 py-1 sm:py-2 rounded-full uppercase tracking-widest shadow-xl flex items-center gap-1.5 sm:gap-2">
+                        <span className="bg-red-600 animate-pulse text-white text-xs sm:text-xs font-black px-2.5 sm:px-4 py-1 sm:py-2 rounded-full uppercase tracking-widest shadow-xl flex items-center gap-1.5 sm:gap-2">
                             <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current shrink-0" /> LIVE STREAM
                         </span>
                     )}
@@ -414,7 +414,7 @@ export default function TournamentDetails() {
                         Organized by: {tournament.hostUid ? <ProfileLink to={`/organization/${tournament.hostUid}`} name={tournament.hostName || 'Official Host'} /> : <span className="text-gray-500">Official Host</span>}
                     </div>
                     
-                    <div className="flex flex-wrap items-center gap-3 sm:gap-6 lg:gap-8 text-gray-200 font-bold text-[10px] sm:text-xs md:text-sm uppercase tracking-widest">
+                    <div className="flex flex-wrap items-center gap-3 sm:gap-6 lg:gap-8 text-gray-200 font-bold text-xs sm:text-xs md:text-sm uppercase tracking-widest">
                         <div className="flex items-center gap-1.5 sm:gap-3">
                             <Calendar className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-brand-500 shrink-0" />
                             <span className="truncate">{formatDate(tournament.startTime)}</span>
@@ -454,7 +454,7 @@ export default function TournamentDetails() {
                                         setActiveTab(tab.id as any);
                                     }
                                 }}
-                                className={`flex-1 min-w-max flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 rounded-xl sm:rounded-full text-[10px] sm:text-xs font-black transition-all uppercase tracking-wider whitespace-nowrap ${
+                                className={`flex-1 min-w-max flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 rounded-xl sm:rounded-full text-xs sm:text-xs font-black transition-all uppercase tracking-wider whitespace-nowrap ${
                                     (activeTab === tab.id && tab.id !== 'results') 
                                     ? 'bg-brand-500 text-white shadow-xl shadow-brand-500/20' 
                                     : 'text-gray-500 hover:text-white hover:bg-surface/50'
@@ -508,7 +508,7 @@ export default function TournamentDetails() {
                                     ].map((stat, i) => (
                                         <div key={i} className="bg-card/50 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-gray-700 transition-all hover:bg-surface/50 min-w-0">
                                             <stat.icon className={`w-5 h-5 sm:w-6 sm:h-6 ${stat.color} mb-2 sm:mb-4`} />
-                                            <div className="text-[9px] sm:text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1 truncate">{stat.label}</div>
+                                            <div className="text-[9px] sm:text-xs text-gray-500 uppercase font-black tracking-widest mb-1 truncate">{stat.label}</div>
                                             <div className="text-white font-black text-sm sm:text-xl truncate">{stat.value}</div>
                                         </div>
                                     ))}
@@ -532,7 +532,7 @@ export default function TournamentDetails() {
 
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                 <div className="bg-card/80 p-4 rounded-2xl border border-gray-800">
-                                                    <div className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1">Room ID</div>
+                                                    <div className="text-xs text-gray-500 uppercase font-black tracking-widest mb-1">Room ID</div>
                                                     <div className="flex items-center justify-between">
                                                         <span className="text-lg sm:text-xl font-mono font-bold text-white tracking-wider">{roomCreds?.roomId || tournament.roomId || 'Waiting...'}</span>
                                                         <button onClick={() => {
@@ -545,7 +545,7 @@ export default function TournamentDetails() {
                                                 </div>
 
                                                 <div className="bg-card/80 p-4 rounded-2xl border border-gray-800">
-                                                    <div className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1">Password</div>
+                                                    <div className="text-xs text-gray-500 uppercase font-black tracking-widest mb-1">Password</div>
                                                     <div className="flex items-center justify-between">
                                                         <span className="text-lg sm:text-xl font-mono font-bold text-white tracking-wider">
                                                             {showPassword ? (roomCreds?.roomPass || tournament.roomPass || 'None') : '••••••••'}
@@ -767,8 +767,8 @@ export default function TournamentDetails() {
                                         <div className="p-4">
                                             <h4 className="text-white font-black text-sm truncate mb-1">{t.title}</h4>
                                             <div className="flex justify-between items-center">
-                                                <span className="text-[10px] text-brand-500 font-black uppercase">{formatCurrency(t.prizePool)}</span>
-                                                <span className="text-[10px] text-gray-500 font-bold">{formatDate(t.startTime)}</span>
+                                                <span className="text-xs text-brand-500 font-black uppercase">{formatCurrency(t.prizePool)}</span>
+                                                <span className="text-xs text-gray-500 font-bold">{formatDate(t.startTime)}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -784,7 +784,7 @@ export default function TournamentDetails() {
                     <div className="bg-surface p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 shadow-2xl lg:sticky lg:top-24">
                         {timeLeft && (
                             <div className="mb-6 sm:mb-8 text-center">
-                                <div className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-3 flex items-center justify-center gap-2">
+                                <div className="text-xs text-gray-500 uppercase font-black tracking-widest mb-3 flex items-center justify-center gap-2">
                                     <Clock className="w-3.5 h-3.5" /> Starts In
                                 </div>
                                 <div className="flex justify-center gap-2 sm:gap-3">
@@ -798,7 +798,7 @@ export default function TournamentDetails() {
                                             <div className="w-10 h-10 sm:w-12 sm:h-12 bg-dark rounded-xl border border-gray-800 flex items-center justify-center text-base sm:text-xl font-black text-white shadow-inner">
                                                 {t.value.toString().padStart(2, '0')}
                                             </div>
-                                            <span className="text-[9px] sm:text-[10px] text-gray-600 font-black mt-1">{t.label}</span>
+                                            <span className="text-[9px] sm:text-xs text-gray-600 font-black mt-1">{t.label}</span>
                                         </div>
                                     ))}
                                 </div>
@@ -870,13 +870,13 @@ export default function TournamentDetails() {
                                 <div className="grid grid-cols-2 gap-2">
                                     <button 
                                         onClick={() => setActiveTab('overview')}
-                                        className="bg-dark hover:bg-surface text-gray-400 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest border border-gray-800 transition-all"
+                                        className="bg-dark hover:bg-surface text-gray-400 py-3 rounded-xl text-xs font-black uppercase tracking-widest border border-gray-800 transition-all"
                                     >
                                         Room Access
                                     </button>
                                     <button 
                                         onClick={() => window.open('https://discord.gg', '_blank')}
-                                        className="bg-brand-600/10 hover:bg-brand-600/20 text-brand-500 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest border border-brand-500/20 transition-all"
+                                        className="bg-brand-600/10 hover:bg-brand-600/20 text-brand-500 py-3 rounded-xl text-xs font-black uppercase tracking-widest border border-brand-500/20 transition-all"
                                     >
                                         Join Discord
                                     </button>

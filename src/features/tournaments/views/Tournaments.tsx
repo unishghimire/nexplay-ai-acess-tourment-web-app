@@ -184,7 +184,7 @@ const Tournaments: React.FC = () => {
                         }`}
                     >
                         <span>{s.label}</span>
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-black tabular-nums ${
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-black tabular-nums ${
                             statusFilter === s.id
                                 ? s.id === 'live' ? 'bg-red-500/20 text-red-400' : 'bg-brand-500/20 text-brand-400'
                                 : 'bg-surface text-gray-600'
@@ -204,7 +204,7 @@ const Tournaments: React.FC = () => {
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                     <div className="min-w-0">
-                        <label className="block text-[10px] font-black text-gray-500 uppercase mb-2 sm:mb-3 tracking-widest">Game</label>
+                        <label className="block text-xs font-black text-gray-500 uppercase mb-2 sm:mb-3 tracking-widest">Game</label>
                         <select 
                             aria-label="Filter tournaments by game"
                             value={gameFilter}
@@ -220,7 +220,7 @@ const Tournaments: React.FC = () => {
                     </div>
 
                     <div className="min-w-0">
-                        <label className="block text-[10px] font-black text-gray-500 uppercase mb-2 sm:mb-3 tracking-widest">Mode</label>
+                        <label className="block text-xs font-black text-gray-500 uppercase mb-2 sm:mb-3 tracking-widest">Mode</label>
                         <select 
                             aria-label="Filter tournaments by mode"
                             value={modeFilter}
@@ -234,7 +234,7 @@ const Tournaments: React.FC = () => {
                     </div>
 
                     <div className="min-w-0">
-                        <label className="block text-[10px] font-black text-gray-500 uppercase mb-2 sm:mb-3 tracking-widest">Entry</label>
+                        <label className="block text-xs font-black text-gray-500 uppercase mb-2 sm:mb-3 tracking-widest">Entry</label>
                         <select 
                             aria-label="Filter tournaments by entry type"
                             value={entryFilter}
@@ -248,7 +248,7 @@ const Tournaments: React.FC = () => {
                     </div>
 
                     <div className="min-w-0">
-                        <label className="block text-[10px] font-black text-gray-500 uppercase mb-2 sm:mb-3 tracking-widest">Player Size</label>
+                        <label className="block text-xs font-black text-gray-500 uppercase mb-2 sm:mb-3 tracking-widest">Player Size</label>
                         <select 
                             aria-label="Filter tournaments by player size"
                             value={teamTypeFilter}

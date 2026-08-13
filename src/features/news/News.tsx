@@ -51,7 +51,7 @@ const News: React.FC = () => {
                     "url": `https://www.nexplayorg.app/news`
                 }}
             />
-            <div className="max-w-4xl mx-auto pb-20">
+            <div className="max-w-4xl mx-auto px-4 pb-20">
                 <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tighter text-white mb-2 flex items-center gap-3">
                     <Newspaper className="w-8 h-8 text-brand-500" /> Esports News
                 </h1>

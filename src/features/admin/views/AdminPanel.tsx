@@ -33,7 +33,7 @@ const AdminPanel: React.FC = () => {
             {/* Sidebar Navigation */}
             <div className={`w-full md:w-72 shrink-0 space-y-6 sm:space-y-8 bg-dark/50 p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border border-gray-800 h-fit md:sticky md:top-24 ${isSidebarOpen ? 'block' : 'hidden md:block'}`}>
                 <div>
-                    <div className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-6 px-3">Main</div>
+                    <div className="text-xs font-black text-gray-500 uppercase tracking-[0.2em] mb-6 px-3">Main</div>
                     <div className="space-y-2">
                         <button 
                             onClick={() => { setActiveTab('tab-dashboard'); setIsSidebarOpen(false); }} 
@@ -61,7 +61,7 @@ const AdminPanel: React.FC = () => {
                 </div>
 
                 <div>
-                    <div className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-6 px-3">Financial</div>
+                    <div className="text-xs font-black text-gray-500 uppercase tracking-[0.2em] mb-6 px-3">Financial</div>
                     <div className="space-y-2">
                         {[
                             { id: 'pending-deposits', icon: ArrowDown, label: 'Pending Deposits', badge: pendingDepositsCount },
@@ -85,7 +85,7 @@ const AdminPanel: React.FC = () => {
                                         {tab.label}
                                     </div>
                                     {tab.badge ? (
-                                        <span className="bg-red-500 text-white text-[10px] font-black px-3 py-1 rounded-full">
+                                        <span className="bg-red-500 text-white text-xs font-black px-3 py-1 rounded-full">
                                             {tab.badge}
                                         </span>
                                     ) : null}
@@ -96,7 +96,7 @@ const AdminPanel: React.FC = () => {
                 </div>
 
                 <div>
-                    <div className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-6 px-3">Organizations</div>
+                    <div className="text-xs font-black text-gray-500 uppercase tracking-[0.2em] mb-6 px-3">Organizations</div>
                     <div className="space-y-2">
                         {[
                             { id: 'org-approvals', icon: Check, label: 'Org Approvals', badge: pendingOrgCount },
@@ -121,7 +121,7 @@ const AdminPanel: React.FC = () => {
                                         {tab.label}
                                     </div>
                                     {tab.badge ? (
-                                        <span className="bg-red-500 text-white text-[10px] font-black px-3 py-1 rounded-full">
+                                        <span className="bg-red-500 text-white text-xs font-black px-3 py-1 rounded-full">
                                             {tab.badge}
                                         </span>
                                     ) : null}
@@ -132,7 +132,7 @@ const AdminPanel: React.FC = () => {
                 </div>
 
                 <div>
-                    <div className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-6 px-3">Management</div>
+                    <div className="text-xs font-black text-gray-500 uppercase tracking-[0.2em] mb-6 px-3">Management</div>
                     <div className="space-y-2">
                         {[
                             { id: 'tournaments', icon: Trophy, label: 'Tournaments' },
@@ -164,7 +164,7 @@ const AdminPanel: React.FC = () => {
                 </div>
 
                 <div>
-                    <div className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-6 px-3">System</div>
+                    <div className="text-xs font-black text-gray-500 uppercase tracking-[0.2em] mb-6 px-3">System</div>
                     <div className="space-y-2">
                         <button 
                             onClick={() => { setActiveTab('tab-discord'); setIsSidebarOpen(false); }} 
@@ -316,7 +316,7 @@ const AdminPanel: React.FC = () => {
                                     <button 
                                         key={role}
                                         onClick={() => handleUpdateUserRole(selectedUser.uid, role)}
-                                        className={`py-2 rounded-lg font-bold text-[10px] uppercase border transition-all ${selectedUser.role === role ? 'bg-brand-600 border-brand-500 text-white' : 'bg-dark border-gray-700 text-gray-500 hover:border-gray-600'}`}
+                                        className={`py-2 rounded-lg font-bold text-xs uppercase border transition-all ${selectedUser.role === role ? 'bg-brand-600 border-brand-500 text-white' : 'bg-dark border-gray-700 text-gray-500 hover:border-gray-600'}`}
                                     >
                                         {role}
                                     </button>

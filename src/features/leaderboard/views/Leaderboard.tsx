@@ -42,14 +42,14 @@ const RankIndicator = ({ change }: { change?: number }) => {
         />
         <div className="flex items-center text-green-500 gap-0.5">
             <ArrowUp className="w-3 h-3" />
-            <span className="text-[10px] font-bold">{change}</span>
+            <span className="text-xs font-bold">{change}</span>
         </div>
         </>
     );
     return (
         <div className="flex items-center text-red-500 gap-0.5">
             <ArrowDown className="w-3 h-3" />
-            <span className="text-[10px] font-bold">{Math.abs(change)}</span>
+            <span className="text-xs font-bold">{Math.abs(change)}</span>
         </div>
     );
 };
@@ -314,11 +314,11 @@ const Leaderboard: React.FC = () => {
 
                                         <div>
                                             <div className="flex items-center gap-3">
-                                                <h4 className={`font-black text-lg truncate max-w-[140px] sm:max-w-[240px] ${isUser ? 'text-brand-400' : 'text-white'} group-hover:text-brand-400 transition`}>
+                                                <h4 className={`font-black text-lg truncate max-w-[100px] sm:max-w-[140px] sm:max-w-[240px] ${isUser ? 'text-brand-400' : 'text-white'} group-hover:text-brand-400 transition`}>
                                                     {displayName}
                                                 </h4>
                                                 {isUser && (
-                                                    <span className="bg-brand-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest">YOU</span>
+                                                    <span className="bg-brand-500 text-white text-xs font-black px-2 py-0.5 rounded-full uppercase tracking-widest">YOU</span>
                                                 )}
                                             </div>
                                             <div className="flex items-center gap-3 mt-1">
@@ -332,7 +332,7 @@ const Leaderboard: React.FC = () => {
 
                                     <div className="flex items-center gap-12">
                                         <div className="text-right hidden sm:block">
-                                            <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Total Earnings</p>
+                                            <p className="text-xs font-black text-gray-500 uppercase tracking-widest mb-1">Total Earnings</p>
                                             <p className="font-black text-white text-lg">{formatCurrency(item.totalEarnings, 'NPR ')}</p>
                                         </div>
                                         <ChevronRight className="w-6 h-6 text-gray-700 group-hover:text-brand-500 transition" />

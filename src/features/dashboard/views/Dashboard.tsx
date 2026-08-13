@@ -183,7 +183,7 @@ const Dashboard: React.FC = () => {
 
                         return (
                             <div key={t.id} className="bg-black border border-gray-800 p-4 sm:p-8 rounded-2xl sm:rounded-3xl transition duration-300 hover:border-gray-700 hover:bg-card/50 group">
-                                <div className="flex justify-between items-start gap-6">
+                                <div className="flex flex-col sm:flex-row justify-between items-start gap-4 sm:gap-6">
                                     <div className="flex-1">
                                         <div className="flex items-center gap-3 mb-4 flex-wrap">
                                             {t.role === 'organizer' ? (
@@ -199,7 +199,7 @@ const Dashboard: React.FC = () => {
                                             <span className="bg-brand-500/10 text-brand-300 text-xs font-black px-4 py-1.5 rounded-full border border-brand-500/20 uppercase tracking-widest">{t.teamType}</span>
                                         </div>
                                         <h3 
-                                            className="text-2xl font-black text-white mb-3 hover:text-brand-400 transition cursor-pointer tracking-tighter" 
+                                            className="text-xl sm:text-2xl font-black text-white mb-3 hover:text-brand-400 truncate min-w-0 transition cursor-pointer tracking-tighter" 
                                             onClick={() => {
                                                     navigate(`/tournaments/${t.id}`);
                                                 }}
@@ -212,7 +212,7 @@ const Dashboard: React.FC = () => {
                                                     Team: <span className="text-brand-300">{t.registration.teamName || 'SOLO'}</span>
                                                 </div>
                                                 <div className="text-xs text-gray-400 font-black uppercase tracking-widest">
-                                                    UID: <span className="text-brand-300">{t.registration.inGameId}</span>
+                                                    UID: <span className="text-brand-300 break-all">{t.registration.inGameId}</span>
                                                 </div>
                                             </div>
                                         )}
@@ -229,7 +229,7 @@ const Dashboard: React.FC = () => {
                                         <div>
                                             <span className="text-gray-500 uppercase text-xs font-black tracking-widest">Room ID:</span> <span className="text-white font-black select-all ml-3">{t.roomId || 'Wait'}</span>
                                         </div>
-                                        <div className="w-px h-6 bg-surface"></div>
+                                        <div className="hidden sm:block w-px h-6 bg-surface"></div>
                                         <div>
                                             <span className="text-gray-500 uppercase text-xs font-black tracking-widest">Pass:</span> <span className="text-white font-black select-all ml-3">{t.roomPass || 'Wait'}</span>
                                         </div>
@@ -238,7 +238,7 @@ const Dashboard: React.FC = () => {
                                 <div className="mt-6 sm:mt-8 flex flex-wrap gap-4 sm:gap-6 border-t border-gray-800 pt-6 sm:pt-8">
                                     <button onClick={() => {
                                             navigate(`/tournaments/${t.id}`);
-                                        }} className="flex items-center gap-3 text-xs font-black uppercase tracking-widest text-gray-400 hover:text-white transition">
+                                        }} className="flex items-center gap-3 text-xs font-black uppercase tracking-widest text-gray-400 hover:text-white transition touch-target">
                                         <Eye className="w-5 h-5" /> View Details
                                     </button>
                                     {isLive && t.role === 'organizer' && (
@@ -246,7 +246,7 @@ const Dashboard: React.FC = () => {
                                             onClick={() => {
                                                     handleUploadResult(t);
                                                 }}
-                                            className="flex items-center gap-3 text-xs font-black uppercase tracking-widest text-emerald-400 hover:text-white transition"
+                                            className="flex items-center gap-3 text-xs font-black uppercase tracking-widest text-emerald-400 hover:text-white transition touch-target"
                                         >
                                             <Upload className="w-5 h-5" /> Upload Result
                                         </button>
@@ -256,7 +256,7 @@ const Dashboard: React.FC = () => {
                                             onClick={() => {
                                                     setViewResultTournament(t);
                                                 }}
-                                            className="flex items-center gap-3 text-xs font-black uppercase tracking-widest text-blue-400 hover:text-white transition"
+                                            className="flex items-center gap-3 text-xs font-black uppercase tracking-widest text-blue-400 hover:text-white transition touch-target"
                                         >
                                             <BarChart className="w-5 h-5" /> View Result
                                         </button>
@@ -266,7 +266,7 @@ const Dashboard: React.FC = () => {
                         );
                     })
                 ) : (
-                    <div className="bg-card/50 p-16 rounded-3xl border border-gray-800 text-center">
+                    <div className="bg-card/50 p-8 sm:p-16 rounded-2xl sm:rounded-3xl border border-gray-800 text-center">
                         <p className="text-gray-500 font-bold uppercase tracking-widest">No matches found.</p>
                     </div>
                 )}

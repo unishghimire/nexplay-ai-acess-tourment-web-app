@@ -280,7 +280,7 @@ const Teams: React.FC = () => {
             {user && myTeams.length > 0 && (
                 <div className="mb-16">
                     <h2 className="text-2xl font-black text-white uppercase tracking-tighter mb-8 border-b border-gray-800 pb-4">My Teams</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                         {myTeams.map(team => (
                             <Link to={`/team/${team.id}`} key={team.id} className="bg-card/50 rounded-2xl sm:rounded-3xl border border-gray-800 p-5 sm:p-8 hover:border-brand-500/50 transition group hover:bg-card">
                                 <div className="flex items-center gap-6 mb-6">

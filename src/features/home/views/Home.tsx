@@ -305,7 +305,7 @@ const Home: React.FC = () => {
                     </div>
                     <button 
                         onClick={() => handleCtaClick('/tournaments', 'ViewAllFeatured')} 
-                        className="bg-surface/50 hover:bg-surface text-white min-h-[44px] px-4 py-2.5 md:px-6 md:py-3 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 border border-gray-700 shrink-0"
+                        className="bg-surface/50 hover:bg-surface text-white min-h-[44px] px-4 py-2.5 md:px-6 md:py-3 rounded-xl text-xs md:text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 border border-gray-700 shrink-0"
                         aria-label="View all scheduled tournaments"
                     >
                         View All <ChevronRight className="w-4 h-4" />
@@ -336,7 +336,7 @@ const Home: React.FC = () => {
                     </div>
                     <button 
                         onClick={() => handleCtaClick('/games', 'ViewAllGames')} 
-                        className="bg-surface/50 hover:bg-surface text-white min-h-[44px] px-4 py-2.5 md:px-6 md:py-3 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 border border-gray-700 shrink-0"
+                        className="bg-surface/50 hover:bg-surface text-white min-h-[44px] px-4 py-2.5 md:px-6 md:py-3 rounded-xl text-xs md:text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 border border-gray-700 shrink-0"
                         aria-label="Explore tournament categories by game"
                     >
                         Explore <ChevronRight className="w-4 h-4" />
@@ -366,7 +366,7 @@ const Home: React.FC = () => {
                         </div>
                         <button 
                             onClick={() => handleCtaClick('/results', 'ViewAllResults')} 
-                            className="bg-surface/50 hover:bg-surface text-white min-h-[44px] px-4 py-2.5 md:px-6 md:py-3 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 border border-gray-700 shrink-0"
+                            className="bg-surface/50 hover:bg-surface text-white min-h-[44px] px-4 py-2.5 md:px-6 md:py-3 rounded-xl text-xs md:text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 border border-gray-700 shrink-0"
                             aria-label="View all historic results"
                         >
                             View All <ChevronRight className="w-4 h-4" />
@@ -380,29 +380,29 @@ const Home: React.FC = () => {
                                 className="bg-surface p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-brand-500/30 transition-all cursor-pointer group"
                             >
                                 <div className="flex flex-wrap gap-4 sm:gap-6 min-w-0">
-                                    <div className="w-24 h-24 rounded-2xl bg-dark overflow-hidden shrink-0 border border-gray-800">
+                                    <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-xl sm:rounded-2xl bg-dark overflow-hidden shrink-0 border border-gray-800">
                                         <img src={t.bannerUrl || `https://api.dicebear.com/7.x/identicon/svg?seed=${t.title}`} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" />
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex justify-between items-start mb-2 min-w-0 gap-2">
                                             <div>
                                                 <h4 className="text-white font-black text-lg uppercase truncate min-w-0">{t.title}</h4>
-                                                <p className="text-[10px] text-brand-500 font-black uppercase tracking-widest">{formatGameName(t.game)}</p>
+                                                <p className="text-xs text-brand-500 font-black uppercase tracking-widest">{formatGameName(t.game)}</p>
                                             </div>
-                                            <span className="text-[10px] text-gray-500 font-bold bg-card px-2 py-1 rounded">COMPLETED</span>
+                                            <span className="text-xs text-gray-500 font-bold bg-card px-2 py-1 rounded">COMPLETED</span>
                                         </div>
                                         <div className="flex flex-wrap items-center gap-3 sm:gap-4 mt-4 min-w-0">
                                             {t.winners?.slice(0, 1).map((w, wIdx) => (
                                                 <div key={w.uid || `winner-${wIdx}`} className="flex items-center gap-3 bg-brand-600/10 px-4 py-2 rounded-xl border border-brand-500/20">
                                                     <Trophy className="w-4 h-4 text-yellow-500" />
                                                     <div>
-                                                        <p className="text-[10px] text-gray-500 font-black uppercase">Champion</p>
-                                                        <p className="text-xs font-black text-white">{w.username || 'Unknown'}</p>
+                                                        <p className="text-xs text-gray-500 font-black uppercase">Champion</p>
+                                                        <p className="text-xs font-black text-white truncate max-w-[120px]">{w.username || 'Unknown'}</p>
                                                     </div>
                                                 </div>
                                             ))}
                                             <div className="flex flex-col">
-                                                <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Prize Pool</p>
+                                                <p className="text-xs text-gray-500 font-black uppercase tracking-widest">Prize Pool</p>
                                                 <p className="text-xs font-black text-brand-500">{(t.prizePool).toLocaleString()} {t.currency || 'Rs.'}</p>
                                             </div>
                                         </div>
@@ -417,32 +417,32 @@ const Home: React.FC = () => {
             <section className="mb-12">
                 <h2 className="text-white font-black text-xl uppercase tracking-tight mb-4">Explore NexPlay</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                    <Link to="/tournaments" className="bg-card rounded-2xl border border-gray-800 p-4 hover:border-brand-500/50 transition-all group">
+                    <Link to="/tournaments" className="bg-card rounded-2xl border border-gray-800 p-4 hover:border-brand-500/50 touch-target transition-all group">
                         <Trophy className="w-6 h-6 text-brand-500 mb-2 group-hover:scale-110 transition-transform" />
                         <h3 className="text-white font-bold text-sm">Tournaments</h3>
                         <p className="text-gray-500 text-xs">Browse & register</p>
                     </Link>
-                    <Link to="/scrims" className="bg-card rounded-2xl border border-gray-800 p-4 hover:border-brand-500/50 transition-all group">
+                    <Link to="/scrims" className="bg-card rounded-2xl border border-gray-800 p-4 hover:border-brand-500/50 touch-target transition-all group">
                         <Gamepad2 className="w-6 h-6 text-brand-500 mb-2 group-hover:scale-110 transition-transform" />
                         <h3 className="text-white font-bold text-sm">Scrims</h3>
                         <p className="text-gray-500 text-xs">Practice matches</p>
                     </Link>
-                    <Link to="/games" className="bg-card rounded-2xl border border-gray-800 p-4 hover:border-brand-500/50 transition-all group">
+                    <Link to="/games" className="bg-card rounded-2xl border border-gray-800 p-4 hover:border-brand-500/50 touch-target transition-all group">
                         <Gamepad2 className="w-6 h-6 text-brand-500 mb-2 group-hover:scale-110 transition-transform" />
                         <h3 className="text-white font-bold text-sm">Games</h3>
                         <p className="text-gray-500 text-xs">Browse by game</p>
                     </Link>
-                    <Link to="/organizations" className="bg-card rounded-2xl border border-gray-800 p-4 hover:border-brand-500/50 transition-all group">
+                    <Link to="/organizations" className="bg-card rounded-2xl border border-gray-800 p-4 hover:border-brand-500/50 touch-target transition-all group">
                         <Building2 className="w-6 h-6 text-brand-500 mb-2 group-hover:scale-110 transition-transform" />
                         <h3 className="text-white font-bold text-sm">Organizations</h3>
                         <p className="text-gray-500 text-xs">Esports orgs</p>
                     </Link>
-                    <Link to="/news" className="bg-card rounded-2xl border border-gray-800 p-4 hover:border-brand-500/50 transition-all group">
+                    <Link to="/news" className="bg-card rounded-2xl border border-gray-800 p-4 hover:border-brand-500/50 touch-target transition-all group">
                         <Newspaper className="w-6 h-6 text-brand-500 mb-2 group-hover:scale-110 transition-transform" />
                         <h3 className="text-white font-bold text-sm">News</h3>
                         <p className="text-gray-500 text-xs">Latest updates</p>
                     </Link>
-                    <Link to="/leaderboard" className="bg-card rounded-2xl border border-gray-800 p-4 hover:border-brand-500/50 transition-all group">
+                    <Link to="/leaderboard" className="bg-card rounded-2xl border border-gray-800 p-4 hover:border-brand-500/50 touch-target transition-all group">
                         <BarChart3 className="w-6 h-6 text-brand-500 mb-2 group-hover:scale-110 transition-transform" />
                         <h3 className="text-white font-bold text-sm">Leaderboard</h3>
                         <p className="text-gray-500 text-xs">Top rankings</p>

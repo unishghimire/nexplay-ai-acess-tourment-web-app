@@ -192,7 +192,7 @@ const OrgBrowser: React.FC = () => {
                                                         className="w-full h-full object-cover"
                                                     />
                                                 </div>
-                                                <span className="bg-brand-500/10 text-brand-400 border border-brand-500/20 px-3 py-1 rounded-full text-[10px] uppercase font-black tracking-widest">
+                                                <span className="bg-brand-500/10 text-brand-400 border border-brand-500/20 px-3 py-1 rounded-full text-xs uppercase font-black tracking-widest">
                                                     Organizer
                                                 </span>
                                             </div>
@@ -271,7 +271,7 @@ const OrgBrowser: React.FC = () => {
                                     <div className="flex items-center gap-3 shrink-0">
                                         <Link
                                             to={`/profile/${org.uid}`}
-                                            className="hidden sm:flex items-center gap-2 bg-surface hover:bg-surface text-white px-5 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition"
+                                            className="flex items-center gap-2 bg-surface hover:bg-surface text-white px-5 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition"
                                         >
                                             View <ChevronRight className="w-3 h-3" />
                                         </Link>

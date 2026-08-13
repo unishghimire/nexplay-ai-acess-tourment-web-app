@@ -318,7 +318,7 @@ const ResultUploadModal: React.FC<ResultUploadModalProps> = ({ isOpen, onClose, 
                                 </h4>
                                 <button 
                                     onClick={handleAddWinner}
-                                    className="text-[10px] bg-brand-600/10 hover:bg-brand-600/20 text-brand-500 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all font-black uppercase tracking-wider border border-brand-500/20"
+                                    className="text-xs bg-brand-600/10 hover:bg-brand-600/20 text-brand-500 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all font-black uppercase tracking-wider border border-brand-500/20"
                                 >
                                     <Plus className="w-3 h-3" /> Add Winner
                                 </button>
@@ -333,7 +333,7 @@ const ResultUploadModal: React.FC<ResultUploadModalProps> = ({ isOpen, onClose, 
                                         className="bg-surface p-4 rounded-2xl border border-gray-800 flex flex-col md:flex-row gap-4 relative group"
                                     >
                                         <div className="w-full md:w-20">
-                                            <label className="text-[10px] text-gray-500 uppercase font-black mb-1.5 block tracking-widest">Rank</label>
+                                            <label className="text-xs text-gray-500 uppercase font-black mb-1.5 block tracking-widest">Rank</label>
                                             <div className="relative">
                                                 <Trophy className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-brand-500" />
                                                 <input 
@@ -348,7 +348,7 @@ const ResultUploadModal: React.FC<ResultUploadModalProps> = ({ isOpen, onClose, 
                                             </div>
                                         </div>
                                         <div className="flex-1">
-                                            <label className="text-[10px] text-gray-500 uppercase font-black mb-1.5 block tracking-widest">Select Winner</label>
+                                            <label className="text-xs text-gray-500 uppercase font-black mb-1.5 block tracking-widest">Select Winner</label>
                                             <div className="relative">
                                                 <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
                                                 <select 
@@ -364,7 +364,7 @@ const ResultUploadModal: React.FC<ResultUploadModalProps> = ({ isOpen, onClose, 
                                             </div>
                                         </div>
                                         <div className="w-full md:w-32">
-                                            <label className="text-[10px] text-gray-500 uppercase font-black mb-1.5 block tracking-widest">Prize Amount</label>
+                                            <label className="text-xs text-gray-500 uppercase font-black mb-1.5 block tracking-widest">Prize Amount</label>
                                             <div className="relative">
                                                 <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-green-500" />
                                                 <input 

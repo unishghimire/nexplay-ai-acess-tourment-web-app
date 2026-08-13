@@ -780,7 +780,7 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
             return (
               <div key={step.id} className="flex flex-col items-center group">
                 <div className={`
-                  w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500
+                  w-11 h-11 rounded-full flex items-center justify-center transition-all duration-500
                   ${isActive ? 'bg-brand-600 text-white shadow-[0_0_20px_rgba(var(--brand-primary-rgb),0.5)]' : 'bg-surface text-gray-500'}
                   ${isCurrent ? 'ring-4 ring-brand-500/20 scale-110' : ''}
                 `}>

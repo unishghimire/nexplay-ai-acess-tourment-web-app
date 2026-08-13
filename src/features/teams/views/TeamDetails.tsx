@@ -423,7 +423,7 @@ const TeamDetails: React.FC = () => {
                 </div>
                 
                 <div className="px-8 pb-8 relative">
-                    <div className="flex flex-col md:flex-row items-end gap-8 -mt-20 relative z-10">
+                    <div className="flex flex-col md:flex-row items-start sm:items-end gap-8 -mt-20 relative z-10">
                         <div className="w-40 h-40 rounded-3xl border-4 border-card bg-dark overflow-hidden shadow-2xl flex items-center justify-center bg-gradient-to-br from-brand-600 to-purple-800 text-5xl font-black text-white shrink-0">
                             {team.logoUrl ? (
                                 <img src={team.logoUrl || undefined} className="w-full h-full object-cover" alt="Logo" />
@@ -547,7 +547,7 @@ const TeamDetails: React.FC = () => {
                                         {isAdmin && member.userId !== team.ownerId && (
                                             <button 
                                                 onClick={() => handleRemoveMember(member.id, member.user?.username || 'Unknown User', member.userId)}
-                                                className="text-gray-500 hover:text-red-500 p-2 rounded-xl hover:bg-red-500/10 transition opacity-0 group-hover:opacity-100"
+                                                className="text-gray-500 hover:text-red-500 p-2 rounded-xl hover:bg-red-500/10 transition opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
                                             >
                                                 <X className="w-5 h-5" />
                                             </button>

@@ -28,10 +28,10 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
             <div className="text-gray-300 mb-6">
                 {message}
             </div>
-            <div className="flex justify-end gap-3">
+            <div className="flex flex-col sm:flex-row justify-end gap-3">
                 <button
                     onClick={onCancel}
-                    className="px-4 py-2 bg-surface hover:bg-surface text-white rounded-lg font-bold transition"
+                    className="px-4 py-3 bg-surface hover:bg-surface text-white rounded-lg touch-target font-bold transition"
                 >
                     {cancelText}
                 </button>
@@ -40,7 +40,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
                         onConfirm();
                         onCancel();
                     }}
-                    className={`px-4 py-2 text-white rounded-lg font-bold transition ${
+                    className={`px-4 py-3 text-white rounded-lg touch-target font-bold transition ${
                         isDestructive ? 'bg-red-600 hover:bg-red-500' : 'bg-brand-600 hover:bg-brand-500'
                     }`}
                 >

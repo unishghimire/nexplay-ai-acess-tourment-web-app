@@ -250,13 +250,13 @@ const PublicProfile: React.FC = () => {
                                     </div>
                                     
                                     <div className="flex flex-wrap items-center gap-3 mb-4">
-                                        <span className="text-[10px] font-black uppercase tracking-widest bg-brand-500/20 text-brand-400 px-3 py-1 rounded-full border border-brand-500/30 flex items-center gap-1">
+                                        <span className="text-xs font-black uppercase tracking-widest bg-brand-500/20 text-brand-400 px-3 py-1 rounded-full border border-brand-500/30 flex items-center gap-1">
                                             <Zap className="w-3 h-3" /> Rank #{profile.rank || 'Unranked'}
                                         </span>
-                                        <span className="text-[10px] font-black uppercase tracking-widest bg-surface text-gray-400 px-3 py-1 rounded-full border border-gray-700">
+                                        <span className="text-xs font-black uppercase tracking-widest bg-surface text-gray-400 px-3 py-1 rounded-full border border-gray-700">
                                             {profile.role}
                                         </span>
-                                        <button onClick={handleCopyId} className="text-[10px] font-mono text-gray-500 hover:text-white transition bg-dark px-3 py-1 rounded-full border border-gray-800 flex items-center gap-2">
+                                        <button onClick={handleCopyId} className="text-xs font-mono text-gray-500 hover:text-white transition bg-dark px-3 py-1 rounded-full border border-gray-800 flex items-center gap-2">
                                             ID: {id?.slice(0, 8)}... {copiedId ? <CheckCircle2 className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
                                         </button>
                                     </div>
@@ -303,7 +303,7 @@ const PublicProfile: React.FC = () => {
                         <div className={`p-2 rounded-xl bg-white/5 w-fit mb-3 group-hover:scale-110 transition-transform`}>
                             <stat.icon className={`w-5 h-5 ${stat.color}`} />
                         </div>
-                        <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">{stat.label}</p>
+                        <p className="text-xs font-black text-gray-500 uppercase tracking-widest mb-1">{stat.label}</p>
                         <p className="text-2xl font-black text-white">{stat.value}</p>
                     </div>
                 ))}
@@ -328,23 +328,23 @@ const PublicProfile: React.FC = () => {
                                             </div>
                                             <div>
                                                 <h4 className="font-black text-white group-hover:text-brand-400 transition">{match.tournamentName}</h4>
-                                                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">{timeAgo(match.timestamp?.toDate())}</p>
+                                                <p className="text-xs text-gray-500 font-bold uppercase tracking-widest">{timeAgo(match.timestamp?.toDate())}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-8 text-right">
                                             <div>
-                                                <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-1">Kills</p>
+                                                <p className="text-xs text-gray-500 font-black uppercase tracking-widest mb-1">Kills</p>
                                                 <p className="font-black text-white">{match.kills}</p>
                                             </div>
                                             <div>
-                                                <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-1">Prize</p>
+                                                <p className="text-xs text-gray-500 font-black uppercase tracking-widest mb-1">Prize</p>
                                                 <p className="font-black text-brand-400">{formatCurrency(match.prize, 'NPR ')}</p>
                                             </div>
                                         </div>
                                     </div>
                                 ))
                             ) : (
-                                <div className="p-12 text-center">
+                                <div className="p-8 sm:p-12 text-center">
                                     <Activity className="w-12 h-12 text-gray-700 mx-auto mb-4" />
                                     <p className="text-gray-500 font-bold uppercase tracking-widest text-sm">No match history found</p>
                                 </div>
@@ -369,7 +369,7 @@ const PublicProfile: React.FC = () => {
                                         {post.imageUrl && (
                                             <img src={post.imageUrl} alt={post.title} className="w-full h-48 object-cover rounded-xl mb-4" />
                                         )}
-                                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-500">
+                                        <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-gray-500">
                                             <Calendar className="w-3 h-3" /> {formatDate(post.createdAt)}
                                         </div>
                                     </Link>
@@ -391,7 +391,7 @@ const PublicProfile: React.FC = () => {
                         {profile.skills && profile.skills.length > 0 && (
                             <div className="flex flex-wrap gap-2">
                                 {profile.skills.map((skill, i) => (
-                                    <span key={i} className="bg-dark border border-gray-800 text-brand-400 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest">
+                                    <span key={i} className="bg-dark border border-gray-800 text-brand-400 px-3 py-1 rounded-lg text-xs font-black uppercase tracking-widest">
                                         {skill}
                                     </span>
                                 ))}
@@ -413,7 +413,7 @@ const PublicProfile: React.FC = () => {
                                         </div>
                                         <div>
                                             <h4 className="font-black text-white text-sm group-hover:text-brand-400 transition">{team.name}</h4>
-                                            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">{team.region || 'Global'}</p>
+                                            <p className="text-xs text-gray-500 font-bold uppercase tracking-widest">{team.region || 'Global'}</p>
                                         </div>
                                     </Link>
                                 ))

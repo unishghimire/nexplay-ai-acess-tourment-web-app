@@ -173,15 +173,15 @@ const Scrims: React.FC = () => {
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/20 to-transparent"></div>
                                 <div className="absolute top-4 left-4 right-4 flex flex-wrap gap-2">
-                                    <span className="bg-brand-500/10 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-brand-300 border border-brand-500/20">
+                                    <span className="bg-brand-500/10 px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest text-brand-300 border border-brand-500/20">
                                         {formatGameName(scrim.game)}
                                     </span>
-                                    <span className="bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-white border border-white/10">
+                                    <span className="bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest text-white border border-white/10">
                                         {scrim.type}
                                     </span>
                                 </div>
                                 <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
-                                    <div className="text-[10px] text-brand-400 font-black uppercase tracking-widest mb-1 flex items-center gap-1">
+                                    <div className="text-xs text-brand-400 font-black uppercase tracking-widest mb-1 flex items-center gap-1">
                                         <Calendar className="w-3 h-3" /> {formatDate(scrim.time)}
                                     </div>
                                     <h3 className="text-lg font-black text-white uppercase tracking-tight line-clamp-1">{scrim.title || 'Official Scrim'}</h3>
@@ -201,7 +201,7 @@ const Scrims: React.FC = () => {
                                 </div>
 
                                 <div className="flex items-center justify-between">
-                                    <span className="text-[10px] text-gray-500 font-black tracking-widest uppercase">{scrim.currentSlots || 0} / {scrim.slots} Joined</span>
+                                    <span className="text-xs text-gray-500 font-black tracking-widest uppercase">{scrim.currentSlots || 0} / {scrim.slots} Joined</span>
                                     <div className="w-24 bg-black rounded-full h-1.5 overflow-hidden">
                                         <div 
                                             className="bg-brand-500 h-full rounded-full" 

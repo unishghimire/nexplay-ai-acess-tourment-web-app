@@ -337,7 +337,7 @@ export default function ScrimDetailPage() {
                     : 'bg-card border-gray-800 border-dashed text-gray-500 hover:border-gray-600 hover:text-gray-300'
                 }`}
               >
-                <span className="text-[10px] text-gray-500 mb-0.5">Slot {slot.slotNumber}</span>
+                <span className="text-xs text-gray-500 mb-0.5">Slot {slot.slotNumber}</span>
                 {slot.status === 'filled' ? (
                   <span className="flex items-center gap-1 text-[11px]">
                     <Lock className="w-3 h-3" /> {slot.teamName || 'Reserved'}

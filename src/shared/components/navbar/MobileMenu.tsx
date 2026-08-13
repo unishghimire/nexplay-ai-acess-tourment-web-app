@@ -37,7 +37,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, navLinks }) =>
                         </div>
                         <div className="flex-1 overflow-hidden">
                             <div className="font-bold text-white truncate text-lg">{(profile?.username || 'User')}</div>
-                            <div className="text-sm font-black text-brand-400 mt-1 cursor-pointer flex items-center gap-1 w-max px-2 py-1 bg-brand-900/20 rounded-lg hover:bg-brand-900/40 transition" onClick={() => { navigate('/wallet'); onClose(); }}>
+                            <div className="text-sm font-black text-brand-400 mt-1 cursor-pointer flex items-center gap-1 w-max px-3 py-2 bg-brand-900/20 touch-target rounded-lg hover:bg-brand-900/40 transition" onClick={() => { navigate('/wallet'); onClose(); }}>
                                 <Wallet className="w-4 h-4" />
                                 {formatCurrency(profile?.balance || 0)}
                             </div>

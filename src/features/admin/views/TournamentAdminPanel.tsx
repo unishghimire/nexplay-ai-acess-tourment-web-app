@@ -71,14 +71,14 @@ export default function TournamentAdminPanel() {
                     >
                         <Download className="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
-                    <span className={`px-3 sm:px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                    <span className={`px-3 sm:px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest ${
                         tournament.status === 'live' ? 'bg-green-500/10 text-green-500 border border-green-500/30' :
                         tournament.status === 'completed' ? 'bg-blue-500/10 text-blue-500 border border-blue-500/30' :
                         'bg-yellow-500/10 text-yellow-500 border border-yellow-500/30'
                     }`}>
                         {tournament.status}
                     </span>
-                    <span className="px-3 sm:px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest bg-brand-500/10 text-brand-400 border border-brand-500/30">
+                    <span className="px-3 sm:px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest bg-brand-500/10 text-brand-400 border border-brand-500/30">
                         {tournament.stage || 'registration'}
                     </span>
                 </div>
@@ -97,7 +97,7 @@ export default function TournamentAdminPanel() {
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as any)}
-                        className={`flex items-center gap-2 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-widest whitespace-nowrap transition-all shrink-0 ${
+                        className={`flex items-center gap-2 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 rounded-full text-xs sm:text-xs font-black uppercase tracking-widest whitespace-nowrap transition-all shrink-0 ${
                             activeTab === tab.id 
                                 ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/20' 
                                 : 'bg-dark/50 border border-gray-800 text-gray-400 hover:text-white hover:border-gray-700'

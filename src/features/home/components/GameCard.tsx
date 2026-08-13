@@ -24,8 +24,8 @@ const GameCard: React.FC<GameCardProps> = ({ game }) => {
                     referrerPolicy="no-referrer"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
-                <div className="absolute bottom-4 left-4">
-                    <h3 className="text-xl font-bold text-white drop-shadow-md">{formatGameName(game.name)}</h3>
+                <div className="absolute bottom-4 left-4 right-4">
+                    <h3 className="text-lg sm:text-xl font-bold text-white drop-shadow-md truncate">{formatGameName(game.name)}</h3>
                 </div>
             </div>
             <div className="p-4 space-y-3">
@@ -33,17 +33,17 @@ const GameCard: React.FC<GameCardProps> = ({ game }) => {
                     {game.modes.map((mode) => (
                         <span 
                             key={mode} 
-                            className="px-2 py-1 bg-surface text-brand-400 text-[10px] font-bold uppercase rounded border border-brand-500/20"
+                            className="px-2 py-1 bg-surface text-brand-400 text-xs font-bold uppercase rounded border border-brand-500/20"
                         >
                             {formatGameModeLabel(mode)}
                         </span>
                     ))}
                 </div>
-                <div className="pt-2 border-t border-gray-800 flex justify-between items-center">
-                    <span className="text-xs text-gray-500 font-mono uppercase">Available Modes: {game.modes.length}</span>
+                <div className="pt-2 border-t border-gray-800 flex justify-between items-center min-w-0">
+                    <span className="text-xs text-gray-500 font-mono uppercase truncate">Modes: {game.modes.length}</span>
                     <Link 
                         to={`/games/${game.id}`}
-                        className="text-xs font-bold text-brand-500 hover:text-brand-400 uppercase tracking-wider transition"
+                        className="text-xs font-bold text-brand-500 hover:text-brand-400 uppercase tracking-wider transition py-2 px-2 -mx-2 touch-target shrink-0"
                     >
                         Explore
                     </Link>

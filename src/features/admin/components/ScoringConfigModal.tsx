@@ -151,7 +151,7 @@ export const ScoringConfigModal: React.FC<ScoringConfigModalProps> = ({
 
                 {/* Kill Points */}
                 <div>
-                    <label htmlFor="scoring-kill-points" className="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">Points Per Kill</label>
+                    <label htmlFor="scoring-kill-points" className="block text-xs font-black text-slate-400 uppercase mb-2 tracking-widest">Points Per Kill</label>
                     <div className="flex items-center gap-3">
                         <input
                             type="number"
@@ -168,7 +168,7 @@ export const ScoringConfigModal: React.FC<ScoringConfigModalProps> = ({
                 {/* Placement Points */}
                 <div>
                     <div className="flex justify-between items-center mb-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Placement Points</label>
+                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Placement Points</label>
                         <button
                             onClick={handleAddPosition}
                             className="text-brand-500 hover:text-brand-400 text-xs font-bold flex items-center gap-1"
@@ -192,7 +192,7 @@ export const ScoringConfigModal: React.FC<ScoringConfigModalProps> = ({
                                 <span className="text-xs text-slate-500">pts</span>
                                 <button
                                     onClick={() => handleRemovePosition(String(pos))}
-                                    className="p-1.5 text-slate-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"
+                                    className="p-1.5 text-slate-600 hover:text-red-500 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition"
                                 >
                                     <Trash2 className="w-3.5 h-3.5" />
                                 </button>
@@ -203,7 +203,7 @@ export const ScoringConfigModal: React.FC<ScoringConfigModalProps> = ({
 
                 {/* Preview — uses the SAME scoring engine */}
                 <div className="bg-dark p-4 rounded-xl border border-slate-800">
-                    <p className="text-[10px] font-black text-brand-500 uppercase tracking-widest mb-3">Scoring Preview</p>
+                    <p className="text-xs font-black text-brand-500 uppercase tracking-widest mb-3">Scoring Preview</p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         {preview.slice(0, 9).map((line, i) => (
                             <div key={i} className="text-xs text-slate-300 font-mono bg-surface px-3 py-1.5 rounded-lg">
