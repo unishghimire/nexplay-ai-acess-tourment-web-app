@@ -192,11 +192,11 @@ const Scrims: React.FC = () => {
                             <div className="p-6 space-y-6">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                     <div className="bg-black p-3 rounded-2xl border border-gray-800">
-                                        <div className="text-[9px] text-gray-500 uppercase font-black mb-1">Entry</div>
+                                        <div className="text-[10px] text-gray-500 uppercase font-black mb-1">Entry</div>
                                         <div className="text-white font-black">{scrim.entryFee === 0 ? 'FREE' : formatCurrency(scrim.entryFee || 0)}</div>
                                     </div>
                                     <div className="bg-black p-3 rounded-2xl border border-gray-800">
-                                        <div className="text-[9px] text-gray-500 uppercase font-black mb-1">Prize Pool</div>
+                                        <div className="text-[10px] text-gray-500 uppercase font-black mb-1">Prize Pool</div>
                                         <div className="text-brand-400 font-black">{formatCurrency(scrim.prizePool || 0)}</div>
                                     </div>
                                 </div>
