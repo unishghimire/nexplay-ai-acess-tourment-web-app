@@ -230,6 +230,9 @@ const Home: React.FC = () => {
         />
         <div className="animate-fade-in space-y-16 pb-20 relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             
+            {/* SEO: h1 for search engines — visually hidden */}
+            <h1 className="sr-only">NexPlay — Esports Tournaments & Scrims in Nepal</h1>
+
             {/* Real-time Status and Security Badges Banner */}
             <div className="bg-gradient-to-br from-gray-900 to-black border border-gray-800 rounded-2xl sm:rounded-3xl p-5 sm:p-8 flex flex-col md:flex-row justify-between items-center gap-4 sm:gap-6 shadow-2xl">
                 <div className="flex items-center gap-4">
