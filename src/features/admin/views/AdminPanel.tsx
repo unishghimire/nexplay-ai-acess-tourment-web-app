@@ -9,6 +9,7 @@ import {Users, ArrowDown, ArrowUp, Layout, Check, X, Image as ImageIcon, CreditC
 import { DashboardTab, TournamentsTab, OrgApprovalsTab, OrgTournamentsTab, UsersTab, OrganizersTab, OrgEarningsTab, PendingDepositsTab, PendingWithdrawalsTab, GamesTab, PaymentsTab, PromoTab, MediaTab, NewsTab, SettingsTab } from './admin-panel-tabs';
 import DiscordAdminPanel from '../components/DiscordAdminPanel';
 import { useAdminData } from '../hooks/useAdminData';
+import TabErrorBoundary from '../../../shared/components/TabErrorBoundary';
 
 // Admin Panel View - Main Management Hub
 const AdminPanel: React.FC = () => {
@@ -197,56 +198,41 @@ const AdminPanel: React.FC = () => {
                 <header className="mb-10 pb-8 border-b border-gray-800">
                     <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white uppercase tracking-tighter">Admin Panel</h1>
                 </header>
-                {activeTab === 'tab-dashboard' && <DashboardTab {...tabProps} />}
-
-            {activeTab === 'tab-tournaments' && <TournamentsTab {...tabProps} />}
-
-            {activeTab === 'tab-org-approvals' && <OrgApprovalsTab {...tabProps} />}
-
-            {activeTab === 'tab-org-tournaments' && <OrgTournamentsTab {...tabProps} />}
-
-            {activeTab === 'tab-users' && <UsersTab {...tabProps} />}
-
-            {activeTab === 'tab-organizers' && <OrganizersTab {...tabProps} />}
-
-            {activeTab === 'tab-org-earnings' && <OrgEarningsTab {...tabProps} />}
-
-                {activeTab === 'tab-pending-deposits' && <PendingDepositsTab {...tabProps} />}
-
-                {activeTab === 'tab-pending-withdrawals' && <PendingWithdrawalsTab {...tabProps} />}
-
+                {activeTab === 'tab-dashboard' && <TabErrorBoundary tabName="Dashboard Tab"><DashboardTab {...tabProps} /></TabErrorBoundary>}
+                {activeTab === 'tab-tournaments' && <TabErrorBoundary tabName="Tournaments Tab"><TournamentsTab {...tabProps} /></TabErrorBoundary>}
+                {activeTab === 'tab-org-approvals' && <TabErrorBoundary tabName="Org Approvals Tab"><OrgApprovalsTab {...tabProps} /></TabErrorBoundary>}
+                {activeTab === 'tab-org-tournaments' && <TabErrorBoundary tabName="Org Tournaments Tab"><OrgTournamentsTab {...tabProps} /></TabErrorBoundary>}
+                {activeTab === 'tab-users' && <TabErrorBoundary tabName="Users Tab"><UsersTab {...tabProps} /></TabErrorBoundary>}
+                {activeTab === 'tab-organizers' && <TabErrorBoundary tabName="Organizers Tab"><OrganizersTab {...tabProps} /></TabErrorBoundary>}
+                {activeTab === 'tab-org-earnings' && <TabErrorBoundary tabName="Org Earnings Tab"><OrgEarningsTab {...tabProps} /></TabErrorBoundary>}
+                {activeTab === 'tab-pending-deposits' && <TabErrorBoundary tabName="Pending Deposits Tab"><PendingDepositsTab {...tabProps} /></TabErrorBoundary>}
+                {activeTab === 'tab-pending-withdrawals' && <TabErrorBoundary tabName="Pending Withdrawals Tab"><PendingWithdrawalsTab {...tabProps} /></TabErrorBoundary>}
                 {activeTab === 'tab-tx-history' && (
-                    <TransactionHistoryTab 
-                        allTransactions={allTransactions}
-                        allTournaments={allTournaments}
-                        setSelectedTx={setSelectedTx}
-                        formatDate={formatDate}
-                        getRelativeTime={getRelativeTime}
-                        formatCurrency={formatCurrency}
-                        txFilterType={txFilterType}
-                        setTxFilterType={setTxFilterType}
-                        txFilterStatus={txFilterStatus}
-                        setTxFilterStatus={setTxFilterStatus}
-                        txFilterTournament={txFilterTournament}
-                        setTxFilterTournament={setTxFilterTournament}
-                        txSearchUser={txSearchUser}
-                        setTxSearchUser={setTxSearchUser}
-                    />
+                    <TabErrorBoundary tabName="Transaction History Tab">
+                        <TransactionHistoryTab 
+                            allTransactions={allTransactions}
+                            allTournaments={allTournaments}
+                            setSelectedTx={setSelectedTx}
+                            formatDate={formatDate}
+                            getRelativeTime={getRelativeTime}
+                            formatCurrency={formatCurrency}
+                            txFilterType={txFilterType}
+                            setTxFilterType={setTxFilterType}
+                            txFilterStatus={txFilterStatus}
+                            setTxFilterStatus={setTxFilterStatus}
+                            txFilterTournament={txFilterTournament}
+                            setTxFilterTournament={setTxFilterTournament}
+                            txSearchUser={txSearchUser}
+                            setTxSearchUser={setTxSearchUser}
+                        />
+                    </TabErrorBoundary>
                 )}
-
-            
-
-            {activeTab === 'tab-games' && <GamesTab {...tabProps} />}
-
-            {activeTab === 'tab-payments' && <PaymentsTab {...tabProps} />}
-
-            {activeTab === 'tab-promo' && <PromoTab {...tabProps} />}
-
-            {activeTab === 'tab-media' && <MediaTab {...tabProps} />}
-
-            {activeTab === 'tab-news' && <NewsTab {...tabProps} />}
-
-            {activeTab === 'tab-settings' && <SettingsTab {...tabProps} />}
+                {activeTab === 'tab-games' && <TabErrorBoundary tabName="Games Tab"><GamesTab {...tabProps} /></TabErrorBoundary>}
+                {activeTab === 'tab-payments' && <TabErrorBoundary tabName="Payments Tab"><PaymentsTab {...tabProps} /></TabErrorBoundary>}
+                {activeTab === 'tab-promo' && <TabErrorBoundary tabName="Promo Codes Tab"><PromoTab {...tabProps} /></TabErrorBoundary>}
+                {activeTab === 'tab-media' && <TabErrorBoundary tabName="Media Library Tab"><MediaTab {...tabProps} /></TabErrorBoundary>}
+                {activeTab === 'tab-news' && <TabErrorBoundary tabName="News Tab"><NewsTab {...tabProps} /></TabErrorBoundary>}
+                {activeTab === 'tab-settings' && <TabErrorBoundary tabName="Settings Tab"><SettingsTab {...tabProps} /></TabErrorBoundary>}
 
             {activeTab === 'tab-discord' && (
                 <DiscordAdminPanel allTournaments={allTournaments} showToast={showToast} />

@@ -209,10 +209,10 @@ export default function TournamentDetails() {
     }, [tournament?.startTime]);
 
     const filteredParticipants = participants.filter(p => 
-        p.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.inGameId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (p.username && p.username.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (p.inGameId && p.inGameId.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (p.teamName && p.teamName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (p.teammates && p.teammates.some((tm: string) => tm.toLowerCase().includes(searchTerm.toLowerCase())))
+        (p.teammates && Array.isArray(p.teammates) && p.teammates.some((tm: string) => typeof tm === 'string' && tm.toLowerCase().includes(searchTerm.toLowerCase())))
     );
 
     const handleJoinClick = () => {

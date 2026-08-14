@@ -83,11 +83,15 @@ export default function ScrimDetailPage() {
     if (!scrim) return;
 
     try {
-      const newSlots = scrim.slots?.map((s: any) => {
+      const slotsArray = Array.isArray(scrim.slots)
+        ? scrim.slots
+        : Array.from({ length: typeof scrim.slots === 'number' ? scrim.slots : 20 }, (_, i) => ({ slotNumber: i + 1, status: 'open' }));
+
+      const newSlots = slotsArray.map((s: any) => {
         if (s.slotNumber !== slotNumber) return s;
         if (s.status === 'filled') return { ...s, status: 'open', teamName: null, teamId: null };
         return { ...s, status: 'filled', teamName: 'Reserved', teamId: null };
-      }) || [];
+      });
       const filled = newSlots.filter((s: any) => s.status === 'filled').length;
       await updateDoc(doc(db, SCRIM_COLLECTION, id), { slots: newSlots, filledSlots: filled, currentPlayers: filled });
       showToast(`Slot ${slotNumber} toggled`, 'info');
