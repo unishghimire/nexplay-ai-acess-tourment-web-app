@@ -30,7 +30,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, navLinks, seco
 
     return (
         <div className={`lg:hidden absolute top-[100%] left-0 w-full transition-all duration-300 ease-in-out bg-dark/95 backdrop-blur-xl border-t border-gray-800 ${isOpen ? 'max-h-[calc(100vh-4rem)] sm:max-h-[calc(100vh-5rem)] opacity-100 overflow-y-auto' : 'max-h-0 opacity-0 pointer-events-none border-t-0 overflow-hidden'}`}>
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 space-y-2">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 space-y-2" inert={!isOpen}>
                 {user && (
                     <div className="flex sm:hidden items-center p-4 gap-4 mb-4 bg-surface/20 rounded-xl border border-gray-800/50">
                         <div className="w-12 h-12 shrink-0 bg-brand-700 rounded-full flex items-center justify-center font-bold text-lg ring-2 ring-brand-500 overflow-hidden">
