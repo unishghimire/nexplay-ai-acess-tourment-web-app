@@ -128,6 +128,14 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     inputRef.current?.click();
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (disabled || loading) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onButtonClick();
+    }
+  };
+
   // Determinar layout responsivo por aspect ratio
   const getAspectClass = () => {
     switch (aspectRatio) {
@@ -148,7 +156,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   return (
     <div className={`w-full max-w-full ${className}`} id={id}>
       {label && (
-        <label className="block text-sm font-medium text-slate-300 mb-2 truncate">
+        <label htmlFor={`${id}-input`} className="block text-sm font-medium text-slate-300 mb-2 truncate">
           {label}
         </label>
       )}
@@ -166,13 +174,17 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         onDragLeave={handleDrag}
         onDrop={handleDrop}
         onClick={onButtonClick}
+        onKeyDown={handleKeyDown}
+        tabIndex={disabled ? -1 : 0}
+        role="button"
+        aria-label={label ? `Upload ${label}` : "Upload image"}
       >
-        {/* Hidden File Input */}
+        {/* Screen-reader-accessible file input (sr-only keeps it in tab order) */}
         <input
           ref={inputRef}
           type="file"
           id={`${id}-input`}
-          className="hidden"
+          className="sr-only"
           accept={ALLOWED_MIME_TYPES.join(",")}
           onChange={handleFileChange}
           disabled={disabled || loading}
@@ -187,27 +199,27 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
               className="w-full h-full object-cover select-none"
               referrerPolicy="no-referrer" loading="lazy" />
             
-            {/* Hover overlay controls */}
+            {/* Hover/focus overlay controls */}
             {!loading && !disabled && (
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3 flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3 flex justify-between items-center opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-200">
                 <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     onButtonClick();
                   }}
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900/90 text-slate-100 hover:bg-amber-500 hover:text-black shadow flex items-center gap-1.5 transition-colors duration-150"
+                  className="px-3 py-1.5 min-h-[44px] rounded-lg text-xs font-semibold bg-slate-900/90 text-slate-100 hover:bg-amber-500 hover:text-black shadow flex items-center gap-1.5 transition-colors duration-150"
                 >
-                  <RefreshCw className="w-3.5 h-3.5" />
+                  <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
                   Replace
                 </button>
                 <button
                   type="button"
                   onClick={handleRemove}
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-500 text-white hover:bg-rose-600 shadow flex items-center gap-1.5 transition-colors duration-150"
+                  className="px-3 py-1.5 min-h-[44px] rounded-lg text-xs font-semibold bg-rose-500 text-white hover:bg-rose-600 shadow flex items-center gap-1.5 transition-colors duration-150"
                   aria-label="Remove image"
                 >
-                  <X className="w-3.5 h-3.5" />
+                  <X className="w-3.5 h-3.5" aria-hidden="true" />
                   Remove
                 </button>
               </div>
@@ -217,7 +229,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           /* Empty placeholder slot */
           <div className="flex flex-col items-center justify-center p-6 text-center select-none pointer-events-none">
             <div className="w-12 h-12 rounded-xl bg-slate-800/80 flex items-center justify-center mb-3 group-hover:bg-slate-700/80 group-hover:scale-110 transition-all duration-200 shadow-md">
-              <Upload className="w-6 h-6 text-slate-400 group-hover:text-amber-500 transition-colors" />
+              <Upload className="w-6 h-6 text-slate-400 group-hover:text-amber-500 transition-colors" aria-hidden="true" />
             </div>
             <p className="text-sm font-semibold text-slate-200 mb-1">
               Drag & drop image here
@@ -233,8 +245,8 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
 
         {/* Loading / Progress Panel */}
         {loading && (
-          <div className="absolute inset-0 bg-slate-950/80 flex flex-col items-center justify-center p-4">
-            <RefreshCw className="w-8 h-8 text-amber-500 animate-spin mb-3" />
+          <div className="absolute inset-0 bg-slate-950/80 flex flex-col items-center justify-center p-4" role="status" aria-live="polite">
+            <RefreshCw className="w-8 h-8 text-amber-500 animate-spin mb-3" aria-hidden="true" />
             <span className="text-sm font-medium text-slate-200 mb-1">Uploading to ImgBB...</span>
             <div className="w-2/3 h-1.5 bg-slate-850 rounded-full overflow-hidden mb-1">
               <motion.div
@@ -252,18 +264,20 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         {/* Error Notification Banner inside dropzone */}
         {error && !loading && (
           <div className="absolute bottom-2 inset-x-2 bg-rose-950/90 hover:bg-rose-950 border border-rose-500/55 rounded-lg p-2 flex items-start gap-1.5 shadow-lg backdrop-blur-sm z-10" onClick={(e) => e.stopPropagation()}>
-            <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+            <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" aria-hidden="true" />
             <div className="flex-1 min-w-0">
               <p className="text-[10px] text-rose-200 leading-tight font-medium line-clamp-2">{error}</p>
             </div>
             <button
+              type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 setError(null);
               }}
-              className="text-rose-400 hover:text-rose-300 p-0.5 transition-colors rounded-md"
+              aria-label="Dismiss error"
+              className="text-rose-400 hover:text-rose-300 p-1 transition-colors rounded-md min-h-[44px] min-w-[44px] flex items-center justify-center"
             >
-              <X className="w-3 h-3" />
+              <X className="w-3 h-3" aria-hidden="true" />
             </button>
           </div>
         )}
@@ -271,10 +285,12 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         {/* Success Tick */}
         {success && !loading && (
           <div className="absolute top-2 right-2 bg-emerald-950/95 border border-emerald-500/50 rounded-full p-1.5 shadow-md flex items-center justify-center z-10" onClick={(e) => e.stopPropagation()}>
-            <CheckCircle className="w-4 h-4 text-emerald-400" />
+            <CheckCircle className="w-4 h-4 text-emerald-400" aria-hidden="true" />
           </div>
         )}
       </div>
     </div>
   );
 };
+
+export default ImageUploader;
