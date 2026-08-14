@@ -16,11 +16,15 @@ const GameCard: React.FC<GameCardProps> = ({ game }) => {
             whileHover={{ scale: 1.02 }}
             className="bg-card rounded-xl overflow-hidden border border-gray-800 hover:border-brand-500/50 transition-all group shadow-lg"
         >
-            <Link to={`/games/${game.id}`} className="block">
+            <Link
+                to={`/games/${game.id}`}
+                aria-label={`View ${formatGameName(game.name)} details`}
+                className="block focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:outline-none rounded-xl"
+            >
                 <div className="relative h-36 sm:h-48 overflow-hidden">
                     <img
                         src={game.logoUrl || ''}
-                        alt={formatGameName(game.name)}
+                        alt=""
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy"
                         referrerPolicy="no-referrer"
                     />
@@ -29,7 +33,7 @@ const GameCard: React.FC<GameCardProps> = ({ game }) => {
                         <h3 className="text-lg sm:text-xl font-bold text-white drop-shadow-md truncate">{formatGameName(game.name)}</h3>
                     </div>
                 </div>
-                <div className="p-4 space-y-3">
+                <div className="p-4 space-y-3" aria-hidden="true">
                     <div className="flex flex-wrap gap-2">
                         {game.modes.map((mode) => (
                             <span
