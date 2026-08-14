@@ -2,6 +2,11 @@ import { Router } from "express";
 import { db, admin, authenticateToken, rateLimit } from "../shared.js";
 
 const router = Router();
+const ANNOUNCEMENT_TYPES: readonly DiscordAnnouncementType[] = [
+  'tournament_published', 'tournament_live', 'tournament_completed',
+  'group_published', 'game_start', 'game_time',
+  'scrim_published', 'scrim_live', 'scrim_completed',
+];
 
 type DiscordAnnouncementType =
   | 'tournament_published' | 'tournament_live' | 'tournament_completed'
@@ -120,6 +125,18 @@ router.post('/api/discord/announce', authenticateToken, rateLimit(10, 15 * 60 * 
   }
   if (!type || !data || !channel) {
     return res.status(400).json({ success: false, message: 'type, data, and channel are required.' });
+  }
+  if (!ANNOUNCEMENT_TYPES.includes(type) || !['tournaments', 'scrims'].includes(channel) ||
+      typeof data !== 'object' || Array.isArray(data) || typeof data.tournamentId !== 'string' || data.tournamentId.length > 128) {
+    return res.status(400).json({ success: false, message: 'Invalid announcement payload.' });
+  }
+  if ((channel === 'scrims') !== type.startsWith('scrim_')) {
+    return res.status(400).json({ success: false, message: 'Announcement type does not match the requested channel.' });
+  }
+  const tournament = await db.collection('tournaments').doc(data.tournamentId).get();
+  if (!tournament.exists) return res.status(404).json({ success: false, message: 'Tournament not found.' });
+  if (req.user.role !== 'admin' && tournament.data()?.hostUid !== req.user.userId) {
+    return res.status(403).json({ success: false, message: 'You can only announce your own tournaments.' });
   }
 
   const webhookUrl = channel === 'scrims' ? process.env.DISCORD_WEBHOOK_SCRIMS : process.env.DISCORD_WEBHOOK_TOURNAMENTS;

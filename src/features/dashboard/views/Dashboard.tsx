@@ -9,6 +9,7 @@ import { Trophy, Eye, Upload, BarChart, User, Shield, Users } from 'lucide-react
 import ResultUploadModal from '../../results/components/ResultUploadModal';
 import TournamentResultModal from '../../tournaments/components/TournamentResultModal';
 import { Seo } from '../../../shared/components/Seo';
+import { fetchRoomCredentials } from '../../../shared/services/roomCredentials';
 
 const Dashboard: React.FC = () => {
     const { user, profile } = useAuth();
@@ -86,7 +87,12 @@ const Dashboard: React.FC = () => {
                 index === self.findIndex((m) => m.id === t.id)
             );
             
-            setMyTournaments(uniqueTours);
+            const tournamentsWithCredentials = await Promise.all(uniqueTours.map(async tournament => {
+                if (tournament.status !== 'live' && tournament.status !== 'upcoming') return tournament;
+                const credentials = await fetchRoomCredentials(tournament.id);
+                return credentials ? { ...tournament, ...credentials } : tournament;
+            }));
+            setMyTournaments(tournamentsWithCredentials);
 
             // Fetch My Teams
             const memberQ = query(collection(db, 'team_members'), where('userId', '==', user.uid));

@@ -11,6 +11,7 @@ import { MediaCategory } from '../../../shared/services/mediaService';
 import { timeAgo, formatDate, formatCurrency } from '../../../shared/utils/utils';
 import Modal from '../../../shared/components/Modal';
 import { Seo } from '../../../shared/components/Seo';
+import { commitFirestoreBatches, type FirestoreBatchOperation } from '../../../shared/utils/firestoreBatches';
 
 const TeamDetails: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -295,30 +296,32 @@ const TeamDetails: React.FC = () => {
         try {
             const membersQ = query(collection(db, 'team_members'), where('teamId', '==', team.id));
             const membersSnap = await getDocs(membersQ);
-            const batchPromises = membersSnap.docs.map(async (memberDoc) => {
+            const operations: FirestoreBatchOperation[] = [];
+            membersSnap.docs.forEach(memberDoc => {
                 const memberData = memberDoc.data();
                 const memberUserId = memberData.userId;
-                await deleteDoc(doc(db, 'team_members', memberDoc.id));
-                await updateDoc(doc(db, 'users', memberUserId), { teamName: '', teamId: '' });
-                await setDoc(doc(db, 'users_public', memberUserId), { teamName: '', teamId: '' }, { merge: true });
+                operations.push(batch => batch.delete(memberDoc.ref));
+                operations.push(batch => batch.update(doc(db, 'users', memberUserId), { teamName: '', teamId: '' }));
+                operations.push(batch => batch.set(doc(db, 'users_public', memberUserId), { teamName: '', teamId: '' }, { merge: true }));
                 if (memberUserId !== user.uid) {
-                    await addDoc(collection(db, 'notifications'), {
+                    const notificationRef = doc(collection(db, 'notifications'));
+                    operations.push(batch => batch.set(notificationRef, {
                         userId: memberUserId,
                         title: 'Team Disbanded',
                         message: `The team "${team.name}" has been disbanded by the owner.`,
                         type: 'alert',
                         read: false,
                         timestamp: serverTimestamp()
-                    });
+                    }));
                 }
             });
-            await Promise.all(batchPromises);
             const invitesQ = query(collection(db, 'team_invites'), where('teamId', '==', team.id));
             const invitesSnap = await getDocs(invitesQ);
-            await Promise.all(invitesSnap.docs.map(d => deleteDoc(doc(db, 'team_invites', d.id))));
+            invitesSnap.docs.forEach(invite => operations.push(batch => batch.delete(invite.ref)));
             const activityQ = query(collection(db, 'team_activity'), where('teamId', '==', team.id));
             const activitySnap = await getDocs(activityQ);
-            await Promise.all(activitySnap.docs.map(d => deleteDoc(doc(db, 'team_activity', d.id))));
+            activitySnap.docs.forEach(activity => operations.push(batch => batch.delete(activity.ref)));
+            await commitFirestoreBatches(db, operations);
             await deleteDoc(doc(db, 'teams', team.id));
             showToast('Team deleted successfully', 'success');
             navigate('/teams');

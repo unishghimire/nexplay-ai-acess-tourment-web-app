@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
+import { fetchRoomCredentials } from '../../../shared/services/roomCredentials';
 import {
   ChevronLeft, Save, Radio, Users, DollarSign, Calendar,
   Gamepad2, Edit2, Check, X, Lock, Unlock, Copy, Trophy,
@@ -45,8 +46,10 @@ export default function ScrimDetailPage() {
           return;
         }
         setScrim(data);
-        setRoomId((data as any).roomId || '');
-        setRoomPass((data as any).roomPass || '');
+        fetchRoomCredentials(id).then(credentials => {
+          setRoomId(credentials?.roomId || '');
+          setRoomPass(credentials?.roomPass || '');
+        });
         setStreamUrl((data as any).ytLink || (data as any).streamUrl || '');
       }
       setLoading(false);
@@ -96,7 +99,10 @@ export default function ScrimDetailPage() {
   const handleBroadcast = useCallback(async () => {
     if (!id) return;
     try {
-      await updateDoc(doc(db, SCRIM_COLLECTION, id), { roomId, roomPass, ytLink: streamUrl });
+      await Promise.all([
+        setDoc(doc(db, SCRIM_COLLECTION, id, 'credentials', 'main'), { roomId, roomPass }, { merge: true }),
+        updateDoc(doc(db, SCRIM_COLLECTION, id), { ytLink: streamUrl }),
+      ]);
       showToast('Room credentials broadcasted', 'success');
     } catch {
       showToast('Failed to broadcast', 'error');

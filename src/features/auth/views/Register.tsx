@@ -4,7 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { motion } from 'motion/react';
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, CheckCircle, XCircle, ShieldCheck, Phone, Hash } from 'lucide-react';
-import { createUserWithEmailAndPassword, signInWithPopup, updateProfile } from 'firebase/auth';
+import { createUserWithEmailAndPassword, sendEmailVerification, signInWithPopup, updateProfile } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db, googleProvider } from '../../../shared/config/firebase';
 import ReCAPTCHA from 'react-google-recaptcha';
@@ -119,8 +119,20 @@ const Register: React.FC = () => {
                 updatedAt: serverTimestamp(),
             });
 
+            let verificationSent = true;
+            try {
+                await sendEmailVerification(user);
+            } catch (verificationError) {
+                console.error('Email verification delivery failed:', verificationError);
+                verificationSent = false;
+            }
 
-            showToast('Welcome to Nexplay, ' + username + '!', 'success');
+            showToast(
+                verificationSent
+                    ? `Welcome to Nexplay, ${username}! Check your email to verify your account.`
+                    : 'Account created. Verify your email from Firebase to unlock all features.',
+                verificationSent ? 'success' : 'warning'
+            );
             navigate('/dashboard');
         } catch (err: any) {
             console.error('Registration error:', err);

@@ -19,12 +19,11 @@ service cloud.firestore {
     function incoming() { return request.resource.data; }
     function existing() { return resource.data; }
     function isSignedIn() { return request.auth != null; }
-    // Email-verified check — gracefully falls back for providers that skip verification
+    // Google accounts are verified by the provider; password accounts must verify email.
     function isVerified() {
       return isSignedIn() && (
         request.auth.token.email_verified == true ||
-        request.auth.token.firebase.sign_in_provider == 'google.com' ||
-        request.auth.token.firebase.sign_in_provider == 'password'
+        request.auth.token.firebase.sign_in_provider == 'google.com'
       );
     }
     // Role checks — prefer Custom Claims, fall back to Firestore doc for migration period
@@ -53,6 +52,11 @@ service cloud.firestore {
              exists(/databases/$(database)/documents/tournaments/$(tournamentId)) &&
              get(/databases/$(database)/documents/tournaments/$(tournamentId)).data.hostUid == request.auth.uid;
     }
+    function isTeamOwner(teamId) {
+      return isSignedIn() && teamId is string &&
+             exists(/databases/$(database)/documents/teams/$(teamId)) &&
+             get(/databases/$(database)/documents/teams/$(teamId)).data.ownerId == request.auth.uid;
+    }
 
     // ═══════════════════════════════════════════════════════════════
     // VALIDATION BLUEPRINTS
@@ -68,10 +72,11 @@ service cloud.firestore {
     // Permissive on status to support all lifecycle states the app uses.
     function isValidTournament(data) {
       return data.title is string && data.title.size() >= 5 && data.title.size() <= 100 &&
-             data.game is string && data.game.size() >= 2 && data.game.size() <= 50 &&
-             data.prizePool is number && data.prizePool >= 0 &&
-             data.status in ['draft', 'published', 'upcoming', 'live', 'paused', 'completed', 'cancelled'] &&
-             isValidId(data.hostUid);
+            data.game is string && data.game.size() >= 2 && data.game.size() <= 50 &&
+            data.prizePool is number && data.prizePool >= 0 &&
+            data.status in ['draft', 'published', 'upcoming', 'live', 'paused', 'completed', 'cancelled'] &&
+             isValidId(data.hostUid) &&
+             !data.keys().hasAny(['roomId', 'roomPass']);
     }
 
     // Validates a transaction record on creation — prevents amount/type manipulation
@@ -87,7 +92,8 @@ service cloud.firestore {
     function isValidPublicProfile(data) {
       return data.keys().hasOnly([
         'uid', 'username', 'inGameId', 'inGameName', 'role',
-        'profilePicUrl', 'bannerUrl', 'teamName', 'orgName', 'updatedAt'
+        'profilePicUrl', 'bannerUrl', 'teamName', 'teamId', 'orgName',
+        'skills', 'status', 'customActivity', 'totalEarnings', 'updatedAt'
       ]);
     }
 
@@ -129,7 +135,11 @@ service cloud.firestore {
           incoming().totalEarnings == existing().totalEarnings &&
           incoming().orgWalletBalance == existing().orgWalletBalance &&
           incoming().orgPendingEarnings == existing().orgPendingEarnings
-        ) || isAdmin()
+        ) ||
+        (existing().teamId is string && isTeamOwner(existing().teamId) &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['teamName', 'teamId', 'updatedAt']) &&
+          incoming().teamName == '' && incoming().teamId == '') ||
+        isAdmin()
       );
     }
 
@@ -137,9 +147,20 @@ service cloud.firestore {
       allow get:    if true && isValidId(userId);
       allow list:   if true;
       allow create: if isSignedIn() && isValidId(userId) && isOwner(userId) &&
-                       isValidPublicProfile(incoming());
-      allow update: if (isOwner(userId) || isAdmin()) && isValidId(userId) &&
-                       isValidPublicProfile(incoming());
+                       incoming().uid == userId && incoming().role == 'player' &&
+                       incoming().totalEarnings == 0 && isValidPublicProfile(incoming());
+      allow update: if isValidId(userId) && isValidPublicProfile(incoming()) && (
+                       (isOwner(userId) && incoming().uid == existing().uid &&
+                        incoming().role == existing().role &&
+                        incoming().diff(existing()).affectedKeys().hasOnly([
+                          'username', 'inGameId', 'inGameName', 'profilePicUrl',
+                          'bannerUrl', 'teamName', 'teamId', 'orgName', 'skills',
+                          'status', 'customActivity', 'updatedAt'
+                        ])) ||
+                       (existing().teamId is string && isTeamOwner(existing().teamId) &&
+                        incoming().diff(existing()).affectedKeys().hasOnly(['teamName', 'teamId', 'updatedAt']) &&
+                        incoming().teamName == '' && incoming().teamId == '') ||
+                       isAdmin());
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -293,7 +314,7 @@ service cloud.firestore {
     match /team_members/{memberId} {
       allow read:   if true;
       allow create: if isVerified() && isOwner(incoming().userId);
-      allow delete: if isAdmin() || isOwner(existing().userId);
+      allow delete: if isAdmin() || isOwner(existing().userId) || isTeamOwner(existing().teamId);
     }
 
     match /team_invites/{inviteId} {
@@ -413,12 +434,14 @@ service cloud.firestore {
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // MEDIA — authenticated users upload own files
+    // MEDIA — catalog records are created by the authenticated server after upload.
+    // Client creation would allow a caller to forge a provider publicId and later
+    // ask the server to delete an asset it does not own.
     // ═══════════════════════════════════════════════════════════════
     match /media/{mediaId} {
       allow read:   if true;
-      allow create: if isSignedIn() && incoming().userId == request.auth.uid;
-      allow delete: if isOwner(existing().userId) || isAdmin();
+      allow create: if false;
+      allow delete: if false;
     }
 
     // ═══════════════════════════════════════════════════════════════

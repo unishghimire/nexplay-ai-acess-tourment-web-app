@@ -330,7 +330,7 @@ export default function TournamentDetails() {
         });
     }, [tournament?.id, tournament?.status, isJoined, user]);
 
-    const showRoom = tournament.matchType === 'scrims' && isJoined && (tournament.status === 'live' || ((roomCreds?.roomId || tournament.roomId) && tournament.status === 'upcoming'));
+    const showRoom = tournament.matchType === 'scrims' && isJoined && (tournament.status === 'live' || (roomCreds?.roomId && tournament.status === 'upcoming'));
     const ytId = getYoutubeId(tournament.ytLink);
 
     return (
@@ -534,9 +534,9 @@ export default function TournamentDetails() {
                                                 <div className="bg-card/80 p-4 rounded-2xl border border-gray-800">
                                                     <div className="text-xs text-gray-500 uppercase font-black tracking-widest mb-1">Room ID</div>
                                                     <div className="flex items-center justify-between">
-                                                        <span className="text-lg sm:text-xl font-mono font-bold text-white tracking-wider">{roomCreds?.roomId || tournament.roomId || 'Waiting...'}</span>
+                                                        <span className="text-lg sm:text-xl font-mono font-bold text-white tracking-wider">{roomCreds?.roomId || 'Waiting...'}</span>
                                                         <button onClick={() => {
-                                                            navigator.clipboard.writeText(roomCreds?.roomId || tournament.roomId || '');
+                                                            navigator.clipboard.writeText(roomCreds?.roomId || '');
                                                             showToast("Copied!", "success");
                                                         }} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
                                                             <ExternalLink className="w-5 h-5 text-gray-500" />
@@ -548,7 +548,7 @@ export default function TournamentDetails() {
                                                     <div className="text-xs text-gray-500 uppercase font-black tracking-widest mb-1">Password</div>
                                                     <div className="flex items-center justify-between">
                                                         <span className="text-lg sm:text-xl font-mono font-bold text-white tracking-wider">
-                                                            {showPassword ? (roomCreds?.roomPass || tournament.roomPass || 'None') : '••••••••'}
+                                                            {showPassword ? (roomCreds?.roomPass || 'None') : '••••••••'}
                                                         </span>
                                                         <div className="flex items-center gap-1">
                                                             <button 
@@ -558,7 +558,7 @@ export default function TournamentDetails() {
                                                                 {showPassword ? <EyeOff className="w-5 h-5 text-gray-500" /> : <Eye className="w-5 h-5 text-gray-500" />}
                                                             </button>
                                                             <button onClick={() => {
-                                                                navigator.clipboard.writeText(roomCreds?.roomPass || tournament.roomPass || '');
+                                                                navigator.clipboard.writeText(roomCreds?.roomPass || '');
                                                                 showToast("Copied!", "success");
                                                             }} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
                                                                 <ExternalLink className="w-5 h-5 text-gray-500" />

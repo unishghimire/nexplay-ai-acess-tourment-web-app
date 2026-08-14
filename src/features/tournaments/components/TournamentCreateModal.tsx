@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, addDoc, getDocs, serverTimestamp, Timestamp, updateDoc, doc, writeBatch, where, query } from 'firebase/firestore';
+import { collection, addDoc, getDocs, serverTimestamp, Timestamp, updateDoc, doc, setDoc, where, query } from 'firebase/firestore';
 import { Tournament } from '../../../shared/types/types';
 import { createScoringSnapshot } from '../../../shared/services/scoringEngine';
 import { generateDefaultRoadmap } from '../../../shared/services/tournamentEngine';
@@ -29,6 +29,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import PrizeDistributionInput from './PrizeDistributionInput';
 import { formatCurrency, formatGameModeLabel, formatGameName, toDateSafe } from '../../../shared/utils/utils';
+import { commitFirestoreBatches } from '../../../shared/utils/firestoreBatches';
 
 interface TournamentCreateModalProps {
   isOpen: boolean;
@@ -218,8 +219,9 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
     }
     setLoading(true);
     try {
+      const { roomId, roomPass, ...publicFormData } = formData;
       const tournamentData = {
-        ...formData,
+        ...publicFormData,
         tournamentMode: formData.tournamentMode,
         hostUid: editTournament ? editTournament.hostUid : user.uid,
         currentPlayers: editTournament ? editTournament.currentPlayers : 0,
@@ -232,6 +234,7 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
 
       if (editTournament) {
         await updateDoc(doc(db, 'tournaments', editTournament.id), tournamentData);
+        await setDoc(doc(db, 'tournaments', editTournament.id, 'credentials', 'main'), { roomId, roomPass }, { merge: true });
         showToast('Tournament updated successfully!', 'success');
       } else {
         // Create scoring snapshot from the selected game's scoring config
@@ -272,12 +275,14 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
           currentRound: 1,
           createdAt: serverTimestamp()
         });
+        if (roomId || roomPass) {
+          await setDoc(doc(db, 'tournaments', docRef.id, 'credentials', 'main'), { roomId, roomPass });
+        }
         showToast('Tournament created successfully!', 'success');
 
         // Notify followers
         const followsSnap = await getDocs(query(collection(db, 'follows'), where('followingId', '==', user.uid)));
-        const batch = writeBatch(db);
-        followsSnap.forEach(fDoc => {
+        const notificationOperations = followsSnap.docs.map(fDoc => batch => {
             const followerId = fDoc.data().followerId;
             const notifRef = doc(collection(db, 'notifications'));
             batch.set(notifRef, {
@@ -290,7 +295,7 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
                 timestamp: serverTimestamp()
             });
         });
-        await batch.commit();
+        await commitFirestoreBatches(db, notificationOperations);
       }
       
       onSuccess();
