@@ -15,11 +15,34 @@ export const ai = new GoogleGenAI({
   httpOptions: { headers: { 'User-Agent': "aistudio-build" } }
 });
 
-export const __filename = fileURLToPath(import.meta.url);
-export const __dirname = path.dirname(__filename);
+let filename = process.cwd();
+let dirname = process.cwd();
+try {
+  if (import.meta?.url) {
+    filename = fileURLToPath(import.meta.url);
+    dirname = path.dirname(filename);
+  }
+} catch {
+  // ESM meta resolution fallback for serverless bundlers
+}
+export const __filename = filename;
+export const __dirname = dirname;
 
-const configPath = path.join(process.cwd(), "firebase-applet-config.json");
-const firebaseConfig = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+let firebaseConfig: any = {
+  projectId: process.env.FIREBASE_PROJECT_ID || process.env.VITE_FIREBASE_PROJECT_ID || "gen-lang-client-0077787807",
+  storageBucket: process.env.FIREBASE_STORAGE_BUCKET || process.env.VITE_FIREBASE_STORAGE_BUCKET || "gen-lang-client-0077787807.firebasestorage.app",
+  firestoreDatabaseId: process.env.FIREBASE_DATABASE_ID || process.env.VITE_FIREBASE_DATABASE_ID || "ai-studio-26f2d1e6-0f23-429d-bff6-19f4e58cf589",
+};
+
+try {
+  const configPath = path.join(process.cwd(), "firebase-applet-config.json");
+  if (fs.existsSync(configPath)) {
+    const fileConfig = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+    firebaseConfig = { ...firebaseConfig, ...fileConfig };
+  }
+} catch (e) {
+  console.warn("Could not read firebase-applet-config.json from disk, using fallback/env config:", e);
+}
 
 // ═══════════════════════════════════════════════════════════════
 // FIREBASE ADMIN INITIALIZATION — production-safe credential handling
