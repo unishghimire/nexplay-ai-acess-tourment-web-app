@@ -1,7 +1,8 @@
 import express from "express";
 import { createServer as createViteServer } from "vite";
 import path from "path";
-import { db } from "./server/shared.js";
+import { db, authenticateToken, rateLimit } from "./server/shared.js";
+import { requireAdmin } from "./server/authz.js";
 
 import authRoutes from "./server/routes/auth.js";
 import tournamentRoutes from "./server/routes/tournaments.js";
@@ -41,7 +42,7 @@ app.use(adminScrimRoutes);
   });
 
   // IndexNow Endpoint for SEO
-  app.post("/api/indexnow", async (req, res) => {
+  app.post("/api/indexnow", authenticateToken, requireAdmin, rateLimit(5, 15 * 60 * 1000), async (req, res) => {
     await handleIndexNow(req, res);
   });
 

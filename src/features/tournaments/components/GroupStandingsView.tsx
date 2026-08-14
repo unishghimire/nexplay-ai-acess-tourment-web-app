@@ -292,8 +292,8 @@ export default function GroupStandingsView({ tournament, participants }: GroupSt
         });
     }, [tournament.id, myGroup?.id]);
 
-    const groupRoomId = secureCreds?.roomId || myGroup?.roomId || tournament.roomId;
-    const groupRoomPass = secureCreds?.roomPass || myGroup?.roomPass || tournament.roomPass;
+    const groupRoomId = secureCreds?.roomId;
+    const groupRoomPass = secureCreds?.roomPass;
     const showRoom = isLive && (groupRoomId || groupRoomPass);
 
     // Is the tournament past the group stage? If so, reveal all groups.

@@ -1,7 +1,17 @@
 import { Router } from "express";
 import { db, admin, ai, Type, authenticateToken, rateLimit, sanitizeHexColor, buildTournamentBannerSvg, uploadBase64ToCloudinary } from "../shared.js";
+import { MAX_AUDIT_HTML_BYTES, SafeUrlFetchError, fetchPublicHtml } from "../safeUrlFetch.js";
 
 const router = Router();
+const MAX_BANNER_TITLE_LENGTH = 120;
+const MAX_BANNER_GAME_LENGTH = 80;
+const MAX_BANNER_CONTEXT_LENGTH = 80;
+const MAX_AUDIT_DISCUSSION_LENGTH = 4_000;
+const MAX_AUDIT_CONTEXT_BYTES = 60_000;
+
+function optionalText(value: unknown, maxLength: number, fallback: string) {
+  return typeof value === "string" && value.trim() ? value.trim().slice(0, maxLength) : fallback;
+}
 
 // Generate Banner
 router.post("/api/generate-banner", authenticateToken, rateLimit(5, 15 * 60 * 1000), async (req: any, res: any) => {
@@ -14,11 +24,21 @@ router.post("/api/generate-banner", authenticateToken, rateLimit(5, 15 * 60 * 10
     const cleanTitle = typeof title === "string" ? title.trim() : "";
     const cleanGame = typeof game === "string" ? game.trim() : "";
     if (!cleanTitle || !cleanGame) return res.status(400).json({ success: false, message: "Title and game are required." });
+    if (cleanTitle.length > MAX_BANNER_TITLE_LENGTH || cleanGame.length > MAX_BANNER_GAME_LENGTH) {
+      return res.status(400).json({ success: false, message: "Title or game name is too long." });
+    }
+
+    const cleanType = optionalText(type, MAX_BANNER_CONTEXT_LENGTH, "Tournament");
+    const cleanTournamentType = optionalText(tournamentType, MAX_BANNER_CONTEXT_LENGTH, "tournament");
+    const cleanTheme = optionalText(theme, MAX_BANNER_CONTEXT_LENGTH, "competitive");
+    const cleanMood = optionalText(mood, MAX_BANNER_CONTEXT_LENGTH, "high-energy");
+    const cleanEntryFee = typeof entryFee === "number" && Number.isFinite(entryFee) ? entryFee : 0;
+    const cleanPrizePool = typeof prizePool === "number" && Number.isFinite(prizePool) ? prizePool : 0;
 
     const prompt = `Create a concise esports banner concept for a tournament.
 Return only JSON with: headline, subtitle, motif, accentColor, secondaryColor, backgroundColor, glowColor.
 Rules: use short high-impact text only, no markdown, no code fences, no extra commentary.
-Context: title=${cleanTitle}; game=${cleanGame}; type=${typeof type === "string" ? type : "Tournament"}; tournamentType=${typeof tournamentType === "string" ? tournamentType : "tournament"}; entryFee=${typeof entryFee === "number" ? entryFee : 0}; prizePool=${typeof prizePool === "number" ? prizePool : 0}; theme=${typeof theme === "string" ? theme : "competitive"}; mood=${typeof mood === "string" ? mood : "high-energy"}.`;
+Context: title=${cleanTitle}; game=${cleanGame}; type=${cleanType}; tournamentType=${cleanTournamentType}; entryFee=${cleanEntryFee}; prizePool=${cleanPrizePool}; theme=${cleanTheme}; mood=${cleanMood}.`;
 
     let aiResult: any = null;
     try {
@@ -45,9 +65,9 @@ Context: title=${cleanTitle}; game=${cleanGame}; type=${typeof type === "string"
 
     const bannerConfig = {
       title: cleanTitle, game: cleanGame,
-      subtitle: typeof aiResult?.subtitle === "string" && aiResult.subtitle.trim() ? aiResult.subtitle.trim() : `Entry fee ${typeof entryFee === "number" ? entryFee : 0} · Prize pool ${typeof prizePool === "number" ? prizePool : 0}`,
-      motif: typeof aiResult?.motif === "string" && aiResult.motif.trim() ? aiResult.motif.trim() : typeof mood === "string" && mood.trim() ? mood.trim() : "NEON ARENA",
-      headline: typeof aiResult?.headline === "string" && aiResult.headline.trim() ? aiResult.headline.trim() : cleanTitle,
+      subtitle: optionalText(aiResult?.subtitle, 160, `Entry fee ${cleanEntryFee} · Prize pool ${cleanPrizePool}`),
+      motif: optionalText(aiResult?.motif, 80, cleanMood || "NEON ARENA"),
+      headline: optionalText(aiResult?.headline, 120, cleanTitle),
       accentColor: sanitizeHexColor(aiResult?.accentColor, "#ff6b00"),
       secondaryColor: sanitizeHexColor(aiResult?.secondaryColor, "#7c3aed"),
       backgroundColor: sanitizeHexColor(aiResult?.backgroundColor, "#111827"),
@@ -71,7 +91,7 @@ Context: title=${cleanTitle}; game=${cleanGame}; type=${typeof type === "string"
     return res.status(200).json({ success: true, url: publicUrl, public_id: publicId, media: mediaData, banner: bannerConfig });
   } catch (error: any) {
     console.error("[Banner Generator] Failed:", error);
-    return res.status(500).json({ success: false, message: error.message || "Banner generation failed" });
+    return res.status(500).json({ success: false, message: "Banner generation failed" });
   }
 });
 
@@ -81,23 +101,26 @@ router.post("/api/audit", authenticateToken, rateLimit(3, 15 * 60 * 1000), async
     if (req.user.role !== 'admin' && req.user.role !== 'organizer') {
       return res.status(403).json({ success: false, message: "Organizer or admin access required" });
     }
-    const { url, htmlContents } = req.body;
+    const { url, htmlContents } = req.body || {};
     let finalHtml = "";
-    let targetUrl = url || "Direct Paste";
+    let targetUrl = "Direct Paste";
 
-    if (htmlContents && htmlContents.trim().length > 0) {
+    if (typeof htmlContents === 'string' && htmlContents.trim().length > 0) {
+      if (Buffer.byteLength(htmlContents, 'utf8') > MAX_AUDIT_HTML_BYTES) {
+        return res.status(413).json({ success: false, message: `HTML source exceeds the ${MAX_AUDIT_HTML_BYTES}-byte audit limit.` });
+      }
       finalHtml = htmlContents;
-    } else if (url) {
-      try { new URL(url); } catch (e) { return res.status(400).json({ success: false, message: "Invalid URL format" }); }
+    } else if (typeof url === 'string' && url.trim()) {
       try {
-        const fetchRes = await fetch(url, {
-          headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" },
-          signal: AbortSignal.timeout(10000),
+        const fetched = await fetchPublicHtml(url.trim());
+        finalHtml = fetched.html;
+        targetUrl = fetched.url;
+      } catch (error: unknown) {
+        const message = error instanceof SafeUrlFetchError ? error.message : "Unable to fetch the requested public website";
+        return res.status(error instanceof SafeUrlFetchError ? error.statusCode : 400).json({
+          success: false,
+          message: `${message}. Please paste the page HTML directly under the Custom HTML option.`,
         });
-        if (!fetchRes.ok) return res.status(400).json({ success: false, message: `Failed to fetch web page. HTTP Status: ${fetchRes.status} ${fetchRes.statusText}` });
-        finalHtml = await fetchRes.text();
-      } catch (err: any) {
-        return res.status(400).json({ success: false, message: `Network error or timeout trying to fetch "${url}": ${err.message || err}. Please paste the page HTML directly under the Custom HTML option.` });
       }
     } else {
       return res.status(400).json({ success: false, message: "Either a website URL or direct HTML source is required." });
@@ -105,7 +128,7 @@ router.post("/api/audit", authenticateToken, rateLimit(3, 15 * 60 * 1000), async
 
     if (!finalHtml || finalHtml.trim().length === 0) return res.status(400).json({ success: false, message: "No HTML content was extracted to audit." });
 
-    const truncatedHtml = finalHtml.slice(0, 120000);
+    const truncatedHtml = finalHtml;
     const systemPrompt = `You are a world-class Web Development QA & Auditing Engine.
 Analyze the provided HTML source code and perform a thorough audit across four critical pillars:
 1. SEO (Search Engine Optimization)
@@ -170,7 +193,7 @@ Be direct, detailed, and highly technical. Never generate fake boilerplate findi
     return res.status(200).json({ success: true, audit: auditResult });
   } catch (error: any) {
     console.error("Audit error:", error);
-    return res.status(500).json({ success: false, message: error.message || "Audit failed. Please try again." });
+    return res.status(500).json({ success: false, message: "Audit failed. Please try again." });
   }
 });
 
@@ -180,15 +203,21 @@ router.post("/api/audit/discuss", authenticateToken, rateLimit(5, 15 * 60 * 1000
     if (req.user.role !== 'admin' && req.user.role !== 'organizer') {
       return res.status(403).json({ success: false, message: "Organizer or admin access required" });
     }
-    const { message, context } = req.body;
-    if (!message) return res.status(400).json({ success: false, message: "Message is required." });
+    const { message, context } = req.body || {};
+    if (typeof message !== "string" || !message.trim()) return res.status(400).json({ success: false, message: "Message is required." });
+    if (message.length > MAX_AUDIT_DISCUSSION_LENGTH) return res.status(400).json({ success: false, message: "Message is too long." });
+
+    const serializedContext = JSON.stringify(context ?? {});
+    if (Buffer.byteLength(serializedContext, "utf8") > MAX_AUDIT_CONTEXT_BYTES) {
+      return res.status(413).json({ success: false, message: "Audit context is too large." });
+    }
 
     const systemPrompt = `You are a Senior Web Development QA Expert continuing a discussion about a web page audit.
 The user previously received an audit report and now has follow-up questions.
 Use the audit context provided to give specific, technical, and actionable advice.
 Be concise and direct. Reference specific audit findings when relevant.`;
 
-    const userPrompt = `Audit Context: ${JSON.stringify(context)}\n\nUser Question: ${message}`;
+    const userPrompt = `Audit Context: ${serializedContext}\n\nUser Question: ${message.trim()}`;
 
     const response = await ai.models.generateContent({
       model: "gemini-3.5-flash",
@@ -200,7 +229,7 @@ Be concise and direct. Reference specific audit findings when relevant.`;
     return res.status(200).json({ success: true, response: result });
   } catch (error: any) {
     console.error("Audit discuss error:", error);
-    return res.status(500).json({ success: false, message: error.message || "Discussion failed." });
+    return res.status(500).json({ success: false, message: "Discussion failed." });
   }
 });
 
