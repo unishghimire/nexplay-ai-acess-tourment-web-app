@@ -71,24 +71,30 @@ const Breadcrumbs: React.FC = () => {
                     {JSON.stringify(breadcrumbSchema)}
                 </script>
             </Helmet>
-            <nav aria-label="Breadcrumb" className="container mx-auto px-4 py-2 text-xs flex items-center gap-2 text-gray-500 font-bold uppercase tracking-widest overflow-x-auto whitespace-nowrap">
-                <Link to="/" className="hover:text-brand-400 transition">Home</Link>
-                {pathnames.map((value, index) => {
-                    const last = index === pathnames.length - 1;
-                    const to = `/${pathnames.slice(0, index + 1).join('/')}`;
-                    const label = breadcrumbNameMap[value] || value.replace(/-/g, ' ');
+            <nav aria-label="Breadcrumb" className="container mx-auto px-4 py-2 text-xs text-gray-500 font-bold uppercase tracking-widest overflow-x-auto">
+                <ol className="flex items-center gap-2 whitespace-nowrap">
+                    <li>
+                        <Link to="/" className="hover:text-brand-400 transition py-2 inline-flex items-center">Home</Link>
+                    </li>
+                    {pathnames.map((value, index) => {
+                        const last = index === pathnames.length - 1;
+                        const to = `/${pathnames.slice(0, index + 1).join('/')}`;
+                        const label = breadcrumbNameMap[value] || value.replace(/-/g, ' ');
 
-                    return last ? (
-                        <span key={to} className="text-white flex items-center gap-2">
-                            <ChevronRight className="w-3 h-3" /> {label}
-                        </span>
-                    ) : (
-                        <span key={to} className="flex items-center gap-2">
-                            <ChevronRight className="w-3 h-3" />
-                            <Link to={to} className="hover:text-brand-400 transition">{label}</Link>
-                        </span>
-                    );
-                })}
+                        return (
+                            <li key={to} className="flex items-center gap-2">
+                                <ChevronRight className="w-3 h-3" aria-hidden="true" />
+                                {last ? (
+                                    <span aria-current="page" className="text-white py-2 inline-flex items-center">
+                                        {label}
+                                    </span>
+                                ) : (
+                                    <Link to={to} className="hover:text-brand-400 transition py-2 inline-flex items-center">{label}</Link>
+                                )}
+                            </li>
+                        );
+                    })}
+                </ol>
             </nav>
         </>
     );

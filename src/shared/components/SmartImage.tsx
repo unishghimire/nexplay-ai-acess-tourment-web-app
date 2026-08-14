@@ -60,7 +60,7 @@ export const SmartImage: React.FC<SmartImageProps> = ({
     return (
       <div
         className={`flex items-center justify-center bg-slate-800/50 ${fallbackClassName || className}`}
-        aria-label={alt}
+        aria-label={alt} role="img"
       >
         <div className="w-8 h-8 rounded bg-slate-700/50" />
       </div>
@@ -71,7 +71,7 @@ export const SmartImage: React.FC<SmartImageProps> = ({
     return (
       <div
         className={`flex items-center justify-center bg-slate-800/50 ${fallbackClassName || className}`}
-        aria-label={alt}
+        aria-label={alt} role="img"
       >
         <svg className="w-6 h-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
