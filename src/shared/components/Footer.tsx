@@ -17,33 +17,33 @@ const Footer: React.FC = () => {
 
                     {/* Compete */}
                     <nav aria-label="Compete links">
-                        <h3 className="text-white font-bold text-sm mb-3 flex items-center gap-1.5"><Trophy className="w-4 h-4" /> Compete</h3>
-                        <ul className="space-y-2 text-sm">
-                            <li><Link to="/tournaments" className="text-gray-400 hover:text-white transition">Tournaments</Link></li>
-                            <li><Link to="/scrims" className="text-gray-400 hover:text-white transition">Scrims</Link></li>
-                            <li><Link to="/leaderboard" className="text-gray-400 hover:text-white transition">Leaderboard</Link></li>
+                        <h3 className="text-white font-bold text-sm mb-3 flex items-center gap-1.5"><Trophy className="w-4 h-4" aria-hidden="true" /> Compete</h3>
+                        <ul className="space-y-1 text-sm">
+                            <li><Link to="/tournaments" className="text-gray-400 hover:text-white transition inline-block py-2">Tournaments</Link></li>
+                            <li><Link to="/scrims" className="text-gray-400 hover:text-white transition inline-block py-2">Scrims</Link></li>
+                            <li><Link to="/leaderboard" className="text-gray-400 hover:text-white transition inline-block py-2">Leaderboard</Link></li>
                         </ul>
                     </nav>
 
                     {/* Community */}
                     <nav aria-label="Community links">
-                        <h3 className="text-white font-bold text-sm mb-3 flex items-center gap-1.5"><Users className="w-4 h-4" /> Community</h3>
-                        <ul className="space-y-2 text-sm">
-                            <li><Link to="/teams" className="text-gray-400 hover:text-white transition">Teams</Link></li>
-                            <li><Link to="/organizations" className="text-gray-400 hover:text-white transition">Organizations</Link></li>
-                            <li><Link to="/games" className="text-gray-400 hover:text-white transition">Games</Link></li>
-                            <li><Link to="/news" className="text-gray-400 hover:text-white transition">News</Link></li>
+                        <h3 className="text-white font-bold text-sm mb-3 flex items-center gap-1.5"><Users className="w-4 h-4" aria-hidden="true" /> Community</h3>
+                        <ul className="space-y-1 text-sm">
+                            <li><Link to="/teams" className="text-gray-400 hover:text-white transition inline-block py-2">Teams</Link></li>
+                            <li><Link to="/organizations" className="text-gray-400 hover:text-white transition inline-block py-2">Organizations</Link></li>
+                            <li><Link to="/games" className="text-gray-400 hover:text-white transition inline-block py-2">Games</Link></li>
+                            <li><Link to="/news" className="text-gray-400 hover:text-white transition inline-block py-2">News</Link></li>
                         </ul>
                     </nav>
 
                     {/* Company */}
                     <nav aria-label="Company links">
-                        <h3 className="text-white font-bold text-sm mb-3 flex items-center gap-1.5"><Gamepad2 className="w-4 h-4" /> Company</h3>
-                        <ul className="space-y-2 text-sm">
-                            <li><Link to="/about" className="text-gray-400 hover:text-white transition">About Us</Link></li>
-                            <li><Link to="/contact" className="text-gray-400 hover:text-white transition">Contact</Link></li>
-                            <li><Link to="/terms" className="text-gray-400 hover:text-white transition">Terms of Service</Link></li>
-                            <li><Link to="/privacy" className="text-gray-400 hover:text-white transition">Privacy Policy</Link></li>
+                        <h3 className="text-white font-bold text-sm mb-3 flex items-center gap-1.5"><Gamepad2 className="w-4 h-4" aria-hidden="true" /> Company</h3>
+                        <ul className="space-y-1 text-sm">
+                            <li><Link to="/about" className="text-gray-400 hover:text-white transition inline-block py-2">About Us</Link></li>
+                            <li><Link to="/contact" className="text-gray-400 hover:text-white transition inline-block py-2">Contact</Link></li>
+                            <li><Link to="/terms" className="text-gray-400 hover:text-white transition inline-block py-2">Terms of Service</Link></li>
+                            <li><Link to="/privacy" className="text-gray-400 hover:text-white transition inline-block py-2">Privacy Policy</Link></li>
                         </ul>
                     </nav>
                 </div>
@@ -52,12 +52,12 @@ const Footer: React.FC = () => {
                     <p className="text-gray-500 text-sm text-center md:text-left">
                         &copy; {new Date().getFullYear()} NexPlay. All rights reserved.
                     </p>
-                    <div className="flex gap-4 text-gray-400 text-sm">
-                        <a href="mailto:nexplayorg@gmail.com" className="hover:text-white transition flex items-center gap-2">
-                            <Mail className="w-4 h-4" /> nexplayorg@gmail.com
+                    <div className="flex flex-wrap gap-4 text-gray-400 text-sm">
+                        <a href="mailto:nexplayorg@gmail.com" className="hover:text-white transition flex items-center gap-2 py-1">
+                            <Mail className="w-4 h-4" aria-hidden="true" /> nexplayorg@gmail.com
                         </a>
-                        <a href="https://wa.me/+9779767783336" target="_blank" rel="noopener noreferrer" className="hover:text-white transition flex items-center gap-2">
-                            <MessageCircle className="w-4 h-4" /> WhatsApp
+                        <a href="https://wa.me/+9779767783336" target="_blank" rel="noopener noreferrer" className="hover:text-white transition flex items-center gap-2 py-1">
+                            <MessageCircle className="w-4 h-4" aria-hidden="true" /> WhatsApp
                         </a>
                     </div>
                 </div>
