@@ -78,7 +78,7 @@ const News: React.FC = () => {
                                 )}
                                 <div className={`p-6 ${post.imageUrl ? '-mt-16 relative z-10' : ''}`}>
                                     <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-500 mb-3">
-                                        <span className="bg-brand-500/20 text-brand-400 px-2 py-1 rounded">{post.orgName}</span>
+                                        <span className="bg-brand-500/20 text-brand-400 px-2 py-1 rounded truncate max-w-full">{post.orgName}</span>
                                         <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {formatDate(post.createdAt)}</span>
                                     </div>
                                     <h2 className="text-xl sm:text-2xl font-black text-white group-hover:text-brand-400 transition mb-2">{post.title}</h2>

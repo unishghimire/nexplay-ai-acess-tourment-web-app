@@ -129,7 +129,7 @@ export const ScoringConfigModal: React.FC<ScoringConfigModalProps> = ({
                         <h3 className="text-xl font-black uppercase tracking-widest text-white">Scoring Configuration</h3>
                         <p className="text-xs text-slate-400 mt-1">{gameName} — Game-Level Scoring</p>
                     </div>
-                    <button onClick={onClose} className="text-slate-400 hover:text-white">
+                    <button onClick={onClose} className="p-2 text-slate-400 hover:text-white">
                         <X className="w-5 h-5" />
                     </button>
                 </div>

@@ -140,7 +140,7 @@ const PostDetails: React.FC = () => {
                         )}
                     </div>
 
-                    <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight mb-6">{post.title}</h1>
+                    <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight mb-6 break-words">{post.title}</h1>
                     
                     <div className="prose prose-invert max-w-none">
                         <p className="text-gray-300 leading-relaxed whitespace-pre-wrap text-lg">

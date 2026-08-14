@@ -382,7 +382,7 @@ const Profile: React.FC = () => {
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                 <div>
                                     <div className="flex items-center gap-3 mb-1">
-                                        <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tighter">{profile.username}</h2>
+                                        <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tighter break-words">{profile.username}</h2>
                                         <span className="bg-brand-500/10 text-brand-400 border border-brand-500/20 px-4 py-1 rounded-full text-xs uppercase font-black tracking-widest flex items-center gap-2">
                                             <Shield className="w-4 h-4" /> {profile.role}
                                         </span>

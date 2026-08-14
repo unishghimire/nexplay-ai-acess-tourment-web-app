@@ -234,7 +234,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
           <h2 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-2">
             <CreditCard className="w-5 h-5 text-brand-500" /> {activeTab === 'deposit' ? 'Deposit Funds' : 'Withdraw Funds'}
           </h2>
-          <button onClick={onClose} className="p-2 hover:bg-surface rounded-full transition text-gray-400 hover:text-white">
+          <button onClick={onClose} className="p-2.5 hover:bg-surface rounded-full transition text-gray-400 hover:text-white">
             <X className="w-6 h-6" />
           </button>
         </div>

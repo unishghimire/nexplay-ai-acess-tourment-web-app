@@ -370,7 +370,7 @@ const TeamDetails: React.FC = () => {
         return (
             <div className="text-center py-20">
                 <h2 className="text-2xl font-black text-white uppercase tracking-widest mb-4">Team Not Found</h2>
-                <Link to="/teams" className="text-brand-500 hover:text-brand-400 font-bold flex items-center justify-center gap-2">
+                <Link to="/teams" className="text-brand-500 hover:text-brand-400 font-bold flex items-center justify-center gap-2 py-2 touch-target">
                     <ArrowLeft className="w-4 h-4" /> Back to Teams
                 </Link>
             </div>
@@ -406,7 +406,7 @@ const TeamDetails: React.FC = () => {
                 </div>
                 <button 
                     onClick={() => navigate(-1)}
-                    className="flex items-center gap-2 text-gray-400 hover:text-white font-bold text-xs uppercase tracking-widest transition"
+                    className="flex items-center gap-2 text-gray-400 hover:text-white font-bold text-xs uppercase tracking-widest transition py-2 touch-target"
                 >
                     <ArrowLeft className="w-4 h-4" /> Back
                 </button>
@@ -507,7 +507,7 @@ const TeamDetails: React.FC = () => {
                                 <Users className="w-5 h-5 text-brand-500" /> Team Roster ({members.length}/6)
                             </h3>
                             {isAdmin && (
-                                <button onClick={() => setInviteUserId('')} className="text-brand-400 hover:text-brand-300 text-xs font-black uppercase tracking-widest flex items-center gap-1">
+                                <button onClick={() => setInviteUserId('')} className="text-brand-400 hover:text-brand-300 text-xs font-black uppercase tracking-widest flex items-center gap-1 py-2 touch-target">
                                     <UserPlus className="w-4 h-4" /> Invite
                                 </button>
                             )}
@@ -723,7 +723,7 @@ const TeamDetails: React.FC = () => {
                                     <button
                                         type="button"
                                         onClick={() => document.getElementById('edit-logo-file-input')?.click()}
-                                        className="text-gray-500 hover:text-brand-500 transition-colors p-1"
+                                        className="text-gray-500 hover:text-brand-500 transition-colors p-2.5 touch-target"
                                         title="Browse image file"
                                     >
                                         <Camera className="w-4 h-4" />
@@ -763,7 +763,7 @@ const TeamDetails: React.FC = () => {
                                     <button
                                         type="button"
                                         onClick={() => document.getElementById('edit-banner-file-input')?.click()}
-                                        className="text-gray-500 hover:text-brand-500 transition-colors p-1"
+                                        className="text-gray-500 hover:text-brand-500 transition-colors p-2.5 touch-target"
                                         title="Browse image file"
                                     >
                                         <Camera className="w-4 h-4" />
