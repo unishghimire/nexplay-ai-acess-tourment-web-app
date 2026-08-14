@@ -1,0 +1,150 @@
+{
+  "auditStarted": "2026-08-14",
+  "scope": "Production readiness audit",
+  "findings": [
+    {
+      "id": "AUD-001",
+      "status": "fixed",
+      "severity": "high",
+      "file": "src/features/scrims/views/Scrims.tsx",
+      "line": 48,
+      "title": "Scrims failure was reported as an empty list",
+      "problem": "A failure of both public data sources and the fallback API was indistinguishable from no available scrims.",
+      "rootCause": "No final failure state was retained; the fallback accepted an invalid response as an empty result.",
+      "risk": "Users could not retry a configuration or connectivity failure.",
+      "recommendation": "Implemented a retryable error state, checked response semantics, and targeted public Firestore queries."
+    },
+    {
+      "id": "AUD-002",
+      "status": "fixed",
+      "severity": "medium",
+      "file": "src/features/organizer/views/OrganizerPanel.tsx",
+      "line": 41,
+      "title": "Invalid organizer tab URL rendered a blank panel",
+      "problem": "An unvalidated `tab` query value reached a switch default that returned no content.",
+      "rootCause": "A TypeScript assertion was used as runtime URL validation.",
+      "risk": "Malformed shared links left organizers with a blank panel.",
+      "recommendation": "Implemented allow-list validation with an `overview` fallback."
+    },
+    {
+      "id": "AUD-003",
+      "status": "not_reproducible",
+      "severity": "low",
+      "file": "src/shared/services/roomCredentials.ts",
+      "line": 17,
+      "title": "Room credential reads need an explicit service contract",
+      "problem": "The caller does not catch credential errors.",
+      "rootCause": "The service deliberately resolves failed or unauthorized reads as `null` to preserve the room-dispatch form.",
+      "risk": "A missing credential and inaccessible credential are not distinguishable in the UI.",
+      "recommendation": "No behavior change: a host may safely enter replacement credentials. Add diagnostic telemetry before changing the privacy-preserving service contract."
+    },
+    {
+      "id": "AUD-004",
+      "status": "fixed",
+      "severity": "medium",
+      "file": "src/features/organizer/views/ScrimDetailPage.tsx",
+      "line": 39,
+      "title": "Scrim subscription errors were presented as missing records",
+      "problem": "A Firestore read error only reached the console.",
+      "rootCause": "The view had no subscription error or retry state.",
+      "risk": "Operators received a misleading not-found state during outage or permission failure.",
+      "recommendation": "Implemented a retryable, accessible load-error state and guarded clipboard errors."
+    },
+    {
+      "id": "AUD-005",
+      "status": "fixed",
+      "severity": "high",
+      "file": "src/features/organizer/views/ScrimDetailPage.tsx; src/features/admin/hooks/useTournamentAdmin.ts",
+      "line": 65,
+      "title": "Role checks captured a stale profile",
+      "problem": "An administrator could be rejected before their asynchronously loaded profile exposed the `admin` role.",
+      "rootCause": "Effects used `profile.role` but omitted it from their dependencies.",
+      "risk": "Legitimate administrators could be redirected from scrim or tournament management.",
+      "recommendation": "Added profile-role dependencies so authorization is re-evaluated when the profile resolves."
+    },
+    {
+      "id": "AUD-006",
+      "status": "fixed",
+      "severity": "high",
+      "file": "src/features/organizer/views/OrganizerPanel.tsx; src/features/organizer/hooks/useOrgData.ts",
+      "line": 150,
+      "title": "Scrims Hub inline slot controls were no-ops",
+      "problem": "The child supplied `(scrimId, slotNumber)`, while the parent handler accepted only a modal slot number.",
+      "rootCause": "The callback contract differed between inline and modal controls; numeric slot counts were also overwritten as empty arrays.",
+      "risk": "Organizers could click visible reservation controls without changing a scrim.",
+      "recommendation": "Implemented a shared slot normalizer, explicit ID-aware handler, and optimistic hosted-scrim update; added unit coverage."
+    },
+    {
+      "id": "AUD-007",
+      "status": "fixed",
+      "severity": "medium",
+      "file": "src/shared/components/TabErrorBoundary.tsx",
+      "line": 31,
+      "title": "Panel error boundary could retain a previous tab failure",
+      "problem": "Changing a tab at the same React position could retain `hasError` from a failed prior tab.",
+      "rootCause": "The boundary did not reset when its tab identity changed.",
+      "risk": "A single failed lazy tab could block other organizer or tournament-admin tabs.",
+      "recommendation": "Added an optional reset key and supplied it to dynamic tab panels; wrapped the remaining Admin Discord tab."
+    },
+    {
+      "id": "AUD-008",
+      "status": "fixed",
+      "severity": "medium",
+      "file": "src/features/organizer/hooks/useOrgData.ts",
+      "line": 176,
+      "title": "Organizer dispute list silently excluded tournaments after the first ten",
+      "problem": "Firestore `in` querying only used the first ten hosted tournament IDs.",
+      "rootCause": "Firestore query-size limit was handled by truncating instead of batching.",
+      "risk": "Older event disputes disappeared from organizer operations.",
+      "recommendation": "Implemented ten-ID batching and merged results."
+    },
+    {
+      "id": "AUD-009",
+      "status": "fixed",
+      "severity": "high",
+      "file": "firestore.rules",
+      "line": 369,
+      "title": "Organizer dispute workflows were denied by Firestore rules",
+      "problem": "The organizer UI queried and resolved disputes, but rules allowed only the filing user or an administrator.",
+      "rootCause": "Tournament-host authorization was missing from the dispute rule.",
+      "risk": "Organizer match-room dispute actions consistently failed in production.",
+      "recommendation": "Allowed the owning tournament host to read and update its disputes while retaining owner/admin controls."
+    },
+    {
+      "id": "AUD-010",
+      "status": "fixed",
+      "severity": "medium",
+      "file": "server/routes/tournaments.ts",
+      "line": 222,
+      "title": "Scrims endpoint scanned collections and masked total backend failure",
+      "problem": "The endpoint read every tournament and returned success with no scrims even when every source failed.",
+      "rootCause": "Broad collection scans and per-source failures were swallowed.",
+      "risk": "Increasing cost/latency and an opaque empty Scrims page during Firebase Admin misconfiguration.",
+      "recommendation": "Replaced scans with targeted queries, combined partial success, and return HTTP 503 when every source fails."
+    },
+    {
+      "id": "AUD-011",
+      "status": "open_external",
+      "severity": "high",
+      "file": "Firestore production data",
+      "line": null,
+      "title": "Title-only legacy scrims require data migration",
+      "problem": "Records identified only by a title containing `scrim` cannot be fetched efficiently or safely by public listing queries.",
+      "rootCause": "Older records lack both `matchType: 'scrims'` and `isScrim: true`.",
+      "risk": "Those historical records remain absent from the public Scrims page.",
+      "recommendation": "Run the protected `/api/admin/audit-scrims` endpoint, review its dry run, then use `/api/admin/fix-scrims` as an administrator before production deployment."
+    },
+    {
+      "id": "AUD-012",
+      "status": "open_external",
+      "severity": "medium",
+      "file": "Deployment environment",
+      "line": null,
+      "title": "Firebase Admin and Firestore rules need production verification",
+      "problem": "Local API calls without Firebase Admin credentials fail, and this workspace has no authenticated Firestore emulator or production test account.",
+      "rootCause": "Required secrets and privileged test identities are environment-owned.",
+      "risk": "Protected live flows cannot be conclusively verified here.",
+      "recommendation": "Set `FIREBASE_SERVICE_ACCOUNT`, deploy `firestore.rules` and indexes, then verify organizer/admin dispute and room flows with a non-production account."
+    }
+  ]
+}

@@ -364,12 +364,14 @@ service cloud.firestore {
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // DISPUTES — signed-in users can file, admin resolves
+    // DISPUTES — signed-in users can file; the tournament host or an admin can resolve.
     // ═══════════════════════════════════════════════════════════════
     match /disputes/{disputeId} {
-      allow read:   if isOwner(existing().userId) || isAdmin();
+      allow read:   if isOwner(existing().userId) || isAdmin() ||
+                       isTournamentHost(existing().tournamentId);
       allow create: if isVerified() && incoming().userId == request.auth.uid;
       allow update: if isAdmin() ||
+                       isTournamentHost(existing().tournamentId) ||
                        (isOwner(existing().userId) &&
                         incoming().diff(existing()).affectedKeys().hasOnly(['description', 'attachments', 'updatedAt']));
       allow delete: if isAdmin();

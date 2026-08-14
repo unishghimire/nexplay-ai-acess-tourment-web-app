@@ -234,9 +234,11 @@ const AdminPanel: React.FC = () => {
                 {activeTab === 'tab-news' && <TabErrorBoundary tabName="News Tab"><NewsTab {...tabProps} /></TabErrorBoundary>}
                 {activeTab === 'tab-settings' && <TabErrorBoundary tabName="Settings Tab"><SettingsTab {...tabProps} /></TabErrorBoundary>}
 
-            {activeTab === 'tab-discord' && (
-                <DiscordAdminPanel allTournaments={allTournaments} showToast={showToast} />
-            )}
+                {activeTab === 'tab-discord' && (
+                    <TabErrorBoundary tabName="Discord Tab">
+                        <DiscordAdminPanel allTournaments={allTournaments} showToast={showToast} />
+                    </TabErrorBoundary>
+                )}
             </div>
 
             {/* Tournament Edit Modal */}

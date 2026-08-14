@@ -5,6 +5,7 @@ import { db } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { fetchRoomCredentials } from '../../../shared/services/roomCredentials';
+import { countFilledScrimSlots, normalizeScrimSlots } from '../../../shared/utils/scrimSlots';
 import {
   ChevronLeft, Save, Radio, Users, DollarSign, Calendar,
   Gamepad2, Edit2, Check, X, Lock, Unlock, Copy, Trophy,
@@ -22,6 +23,8 @@ export default function ScrimDetailPage() {
 
   const [scrim, setScrim] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [retryKey, setRetryKey] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<Record<string, any>>({});
   const [roomId, setRoomId] = useState('');
@@ -31,10 +34,16 @@ export default function ScrimDetailPage() {
 
   // --- Load scrim ---
   useEffect(() => {
-    if (!id) return;
+    if (!id) {
+      setLoading(false);
+      setLoadError('This scrim link is invalid.');
+      return;
+    }
 
     // Real Firestore
     if (!user) { setLoading(false); return; }
+    setLoading(true);
+    setLoadError(null);
 
     const unsub = onSnapshot(doc(db, SCRIM_COLLECTION, id), (snap) => {
       if (snap.exists()) {
@@ -55,21 +64,29 @@ export default function ScrimDetailPage() {
       setLoading(false);
     }, (err) => {
       console.error('Scrim load error:', err);
+      setLoadError('We could not load this scrim. Check your connection and try again.');
       setLoading(false);
     });
 
     return () => unsub();
-  }, [id, user]);
+  }, [id, user, profile?.role, navigate, showToast, retryKey]);
 
   // --- Handlers ---
   const handleSaveEdit = useCallback(async () => {
+    const entryFee = Number(editForm.entryFee);
+    const prizePool = Number(editForm.prizePool);
+    const slots = Number(editForm.slots);
+    if (!id || !editForm.title?.trim() || ![entryFee, prizePool, slots].every(Number.isFinite) || entryFee < 0 || prizePool < 0 || slots < 1) {
+      showToast('Enter a title, non-negative fees, and at least one slot', 'error');
+      return;
+    }
     try {
       await updateDoc(doc(db, SCRIM_COLLECTION, id), {
-        title: editForm.title,
+        title: editForm.title.trim(),
         startTime: editForm.startTime,
-        entryFee: Number(editForm.entryFee),
-        prizePool: Number(editForm.prizePool),
-        slots: Number(editForm.slots),
+        entryFee,
+        prizePool,
+        slots,
         map: editForm.map,
       });
       showToast('Scrim updated', 'success');
@@ -83,16 +100,14 @@ export default function ScrimDetailPage() {
     if (!scrim) return;
 
     try {
-      const slotsArray = Array.isArray(scrim.slots)
-        ? scrim.slots
-        : Array.from({ length: typeof scrim.slots === 'number' ? scrim.slots : 20 }, (_, i) => ({ slotNumber: i + 1, status: 'open' }));
+      const slotsArray = normalizeScrimSlots(scrim.slots, scrim.totalSlots, scrim.filledSlots ?? scrim.currentPlayers);
 
       const newSlots = slotsArray.map((s: any) => {
         if (s.slotNumber !== slotNumber) return s;
         if (s.status === 'filled') return { ...s, status: 'open', teamName: null, teamId: null };
         return { ...s, status: 'filled', teamName: 'Reserved', teamId: null };
       });
-      const filled = newSlots.filter((s: any) => s.status === 'filled').length;
+      const filled = countFilledScrimSlots(newSlots);
       await updateDoc(doc(db, SCRIM_COLLECTION, id), { slots: newSlots, filledSlots: filled, currentPlayers: filled });
       showToast(`Slot ${slotNumber} toggled`, 'info');
     } catch {
@@ -122,10 +137,14 @@ export default function ScrimDetailPage() {
     }
   }, [id, showToast]);
 
-  const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(label);
-    setTimeout(() => setCopied(null), 1500);
+  const copyToClipboard = async (text: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(label);
+      setTimeout(() => setCopied(null), 1500);
+    } catch {
+      showToast('Clipboard access is unavailable. Copy the value manually.', 'error');
+    }
   };
 
   // --- Render ---
@@ -134,6 +153,19 @@ export default function ScrimDetailPage() {
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <div className="w-10 h-10 border-2 border-brand-500 border-t-transparent rounded-full animate-spin mb-4" />
         <p className="text-xs text-gray-500 uppercase tracking-widest">Loading Scrim...</p>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div role="alert" className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+        <Gamepad2 className="w-16 h-16 text-red-400 mb-4" />
+        <p className="text-gray-300">{loadError}</p>
+        <div className="mt-4 flex gap-3">
+          <button onClick={() => setRetryKey(key => key + 1)} className="min-h-[44px] bg-brand-500 hover:bg-brand-400 text-white rounded-lg px-5 py-2 text-sm font-medium transition-colors">Try Again</button>
+          <button onClick={() => navigate('/organizer?tab=scrims')} className="min-h-[44px] text-brand-400 hover:text-brand-300 px-5 py-2 text-sm">Back to Scrims</button>
+        </div>
       </div>
     );
   }
@@ -148,9 +180,9 @@ export default function ScrimDetailPage() {
     );
   }
 
-  const slots = scrim.slots || [];
-  const filledCount = slots.filter((s: any) => s.status === 'filled').length;
-  const totalCount = slots.length || scrim.totalSlots || 0;
+  const slots = normalizeScrimSlots(scrim.slots, scrim.totalSlots, scrim.filledSlots ?? scrim.currentPlayers);
+  const filledCount = countFilledScrimSlots(slots);
+  const totalCount = slots.length;
   const fillPercent = totalCount > 0 ? (filledCount / totalCount) * 100 : 0;
 
   return (
@@ -179,7 +211,7 @@ export default function ScrimDetailPage() {
               </button>
             </>
           ) : (
-            <button onClick={() => { setEditForm({ title: scrim.title, startTime: scrim.startTime, entryFee: scrim.entryFee, prizePool: scrim.prizePool, slots: scrim.totalSlots || scrim.slots, map: scrim.map || '' }); setIsEditing(true); }} className="px-4 py-2 rounded-lg bg-surface text-white text-sm hover:bg-surface flex items-center gap-2 min-h-[44px]">
+            <button onClick={() => { setEditForm({ title: scrim.title, startTime: scrim.startTime, entryFee: scrim.entryFee, prizePool: scrim.prizePool, slots: scrim.totalSlots || (Array.isArray(scrim.slots) ? scrim.slots.length : scrim.slots), map: scrim.map || '' }); setIsEditing(true); }} className="px-4 py-2 rounded-lg bg-surface text-white text-sm hover:bg-surface flex items-center gap-2 min-h-[44px]">
               <Edit2 className="w-4 h-4" /> Edit Scrim
             </button>
           )}
