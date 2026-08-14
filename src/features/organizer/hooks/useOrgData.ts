@@ -136,15 +136,33 @@ export function useOrgData() {
     };
   }, [hostedTournaments, transactions, profile, scrims, teams]);
 
-  const fetchParticipants = useCallback(async (tournamentId: string) => {
-    if (!tournamentId || !user) {
+  const fetchParticipants = useCallback(async (tournamentId?: string) => {
+    if (!user || hostedTournaments.length === 0) {
       setParticipants([]);
       return;
     }
     try {
-      const q = query(collection(db, 'participants'), where('tournamentId', '==', tournamentId));
-      const snap = await getDocs(q);
-      const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Participant));
+      if (tournamentId) {
+        const q = query(collection(db, 'participants'), where('tournamentId', '==', tournamentId));
+        const snap = await getDocs(q);
+        const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Participant));
+        setParticipants(list);
+        return;
+      }
+
+      const tournamentIds = hostedTournaments.map(t => t.id).filter(Boolean);
+      if (tournamentIds.length === 0) {
+        setParticipants([]);
+        return;
+      }
+
+      const batches = Array.from({ length: Math.ceil(tournamentIds.length / 10) }, (_, index) =>
+        tournamentIds.slice(index * 10, (index + 1) * 10)
+      );
+      const snapshots = await Promise.all(
+        batches.map(ids => getDocs(query(collection(db, 'participants'), where('tournamentId', 'in', ids))))
+      );
+      const list = snapshots.flatMap(snap => snap.docs.map(d => ({ id: d.id, ...d.data() } as Participant)));
       list.sort((a, b) => {
         const aTime = toDateSafe(a.timestamp)?.getTime() || 0;
         const bTime = toDateSafe(b.timestamp)?.getTime() || 0;
@@ -154,7 +172,7 @@ export function useOrgData() {
     } catch (err) {
       console.error("Error fetching participants:", err);
     }
-  }, [user]);
+  }, [user, hostedTournaments]);
 
   const fetchTransactions = useCallback(async () => {
     if (!user) return;
@@ -375,12 +393,10 @@ export function useOrgData() {
   }, [fetchHostedTournaments, fetchTransactions]);
 
   useEffect(() => {
-    if (hostedTournaments.length > 0 && participants.length === 0) {
-      const active = hostedTournaments.find(t => t.status === 'live' || t.status === 'upcoming' || t.status === 'published');
-      const target = active || hostedTournaments[0];
-      fetchParticipants(target.id);
+    if (hostedTournaments.length > 0) {
+      fetchParticipants();
     }
-  }, [hostedTournaments, participants.length, fetchParticipants]);
+  }, [hostedTournaments, fetchParticipants]);
 
   useEffect(() => {
     if (hostedTournaments.length > 0) {

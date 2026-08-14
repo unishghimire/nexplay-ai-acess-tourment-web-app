@@ -16,6 +16,7 @@ export interface MatchRoomsTabProps {
   disputes: any[];
   onOpenRoomDispatch: (room: any) => void;
   onResolveDispute: (disputeId: string, action: string) => void;
+  onOpenDisputeOverlay?: (disputeId: string) => void;
 }
 
 const MatchRoomsTab: React.FC<MatchRoomsTabProps> = ({
@@ -23,6 +24,7 @@ const MatchRoomsTab: React.FC<MatchRoomsTabProps> = ({
   disputes = [],
   onOpenRoomDispatch,
   onResolveDispute,
+  onOpenDisputeOverlay,
 }) => {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
@@ -276,7 +278,13 @@ const MatchRoomsTab: React.FC<MatchRoomsTabProps> = ({
                   </div>
 
                   <button
-                    onClick={() => onResolveDispute(dispute.id, dispute.status || 'review')}
+                    onClick={() => {
+                      if (onOpenDisputeOverlay) {
+                        onOpenDisputeOverlay(dispute.id);
+                      } else {
+                        onResolveDispute(dispute.id, 'review');
+                      }
+                    }}
                     className="bg-surface hover:bg-surface text-white font-medium text-xs px-3.5 py-2 rounded-lg transition-colors border border-gray-700 flex items-center gap-1.5 min-h-[44px]"
                   >
                     <ShieldAlert className="w-3.5 h-3.5 text-amber-400" /> Review Dispute

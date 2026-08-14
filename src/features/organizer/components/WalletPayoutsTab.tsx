@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   AlertCircle,
 } from 'lucide-react';
+import { formatDate } from '../../../shared/utils/utils';
 
 export interface WalletPayoutsTabProps {
   kpis: {
@@ -360,7 +361,7 @@ export const WalletPayoutsTab: React.FC<WalletPayoutsTabProps> = ({
                         {getStatusPill(tx.status)}
                       </td>
                       <td className="py-3.5 px-4 whitespace-nowrap text-xs text-slate-400">
-                        {tx.timestamp || tx.date || tx.createdAt || '—'}
+                        {formatDate(tx.timestamp || tx.date || tx.createdAt)}
                       </td>
                     </tr>
                   ))}
@@ -402,7 +403,7 @@ export const WalletPayoutsTab: React.FC<WalletPayoutsTabProps> = ({
                     </div>
                     <div className="col-span-2">
                       <span className="block text-[10px] uppercase text-slate-400 font-medium">Date</span>
-                      <span className="text-slate-300">{tx.timestamp || tx.date || tx.createdAt || '—'}</span>
+                      <span className="text-slate-300">{formatDate(tx.timestamp || tx.date || tx.createdAt)}</span>
                     </div>
                   </div>
                 </div>
