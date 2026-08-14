@@ -354,7 +354,7 @@ const OrganizerPanel: React.FC = () => {
       <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
         {/* Sidebar Navigation */}
         <aside className={`w-full lg:w-60 flex-shrink-0 ${mobileNavOpen ? 'block' : 'hidden lg:block'}`}>
-          <nav className="space-y-2 bg-card p-4 rounded-2xl border border-gray-800 h-fit lg:sticky lg:top-24">
+          <nav aria-label="Organizer panel navigation" className="space-y-2 bg-card p-4 rounded-2xl border border-gray-800 h-fit lg:sticky lg:top-24">
             {NAV_ITEMS.map((item) => (
               <button
                 key={item.id}

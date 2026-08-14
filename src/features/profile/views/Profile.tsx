@@ -661,7 +661,7 @@ const Profile: React.FC = () => {
                                             />
                                         </div>
                                         <div>
-                                            <label htmlFor="profileOrgName" className="text-xs text-gray-500 uppercase font-black tracking-widest mb-2 block flex items-center gap-1">
+                                            <label htmlFor="profileWhatsApp" className="text-xs text-gray-500 uppercase font-black tracking-widest mb-2 block flex items-center gap-1">
                                                 <Phone className="w-3 h-3" /> WhatsApp
                                             </label>
                                             <input 
@@ -674,7 +674,7 @@ const Profile: React.FC = () => {
                                             />
                                         </div>
                                         <div>
-                                            <label htmlFor="profileWhatsApp" className="text-xs text-gray-500 uppercase font-black tracking-widest mb-2 block flex items-center gap-1">
+                                            <label htmlFor="profileDiscord" className="text-xs text-gray-500 uppercase font-black tracking-widest mb-2 block flex items-center gap-1">
                                                 Discord
                                             </label>
                                             <input 
@@ -748,6 +748,7 @@ const Profile: React.FC = () => {
                                         </label>
                                         <select 
                                             value={status} 
+                                            id="profileStatus"
                                             onChange={(e) => setStatus(e.target.value as any)}
                                             className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 outline-none transition font-bold appearance-none min-h-[44px]"
                                         >
@@ -758,7 +759,7 @@ const Profile: React.FC = () => {
                                         </select>
                                     </div>
                                     <div>
-                                        <label htmlFor="profileStatus" className="text-xs text-gray-500 uppercase font-black tracking-widest mb-2 block flex items-center gap-1">
+                                        <label htmlFor="profileCustomActivity" className="text-xs text-gray-500 uppercase font-black tracking-widest mb-2 block flex items-center gap-1">
                                             Custom Activity
                                         </label>
                                         <input 
@@ -864,7 +865,7 @@ const Profile: React.FC = () => {
                                         <div>
                                             <label className="text-xs text-gray-500 uppercase font-black mb-1 block ml-1">Organization Name</label>
                                             <input 
-                                                id="profileOrgName"
+                                                id="applyOrgName"
                                                 type="text"
                                         value={orgName}
                                                 onChange={(e) => setOrgName(e.target.value)}
@@ -887,7 +888,7 @@ const Profile: React.FC = () => {
                                         <div>
                                             <label className="text-xs text-gray-500 uppercase font-black mb-1 block ml-1">WhatsApp Number</label>
                                             <input 
-                                                id="profileWhatsApp"
+                                                id="applyWhatsApp"
                                                 type="text"
                                         value={orgWhatsapp}
                                                 onChange={(e) => setOrgWhatsapp(e.target.value)}

@@ -71,7 +71,7 @@ const Breadcrumbs: React.FC = () => {
                     {JSON.stringify(breadcrumbSchema)}
                 </script>
             </Helmet>
-            <nav className="container mx-auto px-4 py-2 text-xs flex items-center gap-2 text-gray-500 font-bold uppercase tracking-widest overflow-x-auto whitespace-nowrap">
+            <nav aria-label="Breadcrumb" className="container mx-auto px-4 py-2 text-xs flex items-center gap-2 text-gray-500 font-bold uppercase tracking-widest overflow-x-auto whitespace-nowrap">
                 <Link to="/" className="hover:text-brand-400 transition">Home</Link>
                 {pathnames.map((value, index) => {
                     const last = index === pathnames.length - 1;

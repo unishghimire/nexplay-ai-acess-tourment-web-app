@@ -8,13 +8,14 @@ interface MobileMenuProps {
     isOpen: boolean;
     onClose: () => void;
     navLinks: { name: string; path: string }[];
+    secondaryLinks?: { name: string; path: string }[];
 }
 
 /**
  * Slide-down mobile menu for the Navbar. Renders nav links, account section
  * (when logged in), or login CTA (when logged out).
  */
-const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, navLinks }) => {
+const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, navLinks, secondaryLinks = [] }) => {
     const { user, profile, logout } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
@@ -58,6 +59,22 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, navLinks }) =>
                         </Link>
                     ))}
                 </div>
+
+                {secondaryLinks.length > 0 && (
+                    <div className="pt-4 mt-4 border-t border-gray-800 space-y-1">
+                        <div className="text-[10px] font-black uppercase tracking-widest text-gray-500 px-4 mb-2">Explore</div>
+                        {secondaryLinks.map((link) => (
+                            <Link
+                                key={link.path}
+                                to={link.path}
+                                onClick={onClose}
+                                className={`block px-4 py-3 rounded-xl text-sm font-bold transition-colors ${isActive(link.path) ? 'text-brand-400 bg-brand-500/10' : 'text-gray-300 hover:text-white hover:bg-white/5'}`}
+                            >
+                                {link.name}
+                            </Link>
+                        ))}
+                    </div>
+                )}
 
                 {user ? (
                     <div className="pt-4 mt-4 border-t border-gray-800 space-y-1">

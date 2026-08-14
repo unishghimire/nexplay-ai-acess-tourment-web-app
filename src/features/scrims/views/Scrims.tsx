@@ -6,7 +6,7 @@ import { Trophy, Search, Filter, Calendar, Gamepad2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { formatCurrency, formatDate, formatGameName } from '../../../shared/utils/utils';
 import { useNotification } from '../../../shared/context/NotificationContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 
 const scrimFaqs = [
@@ -29,7 +29,8 @@ const Scrims: React.FC = () => {
     const [scrims, setScrims] = useState<Scrim[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [filterGame, setFilterGame] = useState('All');
+    const [searchParams] = useSearchParams();
+    const [filterGame, setFilterGame] = useState(searchParams.get('game') || 'All');
     const { showToast } = useNotification();
     const navigate = useNavigate();
 
