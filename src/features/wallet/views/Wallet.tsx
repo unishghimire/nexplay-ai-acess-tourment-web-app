@@ -287,7 +287,7 @@ const Wallet: React.FC = () => {
                         <button 
                             onClick={() => {
                             }}
-                            className="text-xs font-black uppercase text-gray-400 hover:text-white bg-black px-5 py-2.5 rounded-2xl border border-gray-800 transition flex items-center gap-2"
+                            className="text-xs font-black uppercase text-gray-400 hover:text-white bg-black px-5 py-2.5 min-h-[44px] rounded-2xl border border-gray-800 transition flex items-center gap-2"
                         >
                             <Download size={16} /> Statement
                         </button>
@@ -297,7 +297,7 @@ const Wallet: React.FC = () => {
                         {fetchError && (
                             <div className="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-2xl flex items-center justify-between gap-4">
                                 <p className="text-red-400 text-sm font-bold">{fetchError}</p>
-                                <button onClick={() => window.location.reload()} className="text-xs font-black uppercase tracking-widest text-red-400 hover:text-red-300 border border-red-500/30 rounded-lg px-3 py-2">Retry</button>
+                                <button onClick={() => window.location.reload()} className="text-xs font-black uppercase tracking-widest text-red-400 hover:text-red-300 border border-red-500/30 rounded-lg px-3 py-2 min-h-[44px]">Retry</button>
                             </div>
                         )}
                         {loading && transactions.length === 0 ? (
@@ -356,7 +356,7 @@ const Wallet: React.FC = () => {
                                                         setSelectedTxForDispute(tx);
                                                         setDisputeModalOpen(true);
                                                     }}
-                                                    className="opacity-0 group-hover:opacity-100 absolute sm:relative right-4 sm:right-auto text-[10px] font-bold uppercase tracking-widest text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 px-3 py-2 rounded-lg transition border border-red-500/20 flex items-center gap-1"
+                                                    className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 absolute sm:relative right-4 sm:right-auto text-[10px] font-bold uppercase tracking-widest text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 px-3 py-2 min-h-[44px] rounded-lg transition border border-red-500/20 flex items-center gap-1"
                                                 >
                                                     <AlertTriangle className="w-3 h-3" /> Report
                                                 </button>
@@ -485,7 +485,7 @@ const Wallet: React.FC = () => {
                                 </h3>
                                 <p className="text-xs font-bold text-gray-500 mt-1 uppercase tracking-widest">Unlock premium rewards</p>
                             </div>
-                            <button onClick={() => setIsPromoModalOpen(false)} className="text-gray-500 hover:text-white transition bg-dark-800 p-2 rounded-full border border-gray-700 hover:border-gray-600">
+                            <button type="button" onClick={() => setIsPromoModalOpen(false)} aria-label="Close" className="text-gray-500 hover:text-white transition bg-dark-800 p-2 rounded-full border border-gray-700 hover:border-gray-600 touch-target flex items-center justify-center">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
@@ -524,7 +524,7 @@ const Wallet: React.FC = () => {
                                 </h3>
                                 <p className="text-xs font-bold text-gray-500 mt-1 uppercase tracking-widest">Secure Dispute Resolution</p>
                             </div>
-                            <button onClick={() => setDisputeModalOpen(false)} className="text-gray-500 hover:text-white transition bg-dark-800 p-2 rounded-full border border-gray-700 hover:border-gray-600">
+                            <button type="button" onClick={() => setDisputeModalOpen(false)} aria-label="Close" className="text-gray-500 hover:text-white transition bg-dark-800 p-2 rounded-full border border-gray-700 hover:border-gray-600 touch-target flex items-center justify-center">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>

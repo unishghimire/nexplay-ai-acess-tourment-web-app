@@ -373,7 +373,7 @@ const Profile: React.FC = () => {
                             />
                             <button
                                 onClick={() => setShowPresetModal(true)}
-                                className="text-xs font-black uppercase tracking-widest text-brand-400 hover:text-brand-300 transition bg-brand-500/10 px-5 py-2 rounded-2xl border border-brand-500/20 flex items-center gap-2"
+                                className="text-xs font-black uppercase tracking-widest text-brand-400 hover:text-brand-300 transition bg-brand-500/10 px-5 py-2 min-h-[44px] rounded-2xl border border-brand-500/20 flex items-center gap-2"
                             >
                                 <ImageIcon className="w-4 h-4" /> Change Avatar
                             </button>
@@ -390,7 +390,7 @@ const Profile: React.FC = () => {
                                     <div className="flex items-center gap-2 mb-3">
                                         <span className="text-xs text-gray-500 font-mono bg-black px-3 py-1.5 rounded-xl border border-gray-800 flex items-center gap-2">
                                             ID: {user?.uid}
-                                            <button onClick={handleCopyId} className="hover:text-white transition">
+                                            <button onClick={handleCopyId} aria-label="Copy player ID" className="hover:text-white transition touch-target flex items-center justify-center">
                                                 {copiedId ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
                                             </button>
                                         </span>
@@ -584,7 +584,7 @@ const Profile: React.FC = () => {
                                 }}
                                 className="relative group rounded-2xl overflow-hidden border-2 border-gray-800 hover:border-brand-500 transition-all aspect-square bg-dark"
                             >
-                                <img src={url || undefined} alt={`Preset ${index + 1}`} className="w-full h-full object-cover p-2" loading="lazy" />
+                                <img src={url || undefined} alt={`Avatar preset ${index + 1}`} className="w-full h-full object-cover p-2" loading="lazy" />
                                 <div className="absolute inset-0 bg-brand-500/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                     <CheckCircle2 className="w-8 h-8 text-brand-400 drop-shadow-lg" />
                                 </div>
@@ -840,7 +840,7 @@ const Profile: React.FC = () => {
                                     <button 
                                         onClick={handleUpdateEmail} 
                                         disabled={isUpdatingEmail || !newEmail}
-                                        className="bg-brand-600 px-4 rounded-xl hover:bg-brand-500 disabled:bg-surface text-white text-xs font-black transition uppercase tracking-widest shadow-lg whitespace-nowrap"
+                                        className="bg-brand-600 px-4 min-h-[44px] rounded-xl hover:bg-brand-500 disabled:bg-surface text-white text-xs font-black transition uppercase tracking-widest shadow-lg whitespace-nowrap"
                                     >
                                         {isUpdatingEmail ? 'Updating...' : 'Update'}
                                     </button>
@@ -959,7 +959,7 @@ const Profile: React.FC = () => {
                             onClick={() => handleBannerSelect(url)}
                             className="relative group rounded-xl overflow-hidden border-2 border-transparent hover:border-brand-500 transition-all aspect-video"
                         >
-                            <img src={url || undefined} alt={`Preset ${index + 1}`} className="w-full h-full object-cover" loading="lazy" />
+                            <img src={url || undefined} alt={`Avatar preset ${index + 1}`} className="w-full h-full object-cover" loading="lazy" />
                             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                 <span className="text-xs font-black uppercase tracking-widest text-white bg-brand-500 px-3 py-1 rounded-full">Select</span>
                             </div>
