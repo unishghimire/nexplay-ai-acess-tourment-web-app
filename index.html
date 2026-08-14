@@ -7,7 +7,15 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#0f172a" />
+
+    <!-- ponytail: preconnect to external origins saves 100-300ms on first paint -->
+    <link rel="preconnect" href="https://firestore.googleapis.com" />
+    <link rel="preconnect" href="https://firebaseauth.googleapis.com" />
+    <link rel="preconnect" href="https://firebasestorage.googleapis.com" />
+    <link rel="dns-prefetch" href="https://www.google.com" />
+    <link rel="dns-prefetch" href="https://api.imgbb.com" />
 
     <!-- Primary Meta Tags -->
     <title>NexPlay | The Ultimate Esports Platform & Tournament Hub</title>
@@ -17,6 +25,13 @@
     <meta name="robots" content="index, follow" />
     <meta name="language" content="English" />
     <meta name="author" content="NexPlay Ecosystem" />
+
+    <!-- GEO signals for Nepal -->
+    <meta name="geo.region" content="NP" />
+    <meta name="geo.placename" content="Nepal" />
+    <link rel="alternate" hreflang="en-NP" href="https://www.nexplayorg.app/" />
+    <link rel="alternate" hreflang="en" href="https://www.nexplayorg.app/" />
+    <link rel="alternate" hreflang="x-default" href="https://www.nexplayorg.app/" />
 
     <!-- Search Engine Verification -->
     <meta name="google-site-verification" content="icqK17WCpZZJw7idp7dVdswr7t-eBY5qVyG_Gk5GAIA" />
@@ -28,6 +43,11 @@
     <meta property="og:title" content="NexPlay | Secure Esports Platform & Tournament Hub" />
     <meta property="og:description" content="Compete in premium, admin-refereed esports tournaments and daily squad scrims. Real-time standings, secure wallets, and automated brackets." />
     <meta property="og:image" content="/og-default.jpg" />
+    <meta property="og:image:width" content="1024" />
+    <meta property="og:image:height" content="1024" />
+    <meta property="og:image:alt" content="NexPlay esports tournament platform" />
+    <meta property="og:locale" content="en_NP" />
+    <meta property="og:site_name" content="NexPlay" />
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />

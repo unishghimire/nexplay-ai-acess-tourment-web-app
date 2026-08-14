@@ -42,9 +42,12 @@ export const Seo: React.FC<SeoProps> = ({
             {/* Open Graph */}
             <meta property="og:type" content={ogType} />
             <meta property="og:site_name" content={SITE_NAME} />
+            <meta property="og:locale" content="en_NP" />
             <meta property="og:title" content={title} />
             <meta property="og:description" content={description} />
             <meta property="og:image" content={ogImage} />
+            <meta property="og:image:width" content="1024" />
+            <meta property="og:image:height" content="1024" />
             {canonicalUrl && <meta property="og:url" content={canonicalUrl} />}
 
             {/* Twitter */}
