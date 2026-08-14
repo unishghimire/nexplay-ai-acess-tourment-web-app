@@ -37,7 +37,7 @@ const Navbar: React.FC = () => {
     const isActive = (path: string) => location.pathname === path;
 
     return (
-        <nav className="sticky top-0 z-50 bg-dark/90 backdrop-blur-xl border-b border-gray-800 transition-all duration-200">
+        <nav aria-label="Main navigation" className="sticky top-0 z-50 bg-dark/90 backdrop-blur-xl border-b border-gray-800 transition-all duration-200">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-[auto_1fr_auto] items-center h-16 sm:h-20 gap-2">
                     {/* Logo */}

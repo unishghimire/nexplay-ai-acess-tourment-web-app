@@ -16,17 +16,17 @@ const Footer: React.FC = () => {
                     </div>
 
                     {/* Compete */}
-                    <div>
+                    <nav aria-label="Compete links">
                         <h3 className="text-white font-bold text-sm mb-3 flex items-center gap-1.5"><Trophy className="w-4 h-4" /> Compete</h3>
                         <ul className="space-y-2 text-sm">
                             <li><Link to="/tournaments" className="text-gray-400 hover:text-white transition">Tournaments</Link></li>
                             <li><Link to="/scrims" className="text-gray-400 hover:text-white transition">Scrims</Link></li>
                             <li><Link to="/leaderboard" className="text-gray-400 hover:text-white transition">Leaderboard</Link></li>
                         </ul>
-                    </div>
+                    </nav>
 
                     {/* Community */}
-                    <div>
+                    <nav aria-label="Community links">
                         <h3 className="text-white font-bold text-sm mb-3 flex items-center gap-1.5"><Users className="w-4 h-4" /> Community</h3>
                         <ul className="space-y-2 text-sm">
                             <li><Link to="/teams" className="text-gray-400 hover:text-white transition">Teams</Link></li>
@@ -34,10 +34,10 @@ const Footer: React.FC = () => {
                             <li><Link to="/games" className="text-gray-400 hover:text-white transition">Games</Link></li>
                             <li><Link to="/news" className="text-gray-400 hover:text-white transition">News</Link></li>
                         </ul>
-                    </div>
+                    </nav>
 
                     {/* Company */}
-                    <div>
+                    <nav aria-label="Company links">
                         <h3 className="text-white font-bold text-sm mb-3 flex items-center gap-1.5"><Gamepad2 className="w-4 h-4" /> Company</h3>
                         <ul className="space-y-2 text-sm">
                             <li><Link to="/about" className="text-gray-400 hover:text-white transition">About Us</Link></li>
@@ -45,7 +45,7 @@ const Footer: React.FC = () => {
                             <li><Link to="/terms" className="text-gray-400 hover:text-white transition">Terms of Service</Link></li>
                             <li><Link to="/privacy" className="text-gray-400 hover:text-white transition">Privacy Policy</Link></li>
                         </ul>
-                    </div>
+                    </nav>
                 </div>
 
                 <div className="border-t border-gray-800 pt-6 flex flex-col md:flex-row justify-between items-center gap-4">

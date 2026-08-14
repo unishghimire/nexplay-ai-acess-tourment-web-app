@@ -1,4 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
+import { BASE_URL } from '../constants/constants';
 // DYNAMIC SITEMAP GENERATOR
 // ponytail: generates sitemap.xml from Firestore data at build time.
 // Called by the build script to produce a fresh sitemap before deploy.
@@ -6,7 +7,6 @@
 
 import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
 
-const BASE_URL = 'https://www.nexplayorg.app';
 
 interface SitemapUrl {
     loc: string;
