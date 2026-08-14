@@ -225,6 +225,11 @@ const OrganizerPanel: React.FC = () => {
     }
   }, [org, showToast]);
 
+  const handleOpenDisputeOverlay = useCallback((disputeId: string) => {
+    setDisputeTarget(disputeId);
+    setActiveOverlay('DISPUTE_RESOLVER');
+  }, []);
+
   const handleResolveDispute = useCallback(async (action: 'warn' | 'ban' | 'dismiss') => {
     if (!disputeTarget || isResolvingDispute) return;
     setIsResolvingDispute(true);
@@ -305,6 +310,7 @@ const OrganizerPanel: React.FC = () => {
               disputes={org.disputes}
               onOpenRoomDispatch={handleOpenRoomDispatch}
               onResolveDispute={handleResolveDispute}
+              onOpenDisputeOverlay={handleOpenDisputeOverlay}
             />
           </TabErrorBoundary>
         );
