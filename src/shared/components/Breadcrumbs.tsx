@@ -5,7 +5,7 @@ import { Helmet } from 'react-helmet-async';
 
 // ponytail: protected routes that should NOT appear in breadcrumbs or SEO schema.
 // Users reach these only by navigating through the app flow, not via direct links.
-const HIDDEN_ROUTES = ['admin', 'organizer', 'wallet', 'dashboard', 'complete-profile', 'tournament-admin'];
+const HIDDEN_ROUTES = ['admin', 'organizer', 'wallet', 'dashboard', 'complete-profile', 'tournament-admin', 'profile', 'results'];
 
 const Breadcrumbs: React.FC = () => {
     const location = useLocation();
