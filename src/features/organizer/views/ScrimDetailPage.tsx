@@ -75,18 +75,36 @@ export default function ScrimDetailPage() {
   const handleSaveEdit = useCallback(async () => {
     const entryFee = Number(editForm.entryFee);
     const prizePool = Number(editForm.prizePool);
-    const slots = Number(editForm.slots);
-    if (!id || !editForm.title?.trim() || ![entryFee, prizePool, slots].every(Number.isFinite) || entryFee < 0 || prizePool < 0 || slots < 1) {
+    const newSlotCount = Number(editForm.slots);
+    if (!id || !editForm.title?.trim() || ![entryFee, prizePool, newSlotCount].every(Number.isFinite) || entryFee < 0 || prizePool < 0 || newSlotCount < 1) {
       showToast('Enter a title, non-negative fees, and at least one slot', 'error');
       return;
     }
     try {
+      const currentSlots = normalizeScrimSlots(scrim?.slots, scrim?.totalSlots, scrim?.filledSlots ?? scrim?.currentPlayers);
+      let updatedSlots = currentSlots;
+      if (newSlotCount < currentSlots.length) {
+        updatedSlots = currentSlots.slice(0, newSlotCount);
+      } else if (newSlotCount > currentSlots.length) {
+        const extra = Array.from({ length: newSlotCount - currentSlots.length }, (_, idx) => ({
+          slotNumber: currentSlots.length + idx + 1,
+          status: 'open' as const,
+          teamName: null,
+          teamId: null,
+        }));
+        updatedSlots = [...currentSlots, ...extra];
+      }
+      const filled = countFilledScrimSlots(updatedSlots);
+
       await updateDoc(doc(db, SCRIM_COLLECTION, id), {
         title: editForm.title.trim(),
         startTime: editForm.startTime,
         entryFee,
         prizePool,
-        slots,
+        slots: updatedSlots,
+        totalSlots: newSlotCount,
+        filledSlots: filled,
+        currentPlayers: filled,
         map: editForm.map,
       });
       showToast('Scrim updated', 'success');
@@ -94,7 +112,7 @@ export default function ScrimDetailPage() {
     } catch {
       showToast('Failed to update scrim', 'error');
     }
-  }, [id, editForm, showToast]);
+  }, [id, scrim, editForm, showToast]);
 
   const handleToggleSlot = useCallback(async (slotNumber: number) => {
     if (!scrim) return;
