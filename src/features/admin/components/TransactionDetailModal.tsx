@@ -120,7 +120,7 @@ const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
                         <div className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-2">Proof of Payment</div>
                         {selectedTx.proofUrl ? (
                             <div className="relative group rounded-2xl overflow-hidden border border-slate-800 bg-black">
-                                <img src={selectedTx.proofUrl || undefined} onError={(e) => { e.currentTarget.style.display = "none"; }} className="w-full aspect-square object-contain" alt="Payment proof screenshot" referrerPolicy="no-referrer" />
+                                <img src={selectedTx.proofUrl || undefined} onError={(e) => { e.currentTarget.style.display = "none"; }} className="w-full aspect-square object-contain" alt="Payment proof screenshot" referrerPolicy="no-referrer" loading="lazy" />
                                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
                                     <a href={sanitizeUrl(selectedTx.proofUrl)} target="_blank" rel="noreferrer" className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all border border-white/10">
                                         <Eye className="w-5 h-5" /> View Full Image

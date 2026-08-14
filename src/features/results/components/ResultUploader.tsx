@@ -304,7 +304,7 @@ export const ResultUploader: React.FC<ResultUploaderProps> = ({ isOpen, onClose,
                     >
                         {previewUrl ? (
                             <>
-                                <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                                <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" loading="lazy" />
                                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center">
                                     <Camera className="w-8 h-8 text-white" />
                                 </div>

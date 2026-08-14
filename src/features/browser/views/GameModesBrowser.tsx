@@ -107,7 +107,7 @@ const GameModesBrowser: React.FC = () => {
             <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6 border-b border-gray-800 pb-8">
                 <div className="space-y-2">
                     <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white uppercase tracking-tighter flex items-center gap-4">
-                        <img src={game.logoUrl || ''} alt={gameLabel} className="w-14 h-14 object-cover rounded-2xl border border-gray-800" referrerPolicy="no-referrer" />
+                        <img src={game.logoUrl || ''} alt={gameLabel} className="w-14 h-14 object-cover rounded-2xl border border-gray-800" referrerPolicy="no-referrer" loading="lazy" />
                         {gameLabel} Modes
                     </h1>
                     <p className="text-gray-400 font-bold uppercase tracking-widest text-sm">Select a mode to view tournaments</p>
@@ -137,8 +137,7 @@ const GameModesBrowser: React.FC = () => {
                                     src={getModeImage(modeLabel, idx) || undefined} 
                                     alt={modeLabel} 
                                     className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110" 
-                                    referrerPolicy="no-referrer"
-                                />
+                                    referrerPolicy="no-referrer" loading="lazy" />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent"></div>
                                 
                                 <div className="absolute bottom-6 left-6 right-6">

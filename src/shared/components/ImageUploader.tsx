@@ -185,8 +185,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
               src={preview}
               alt="Uploader Preview"
               className="w-full h-full object-cover select-none"
-              referrerPolicy="no-referrer"
-            />
+              referrerPolicy="no-referrer" loading="lazy" />
             
             {/* Hover overlay controls */}
             {!loading && !disabled && (

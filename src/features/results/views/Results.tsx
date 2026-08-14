@@ -116,7 +116,7 @@ const Results: React.FC = () => {
         <div className="max-w-7xl mx-auto space-y-12 pb-20">
             <div className="relative overflow-hidden rounded-2xl sm:rounded-[2rem] border border-gray-800 bg-surface shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
                 <div className="absolute inset-0">
-                    <img src={featuredBanner} alt="Featured tournament banner" className="h-full w-full object-cover opacity-30" />
+                    <img src={featuredBanner} alt="Featured tournament banner" className="h-full w-full object-cover opacity-30" loading="lazy" />
                     <div className="absolute inset-0 bg-gradient-to-r from-gray-950 via-gray-950/90 to-gray-950/40" />
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(250,204,21,0.15),transparent_35%),radial-gradient(circle_at_bottom_left,rgba(96,165,250,0.12),transparent_32%)]" />
                 </div>
@@ -155,7 +155,7 @@ const Results: React.FC = () => {
                         <div className="absolute inset-0 bg-gradient-to-br from-white/0 via-white/0 to-brand-500/10" />
                         <div className="relative flex h-full flex-col justify-between gap-4">
                             <div className="overflow-hidden rounded-2xl border border-white/10 bg-dark/80">
-                                <img src={featuredBanner} alt={featuredResult?.title || 'Featured tournament'} className="h-52 w-full object-cover" />
+                                <img src={featuredBanner} alt={featuredResult?.title || 'Featured tournament'} className="h-52 w-full object-cover" loading="lazy" />
                             </div>
                             <div className="space-y-3">
                                 <div>

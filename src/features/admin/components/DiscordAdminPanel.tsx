@@ -156,7 +156,7 @@ const DiscordAdminPanel: React.FC<DiscordAdminPanelProps> = ({ allTournaments, s
                     <div className="flex items-center gap-3 p-4 bg-black/40 rounded-2xl border border-gray-800">
                         <div className="w-12 h-12 rounded-xl overflow-hidden bg-card border border-gray-700 shrink-0">
                             {selectedTournament.bannerUrl && (
-                                <img src={selectedTournament.bannerUrl} alt="" className="w-full h-full object-cover" />
+                                <img src={selectedTournament.bannerUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
                             )}
                         </div>
                         <div className="min-w-0">

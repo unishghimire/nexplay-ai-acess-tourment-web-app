@@ -220,8 +220,7 @@ const Teams: React.FC = () => {
                                                 alt="Team Logo Preview" 
                                                 className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition"
                                                 onError={(e) => (e.currentTarget.src = NEXPLAY_LOGO)}
-                                                referrerPolicy="no-referrer"
-                                            />
+                                                referrerPolicy="no-referrer" loading="lazy" />
                                             <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition">
                                                 <Plus className="w-8 h-8 text-white" />
                                             </div>
@@ -267,7 +266,7 @@ const Teams: React.FC = () => {
                                 }}
                                 className="relative group rounded-2xl overflow-hidden border-2 border-gray-800 hover:border-brand-500 transition-all aspect-square bg-dark"
                             >
-                                <img src={url} alt={`Preset ${index + 1}`} className="w-full h-full object-cover p-2" />
+                                <img src={url} alt={`Preset ${index + 1}`} className="w-full h-full object-cover p-2" loading="lazy" />
                                 <div className="absolute inset-0 bg-brand-500/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                     <CheckCircle2 className="w-8 h-8 text-brand-400 drop-shadow-lg" />
                                 </div>
@@ -289,8 +288,7 @@ const Teams: React.FC = () => {
                                             src={team.logoUrl || DEFAULT_TEAM_LOGO || undefined} 
                                             alt={team.name} 
                                             className="w-full h-full object-cover" 
-                                            referrerPolicy="no-referrer"
-                                        />
+                                            referrerPolicy="no-referrer" loading="lazy" />
                                     </div>
                                     <div>
                                         <h3 className="text-xl font-black text-white group-hover:text-brand-400 transition truncate">{team.name}</h3>
@@ -344,8 +342,7 @@ const Teams: React.FC = () => {
                                             src={team.logoUrl || DEFAULT_TEAM_LOGO || undefined} 
                                             alt={team.name} 
                                             className="w-full h-full object-cover" 
-                                            referrerPolicy="no-referrer"
-                                        />
+                                            referrerPolicy="no-referrer" loading="lazy" />
                                     </div>
                                     <h3 className="text-xl font-black text-white group-hover:text-brand-400 transition line-clamp-1">{team.name}</h3>
                                 </div>

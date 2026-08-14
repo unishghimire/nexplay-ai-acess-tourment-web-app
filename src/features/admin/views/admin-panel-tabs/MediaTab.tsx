@@ -144,8 +144,7 @@ export const MediaTab: React.FC<AdminPanelTabProps> = (props) => {
                                                     src={item.url}
                                                     alt={item.fileName || "Media Asset"}
                                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                                                    referrerPolicy="no-referrer"
-                                                />
+                                                    referrerPolicy="no-referrer" loading="lazy" />
                                                 <div className="absolute top-2 left-2 bg-black/75 px-2.5 py-1 rounded text-[10px] font-bold text-brand-400 uppercase tracking-wider border border-brand-500/10">
                                                     {item.category ? item.category.replace("_", " ") : "OTHER"}
                                                 </div>

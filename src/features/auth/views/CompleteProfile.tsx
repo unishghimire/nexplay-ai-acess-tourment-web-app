@@ -95,7 +95,7 @@ const CompleteProfile: React.FC = () => {
                                         selectedAvatar === url ? 'border-brand-500 scale-105 shadow-[0_0_15px_rgba(255,0,85,0.5)]' : 'border-gray-800 hover:border-gray-600'
                                     }`}
                                 >
-                                    <img src={url || undefined} alt={`Avatar ${idx + 1}`} className="w-full h-full object-cover p-1" />
+                                    <img src={url || undefined} alt={`Avatar ${idx + 1}`} className="w-full h-full object-cover p-1" loading="lazy" />
                                     {selectedAvatar === url && (
                                         <div className="absolute inset-0 bg-brand-500/20 flex items-center justify-center">
                                             <CheckCircle2 className="w-6 h-6 text-brand-400 drop-shadow-lg" />

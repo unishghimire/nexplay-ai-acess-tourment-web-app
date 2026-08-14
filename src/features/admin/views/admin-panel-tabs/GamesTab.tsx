@@ -28,7 +28,7 @@ export const GamesTab: React.FC<AdminPanelTabProps> = (props) => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {games.map(game => (
                             <div key={game.id} className="bg-card p-4 rounded-xl border border-gray-800 flex items-center gap-4">
-                                <img src={game.logoUrl || undefined} className="w-16 h-16 object-cover rounded-lg border border-gray-700" alt={formatGameName(game.name)} />
+                                <img src={game.logoUrl || undefined} className="w-16 h-16 object-cover rounded-lg border border-gray-700" alt={formatGameName(game.name)} loading="lazy" />
                                 <div className="flex-grow">
                                     <h3 className="font-bold text-white">{formatGameName(game.name)}</h3>
                                     <div className="flex items-center gap-2 mt-1">
@@ -97,8 +97,7 @@ export const GamesTab: React.FC<AdminPanelTabProps> = (props) => {
                                                         alt="Game Logo Preview" 
                                                         className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition"
                                                         onError={(e) => (e.currentTarget.src = NEXPLAY_LOGO)}
-                                                        referrerPolicy="no-referrer"
-                                                    />
+                                                        referrerPolicy="no-referrer" loading="lazy" />
                                                     <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition">
                                                         <Plus className="w-8 h-8 text-white" />
                                                     </div>

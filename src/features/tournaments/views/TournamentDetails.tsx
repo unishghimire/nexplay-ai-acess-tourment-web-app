@@ -589,7 +589,7 @@ export default function TournamentDetails() {
                                         <div className="flex items-center gap-3 sm:gap-4">
                                             <div className="w-12 h-12 sm:w-16 sm:h-16 shrink-0 rounded-2xl bg-dark border border-gray-700 overflow-hidden flex items-center justify-center">
                                                 {hostProfile.profilePicUrl ? (
-                                                    <img src={hostProfile.profilePicUrl || undefined} alt={hostProfile.username} className="w-full h-full object-cover" />
+                                                    <img src={hostProfile.profilePicUrl || undefined} alt={hostProfile.username} className="w-full h-full object-cover" loading="lazy" />
                                                 ) : (
                                                     <Building2 className="w-6 h-6 sm:w-8 sm:h-8 text-gray-600" />
                                                 )}

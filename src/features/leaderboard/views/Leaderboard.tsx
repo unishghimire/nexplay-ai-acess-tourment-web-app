@@ -97,8 +97,7 @@ const PodiumCard = ({ item, rank, type, navigate }: {
                     <img 
                         src={avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${avatarSeed}`} 
                         alt={`${displayName} avatar`} 
-                        className="w-full h-full object-cover"
-                    />
+                        className="w-full h-full object-cover" loading="lazy" />
                 </div>
                 {isPlayer && player?.status === 'online' && (
                     <div className="absolute bottom-1.5 right-1.5 w-5 h-5 bg-emerald-500 border-4 border-black rounded-full"></div>
@@ -304,8 +303,7 @@ const Leaderboard: React.FC = () => {
                                                 <img 
                                                     src={avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${avatarSeed}`} 
                                                     alt={`${displayName} avatar`} 
-                                                    className="w-full h-full object-cover"
-                                                />
+                                                    className="w-full h-full object-cover" loading="lazy" />
                                             </div>
                                             {isPlayerView && player?.status === 'online' && (
                                                 <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 border-4 border-black rounded-full"></div>

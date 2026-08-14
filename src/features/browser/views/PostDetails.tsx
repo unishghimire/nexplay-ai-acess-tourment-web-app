@@ -105,7 +105,7 @@ const PostDetails: React.FC = () => {
             <div className="bg-card rounded-2xl border border-gray-800 overflow-hidden shadow-2xl">
                 {post.imageUrl && (
                     <div className="w-full h-64 md:h-96 relative">
-                        <img src={post.imageUrl || undefined} alt={post.title} className="w-full h-full object-cover" />
+                        <img src={post.imageUrl || undefined} alt={post.title} className="w-full h-full object-cover" loading="lazy" />
                         <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent"></div>
                     </div>
                 )}
@@ -115,7 +115,7 @@ const PostDetails: React.FC = () => {
                         <Link to={`/user/${post.orgId}`} className="flex items-center gap-3 group">
                             <div className="w-10 h-10 rounded-full bg-dark border-2 border-gray-700 overflow-hidden group-hover:border-brand-500 transition">
                                 {post.orgAvatar ? (
-                                    <img src={post.orgAvatar || undefined} alt={post.orgName} className="w-full h-full object-cover" />
+                                    <img src={post.orgAvatar || undefined} alt={post.orgName} className="w-full h-full object-cover" loading="lazy" />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center bg-brand-600 text-white font-black">
                                         {post.orgName[0].toUpperCase()}

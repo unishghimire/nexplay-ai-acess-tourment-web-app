@@ -168,7 +168,7 @@ export const DashboardTab: React.FC<AdminPanelTabProps> = (props) => {
                                     slides.map(s => (
                                         <div key={s.id} className="flex justify-between items-center bg-dark p-2 rounded mb-2 border border-slate-700">
                                             <div className="flex items-center gap-2">
-                                                <img src={s.imageUrl || undefined} onError={(e) => { e.currentTarget.src = NEXPLAY_LOGO; }} className="w-10 h-6 object-cover rounded" alt={s.title} />
+                                                <img src={s.imageUrl || undefined} onError={(e) => { e.currentTarget.src = NEXPLAY_LOGO; }} className="w-10 h-6 object-cover rounded" alt={s.title} loading="lazy" />
                                                 <span className="text-white text-sm truncate flex-1 min-w-0">{s.title}</span>
                                             </div>
                                             <div className="flex gap-2">
@@ -229,8 +229,7 @@ export const DashboardTab: React.FC<AdminPanelTabProps> = (props) => {
                                                         alt="Slide Preview" 
                                                         className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition"
                                                         onError={(e) => (e.currentTarget.src = NEXPLAY_LOGO)}
-                                                        referrerPolicy="no-referrer"
-                                                    />
+                                                        referrerPolicy="no-referrer" loading="lazy" />
                                                     <div className="absolute inset-0 flex items-center justify-center bg-dark/40 opacity-0 group-hover:opacity-100 transition">
                                                         <Plus className="w-8 h-8 text-white" />
                                                     </div>

@@ -165,7 +165,7 @@ export const GroupsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                             <div className="flex items-center gap-3">
                                                 <div className="w-8 h-8 rounded-full bg-surface overflow-hidden">
                                                     {team.logoUrl ? (
-                                                        <img src={team.logoUrl} alt={team.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                                        <img src={team.logoUrl} alt={team.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" loading="lazy" />
                                                     ) : (
                                                         <div className="w-full h-full flex items-center justify-center text-xs font-bold text-gray-500">
                                                             {team.name.charAt(0).toUpperCase()}
@@ -211,7 +211,7 @@ export const GroupsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                             <div className="flex items-center gap-3">
                                                 <div className="w-8 h-8 rounded-full bg-surface overflow-hidden">
                                                     {team.logoUrl ? (
-                                                        <img src={team.logoUrl} alt={team.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                                        <img src={team.logoUrl} alt={team.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" loading="lazy" />
                                                     ) : (
                                                         <div className="w-full h-full flex items-center justify-center text-xs font-bold text-gray-500">
                                                             {team.name.charAt(0).toUpperCase()}

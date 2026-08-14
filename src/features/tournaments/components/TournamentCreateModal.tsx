@@ -448,7 +448,7 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
                         onClick={() => setFormData({...formData, bannerUrl: url})}
                         className={`relative aspect-[3/1] rounded overflow-hidden border-2 transition-all ${formData.bannerUrl === url ? 'border-brand-500' : 'border-transparent hover:border-gray-600'}`}
                       >
-                        <img src={url || undefined} alt={`Preset ${idx + 1}`} className="w-full h-full object-cover" />
+                        <img src={url || undefined} alt={`Preset ${idx + 1}`} className="w-full h-full object-cover" loading="lazy" />
                       </button>
                     ))}
                   </div>

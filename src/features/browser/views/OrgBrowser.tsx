@@ -189,8 +189,7 @@ const OrgBrowser: React.FC = () => {
                                                     <img
                                                         src={org.profilePicUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${org.username}`}
                                                         alt={org.username}
-                                                        className="w-full h-full object-cover"
-                                                    />
+                                                        className="w-full h-full object-cover" loading="lazy" />
                                                 </div>
                                                 <span className="bg-brand-500/10 text-brand-400 border border-brand-500/20 px-3 py-1 rounded-full text-xs uppercase font-black tracking-widest">
                                                     Organizer
@@ -257,8 +256,7 @@ const OrgBrowser: React.FC = () => {
                                             <img
                                                 src={org.profilePicUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${org.username}`}
                                                 alt={org.username}
-                                                className="w-full h-full object-cover"
-                                            />
+                                                className="w-full h-full object-cover" loading="lazy" />
                                         </div>
                                         <div className="min-w-0">
                                             <h3 className="text-base font-black text-white uppercase tracking-tight truncate group-hover:text-brand-400 transition">

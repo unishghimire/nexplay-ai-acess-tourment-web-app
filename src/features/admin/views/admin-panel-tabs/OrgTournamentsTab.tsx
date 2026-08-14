@@ -27,7 +27,7 @@ export const OrgTournamentsTab: React.FC<AdminPanelTabProps> = (props) => {
                         {orgTournaments.length > 0 ? (
                             orgTournaments.map(t => (
                                 <div key={t.id} className="bg-dark p-4 rounded-xl border border-slate-800 space-y-3">
-                                    <img src={t.bannerUrl || undefined} className="w-full aspect-video object-cover rounded-lg" alt={t.title} />
+                                    <img src={t.bannerUrl || undefined} className="w-full aspect-video object-cover rounded-lg" alt={t.title} loading="lazy" />
                                     <div>
                                         <h3 className="font-bold text-white truncate">{t.title}</h3>
                                         <div className="flex justify-between items-center mt-2">

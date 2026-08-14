@@ -416,7 +416,7 @@ const TeamDetails: React.FC = () => {
             <div className="bg-card rounded-3xl border border-gray-800 overflow-hidden shadow-2xl mb-8 relative">
                 <div className="h-56 bg-gradient-to-r from-brand-900 via-purple-900 to-black relative">
                     {team.bannerUrl && (
-                        <img src={team.bannerUrl || undefined} alt="Banner" className="w-full h-full object-cover opacity-50" />
+                        <img src={team.bannerUrl || undefined} alt="Banner" className="w-full h-full object-cover opacity-50" loading="lazy" />
                     )}
                     <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"></div>
                     <div className="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
@@ -426,7 +426,7 @@ const TeamDetails: React.FC = () => {
                     <div className="flex flex-col md:flex-row items-start sm:items-end gap-8 -mt-20 relative z-10">
                         <div className="w-40 h-40 rounded-3xl border-4 border-card bg-dark overflow-hidden shadow-2xl flex items-center justify-center bg-gradient-to-br from-brand-600 to-purple-800 text-5xl font-black text-white shrink-0">
                             {team.logoUrl ? (
-                                <img src={team.logoUrl || undefined} className="w-full h-full object-cover" alt="Logo" />
+                                <img src={team.logoUrl || undefined} className="w-full h-full object-cover" alt="Logo" loading="lazy" />
                             ) : (
                                 <Users className="w-16 h-16 text-white/50" />
                             )}
@@ -518,7 +518,7 @@ const TeamDetails: React.FC = () => {
                                     <div className="flex items-center gap-4">
                                         <Link to={`/user/${member.userId}`} className="w-14 h-14 rounded-2xl bg-surface overflow-hidden border-2 border-gray-700 group-hover:border-brand-500 transition shrink-0">
                                             {member.user?.profilePicUrl ? (
-                                                <img src={member.user.profilePicUrl || undefined} alt={member.user.username} className="w-full h-full object-cover" />
+                                                <img src={member.user.profilePicUrl || undefined} alt={member.user.username} className="w-full h-full object-cover" loading="lazy" />
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center text-gray-500 font-black text-xl">
                                                     {member.user?.username?.[0]?.toUpperCase() || '?'}

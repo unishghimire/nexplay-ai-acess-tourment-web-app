@@ -33,7 +33,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, navLinks }) =>
                 {user && (
                     <div className="flex sm:hidden items-center p-4 gap-4 mb-4 bg-surface/20 rounded-xl border border-gray-800/50">
                         <div className="w-12 h-12 shrink-0 bg-brand-700 rounded-full flex items-center justify-center font-bold text-lg ring-2 ring-brand-500 overflow-hidden">
-                            {profile?.profilePicUrl ? <img src={profile.profilePicUrl} className="w-full h-full object-cover" alt="Avatar" /> : (profile?.username || 'U')[0].toUpperCase()}
+                            {profile?.profilePicUrl ? <img src={profile.profilePicUrl} className="w-full h-full object-cover" alt="Avatar" loading="lazy" /> : (profile?.username || 'U')[0].toUpperCase()}
                         </div>
                         <div className="flex-1 overflow-hidden">
                             <div className="font-bold text-white truncate text-lg">{(profile?.username || 'User')}</div>

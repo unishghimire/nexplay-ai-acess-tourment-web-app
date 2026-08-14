@@ -42,7 +42,7 @@ const Navbar: React.FC = () => {
                 <div className="grid grid-cols-[auto_1fr_auto] items-center h-16 sm:h-20 gap-2">
                     {/* Logo */}
                     <Link to="/" className="flex items-center gap-3 shrink-0 group">
-                        <img src="/logo.png" alt="Nexplay Logo" className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg shrink-0 object-cover shadow-md group-hover:scale-105 transition-transform" />
+                        <img src="/logo.png" alt="Nexplay Logo" className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg shrink-0 object-cover shadow-md group-hover:scale-105 transition-transform" loading="eager" />
                         <span className="text-xl sm:text-2xl font-black tracking-widest text-white leading-none">NEX<span className="text-brand-500">PLAY</span></span>
                     </Link>
 

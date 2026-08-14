@@ -100,7 +100,7 @@ export const ParticipantsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-xl bg-dark border border-gray-800 overflow-hidden shrink-0">
                                         {p.logoUrl ? (
-                                            <img src={p.logoUrl} alt="" className="w-full h-full object-cover" />
+                                            <img src={p.logoUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center">
                                                 <User className="w-5 h-5 text-gray-600" />
@@ -169,7 +169,7 @@ export const ParticipantsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-xl bg-dark border border-gray-800 overflow-hidden shrink-0">
                                                     {p.logoUrl ? (
-                                                        <img src={p.logoUrl} alt="" className="w-full h-full object-cover" />
+                                                        <img src={p.logoUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
                                                     ) : (
                                                         <div className="w-full h-full flex items-center justify-center">
                                                             <User className="w-5 h-5 text-gray-600" />

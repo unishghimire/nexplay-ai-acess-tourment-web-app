@@ -87,7 +87,7 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                 <div key={pm.id} className="bg-card p-4 rounded-xl border border-slate-800 flex flex-col gap-4">
                                     <div className="flex items-center gap-4">
                                         <div className="w-16 h-16 bg-dark rounded-lg border border-slate-700 flex items-center justify-center overflow-hidden">
-                                            <img src={pm.qrUrl || undefined} className="w-full h-full object-contain" alt="QR" />
+                                            <img src={pm.qrUrl || undefined} className="w-full h-full object-contain" alt="QR" loading="lazy" />
                                         </div>
                                         <div className="flex-grow">
                                             <h3 className="font-bold text-white">{pm.name}</h3>
@@ -231,8 +231,7 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                                         alt="QR Preview" 
                                                         className="w-full h-full object-contain opacity-80 group-hover:opacity-100 transition"
                                                         onError={(e) => (e.currentTarget.src = NEXPLAY_LOGO)}
-                                                        referrerPolicy="no-referrer"
-                                                    />
+                                                        referrerPolicy="no-referrer" loading="lazy" />
                                                     <div className="absolute inset-0 flex items-center justify-center bg-dark/40 opacity-0 group-hover:opacity-100 transition">
                                                         <Plus className="w-8 h-8 text-white" />
                                                     </div>

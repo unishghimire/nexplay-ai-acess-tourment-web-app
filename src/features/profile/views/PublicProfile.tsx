@@ -227,7 +227,7 @@ const PublicProfile: React.FC = () => {
                         <div className="relative">
                             <div className={`w-40 h-40 rounded-3xl border-4 ${isRankOne ? 'border-yellow-500 shadow-yellow-500/20' : 'border-card'} bg-dark overflow-hidden shadow-2xl flex items-center justify-center bg-gradient-to-br from-brand-600 to-purple-800 text-5xl font-black text-white`}>
                                 {profile.profilePicUrl ? (
-                                    <img src={profile.profilePicUrl || undefined} className="w-full h-full object-cover" alt="Avatar" />
+                                    <img src={profile.profilePicUrl || undefined} className="w-full h-full object-cover" alt="Avatar" loading="lazy" />
                                 ) : (
                                     profile.username[0].toUpperCase()
                                 )}
@@ -367,7 +367,7 @@ const PublicProfile: React.FC = () => {
                                         <h4 className="text-xl font-black text-white mb-2 group-hover:text-brand-400 transition">{post.title}</h4>
                                         <p className="text-gray-400 text-sm leading-relaxed mb-4 line-clamp-2">{post.content}</p>
                                         {post.imageUrl && (
-                                            <img src={post.imageUrl} alt={post.title} className="w-full h-48 object-cover rounded-xl mb-4" />
+                                            <img src={post.imageUrl} alt={post.title} className="w-full h-48 object-cover rounded-xl mb-4" loading="lazy" />
                                         )}
                                         <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-gray-500">
                                             <Calendar className="w-3 h-3" /> {formatDate(post.createdAt)}
@@ -409,7 +409,7 @@ const PublicProfile: React.FC = () => {
                                 teams.map(team => (
                                     <Link to={`/team/${team.id}`} key={team.id} className="flex items-center gap-3 bg-dark p-3 rounded-2xl border border-gray-800 hover:border-brand-500/50 transition group">
                                         <div className="w-12 h-12 rounded-xl bg-surface overflow-hidden flex items-center justify-center shrink-0 border border-gray-700">
-                                            {team.logoUrl ? <img src={team.logoUrl} alt="Logo" className="w-full h-full object-cover" /> : <Users className="w-6 h-6 text-gray-600" />}
+                                            {team.logoUrl ? <img src={team.logoUrl} alt="Logo" className="w-full h-full object-cover" loading="lazy" /> : <Users className="w-6 h-6 text-gray-600" />}
                                         </div>
                                         <div>
                                             <h4 className="font-black text-white text-sm group-hover:text-brand-400 transition">{team.name}</h4>

@@ -123,7 +123,7 @@ const NewsTab: React.FC<AdminPanelTabProps> = ({ showToast }) => {
                     {posts.map(post => (
                         <div key={post.id} className="bg-dark p-5 rounded-2xl border border-gray-800 hover:border-gray-700 transition group flex gap-4 items-start">
                             {post.imageUrl && (
-                                <img src={post.imageUrl} alt={post.title} className="w-20 h-20 rounded-xl object-cover shrink-0" />
+                                <img src={post.imageUrl} alt={post.title} className="w-20 h-20 rounded-xl object-cover shrink-0" loading="lazy" />
                             )}
                             <div className="flex-1 min-w-0">
                                 <h3 className="text-lg font-black text-white group-hover:text-brand-400 transition truncate">{post.title}</h3>
@@ -184,7 +184,7 @@ const NewsTab: React.FC<AdminPanelTabProps> = ({ showToast }) => {
                                 </div>
                             ) : imageUrl ? (
                                 <>
-                                    <img src={imageUrl} alt="Preview" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                    <img src={imageUrl} alt="Preview" className="w-full h-full object-cover" referrerPolicy="no-referrer" loading="lazy" />
                                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
                                         <Camera className="w-8 h-8 text-white" />
                                     </div>

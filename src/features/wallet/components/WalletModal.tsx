@@ -279,7 +279,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
                       >
                         <div className="flex items-center gap-4">
                           <div className="w-12 h-12 bg-dark rounded-lg flex items-center justify-center border border-gray-700">
-                            <img src={pm.qrUrl || undefined} className="w-8 h-8 object-contain" alt={pm.name} />
+                            <img src={pm.qrUrl || undefined} className="w-8 h-8 object-contain" alt={pm.name} loading="lazy" />
                           </div>
                           <div className="text-left">
                             <div className="font-bold text-white group-hover:text-brand-400 transition">{pm.name}</div>
@@ -301,7 +301,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
                   </button>
                   <div className="flex flex-col items-center gap-4">
                     <div className="w-40 h-40 bg-white p-2 rounded-xl">
-                      <img src={selectedMethod.qrUrl || undefined} className="w-full h-full object-contain" alt="QR" />
+                      <img src={selectedMethod.qrUrl || undefined} className="w-full h-full object-contain" alt="QR" loading="lazy" />
                     </div>
                     <div className="bg-dark p-4 rounded-xl border border-gray-800 w-full">
                       <p className="text-[10px] text-gray-500 uppercase font-black mb-2">Instructions</p>
@@ -339,7 +339,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
                       <label className="text-[10px] text-gray-500 uppercase font-black mb-2 block">Payment Screenshot (Required)</label>
                       {proofPreview ? (
                         <div className="relative">
-                          <img src={proofPreview} alt="Payment screenshot" className="w-full max-h-48 object-contain rounded-xl border border-gray-700" />
+                          <img src={proofPreview} alt="Payment screenshot" className="w-full max-h-48 object-contain rounded-xl border border-gray-700" loading="lazy" />
                           <button 
                             onClick={() => { setProofPreview(''); setProofUrl(''); }}
                             className="absolute top-2 right-2 bg-black/80 rounded-full p-1 text-white hover:bg-red-500 transition"
