@@ -1,5 +1,6 @@
 import React from 'react';
 import { Gamepad2, RefreshCw, Clock, DollarSign, Trophy, Plus } from 'lucide-react';
+import { toDateSafe } from '../../../shared/utils/utils';
 
 export interface ScrimsHubTabProps {
   scrims: any[];
@@ -16,11 +17,11 @@ export const ScrimsHubTab: React.FC<ScrimsHubTabProps> = ({
   onViewDetails,
   onCreateScrim,
 }) => {
-  const formatTime = (timeStr?: string) => {
-    if (!timeStr) return 'TBD';
+  const formatTime = (timeInput?: any) => {
+    if (!timeInput) return 'TBD';
     try {
-      const date = new Date(timeStr);
-      if (isNaN(date.getTime())) return timeStr;
+      const date = toDateSafe(timeInput);
+      if (!date) return typeof timeInput === 'string' ? timeInput : 'TBD';
       return date.toLocaleString('en-US', {
         month: 'short',
         day: 'numeric',
@@ -29,8 +30,8 @@ export const ScrimsHubTab: React.FC<ScrimsHubTabProps> = ({
         hour12: true,
       });
     } catch (e) {
-      console.warn('Date formatting failed, using raw value', e);
-      return timeStr || 'TBD';
+      console.warn('Date formatting failed', e);
+      return typeof timeInput === 'string' ? timeInput : 'TBD';
     }
   };
 
@@ -148,7 +149,7 @@ export const ScrimsHubTab: React.FC<ScrimsHubTabProps> = ({
                     {(scrim.recurring || scrim.recurrencePattern) && (
                       <div className="flex items-center gap-1.5 text-xs text-brand-400/90 font-medium">
                         <RefreshCw className="w-3.5 h-3.5" />
-                        <span>{scrim.recurrencePattern || 'Recurring Scrim Schedule'}</span>
+                        <span>{typeof scrim.recurrencePattern === 'string' ? scrim.recurrencePattern : 'Recurring Scrim Schedule'}</span>
                       </div>
                     )}
                   </div>
