@@ -209,7 +209,7 @@ const GameModesBrowser: React.FC = () => {
                         <Link
                             key={idx}
                             to={`${targetPath}?game=${encodeURIComponent(game.name)}&mode=${encodeURIComponent(mode)}`}
-                            className="block w-full h-full"
+                            className="block w-full h-full focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:outline-none rounded-3xl"
                         >
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
