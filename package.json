@@ -13,7 +13,7 @@
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
     "type-check": "tsc --noEmit",
-    "test": "tsx src/shared/services/tournamentEngine.test.ts && tsx src/shared/services/scoringEngine.test.ts && tsx src/shared/services/perKillEngine.test.ts && tsx src/shared/components/Seo.test.ts && tsx server/authz.test.ts && tsx server/prizeValidation.test.ts && tsx server/safeUrlFetch.test.ts && tsx server/authPolicy.test.ts && tsx server/batchedWrites.test.ts && tsx server/seo.test.ts",
+    "test": "tsx src/shared/services/tournamentEngine.test.ts && tsx src/shared/services/scoringEngine.test.ts && tsx src/shared/services/perKillEngine.test.ts && tsx src/shared/components/Seo.test.ts && tsx src/shared/utils/scrimSlots.test.ts && tsx server/authz.test.ts && tsx server/prizeValidation.test.ts && tsx server/safeUrlFetch.test.ts && tsx server/authPolicy.test.ts && tsx server/batchedWrites.test.ts && tsx server/seo.test.ts",
     "start": "NODE_ENV=production tsx server.ts",
     "deploy:indexes": "firebase deploy --only firestore:indexes"
   },
