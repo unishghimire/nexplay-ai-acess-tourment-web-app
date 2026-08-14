@@ -54,17 +54,19 @@ export default function TournamentAdminPanel() {
                 <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
                     <button 
                         onClick={() => {
-                            const csvContent = "data:text/csv;charset=utf-8," 
-                                + ["Team Name,Username,In-Game ID,In-Game Name,Status", 
-                                   ...participants.map(p => `"${p.teamName || 'Solo'}","${p.username}","${p.inGameId}","${p.inGameName}","${p.status}"`)
-                                ].join("\n");
-                            const encodedUri = encodeURI(csvContent);
+                            const headers = "Team Name,Username,In-Game ID,In-Game Name,Status\n";
+                            const rows = participants.map(p => 
+                              `"${(p.teamName || 'Solo').replace(/"/g, '""')}","${(p.username || '').replace(/"/g, '""')}","${(p.inGameId || '').replace(/"/g, '""')}","${(p.inGameName || '').replace(/"/g, '""')}","${p.status || ''}"`
+                            ).join("\n");
+                            const blob = new Blob([headers + rows], { type: 'text/csv;charset=utf-8;' });
+                            const url = URL.createObjectURL(blob);
                             const link = document.createElement("a");
-                            link.setAttribute("href", encodedUri);
-                            link.setAttribute("download", `${tournament.title}_participants.csv`);
+                            link.setAttribute("href", url);
+                            link.setAttribute("download", `${(tournament.title || 'tournament').replace(/[^a-zA-Z0-9]/g, '_')}_participants.csv`);
                             document.body.appendChild(link);
                             link.click();
                             document.body.removeChild(link);
+                            URL.revokeObjectURL(url);
                         }}
                         className="bg-dark border border-gray-800 hover:border-brand-500 text-gray-500 hover:text-white p-2.5 sm:p-3 rounded-full transition-all touch-target flex items-center justify-center"
                         title="Export Participants"
