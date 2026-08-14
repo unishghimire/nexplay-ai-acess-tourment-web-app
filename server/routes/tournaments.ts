@@ -234,39 +234,37 @@ router.delete("/api/tournaments/:id",
 // Scrims API
 router.get("/api/scrims", rateLimit(30, 60 * 1000), async (req, res) => {
   try {
-    let scrimsFromCol: any[] = [];
-    let scrimsFromTourneys: any[] = [];
+    // Each source has a different schema history. Query by indexed fields,
+    // rather than scanning every tournament, then merge partial successes.
+    const sources = await Promise.allSettled([
+      db.collection("scrims").where("status", "in", ["open", "live"]).get(),
+      db.collection("tournaments").where("matchType", "==", "scrims").get(),
+      db.collection("tournaments").where("isScrim", "==", true).get(),
+    ]);
+    const snapshots = sources
+      .filter((result): result is PromiseFulfilledResult<FirebaseFirestore.QuerySnapshot> => result.status === 'fulfilled')
+      .map(result => result.value);
 
-    // Query dedicated scrims collection safely
-    try {
-      const scrimsSnap = await db.collection("scrims").get();
-      scrimsFromCol = scrimsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    } catch (e) {
-      console.warn("Could not fetch from 'scrims' collection:", e);
+    if (snapshots.length === 0) {
+      const errors = sources
+        .filter((result): result is PromiseRejectedResult => result.status === 'rejected')
+        .map(result => result.reason);
+      console.error("All scrim data sources failed:", errors);
+      return res.status(503).json({ success: false, message: "Scrims are temporarily unavailable", scrims: [] });
     }
 
-    // Query tournaments collection and filter for scrims
-    try {
-      const tourneySnap = await db.collection("tournaments").get();
-      scrimsFromTourneys = tourneySnap.docs
-        .map(doc => ({ id: doc.id, ...doc.data() }))
-        .filter((t: any) => {
-          const isScrimMatch = t.matchType === 'scrims' || t.isScrim === true || (t.title && t.title.toLowerCase().includes('scrim'));
-          const isActive = t.status !== 'draft' && t.status !== 'cancelled';
-          return isScrimMatch && isActive;
-        });
-    } catch (e) {
-      console.warn("Could not fetch scrims from 'tournaments' collection:", e);
-    }
-
-    const combinedMap = new Map();
-    [...scrimsFromCol, ...scrimsFromTourneys].forEach(s => combinedMap.set(s.id, s));
+    const activeStatuses = new Set(["open", "upcoming", "published", "live"]);
+    const combinedMap = new Map<string, any>();
+    snapshots
+      .flatMap(snapshot => snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })))
+      .filter((scrim: any) => activeStatuses.has(scrim.status))
+      .forEach(scrim => combinedMap.set(scrim.id, scrim));
     const allScrims = Array.from(combinedMap.values());
 
     res.json({ success: true, scrims: allScrims });
   } catch (error: any) {
     console.error("Error in /api/scrims route:", error);
-    res.status(500).json({ success: false, message: error?.message || "Error fetching scrims", scrims: [] });
+    res.status(500).json({ success: false, message: "Error fetching scrims", scrims: [] });
   }
 });
 

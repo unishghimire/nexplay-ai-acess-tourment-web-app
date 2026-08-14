@@ -34,6 +34,12 @@ const NAV_ITEMS = [
 ] as const;
 
 type TabId = typeof NAV_ITEMS[number]['id'];
+const DEFAULT_TAB: TabId = 'overview';
+
+const getActiveTab = (search: string): TabId => {
+  const requestedTab = new URLSearchParams(search).get('tab');
+  return NAV_ITEMS.some(item => item.id === requestedTab) ? requestedTab as TabId : DEFAULT_TAB;
+};
 
 const OrganizerPanel: React.FC = () => {
   const { profile } = useAuth();
@@ -42,7 +48,7 @@ const OrganizerPanel: React.FC = () => {
   const navigate = useNavigate();
 
   const org = useOrgData();
-  const activeTab = (new URLSearchParams(location.search).get('tab') || 'overview') as TabId;
+  const activeTab = getActiveTab(location.search);
 
   // Mobile sidebar drawer
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -156,14 +162,16 @@ const OrganizerPanel: React.FC = () => {
     setActiveOverlay('SCRIM_SLOTS');
   }, []);
 
-  const handleToggleSlot = useCallback(async (slotNumber: number) => {
-    if (!scrimSlotTarget || isTogglingSlot) return;
+  const handleToggleSlot = useCallback(async (scrimIdOrSlotNumber: string | number, requestedSlotNumber?: number) => {
+    const scrimId = requestedSlotNumber === undefined ? scrimSlotTarget?.id : String(scrimIdOrSlotNumber);
+    const slotNumber = requestedSlotNumber ?? Number(scrimIdOrSlotNumber);
+    if (!scrimId || !Number.isInteger(slotNumber) || slotNumber < 1 || isTogglingSlot) return;
     setIsTogglingSlot(true);
     try {
-      await org.toggleScrimSlot(scrimSlotTarget.id, slotNumber);
+      await org.toggleScrimSlot(scrimId, slotNumber);
       showToast(`Slot ${slotNumber} toggled`, 'info');
       setScrimSlotTarget((prev: any) => {
-        if (!prev) return prev;
+        if (!prev || prev.id !== scrimId) return prev;
         const newSlots = (prev.slots || []).map((s: any) => {
           if (s.slotNumber !== slotNumber) return s;
           if (s.status === 'filled') return { ...s, status: 'open', teamName: null, teamId: null };
@@ -255,7 +263,7 @@ const OrganizerPanel: React.FC = () => {
     switch (activeTab) {
       case 'overview':
         return (
-          <TabErrorBoundary tabName="Overview Tab">
+          <TabErrorBoundary tabName="Overview Tab" resetKey={activeTab}>
             <OverviewTab
               kpis={org.kpis}
               activityFeed={org.activityFeed}
@@ -265,7 +273,7 @@ const OrganizerPanel: React.FC = () => {
         );
       case 'tournaments':
         return (
-          <TabErrorBoundary tabName="Tournaments Tab">
+          <TabErrorBoundary tabName="Tournaments Tab" resetKey={activeTab}>
             <TournamentsTab
               hostedTournaments={org.hostedTournaments}
               onDelete={handleDelete}
@@ -279,7 +287,7 @@ const OrganizerPanel: React.FC = () => {
         );
       case 'scrims':
         return (
-          <TabErrorBoundary tabName="Scrims Hub Tab">
+          <TabErrorBoundary tabName="Scrims Hub Tab" resetKey={activeTab}>
             <ScrimsHubTab
               scrims={org.scrims}
               onOpenSlotGrid={handleOpenSlotGrid}
@@ -291,7 +299,7 @@ const OrganizerPanel: React.FC = () => {
         );
       case 'rooms':
         return (
-          <TabErrorBoundary tabName="Match Rooms Tab">
+          <TabErrorBoundary tabName="Match Rooms Tab" resetKey={activeTab}>
             <MatchRoomsTab
               matchRooms={org.matchRooms}
               disputes={org.disputes}
@@ -302,7 +310,7 @@ const OrganizerPanel: React.FC = () => {
         );
       case 'teams':
         return (
-          <TabErrorBoundary tabName="Teams & Rosters Tab">
+          <TabErrorBoundary tabName="Teams & Rosters Tab" resetKey={activeTab}>
             <TeamsRostersTab
               teams={org.teams}
               onToggleRosterLock={handleToggleRosterLock}
@@ -313,7 +321,7 @@ const OrganizerPanel: React.FC = () => {
         );
       case 'wallet':
         return (
-          <TabErrorBoundary tabName="Wallet & Payouts Tab">
+          <TabErrorBoundary tabName="Wallet & Payouts Tab" resetKey={activeTab}>
             <WalletPayoutsTab
               kpis={org.kpis}
               transactions={org.transactions}
@@ -323,7 +331,7 @@ const OrganizerPanel: React.FC = () => {
         );
       case 'settings':
         return (
-          <TabErrorBoundary tabName="Settings & Stream Tab">
+          <TabErrorBoundary tabName="Settings & Stream Tab" resetKey={activeTab}>
             <SettingsStreamTab
               profile={profile}
               onSaveSettings={handleSaveSettings}
@@ -331,7 +339,7 @@ const OrganizerPanel: React.FC = () => {
           </TabErrorBoundary>
         );
       default:
-        return null;
+        return <TabErrorBoundary tabName="Organizer Panel">Unable to load this panel.</TabErrorBoundary>;
     }
   };
 
