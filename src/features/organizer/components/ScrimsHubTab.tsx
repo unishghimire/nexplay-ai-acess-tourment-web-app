@@ -91,17 +91,26 @@ export const ScrimsHubTab: React.FC<ScrimsHubTabProps> = ({
       ) : (
         <div className="grid grid-cols-1 gap-6">
           {scrims.map((scrim) => {
-            const totalSlots = scrim.totalSlots || scrim.slots?.length || 20;
+            const totalSlots =
+              typeof scrim.totalSlots === 'number'
+                ? scrim.totalSlots
+                : typeof scrim.slots === 'number'
+                ? scrim.slots
+                : Array.isArray(scrim.slots)
+                ? scrim.slots.length
+                : 20;
+
             const filledSlots =
               scrim.filledSlots !== undefined
                 ? scrim.filledSlots
-                : scrim.slots
-                ? scrim.slots.filter((s: any) => s.status === 'filled').length
+                : Array.isArray(scrim.slots)
+                ? scrim.slots.filter((s: any) => s && s.status === 'filled').length
                 : 0;
-            const progressPercent = Math.min(100, Math.max(0, (filledSlots / totalSlots) * 100));
+
+            const progressPercent = Math.min(100, Math.max(0, (filledSlots / Math.max(1, totalSlots)) * 100));
 
             const slotList: Array<{ slotNumber: number; status: string; teamName?: string | null }> =
-              scrim.slots && scrim.slots.length > 0
+              Array.isArray(scrim.slots) && scrim.slots.length > 0
                 ? scrim.slots
                 : Array.from({ length: totalSlots }, (_, i) => ({
                     slotNumber: i + 1,
