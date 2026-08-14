@@ -8,9 +8,10 @@ interface ModalProps {
     title?: string;
     children: React.ReactNode;
     maxWidth?: string;
+    role?: string;
 }
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, maxWidth = 'sm:max-w-lg' }) => {
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, maxWidth = "sm:max-w-lg", role = "dialog" }) => {
     const dialogRef = useRef<HTMLDivElement>(null);
     const previouslyFocused = useRef<HTMLElement | null>(null);
 
@@ -67,7 +68,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, maxWidt
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[70] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby={title ? "modal-title" : undefined}>
+        <div className="fixed inset-0 z-[70] overflow-y-auto" role={role} aria-modal="true" aria-labelledby={title ? "modal-title" : undefined}>
             <div className="flex min-h-screen items-center justify-center p-0 sm:p-4 sm:pt-8 sm:pb-20">
                 <div className="fixed inset-0 modal-backdrop transition-opacity" onClick={onClose} aria-hidden="true"></div>
                 <div ref={dialogRef} className={`relative w-full ${maxWidth} max-w-[calc(100vw-0px)] sm:max-w-[calc(100vw-2rem)] bg-card rounded-t-2xl sm:rounded-xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 border border-gray-700 max-h-[100vh] sm:max-h-[90vh] flex flex-col`}>
