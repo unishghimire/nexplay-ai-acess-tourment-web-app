@@ -12,6 +12,7 @@ import { useOrgData } from '../hooks/useOrgData';
 import { OrgOverlayManager, OverlayType } from '../components/OrgOverlayManager';
 import { Seo } from '../../../shared/components/Seo';
 import { fetchRoomCredentials } from '../../../shared/services/roomCredentials';
+import TabErrorBoundary from '../../../shared/components/TabErrorBoundary';
 
 // Lazy-load tab components
 const OverviewTab = React.lazy(() => import('../components/OverviewTab'));
@@ -97,7 +98,7 @@ const OrganizerPanel: React.FC = () => {
   }, [deleteTarget, org, showToast]);
 
   const handleUpdateStatus = useCallback(async (id: string, status: string) => {
-    if (isUpdatingStatus) return; // Duplicate-submit protection (BUG-012 fix)
+    if (isUpdatingStatus) return;
     setIsUpdatingStatus(true);
     try {
       await org.updateTournamentStatus(id, status as any);
@@ -155,14 +156,12 @@ const OrganizerPanel: React.FC = () => {
     setActiveOverlay('SCRIM_SLOTS');
   }, []);
 
-  // BUG-003 FIX: Real Firestore write for slot toggle
   const handleToggleSlot = useCallback(async (slotNumber: number) => {
     if (!scrimSlotTarget || isTogglingSlot) return;
     setIsTogglingSlot(true);
     try {
       await org.toggleScrimSlot(scrimSlotTarget.id, slotNumber);
       showToast(`Slot ${slotNumber} toggled`, 'info');
-      // Update local state
       setScrimSlotTarget((prev: any) => {
         if (!prev) return prev;
         const newSlots = (prev.slots || []).map((s: any) => {
@@ -179,7 +178,6 @@ const OrganizerPanel: React.FC = () => {
     }
   }, [scrimSlotTarget, isTogglingSlot, org, showToast]);
 
-  // BUG-003 FIX: Real Firestore write for roster lock toggle
   const handleToggleRosterLock = useCallback(async (teamId: string) => {
     try {
       await org.toggleRosterLock(teamId);
@@ -194,7 +192,6 @@ const OrganizerPanel: React.FC = () => {
     setActiveOverlay('TEAM_WARNING');
   }, []);
 
-  // BUG-003 FIX: Real Firestore write for warning issuance
   const confirmWarning = useCallback(async () => {
     if (!warningTeam || !warningReason.trim()) {
       showToast('Please enter a violation description', 'error');
@@ -211,7 +208,6 @@ const OrganizerPanel: React.FC = () => {
     }
   }, [warningTeam, warningReason, org, showToast]);
 
-  // BUG-003 FIX: Real Firestore write for team ban toggle
   const handleBanTeam = useCallback(async (teamId: string, teamName: string) => {
     try {
       await org.toggleBanTeam(teamId, teamName);
@@ -221,7 +217,6 @@ const OrganizerPanel: React.FC = () => {
     }
   }, [org, showToast]);
 
-  // BUG-003 FIX: Real Firestore write for dispute resolution
   const handleResolveDispute = useCallback(async (action: 'warn' | 'ban' | 'dismiss') => {
     if (!disputeTarget || isResolvingDispute) return;
     setIsResolvingDispute(true);
@@ -259,54 +254,82 @@ const OrganizerPanel: React.FC = () => {
   const renderTab = () => {
     switch (activeTab) {
       case 'overview':
-        return <OverviewTab
-          kpis={org.kpis}
-          activityFeed={org.activityFeed}
-          hostedTournaments={org.hostedTournaments}
-        />;
+        return (
+          <TabErrorBoundary tabName="Overview Tab">
+            <OverviewTab
+              kpis={org.kpis}
+              activityFeed={org.activityFeed}
+              hostedTournaments={org.hostedTournaments}
+            />
+          </TabErrorBoundary>
+        );
       case 'tournaments':
-        return <TournamentsTab
-          hostedTournaments={org.hostedTournaments}
-          onDelete={handleDelete}
-          onUpdateStatus={handleUpdateStatus}
-          onCreateTournament={() => handleCreateTournament('tournament')}
-          onOpenRoomDispatch={handleOpenRoomDispatch}
-          onManageTournament={handleManageTournament}
-          onEditTournament={handleEditTournament}
-        />;
+        return (
+          <TabErrorBoundary tabName="Tournaments Tab">
+            <TournamentsTab
+              hostedTournaments={org.hostedTournaments}
+              onDelete={handleDelete}
+              onUpdateStatus={handleUpdateStatus}
+              onCreateTournament={() => handleCreateTournament('tournament')}
+              onOpenRoomDispatch={handleOpenRoomDispatch}
+              onManageTournament={handleManageTournament}
+              onEditTournament={handleEditTournament}
+            />
+          </TabErrorBoundary>
+        );
       case 'scrims':
-        return <ScrimsHubTab
-          scrims={org.scrims}
-          onOpenSlotGrid={handleOpenSlotGrid}
-          onToggleSlot={handleToggleSlot}
-          onViewDetails={handleViewScrimDetails}
-          onCreateScrim={() => handleCreateTournament('scrims')}
-        />;
+        return (
+          <TabErrorBoundary tabName="Scrims Hub Tab">
+            <ScrimsHubTab
+              scrims={org.scrims}
+              onOpenSlotGrid={handleOpenSlotGrid}
+              onToggleSlot={handleToggleSlot}
+              onViewDetails={handleViewScrimDetails}
+              onCreateScrim={() => handleCreateTournament('scrims')}
+            />
+          </TabErrorBoundary>
+        );
       case 'rooms':
-        return <MatchRoomsTab
-          matchRooms={org.matchRooms}
-          disputes={org.disputes}
-          onOpenRoomDispatch={handleOpenRoomDispatch}
-          onResolveDispute={handleResolveDispute}
-        />;
+        return (
+          <TabErrorBoundary tabName="Match Rooms Tab">
+            <MatchRoomsTab
+              matchRooms={org.matchRooms}
+              disputes={org.disputes}
+              onOpenRoomDispatch={handleOpenRoomDispatch}
+              onResolveDispute={handleResolveDispute}
+            />
+          </TabErrorBoundary>
+        );
       case 'teams':
-        return <TeamsRostersTab
-          teams={org.teams}
-          onToggleRosterLock={handleToggleRosterLock}
-          onIssueWarning={handleIssueWarning}
-          onBanTeam={handleBanTeam}
-        />;
+        return (
+          <TabErrorBoundary tabName="Teams & Rosters Tab">
+            <TeamsRostersTab
+              teams={org.teams}
+              onToggleRosterLock={handleToggleRosterLock}
+              onIssueWarning={handleIssueWarning}
+              onBanTeam={handleBanTeam}
+            />
+          </TabErrorBoundary>
+        );
       case 'wallet':
-        return <WalletPayoutsTab
-          kpis={org.kpis}
-          transactions={org.transactions}
-          onRequestWithdraw={handleRequestWithdraw}
-        />;
+        return (
+          <TabErrorBoundary tabName="Wallet & Payouts Tab">
+            <WalletPayoutsTab
+              kpis={org.kpis}
+              transactions={org.transactions}
+              onRequestWithdraw={handleRequestWithdraw}
+            />
+          </TabErrorBoundary>
+        );
       case 'settings':
-        return <SettingsStreamTab
-          profile={profile}
-          onSaveSettings={handleSaveSettings}
-        />;
+        return (
+          <TabErrorBoundary tabName="Settings & Stream Tab">
+            <SettingsStreamTab
+              profile={profile}
+              onSaveSettings={handleSaveSettings}
+            />
+          </TabErrorBoundary>
+        );
       default:
         return null;
     }
@@ -323,7 +346,6 @@ const OrganizerPanel: React.FC = () => {
     );
   }
 
-  // BUG-011 FIX: Show error state with retry
   if (org.error && hostedTournamentsEmpty(org)) {
     return (
       <DashboardLayout title="Organizer Panel">
@@ -343,7 +365,7 @@ const OrganizerPanel: React.FC = () => {
 
   return (
     <DashboardLayout title="Organizer Panel">
-        <Seo title="Organizer Panel | NexPlay" description="Tournament organizer dashboard" noindex />
+      <Seo title="Organizer Panel | NexPlay" description="Tournament organizer dashboard" noindex />
       {/* Mobile nav toggle */}
       <button
         onClick={() => setMobileNavOpen(!mobileNavOpen)}
@@ -408,7 +430,7 @@ const OrganizerPanel: React.FC = () => {
         onToggleSlot={handleToggleSlot}
       />
 
-      {/* Tournament Create Modal (reused from existing) */}
+      {/* Tournament Create Modal */}
       {showCreateModal && (
         <TournamentCreateModal
           isOpen={showCreateModal}
@@ -422,7 +444,6 @@ const OrganizerPanel: React.FC = () => {
   );
 };
 
-// Helper to check if tournaments are empty (for error state display)
 function hostedTournamentsEmpty(org: ReturnType<typeof useOrgData>): boolean {
   return org.hostedTournaments.length === 0;
 }

@@ -5,6 +5,7 @@ import { AnimatePresence } from 'motion/react';
 
 import { OverviewTab, GroupsTab, MatchesTab, BracketsTab, SettingsTab, ParticipantsTab } from './tournament-admin-tabs';
 import { useTournamentAdmin } from '../hooks/useTournamentAdmin';
+import TabErrorBoundary from '../../../shared/components/TabErrorBoundary';
 
 export default function TournamentAdminPanel() {
     const { id } = useParams();
@@ -111,12 +112,12 @@ export default function TournamentAdminPanel() {
             {/* ponytail: shared tabProps — built once, spread to each tab */}
             <div className="bg-dark/50 rounded-2xl sm:rounded-[2rem] border border-gray-800 p-4 sm:p-6 lg:p-8">
                 <AnimatePresence mode="wait">
-                    {activeTab === 'overview' && <OverviewTab {...tabProps} />}
-                    {activeTab === 'groups' && <GroupsTab {...tabProps} />}
-                    {activeTab === 'matches' && <MatchesTab {...tabProps} />}
-                    {activeTab === 'brackets' && <BracketsTab {...tabProps} />}
-                    {activeTab === 'settings' && <SettingsTab {...tabProps} />}
-                    {activeTab === 'participants' && <ParticipantsTab {...tabProps} />}
+                    {activeTab === 'overview' && <TabErrorBoundary tabName="Overview Tab"><OverviewTab {...tabProps} /></TabErrorBoundary>}
+                    {activeTab === 'groups' && <TabErrorBoundary tabName="Groups Tab"><GroupsTab {...tabProps} /></TabErrorBoundary>}
+                    {activeTab === 'matches' && <TabErrorBoundary tabName="Matches Tab"><MatchesTab {...tabProps} /></TabErrorBoundary>}
+                    {activeTab === 'brackets' && <TabErrorBoundary tabName="Brackets Tab"><BracketsTab {...tabProps} /></TabErrorBoundary>}
+                    {activeTab === 'settings' && <TabErrorBoundary tabName="Settings Tab"><SettingsTab {...tabProps} /></TabErrorBoundary>}
+                    {activeTab === 'participants' && <TabErrorBoundary tabName="Participants Tab"><ParticipantsTab {...tabProps} /></TabErrorBoundary>}
                 </AnimatePresence>
             </div>
         </div>
