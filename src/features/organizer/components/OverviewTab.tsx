@@ -9,6 +9,7 @@ import {
   Activity,
 } from 'lucide-react';
 import { Tournament } from '../../../shared/types/types';
+import { getSlotCount, getFilledSlotCount } from '../../../shared/utils/scrimSlots';
 
 export interface OverviewTabProps {
   kpis: {
@@ -204,9 +205,8 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
               <tbody className="divide-y divide-gray-800">
                 {hostedTournaments && hostedTournaments.length > 0 ? (
                   hostedTournaments.map((tournament, idx) => {
-                    const current =
-                      tournament.currentPlayers ?? tournament.filledSlots ?? 0;
-                    const max = tournament.slots ?? tournament.totalSlots ?? 0;
+                    const current = getFilledSlotCount(tournament);
+                    const max = getSlotCount(tournament);
                     return (
                       <tr
                         key={tournament.id || `tournament-${idx}`}

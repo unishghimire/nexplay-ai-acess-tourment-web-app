@@ -6,6 +6,7 @@ import { formatCurrency, formatDate, formatGameName } from '../../../shared/util
 import { Clock, Users, Trophy, ChevronRight, Gamepad2, MapPin, Target } from 'lucide-react';
 import { motion } from 'motion/react';
 import { ScoringInfoCard } from './ScoringInfoCard';
+import { getSlotCount, getFilledSlotCount } from '../../../shared/utils/scrimSlots';
 
 interface TournamentCardProps {
     tournament: Tournament;
@@ -114,13 +115,13 @@ const TournamentCard: React.FC<TournamentCardProps> = ({ tournament }) => {
                             </div>
                             <div className="text-right shrink-0">
                                 <span className="text-[8px] sm:text-[9px] text-gray-500 font-black uppercase tracking-widest block mb-0.5">Slots</span>
-                                <span className="text-xs sm:text-sm font-black text-brand-400">{tournament.currentPlayers} / {tournament.slots}</span>
+                                <span className="text-xs sm:text-sm font-black text-brand-400">{getFilledSlotCount(tournament)} / {getSlotCount(tournament)}</span>
                             </div>
                         </div>
                         <div className="w-full bg-card rounded-full h-2 overflow-hidden border border-gray-800/50">
                             <motion.div 
                                 initial={{ width: 0 }}
-                                animate={{ width: `${Math.min(100, Math.max(0, (tournament.currentPlayers / (tournament.slots || 1)) * 100))}%` }}
+                                animate={{ width: `${Math.min(100, Math.max(0, (getFilledSlotCount(tournament) / (getSlotCount(tournament) || 1)) * 100))}%` }}
                                 transition={{ duration: 1, ease: 'easeOut' }}
                                 className="bg-brand-600 h-full rounded-full relative"
                             >
