@@ -6,7 +6,7 @@ import { Tournament, Participant, Transaction } from '../../../shared/types/type
 import { fetchRoomCredentials } from '../../../shared/services/roomCredentials';
 import { commitFirestoreBatches } from '../../../shared/utils/firestoreBatches';
 import { toDateSafe } from '../../../shared/utils/utils';
-import { countFilledScrimSlots, normalizeScrimSlots } from '../../../shared/utils/scrimSlots';
+import { countFilledScrimSlots, normalizeScrimSlots, getSlotCount, getFilledSlotCount } from '../../../shared/utils/scrimSlots';
 
 export function useOrgData() {
   const { user, profile } = useAuth();
@@ -105,8 +105,8 @@ export function useOrgData() {
   const kpis = useMemo(() => {
     const active = hostedTournaments.filter(t => t.status === 'live' || t.status === 'upcoming' || t.status === 'published').length;
     const prizePool = hostedTournaments.reduce((sum, t) => sum + (t.prizePool || 0), 0);
-    const filledSlots = hostedTournaments.reduce((sum, t) => sum + (t.currentPlayers || 0), 0);
-    const totalSlots = hostedTournaments.reduce((sum, t) => sum + (t.slots || 0), 0);
+    const filledSlots = hostedTournaments.reduce((sum, t) => sum + getFilledSlotCount(t), 0);
+    const totalSlots = hostedTournaments.reduce((sum, t) => sum + getSlotCount(t), 0);
     const pendingPayouts = transactions.filter(t => t.type === 'withdrawal' && t.status === 'pending').reduce((sum, t) => sum + Math.abs(t.amount || 0), 0);
 
     const now = new Date();

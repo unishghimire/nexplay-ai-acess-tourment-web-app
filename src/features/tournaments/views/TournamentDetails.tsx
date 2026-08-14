@@ -6,6 +6,7 @@ import { Tournament, UserProfile } from '../../../shared/types/types';
 import { DEFAULT_BANNER } from '../../../shared/constants/constants';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { formatCurrency, formatDate, formatGameName, getYoutubeId, toDateSafe, sanitizeUrl } from '../../../shared/utils/utils';
+import { getSlotCount, getFilledSlotCount } from '../../../shared/utils/scrimSlots';
 import { Clock, Users, Trophy, Lock, Eye, EyeOff, Play, Share2, Calendar, MapPin, Info, Medal, ExternalLink, ChevronRight, AlertCircle, CheckCircle2, Search, Building2 , Target} from 'lucide-react';
 import RegistrationModal from '../components/RegistrationModal';
 import JoinTournamentModal from '../components/JoinTournamentModal';
@@ -507,7 +508,7 @@ export default function TournamentDetails() {
                                     {[
                                         { label: 'Prize Pool', value: formatCurrency(tournament.prizePool), icon: Trophy, color: 'text-yellow-500' },
                                         { label: 'Entry Fee', value: tournament.entryFee > 0 ? formatCurrency(tournament.entryFee) : 'FREE', icon: Medal, color: 'text-brand-500' },
-                                        { label: 'Slots', value: `${tournament.currentPlayers}/${tournament.slots}`, icon: Users, color: 'text-blue-500' },
+                                        { label: 'Slots', value: `${getFilledSlotCount(tournament)}/${getSlotCount(tournament)}`, icon: Users, color: 'text-blue-500' },
                                         { label: 'Game Mode', value: tournament.type, icon: Play, color: 'text-red-500' },
                                     ].map((stat, i) => (
                                         <div key={i} className="bg-card/50 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-gray-700 transition-all hover:bg-surface/50 min-w-0">
@@ -819,12 +820,12 @@ export default function TournamentDetails() {
                             <div className="p-3 sm:p-4 bg-dark rounded-2xl border border-gray-800">
                                 <div className="flex justify-between items-center mb-2">
                                     <span className="text-xs text-gray-500 font-black uppercase tracking-widest">Slots Filled</span>
-                                    <span className="text-xs text-white font-black">{tournament.currentPlayers} / {tournament.slots}</span>
+                                    <span className="text-xs text-white font-black">{getFilledSlotCount(tournament)} / {getSlotCount(tournament)}</span>
                                 </div>
                                 <div className="w-full bg-card rounded-full h-2.5 overflow-hidden">
                                     <motion.div 
                                         initial={{ width: 0 }}
-                                        animate={{ width: `${(tournament.currentPlayers / tournament.slots) * 100}%` }}
+                                        animate={{ width: `${(getFilledSlotCount(tournament) / (getSlotCount(tournament) || 1)) * 100}%` }}
                                         className="bg-brand-600 h-full rounded-full shadow-[0_0_10px_rgba(var(--brand-primary-rgb),0.5)]"
                                     ></motion.div>
                                 </div>
@@ -896,7 +897,7 @@ export default function TournamentDetails() {
                                     </div>
                                 )}
                             </div>
-                        ) : tournament.currentPlayers >= tournament.slots ? (
+                        ) : getFilledSlotCount(tournament) >= getSlotCount(tournament) ? (
                             <button disabled className="w-full bg-red-900/20 text-red-500 border border-red-900/50 py-4 sm:py-5 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-widest cursor-not-allowed">
                                 Tournament Full
                             </button>

@@ -11,6 +11,7 @@ import {
   Settings2,
   Edit2,
 } from 'lucide-react';
+import { getSlotCount, getFilledSlotCount } from '../../../shared/utils/scrimSlots';
 
 export interface BracketMatch {
   id?: string;
@@ -274,7 +275,7 @@ const TournamentsTab: React.FC<TournamentsTabProps> = ({
                   <div>
                     <span className="block text-xs text-zinc-400 mb-1">Teams</span>
                     <span className="font-medium text-zinc-200">
-                      {tournament.currentPlayers || 0} / {tournament.slots || 0}
+                      {getFilledSlotCount(tournament)} / {getSlotCount(tournament)}
                     </span>
                   </div>
                   <div>

@@ -43,3 +43,23 @@ export const normalizeScrimSlots = (
 
 export const countFilledScrimSlots = (slots: ScrimSlot[]) =>
   slots.filter(slot => slot.status === 'filled').length;
+
+export const getSlotCount = (t: any): number => {
+  if (!t) return 0;
+  if (typeof t.totalSlots === 'number' && !isNaN(t.totalSlots) && t.totalSlots > 0) return t.totalSlots;
+  if (typeof t.slots === 'number' && !isNaN(t.slots) && t.slots > 0) return t.slots;
+  if (Array.isArray(t.slots)) return t.slots.length;
+  const num = Number(t.totalSlots ?? t.slots);
+  return !isNaN(num) && num > 0 ? num : 0;
+};
+
+export const getFilledSlotCount = (t: any): number => {
+  if (!t) return 0;
+  if (typeof t.currentPlayers === 'number' && !isNaN(t.currentPlayers) && t.currentPlayers >= 0) return t.currentPlayers;
+  if (typeof t.filledSlots === 'number' && !isNaN(t.filledSlots) && t.filledSlots >= 0) return t.filledSlots;
+  if (Array.isArray(t.slots)) {
+    return t.slots.filter((s: any) => s && s.status === 'filled').length;
+  }
+  const num = Number(t.currentPlayers ?? t.filledSlots);
+  return !isNaN(num) && num >= 0 ? num : 0;
+};
