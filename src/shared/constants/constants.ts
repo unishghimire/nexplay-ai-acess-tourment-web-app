@@ -1,3 +1,6 @@
+// ponytail: single source of truth for the production domain — used by Seo, sitemap, and JSON-LD
+export const BASE_URL = 'https://www.nexplayorg.app';
+
 export const NEXPLAY_LOGO = '/logo.png';
 export const DEFAULT_AVATAR = 'https://ui-avatars.com/api/?name=User&background=6d28d9&color=fff';
 export const DEFAULT_BANNER = 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=2670&h=400';

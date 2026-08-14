@@ -9,12 +9,16 @@ import MobileMenu from './navbar/MobileMenu';
 
 const navLinks = [
     { name: 'Home', path: '/' },
+    { name: 'Games', path: '/games' },
+    { name: 'Organizations', path: '/organizations' }
+];
+
+// ponytail: secondary links for mobile menu — kept out of the main navbar per hierarchical nav restructure
+const secondaryLinks = [
     { name: 'Tournaments', path: '/tournaments' },
     { name: 'Scrims', path: '/scrims' },
-    { name: 'Games', path: '/games' },
     { name: 'Teams', path: '/teams' },
     { name: 'Leaderboard', path: '/leaderboard' },
-    { name: 'Organizations', path: '/organizations' },
     { name: 'News', path: '/news' }
 ];
 
@@ -37,7 +41,7 @@ const Navbar: React.FC = () => {
     const isActive = (path: string) => location.pathname === path;
 
     return (
-        <nav className="sticky top-0 z-50 bg-dark/90 backdrop-blur-xl border-b border-gray-800 transition-all duration-200">
+        <nav aria-label="Main navigation" className="sticky top-0 z-50 bg-dark/90 backdrop-blur-xl border-b border-gray-800 transition-all duration-200">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-[auto_1fr_auto] items-center h-16 sm:h-20 gap-2">
                     {/* Logo */}
@@ -100,6 +104,7 @@ const Navbar: React.FC = () => {
                 isOpen={isMobileMenuOpen}
                 onClose={() => setIsMobileMenuOpen(false)}
                 navLinks={navLinks}
+                secondaryLinks={secondaryLinks}
             />
         </nav>
     );
