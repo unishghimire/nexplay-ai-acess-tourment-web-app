@@ -109,7 +109,7 @@ export function useTournamentAdmin(
             unsubTournament();
             unsubParticipants();
         };
-    }, [id, user, navigate, showToast]);
+    }, [id, user, profile?.role, navigate, showToast]);
 
     const handleUpdateStatus = async (status: 'upcoming' | 'live' | 'completed' | 'paused') => {
         if (!tournament) return;

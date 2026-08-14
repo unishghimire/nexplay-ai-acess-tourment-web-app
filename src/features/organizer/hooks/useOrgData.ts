@@ -6,6 +6,7 @@ import { Tournament, Participant, Transaction } from '../../../shared/types/type
 import { fetchRoomCredentials } from '../../../shared/services/roomCredentials';
 import { commitFirestoreBatches } from '../../../shared/utils/firestoreBatches';
 import { toDateSafe } from '../../../shared/utils/utils';
+import { countFilledScrimSlots, normalizeScrimSlots } from '../../../shared/utils/scrimSlots';
 
 export function useOrgData() {
   const { user, profile } = useAuth();
@@ -180,15 +181,20 @@ export function useOrgData() {
     }
     try {
       const tournamentIds = hostedTournaments.map(t => t.id).filter(Boolean);
-      const batch = tournamentIds.slice(0, 10);
-      if (batch.length === 0) {
+      if (tournamentIds.length === 0) {
         setDisputes([]);
         return;
       }
-      const q = query(collection(db, 'disputes'), where('tournamentId', 'in', batch));
-      const snap = await getDocs(q);
-      const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      setDisputes(list);
+
+      // Firestore permits at most ten values in an `in` query. Query every
+      // organizer tournament batch rather than silently dropping older disputes.
+      const batches = Array.from({ length: Math.ceil(tournamentIds.length / 10) }, (_, index) =>
+        tournamentIds.slice(index * 10, (index + 1) * 10)
+      );
+      const snapshots = await Promise.all(
+        batches.map(ids => getDocs(query(collection(db, 'disputes'), where('tournamentId', 'in', ids))))
+      );
+      setDisputes(snapshots.flatMap(snap => snap.docs.map(d => ({ id: d.id, ...d.data() }))));
     } catch (err) {
       console.error("Error fetching disputes:", err);
     }
@@ -281,14 +287,18 @@ export function useOrgData() {
     const data = snap.docs[0].data() as any;
     if (data.hostUid !== user.uid) throw new Error('Not authorized');
 
-    const currentSlots = Array.isArray(data.slots) ? data.slots : [];
+    const currentSlots = normalizeScrimSlots(data.slots, data.totalSlots, data.filledSlots ?? data.currentPlayers);
     const newSlots = currentSlots.map((s: any) => {
       if (s.slotNumber !== slotNumber) return s;
       if (s.status === 'filled') return { ...s, status: 'open', teamName: null, teamId: null };
       return { ...s, status: 'filled', teamName: 'Reserved', teamId: null };
     });
-    const filled = newSlots.filter((s: any) => s.status === 'filled').length;
+    const filled = countFilledScrimSlots(newSlots);
     await updateDoc(doc(db, 'tournaments', scrimId), { slots: newSlots, filledSlots: filled, currentPlayers: filled });
+    setHostedTournaments(prev => prev.map(t => t.id === scrimId
+      ? { ...t, slots: newSlots as any, filledSlots: filled, currentPlayers: filled }
+      : t
+    ));
   }, [user]);
 
   const toggleRosterLock = useCallback(async (teamId: string) => {

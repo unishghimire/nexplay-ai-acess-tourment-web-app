@@ -112,12 +112,12 @@ export default function TournamentAdminPanel() {
             {/* ponytail: shared tabProps — built once, spread to each tab */}
             <div className="bg-dark/50 rounded-2xl sm:rounded-[2rem] border border-gray-800 p-4 sm:p-6 lg:p-8">
                 <AnimatePresence mode="wait">
-                    {activeTab === 'overview' && <TabErrorBoundary tabName="Overview Tab"><OverviewTab {...tabProps} /></TabErrorBoundary>}
-                    {activeTab === 'groups' && <TabErrorBoundary tabName="Groups Tab"><GroupsTab {...tabProps} /></TabErrorBoundary>}
-                    {activeTab === 'matches' && <TabErrorBoundary tabName="Matches Tab"><MatchesTab {...tabProps} /></TabErrorBoundary>}
-                    {activeTab === 'brackets' && <TabErrorBoundary tabName="Brackets Tab"><BracketsTab {...tabProps} /></TabErrorBoundary>}
-                    {activeTab === 'settings' && <TabErrorBoundary tabName="Settings Tab"><SettingsTab {...tabProps} /></TabErrorBoundary>}
-                    {activeTab === 'participants' && <TabErrorBoundary tabName="Participants Tab"><ParticipantsTab {...tabProps} /></TabErrorBoundary>}
+                    {activeTab === 'overview' && <TabErrorBoundary tabName="Overview Tab" resetKey={activeTab}><OverviewTab {...tabProps} /></TabErrorBoundary>}
+                    {activeTab === 'groups' && <TabErrorBoundary tabName="Groups Tab" resetKey={activeTab}><GroupsTab {...tabProps} /></TabErrorBoundary>}
+                    {activeTab === 'matches' && <TabErrorBoundary tabName="Matches Tab" resetKey={activeTab}><MatchesTab {...tabProps} /></TabErrorBoundary>}
+                    {activeTab === 'brackets' && <TabErrorBoundary tabName="Brackets Tab" resetKey={activeTab}><BracketsTab {...tabProps} /></TabErrorBoundary>}
+                    {activeTab === 'settings' && <TabErrorBoundary tabName="Settings Tab" resetKey={activeTab}><SettingsTab {...tabProps} /></TabErrorBoundary>}
+                    {activeTab === 'participants' && <TabErrorBoundary tabName="Participants Tab" resetKey={activeTab}><ParticipantsTab {...tabProps} /></TabErrorBoundary>}
                 </AnimatePresence>
             </div>
         </div>

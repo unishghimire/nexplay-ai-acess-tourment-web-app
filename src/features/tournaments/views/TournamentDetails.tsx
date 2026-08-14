@@ -23,6 +23,12 @@ import { TournamentRoadmap } from '../components/TournamentRoadmap';
 import GroupStandingsView from '../components/GroupStandingsView';
 import { fetchRoomCredentials } from '../../../shared/services/roomCredentials';
 
+const TOURNAMENT_TAB_IDS = ['overview', 'description', 'participants', 'groups', 'roadmap', 'results', 'killrewards'] as const;
+type TournamentTabId = typeof TOURNAMENT_TAB_IDS[number];
+
+const getTournamentTab = (value: string | null): TournamentTabId =>
+    TOURNAMENT_TAB_IDS.includes(value as TournamentTabId) ? value as TournamentTabId : 'overview';
+
 export default function TournamentDetails() {
     const { id } = useParams<{ id: string }>();
     const { user, profile } = useAuth();
@@ -32,9 +38,7 @@ export default function TournamentDetails() {
     const [tournament, setTournament] = useState<Tournament | null>(null);
     const [isJoined, setIsJoined] = useState(false);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<'overview' | 'description' | 'participants' | 'groups' | 'roadmap' | 'results' | 'killrewards'>(
-        (searchParams.get('tab') as any) || 'overview'
-    );
+    const [activeTab, setActiveTab] = useState<TournamentTabId>(() => getTournamentTab(searchParams.get('tab')));
     const [isResultModalOpen, setIsResultModalOpen] = useState(false);
     const [participants, setParticipants] = useState<any[]>([]);
     const [searchTerm, setSearchTerm] = useState('');

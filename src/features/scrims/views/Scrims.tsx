@@ -5,7 +5,6 @@ import { Scrim } from '../../../shared/types/types';
 import { Trophy, Search, Filter, Calendar, Gamepad2, AlertCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 import { formatCurrency, formatDate, formatGameName } from '../../../shared/utils/utils';
-import { useNotification } from '../../../shared/context/NotificationContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
@@ -26,53 +25,78 @@ const scrimFaqs = [
     },
 ];
 
+type ScrimRecord = Scrim & {
+    currentPlayers?: number;
+    isScrim?: boolean;
+    totalSlots?: number;
+};
+
+const ACTIVE_SCRIM_STATUSES = new Set(['open', 'upcoming', 'published', 'live']);
+
+const toScrimRecord = (id: string, data: Record<string, unknown>): ScrimRecord => ({
+    id,
+    ...data,
+} as ScrimRecord);
+
+const uniqueScrims = (scrims: ScrimRecord[]) =>
+    Array.from(new Map(scrims.map(scrim => [scrim.id, scrim])).values());
+
 const ScrimsContent: React.FC = () => {
-    const [scrims, setScrims] = useState<Scrim[]>([]);
+    const [scrims, setScrims] = useState<ScrimRecord[]>([]);
     const [loading, setLoading] = useState(true);
     const [fetchError, setFetchError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [searchParams] = useSearchParams();
     const [filterGame, setFilterGame] = useState(searchParams.get('game') || 'All');
-    const { showToast } = useNotification();
     const navigate = useNavigate();
 
     const fetchScrims = useCallback(async () => {
         setLoading(true);
         setFetchError(null);
-        let list: Scrim[] = [];
+        let successfulSources = 0;
+        let list: ScrimRecord[] = [];
 
-        // Dual-mode fetch: Try direct Firestore query first for fast client load
-        try {
-            const q = query(
-                collection(db, 'tournaments'),
-                where('status', 'in', ['upcoming', 'published', 'live'])
-            );
-            const snap = await getDocs(q);
-            const firestoreScrims = snap.docs
-                .map(d => ({ id: d.id, ...d.data() } as any))
-                .filter(t => t.matchType === 'scrims' || t.isScrim === true || (t.title && t.title.toLowerCase().includes('scrim')));
+        // Scrims are public tournament records. Query their discriminating field directly
+        // instead of scanning every published tournament, which avoids unbounded reads and
+        // keeps this public page independent of privileged server credentials.
+        const [tournamentScrims, flaggedTournamentScrims, legacyScrims] = await Promise.allSettled([
+            getDocs(query(collection(db, 'tournaments'), where('matchType', '==', 'scrims'))),
+            getDocs(query(collection(db, 'tournaments'), where('isScrim', '==', true))),
+            getDocs(query(collection(db, 'scrims'), where('status', 'in', ['open', 'live']))),
+        ]);
 
-            list = firestoreScrims as Scrim[];
-        } catch (fsErr) {
-            console.warn("Direct Firestore scrim query failed, attempting API fallback:", fsErr);
-        }
-
-        // Fallback to /api/scrims if Firestore didn't return any or threw error
-        if (list.length === 0) {
-            try {
-                const response = await fetch('/api/scrims');
-                if (response.ok) {
-                    const result = await response.json();
-                    if (result.success && Array.isArray(result.scrims)) {
-                        list = result.scrims;
-                    }
-                }
-            } catch (apiErr) {
-                console.warn("API scrim query fallback failed:", apiErr);
+        for (const result of [tournamentScrims, flaggedTournamentScrims, legacyScrims]) {
+            if (result.status === 'fulfilled') {
+                successfulSources += 1;
+                list.push(...result.value.docs.map(docSnap => toScrimRecord(docSnap.id, docSnap.data())));
+            } else {
+                console.warn('A public scrim data source failed:', result.reason);
             }
         }
 
-        setScrims(list);
+        list = uniqueScrims(list.filter(scrim => ACTIVE_SCRIM_STATUSES.has(scrim.status)));
+
+        // Retain the API as a compatibility fallback only when both Firestore sources fail.
+        if (successfulSources === 0) {
+            try {
+                const response = await fetch('/api/scrims');
+                const result = await response.json().catch(() => null);
+                if (!response.ok || !result?.success || !Array.isArray(result.scrims)) {
+                    throw new Error(result?.message || `Scrims request failed (${response.status})`);
+                }
+                successfulSources += 1;
+                list = uniqueScrims(result.scrims as ScrimRecord[]);
+            } catch (apiErr) {
+                console.warn('API scrim query fallback failed:', apiErr);
+            }
+        }
+
+        if (successfulSources === 0) {
+            setFetchError('Scrims could not be loaded. Check your connection and try again.');
+            setScrims([]);
+        } else {
+            setScrims(list);
+        }
         setLoading(false);
     }, []);
 
@@ -177,11 +201,31 @@ const ScrimsContent: React.FC = () => {
                             <div key={i} className="bg-card/50 h-[400px] rounded-3xl animate-pulse border border-gray-800"></div>
                         ))}
                     </div>
+                ) : fetchError ? (
+                    <div role="alert" className="bg-card/50 p-6 sm:p-12 rounded-3xl border border-red-500/30 text-center">
+                        <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-6" />
+                        <h3 className="text-2xl font-black text-white uppercase mb-2">Unable to Load Scrims</h3>
+                        <p className="text-gray-400 font-bold max-w-sm mx-auto mb-8">{fetchError}</p>
+                        <button
+                            onClick={fetchScrims}
+                            className="min-h-[44px] inline-flex items-center px-6 py-2.5 bg-brand-500 hover:bg-brand-400 text-white rounded-xl font-black uppercase tracking-widest text-xs transition-colors cursor-pointer"
+                        >
+                            Try Again
+                        </button>
+                    </div>
                 ) : filteredScrims.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
                         {filteredScrims.map((scrim) => {
-                            const totalSlots = scrim.slots || (scrim as any).totalSlots || 20;
-                            const currentSlots = scrim.currentSlots || (scrim as any).filledSlots || 0;
+                            const rawSlots = scrim.slots as unknown;
+                            const totalSlots = typeof rawSlots === 'number'
+                                ? rawSlots
+                                : Array.isArray(rawSlots)
+                                    ? rawSlots.length
+                                    : scrim.totalSlots || 20;
+                            const currentSlots = scrim.currentSlots
+                                ?? scrim.filledSlots
+                                ?? scrim.currentPlayers
+                                ?? (Array.isArray(rawSlots) ? rawSlots.filter(slot => slot?.status === 'filled').length : 0);
                             const slotPercentage = Math.min(100, Math.max(0, (currentSlots / Math.max(1, totalSlots)) * 100));
 
                             return (
@@ -191,7 +235,7 @@ const ScrimsContent: React.FC = () => {
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true }}
                                     onClick={() => {
-                                        navigate(`/tournaments/${(scrim as any).tournamentId || scrim.id}`);
+                                        navigate(`/tournaments/${scrim.tournamentId || scrim.id}`);
                                     }}
                                     className="bg-card/50 rounded-[2rem] border border-gray-800 overflow-hidden cursor-pointer group hover:border-brand-500/50 transition-all hover:bg-card flex flex-col justify-between"
                                 >
@@ -212,7 +256,7 @@ const ScrimsContent: React.FC = () => {
                                         </div>
                                         <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
                                             <div className="text-xs text-brand-400 font-black uppercase tracking-widest mb-1 flex items-center gap-1">
-                                                <Calendar className="w-3 h-3" /> {formatDate(scrim.time || (scrim as any).startTime || new Date().toISOString())}
+                                                <Calendar className="w-3 h-3" /> {formatDate(scrim.time || scrim.startTime || new Date().toISOString())}
                                             </div>
                                             <h3 className="text-lg font-black text-white uppercase tracking-tight line-clamp-1">{scrim.title || 'Official Scrim'}</h3>
                                         </div>
