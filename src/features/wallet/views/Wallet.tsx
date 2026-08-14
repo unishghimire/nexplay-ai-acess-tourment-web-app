@@ -409,7 +409,7 @@ const Wallet: React.FC = () => {
                                                         {/* Tooltip */}
                                                         <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none absolute -top-10 z-20 bg-slate-900 border border-slate-800 text-white text-[10px] font-bold py-1 px-2 rounded-xl whitespace-nowrap shadow-xl flex flex-col items-center">
                                                             <span>{formatCurrency(item.amount)}</span>
-                                                            <span className="text-[9px] text-gray-400 font-normal">{isIncoming ? 'Incoming' : 'Outgoing'}</span>
+                                                            <span className="text-[10px] text-gray-400 font-normal">{isIncoming ? 'Incoming' : 'Outgoing'}</span>
                                                         </div>
                                                         {/* Bar */}
                                                         <div
@@ -424,7 +424,7 @@ const Wallet: React.FC = () => {
                                         </div>
                                         <div className="flex justify-between items-center w-full pt-2 border-t border-gray-800/60 mt-2 gap-1 px-1">
                                             {analytics.chartData.map((item, index) => (
-                                                <span key={index} className="flex-1 text-[9px] text-slate-500 font-medium truncate text-center">
+                                                <span key={index} className="flex-1 text-[10px] text-slate-500 font-medium truncate text-center">
                                                     {item.name}
                                                 </span>
                                             ))}

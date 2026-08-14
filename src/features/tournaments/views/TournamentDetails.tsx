@@ -508,7 +508,7 @@ export default function TournamentDetails() {
                                     ].map((stat, i) => (
                                         <div key={i} className="bg-card/50 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-gray-700 transition-all hover:bg-surface/50 min-w-0">
                                             <stat.icon className={`w-5 h-5 sm:w-6 sm:h-6 ${stat.color} mb-2 sm:mb-4`} />
-                                            <div className="text-[9px] sm:text-xs text-gray-500 uppercase font-black tracking-widest mb-1 truncate">{stat.label}</div>
+                                            <div className="text-[10px] sm:text-xs text-gray-500 uppercase font-black tracking-widest mb-1 truncate">{stat.label}</div>
                                             <div className="text-white font-black text-sm sm:text-xl truncate">{stat.value}</div>
                                         </div>
                                     ))}
@@ -661,18 +661,18 @@ export default function TournamentDetails() {
                                                     </div>
                                                     <div className="flex flex-wrap items-center gap-1.5">
                                                         <div className="flex items-center gap-1 bg-dark px-2 py-1 rounded-lg border border-gray-800 max-w-full">
-                                                            <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest shrink-0">UID:</span>
+                                                            <span className="text-[10px] text-gray-500 font-black uppercase tracking-widest shrink-0">UID:</span>
                                                             <span className="text-xs text-brand-400 font-mono font-bold truncate">{p.inGameId}</span>
                                                         </div>
                                                         {p.inGameName && (
                                                             <div className="flex items-center gap-1 bg-dark px-2 py-1 rounded-lg border border-gray-800 max-w-full">
-                                                                <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest shrink-0">IGN:</span>
+                                                                <span className="text-[10px] text-gray-500 font-black uppercase tracking-widest shrink-0">IGN:</span>
                                                                 <span className="text-xs text-brand-400 font-mono font-bold truncate">{p.inGameName}</span>
                                                             </div>
                                                         )}
                                                         {p.teammates && p.teammates.map((tm: string, idx: number) => (
                                                             <div key={idx} className="flex items-center gap-1 bg-dark px-2 py-1 rounded-lg border border-gray-800 max-w-full">
-                                                                <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest shrink-0">T{idx + 1}:</span>
+                                                                <span className="text-[10px] text-gray-500 font-black uppercase tracking-widest shrink-0">T{idx + 1}:</span>
                                                                 <span className="text-xs text-brand-400 font-mono font-bold truncate">{tm}</span>
                                                             </div>
                                                         ))}
@@ -680,7 +680,7 @@ export default function TournamentDetails() {
                                                 </div>
                                             </div>
                                             <div className="bg-dark p-3 rounded-xl border border-gray-800">
-                                                <div className="text-[9px] text-gray-500 uppercase font-black tracking-widest mb-1">Team Name</div>
+                                                <div className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1">Team Name</div>
                                                 <div className={`inline-block px-3 py-1 rounded-lg text-xs font-black uppercase tracking-tight truncate max-w-full ${p.teamName ? 'bg-brand-600/20 text-brand-400 border border-brand-500/20' : 'bg-surface text-gray-500'}`}>
                                                     {p.teamId ? <ProfileLink to={`/team/${p.teamId}`} name={p.teamName || 'TEAM'} /> : (p.teamName || 'SOLO PLAYER')}
                                                 </div>
@@ -798,7 +798,7 @@ export default function TournamentDetails() {
                                             <div className="w-10 h-10 sm:w-12 sm:h-12 bg-dark rounded-xl border border-gray-800 flex items-center justify-center text-base sm:text-xl font-black text-white shadow-inner">
                                                 {t.value.toString().padStart(2, '0')}
                                             </div>
-                                            <span className="text-[9px] sm:text-xs text-gray-600 font-black mt-1">{t.label}</span>
+                                            <span className="text-[10px] sm:text-xs text-gray-600 font-black mt-1">{t.label}</span>
                                         </div>
                                     ))}
                                 </div>

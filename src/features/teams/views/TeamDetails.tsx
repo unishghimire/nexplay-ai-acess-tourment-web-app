@@ -626,7 +626,7 @@ const TeamDetails: React.FC = () => {
                                             {invites.map(invite => (
                                                 <div key={invite.id} className="flex items-center justify-between bg-dark p-3 rounded-xl border border-gray-800">
                                                     <span className="text-xs font-bold text-white truncate max-w-[120px]">{invite.inviteeId}</span>
-                                                    <span className="text-[8px] font-black uppercase tracking-widest bg-yellow-500/20 text-yellow-500 px-2 py-0.5 rounded">Pending</span>
+                                                    <span className="text-[10px] font-black uppercase tracking-widest bg-yellow-500/20 text-yellow-500 px-2 py-0.5 rounded">Pending</span>
                                                 </div>
                                             ))}
                                         </div>
