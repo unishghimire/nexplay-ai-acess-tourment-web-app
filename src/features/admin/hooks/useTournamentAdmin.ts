@@ -447,16 +447,16 @@ export function useTournamentAdmin(
     const handleSetGroupRoom = async (groupId: string, field: 'roomId' | 'roomPass', value: string) => {
         if (!tournament) return;
         try {
-            const updatedGroups = (tournament.groups || []).map(g =>
-                g.id === groupId ? { ...g, [field]: value } : g
-            );
-            // Write to tournament doc (for backward compat) AND credentials subcollection (secure)
+            const updatedGroups = (tournament.groups || []).map(g => {
+                const { roomId: _roomId, roomPass: _roomPass, ...publicGroup } = g;
+                return publicGroup;
+            });
+            // Room credentials live exclusively in the protected subcollection.
             const batch = writeBatch(db);
             batch.update(doc(db, 'tournaments', tournament.id), { groups: updatedGroups });
-            const group = updatedGroups.find(g => g.id === groupId);
-            if (group) {
+            if (updatedGroups.some(group => group.id === groupId)) {
                 const credRef = doc(db, 'tournaments', tournament.id, 'credentials', `group_${groupId}`);
-                batch.set(credRef, { roomId: group.roomId || '', roomPass: group.roomPass || '' }, { merge: true });
+                batch.set(credRef, { [field]: value }, { merge: true });
             }
             await batch.commit();
             setTournament({ ...tournament, groups: updatedGroups });

@@ -24,6 +24,16 @@ interface UploadResult {
   provider: string;
 }
 
+const MEDIA_CATEGORIES = new Set([
+  "USER_AVATAR", "TEAM_LOGO", "TEAM_BANNER", "ORG_LOGO", "ORG_BANNER",
+  "TOURNAMENT_BANNER", "TOURNAMENT_THUMBNAIL", "SCRIM_BANNER", "PRODUCT_IMAGE",
+  "NEWS_IMAGE", "SPONSOR_LOGO", "PAYMENT_PROOF", "OVERLAY_GRAPHIC", "OTHER",
+]);
+
+function getMediaCategory(value: unknown): string | null {
+  return typeof value === 'string' && MEDIA_CATEGORIES.has(value) ? value : null;
+}
+
 async function uploadBufferMultiProvider(
   buffer: Buffer,
   category: string,
@@ -91,7 +101,7 @@ async function uploadBase64MultiProvider(
 
   // 2. Try Cloudinary (fallback)
   try {
-    const c = await uploadBase64ToCloudinary(base64String, category);
+    const c = await uploadBase64ToCloudinary(base64String, mapCategoryToFolder(category));
     return {
       url: c.secure_url || c.url, publicId: c.public_id,
       fileName: c.original_filename || `img_${Date.now()}`,
@@ -130,7 +140,8 @@ async function uploadBase64MultiProvider(
 router.post("/api/upload-image", authenticateToken, rateLimit(10, 15 * 60 * 1000), upload.single("image"), async (req: any, res) => {
   try {
     const uid = req.user.userId;
-    const category = req.body.category || "OTHER";
+    const category = getMediaCategory(req.body.category || "OTHER");
+    if (!category) return res.status(400).json({ success: false, message: "Invalid media category" });
     if (!req.file) return res.status(400).json({ success: false, message: "No file uploaded" });
 
     const result = await uploadBufferMultiProvider(req.file.buffer, category, req.file.originalname);
@@ -146,7 +157,7 @@ router.post("/api/upload-image", authenticateToken, rateLimit(10, 15 * 60 * 1000
     res.status(201).json({ success: true, url: result.url, public_id: result.publicId, media: mediaData });
   } catch (error: any) {
     console.error("Upload error:", error);
-    res.status(500).json({ success: false, message: error.message || "Internal server error" });
+    res.status(500).json({ success: false, message: "Upload failed" });
   }
 });
 
@@ -154,7 +165,8 @@ router.post("/api/upload-image", authenticateToken, rateLimit(10, 15 * 60 * 1000
 router.post("/api/upload/image", authenticateToken, rateLimit(10, 15 * 60 * 1000), upload.single("image"), async (req: any, res) => {
   try {
     const uid = req.user.userId;
-    const category = req.body.category || "OTHER";
+    const category = getMediaCategory(req.body.category || "OTHER");
+    if (!category) return res.status(400).json({ success: false, message: "Invalid media category" });
     if (!req.file) return res.status(400).json({ success: false, message: "No file uploaded" });
 
     const result = await uploadBufferMultiProvider(req.file.buffer, category, req.file.originalname);
@@ -170,54 +182,57 @@ router.post("/api/upload/image", authenticateToken, rateLimit(10, 15 * 60 * 1000
     return res.status(200).json({ success: true, url: result.url, public_id: result.publicId, media: mediaData });
   } catch (error: any) {
     console.error("[Upload API] Upload failed:", error);
-    return res.status(500).json({ success: false, message: error.message || "Upload failed" });
+    return res.status(500).json({ success: false, message: "Upload failed" });
   }
 });
 
 // Secure Media Deletion
-router.post("/api/media/delete", authenticateToken, async (req: any, res) => {
+async function deleteMediaById(mediaId: string, actor: { userId: string; role: string }) {
+  const mediaDoc = await db.collection('media').doc(mediaId).get();
+  if (!mediaDoc.exists) throw new Error('MEDIA_NOT_FOUND');
+
+  const mediaData = mediaDoc.data();
+  if (actor.role !== 'admin' && mediaData?.userId !== actor.userId) throw new Error('MEDIA_FORBIDDEN');
+
+  const publicId = mediaData?.publicId;
+  const provider = mediaData?.provider;
+  if (provider === 'imgbb' && typeof publicId === 'string' && publicId.startsWith("http")) {
+    const deleted = await deleteFromImgBB(publicId);
+    if (!deleted) console.warn("[Media Purge Warn] ImgBB delete_url may be expired or invalid — removing DB reference only");
+  } else if (provider === 'firebase-storage' && typeof publicId === 'string') {
+    try { await bucket.file(publicId).delete(); } catch (error: any) { console.warn("[Media Purge Warn] Firebase Storage delete failed:", error.message); }
+  }
+
+  await mediaDoc.ref.delete();
+}
+
+router.post("/api/media/delete", authenticateToken, rateLimit(10, 15 * 60 * 1000), async (req: any, res) => {
   try {
-    const { mediaId, publicId } = req.body;
-    if (!publicId && !mediaId) return res.status(400).json({ success: false, message: "Missing mediaId or publicId" });
-
-    // Authorization: admin can delete any, others can only delete their own uploads
-    if (req.user.role !== 'admin' && mediaId) {
-      const mediaDoc = await db.collection('media').doc(mediaId).get();
-      if (mediaDoc.exists && mediaDoc.data()?.userId !== req.user.userId) {
-        return res.status(403).json({ success: false, message: "Unauthorized — can only delete your own media" });
-      }
+    const { mediaId } = req.body;
+    if (!mediaId || typeof mediaId !== 'string' || mediaId.length > 128) {
+      return res.status(400).json({ success: false, message: "A valid mediaId is required" });
     }
-
-    // Try ImgBB deletion first (delete_url stored as publicId for imgbb provider)
-    if (publicId && publicId.startsWith("http")) {
-      const deleted = await deleteFromImgBB(publicId);
-      if (!deleted) console.warn("[Media Purge Warn] ImgBB delete_url may be expired or invalid — removing DB reference only");
-    } else if (publicId && publicId.includes("/")) {
-      // Firebase Storage path
-      try { await bucket.file(publicId).delete(); } catch (e: any) { console.warn("[Media Purge Warn] Firebase Storage delete failed:", e.message); }
-    }
-
-    // Always remove the Firestore catalog entry
-    if (mediaId) {
-      try { await db.collection("media").doc(mediaId).delete(); } catch (e: any) { console.warn("[Media Purge Warn] Firestore delete failed:", e.message); }
-    }
-
+    await deleteMediaById(mediaId, req.user);
     return res.status(200).json({ success: true, message: "Asset reference removed. Physical file deletion depends on provider." });
   } catch (error: any) {
+    if (error.message === 'MEDIA_NOT_FOUND') return res.status(404).json({ success: false, message: "Media not found" });
+    if (error.message === 'MEDIA_FORBIDDEN') return res.status(403).json({ success: false, message: "Unauthorized — can only delete your own media" });
     console.error("[Media Purge Error]:", error);
-    return res.status(500).json({ success: false, message: error.message || "Deletion failed" });
+    return res.status(500).json({ success: false, message: "Deletion failed" });
   }
 });
 
 // Get All Media (admin: all, user: own only)
-router.get("/api/media", authenticateToken, async (req: any, res) => {
+router.get("/api/media", authenticateToken, rateLimit(30, 15 * 60 * 1000), async (req: any, res) => {
   try {
+    const pageLimit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 100);
     let q = db.collection("media").orderBy("createdAt", "desc");
     if (req.user.role !== 'admin') {
       q = db.collection("media").where('userId', '==', req.user.userId).orderBy("createdAt", "desc");
     }
-    const mediaSnap = await q.get();
-    res.json({ success: true, media: mediaSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) });
+    const mediaSnap = await q.limit(pageLimit + 1).get();
+    const docs = mediaSnap.docs.slice(0, pageLimit);
+    res.json({ success: true, media: docs.map(doc => ({ id: doc.id, ...doc.data() })), hasMore: mediaSnap.size > pageLimit });
   } catch (error: any) {
     console.error("Fetch media error:", error);
     res.status(500).json({ success: false, message: "Internal server error" });
@@ -225,10 +240,12 @@ router.get("/api/media", authenticateToken, async (req: any, res) => {
 });
 
 // Process Base64 Image (used by useInvisibleImage hook)
-router.post("/api/process-image", authenticateToken, async (req: any, res) => {
+router.post("/api/process-image", authenticateToken, rateLimit(10, 15 * 60 * 1000), async (req: any, res) => {
   try {
-    const { base64, folder = "gallery" } = req.body;
+    const { base64, folder = "OTHER" } = req.body;
     const uid = req.user.userId;
+    const category = getMediaCategory(folder);
+    if (!category) return res.status(400).json({ success: false, message: "Invalid media category" });
     if (!base64) return res.status(400).json({ success: false, message: "No image data provided" });
 
     const matches = base64.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
@@ -240,40 +257,33 @@ router.post("/api/process-image", authenticateToken, async (req: any, res) => {
     if (!allowedTypes.includes(mimeType)) return res.status(400).json({ success: false, message: "Invalid file type. Only JPG, PNG, WEBP, and GIF are allowed." });
     if (buffer.length > 10 * 1024 * 1024) return res.status(400).json({ success: false, message: "File size too large. Max 10MB allowed." });
 
-    const result = await uploadBase64MultiProvider(base64, folder);
+    const result = await uploadBase64MultiProvider(base64, category);
 
     const mediaRef = db.collection("media").doc();
     const mediaData = {
       id: mediaRef.id, userId: uid, url: result.url, publicId: result.publicId,
       thumbUrl: result.thumbUrl, mediumUrl: result.mediumUrl, provider: result.provider,
       fileName: result.fileName, fileSize: result.fileSize, mimeType: result.mimeType,
-      category: folder, createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      category, createdAt: admin.firestore.FieldValue.serverTimestamp(),
     };
     try { await mediaRef.set(mediaData); } catch (dbErr) { console.warn("[Database Bypass]", dbErr); }
     return res.status(200).json({ success: true, url: result.url, public_id: result.publicId, media: mediaData });
   } catch (error: any) {
     console.error("Process image error:", error);
-    return res.status(500).json({ success: false, message: error.message || "Internal server error" });
+    return res.status(500).json({ success: false, message: "Image processing failed" });
   }
 });
 
 // Delete media by ID
-router.delete('/api/media/:id', authenticateToken, async (req: any, res) => {
+router.delete('/api/media/:id', authenticateToken, rateLimit(10, 15 * 60 * 1000), async (req: any, res) => {
   try {
     const mediaId = req.params.id;
-    const mediaDoc = await db.collection('media').doc(mediaId).get();
-    if (!mediaDoc.exists) return res.status(404).json({ success: false, message: 'Media not found' });
-    const mediaData = mediaDoc.data();
-    if (mediaData?.userId !== req.user.userId) return res.status(403).json({ success: false, message: 'Unauthorized' });
-
-    // Try ImgBB deletion if delete_url is available
-    if (mediaData?.publicId && mediaData.publicId.startsWith("http")) {
-      await deleteFromImgBB(mediaData.publicId).catch(() => {});
-    }
-
-    await db.collection('media').doc(mediaId).delete();
+    if (!mediaId || mediaId.length > 128) return res.status(400).json({ success: false, message: 'Invalid media ID' });
+    await deleteMediaById(mediaId, req.user);
     res.json({ success: true, message: 'Media deleted successfully' });
-  } catch (error) {
+  } catch (error: any) {
+    if (error.message === 'MEDIA_NOT_FOUND') return res.status(404).json({ success: false, message: 'Media not found' });
+    if (error.message === 'MEDIA_FORBIDDEN') return res.status(403).json({ success: false, message: 'Unauthorized' });
     console.error('Error deleting media:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
   }

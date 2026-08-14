@@ -11,6 +11,7 @@ import {
 import { useOrgData } from '../hooks/useOrgData';
 import { OrgOverlayManager, OverlayType } from '../components/OrgOverlayManager';
 import { Seo } from '../../../shared/components/Seo';
+import { fetchRoomCredentials } from '../../../shared/services/roomCredentials';
 
 // Lazy-load tab components
 const OverviewTab = React.lazy(() => import('../components/OverviewTab'));
@@ -127,10 +128,11 @@ const OrganizerPanel: React.FC = () => {
     navigate(`/organizer/scrim/${scrimId}`);
   }, [navigate]);
 
-  const handleOpenRoomDispatch = useCallback((target: any) => {
+  const handleOpenRoomDispatch = useCallback(async (target: any) => {
     setRoomDispatchTarget(target);
-    setRoomId(target?.roomId || '');
-    setRoomPass(target?.roomPass || '');
+    const credentials = await fetchRoomCredentials(target.id || target.tournamentId);
+    setRoomId(credentials?.roomId || '');
+    setRoomPass(credentials?.roomPass || '');
     setStreamUrl(target?.ytLink || target?.streamUrl || '');
     setActiveOverlay('ROOM_DISPATCH');
   }, []);

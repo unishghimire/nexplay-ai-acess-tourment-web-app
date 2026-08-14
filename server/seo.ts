@@ -130,27 +130,37 @@ export async function generateSitemapXml(db: any): Promise<string> {
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${xmlUrls}\n</urlset>`;
 }
 
+const INDEXNOW_ORIGIN = 'https://www.nexplayorg.app';
+
+export function isNexplayUrl(value: unknown): value is string {
+  if (typeof value !== 'string' || value.length > 2_048) return false;
+  try {
+    const url = new URL(value);
+    return url.origin === INDEXNOW_ORIGIN && !url.username && !url.password;
+  } catch {
+    return false;
+  }
+}
+
 export async function handleIndexNow(req: any, res: any): Promise<any> {
   const apiKey = process.env.INDEXNOW_KEY;
 
   if (!apiKey) {
     console.error("[IndexNow] INDEXNOW_KEY environment variable is not configured.");
     return res.status(503).json({
-      error: "IndexNow key is not configured. Set INDEXNOW_KEY environment variable."
+      error: "IndexNow is not configured."
     });
   }
 
   const body = (req as any).body || {};
   const { urls } = body;
-  if (!urls || !Array.isArray(urls) || urls.length === 0) {
+  if (!urls || !Array.isArray(urls) || urls.length === 0 || urls.length > 100) {
     return res.status(400).json({
       error: "Invalid request body. 'urls' must be a non-empty array of strings."
     });
   }
 
-  const validUrls = urls.filter(
-    (url: any) => typeof url === "string" && url.startsWith("https://www.nexplayorg.app")
-  );
+  const validUrls = urls.filter(isNexplayUrl);
 
   if (validUrls.length === 0) {
     return res.status(400).json({
@@ -169,7 +179,8 @@ export async function handleIndexNow(req: any, res: any): Promise<any> {
     const response = await fetch("https://api.indexnow.org/IndexNow", {
       method: "POST",
       headers: { "Content-Type": "application/json; charset=utf-8" },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(8_000),
     });
 
     const status = (response as any).status;
@@ -182,12 +193,10 @@ export async function handleIndexNow(req: any, res: any): Promise<any> {
         status
       });
     } else {
-      const responseText = await response.text();
-      console.error(`[IndexNow] Submission failed with status ${status}: ${responseText}`);
+      console.error(`[IndexNow] Submission failed with status ${status}`);
       return res.status(status >= 400 && status < 600 ? status : 500).json({
         success: false,
         error: `IndexNow API request failed with status ${status}`,
-        details: responseText
       });
     }
   } catch (err: any) {
@@ -195,7 +204,7 @@ export async function handleIndexNow(req: any, res: any): Promise<any> {
     return res.status(500).json({
       success: false,
       error: "Failed to submit URLs to IndexNow API",
-      message: err.message || String(err)
+      message: "IndexNow submission failed"
     });
   }
 }

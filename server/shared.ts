@@ -1,8 +1,6 @@
 import path from "path";
 import { fileURLToPath } from "url";
 import admin from "firebase-admin";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { GoogleGenAI, Type } from "@google/genai";
 import fs from "fs";
@@ -69,12 +67,7 @@ export const firebaseApp = admin.initializeApp(appOptions);
 
 export const db = getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId);
 export const bucket = admin.storage().bucket();
-export const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) {
-  console.error("CRITICAL: JWT_SECRET environment variable is missing. JWT auth will fail.");
-}
-
-export { admin, jwt, bcrypt, Type };
+export { admin, Type };
 
 export function getCloudinary() {
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
@@ -316,38 +309,24 @@ export const authenticateToken = async (req: any, res: any, next: any) => {
   const token = authHeader.split(" ")[1];
   if (!token) return res.status(401).json({ success: false, message: "Unauthorized" });
   try {
-    try {
-      const decodedIdToken = await admin.auth().verifyIdToken(token);
-      if (decodedIdToken) {
-        // Prefer custom claims for role (set via admin.auth().setCustomUserClaims)
-        // Fall back to Firestore doc only during migration period
-        // ponytail: dual-check during migration from doc-based to claims-based roles
-        let role = decodedIdToken.role || "player";
-        let username = decodedIdToken.name || decodedIdToken.email?.split("@")[0] || "User";
-        if (!decodedIdToken.role) {
-          try {
-            const userDoc = await db.collection("users").doc(decodedIdToken.uid).get();
-            if (userDoc.exists) {
-              const userData = userDoc.data();
-              if (userData) { role = userData.role || "player"; username = userData.username || username; }
-            }
-          } catch (e) { console.error("Firestore user fetch error in auth middleware", e); }
-        }
-        req.user = { userId: decodedIdToken.uid, email: decodedIdToken.email, username, role };
-        return next();
-      }
-    } catch (firebaseErr) {
-      if (!JWT_SECRET) {
-        return res.status(500).json({ success: false, message: "Server auth not configured (JWT_SECRET missing)" });
-      }
+    const decodedIdToken = await admin.auth().verifyIdToken(token);
+    // Prefer custom claims for role (set via admin.auth().setCustomUserClaims).
+    // The profile lookup remains only for the existing Firestore-role migration.
+    let role = decodedIdToken.role || "player";
+    let username = decodedIdToken.name || decodedIdToken.email?.split("@")[0] || "User";
+    if (!decodedIdToken.role) {
       try {
-        const decoded: any = jwt.verify(token, JWT_SECRET);
-        req.user = { userId: decoded.uid, email: decoded.email, username: decoded.username, role: decoded.role };
-        return next();
-      } catch (jwtErr) {
-        return res.status(401).json({ success: false, message: "Invalid token" });
+        const userDoc = await db.collection("users").doc(decodedIdToken.uid).get();
+        if (userDoc.exists) {
+          const userData = userDoc.data();
+          if (userData) { role = userData.role || "player"; username = userData.username || username; }
+        }
+      } catch (error) {
+        console.error("Firestore user fetch error in auth middleware", error);
       }
     }
+    req.user = { userId: decodedIdToken.uid, email: decodedIdToken.email, username, role };
+    return next();
   } catch (error) {
     return res.status(401).json({ success: false, message: "Invalid token" });
   }
@@ -360,20 +339,36 @@ export const authenticateToken = async (req: any, res: any, next: any) => {
 // per-cold-start, not global. Upgrade: use Vercel KV or Upstash.
 // ═══════════════════════════════════════════════════════════════
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const MAX_RATE_LIMIT_ENTRIES = 50_000;
+
+function pruneRateLimitEntries(now: number) {
+  if (rateLimitMap.size < MAX_RATE_LIMIT_ENTRIES) return;
+
+  for (const [key, entry] of rateLimitMap) {
+    if (entry.resetTime <= now) rateLimitMap.delete(key);
+  }
+}
 
 export function rateLimit(maxRequests: number = 10, windowMs: number = 15 * 60 * 1000) {
   return (req: any, res: any, next: any) => {
-    const key = req.ip || req.connection?.remoteAddress || 'unknown';
     const now = Date.now();
+    pruneRateLimitEntries(now);
+    const clientIp = req.ip || req.connection?.remoteAddress || 'unknown';
+    const endpoint = `${req.method || 'UNKNOWN'}:${req.baseUrl || ''}${req.path || ''}`;
+    const key = `${clientIp}:${endpoint}`;
     const entry = rateLimitMap.get(key);
 
     if (!entry || now > entry.resetTime) {
+      if (rateLimitMap.size >= MAX_RATE_LIMIT_ENTRIES) {
+        return res.status(503).json({ success: false, message: 'Request protection is temporarily at capacity. Please try again shortly.' });
+      }
       rateLimitMap.set(key, { count: 1, resetTime: now + windowMs });
       return next();
     }
 
     entry.count++;
     if (entry.count > maxRequests) {
+      res.set('Retry-After', String(Math.max(1, Math.ceil((entry.resetTime - now) / 1000))));
       return res.status(429).json({ success: false, message: "Too many requests. Please try again later." });
     }
 
