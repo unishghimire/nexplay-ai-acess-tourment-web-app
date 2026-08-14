@@ -578,6 +578,7 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
             const batch = writeBatch(db);
             const appRef = doc(db, 'orgApplications', app.id);
             const userRef = doc(db, 'users', app.userId);
+            const publicUserRef = doc(db, 'users_public', app.userId);
 
             batch.update(userRef, { 
                 role: 'organizer',
@@ -586,6 +587,11 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
                 isOrganizer: true
             });
             batch.update(appRef, { status: 'approved' });
+            batch.set(publicUserRef, {
+                role: 'organizer',
+                orgName: app.orgName,
+                updatedAt: serverTimestamp(),
+            }, { merge: true });
             
             await batch.commit();
 
@@ -627,81 +633,19 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
             isDestructive: true,
             onConfirm: async () => {
                 try {
-                    const batch = writeBatch(db);
-                    
-                    // 1. Update tournament status
-                    const tournamentRef = doc(db, 'tournaments', tournament.id);
-                    batch.update(tournamentRef, { status: 'cancelled' });
-
-                    // 2. Fetch participants and pending transactions related to this tournament
-                    const [participantsSnap, pendingTxSnap] = await Promise.all([
-                        getDocs(query(collection(db, 'participants'), where('tournamentId', '==', tournament.id))),
-                        getDocs(query(collection(db, 'transactions'), where('tournamentId', '==', tournament.id), where('status', '==', 'pending')))
-                    ]);
-
-                    const participants = participantsSnap.docs.map(d => d.data());
-                    const pendingTxs = pendingTxSnap.docs;
-
-                    // 3. Reject any pending transactions related to this tournament
-                    for (const txDoc of pendingTxs) {
-                        batch.update(txDoc.ref, { 
-                            status: 'rejected', 
-                            rejectionReason: 'Tournament Cancelled',
-                            confirmedBy: profile?.uid,
-                            confirmedByUsername: profile?.username
+                    const token = await auth.currentUser?.getIdToken();
+                    if (!token) throw new Error('Authentication required');
+                    let cursor: string | null = null;
+                    do {
+                        const response = await fetch('/api/wallet/cancel-tournament', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                            body: JSON.stringify({ tournamentId: tournament.id, ...(cursor ? { lastParticipantId: cursor } : {}) }),
                         });
-                    }
-
-                    // 4. Process refunds for participants
-                    for (const participant of participants) {
-                        const userRef = doc(db, 'users', participant.userId);
-                        const refundAmount = tournament.entryFee;
-
-                        if (refundAmount > 0) {
-                            // Update user balance
-                            batch.update(userRef, { balance: increment(refundAmount) });
-
-                            // Create refund transaction
-                            const txRef = doc(collection(db, 'transactions'));
-                            batch.set(txRef, {
-                                userId: participant.userId,
-                                username: participant.username,
-                                type: 'refund',
-                                amount: refundAmount,
-                                method: 'Wallet Refund',
-                                refId: `REFUND-${tournament.id}-${participant.userId.slice(0, 5)}`,
-                                status: 'refunded',
-                                timestamp: serverTimestamp(),
-                                desc: `Refund for cancelled tournament: ${tournament.title}`,
-                                tournamentId: tournament.id,
-                                confirmedBy: profile?.uid,
-                                confirmedByUsername: profile?.username
-                            });
-
-                            // Send notification
-                            await NotificationService.create(
-                                participant.userId,
-                                'Tournament Cancelled - Refunded',
-                                `The tournament "${tournament.title}" has been cancelled. Your entry fee of ${formatCurrency(refundAmount)} has been refunded to your wallet.`,
-                                'info',
-                                '/profile'
-                            );
-                        }
-                    }
-
-                    // 4. Create Activity Log
-                    const logRef = doc(collection(db, 'activityLogs'));
-                    batch.set(logRef, {
-                        type: 'tournament_cancellation',
-                        adminId: profile?.uid,
-                        adminName: profile?.username,
-                        tournamentId: tournament.id,
-                        tournamentTitle: tournament.title,
-                        timestamp: serverTimestamp(),
-                        details: `Cancelled tournament and refunded ${participants.length} players.`
-                    });
-
-                    await batch.commit();
+                        const result = await response.json();
+                        if (!response.ok || !result.success) throw new Error(result.message || 'Failed to cancel tournament');
+                        cursor = result.hasMore ? result.nextParticipantId : null;
+                    } while (cursor);
                     showToast('Tournament cancelled and refunds processed', 'success');
                     
                     // Refresh tournaments if needed

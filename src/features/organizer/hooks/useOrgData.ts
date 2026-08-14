@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { collection, query, where, getDocs, doc, updateDoc, deleteDoc, serverTimestamp, increment, writeBatch, orderBy, limit } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, updateDoc, deleteDoc, setDoc, serverTimestamp, increment, writeBatch, orderBy, limit } from 'firebase/firestore';
 import { db, auth } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { Tournament, Participant, Transaction } from '../../../shared/types/types';
+import { fetchRoomCredentials } from '../../../shared/services/roomCredentials';
+import { commitFirestoreBatches } from '../../../shared/utils/firestoreBatches';
 
 export function useOrgData() {
   const { user, profile } = useAuth();
@@ -23,7 +25,12 @@ export function useOrgData() {
     try {
       const q = query(collection(db, 'tournaments'), where('hostUid', '==', user.uid));
       const snap = await getDocs(q);
-      const tours = snap.docs.map(d => ({ id: d.id, ...d.data() } as Tournament));
+      const tours = await Promise.all(snap.docs.map(async d => {
+        const tournament = { id: d.id, ...d.data() } as Tournament;
+        if (tournament.status !== 'live') return tournament;
+        const credentials = await fetchRoomCredentials(tournament.id);
+        return credentials ? { ...tournament, ...credentials } : tournament;
+      }));
       tours.sort((a, b) => {
         const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
         const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
@@ -45,7 +52,7 @@ export function useOrgData() {
   );
 
   const matchRooms = useMemo(() =>
-    hostedTournaments.filter(t => t.status === 'live' && t.roomId),
+    hostedTournaments.filter(t => t.status === 'live'),
     [hostedTournaments]
   );
 
@@ -208,7 +215,10 @@ export function useOrgData() {
   }, []);
 
   const broadcastLobby = useCallback(async (tournamentId: string, roomId: string, roomPass: string, ytLink: string) => {
-    await updateDoc(doc(db, 'tournaments', tournamentId), { roomId, roomPass, ytLink });
+    await Promise.all([
+      setDoc(doc(db, 'tournaments', tournamentId, 'credentials', 'main'), { roomId, roomPass }, { merge: true }),
+      updateDoc(doc(db, 'tournaments', tournamentId), { ytLink }),
+    ]);
     setHostedTournaments(prev => prev.map(t => t.id === tournamentId ? { ...t, roomId, roomPass, ytLink } : t));
   }, []);
 
@@ -246,8 +256,7 @@ export function useOrgData() {
     const pSnap = await getDocs(pQuery);
     const parts = pSnap.docs.map(d => d.data() as Participant);
     if (parts.length === 0) return 0;
-    const batch = writeBatch(db);
-    parts.forEach(p => {
+    const notificationOperations = parts.map(p => batch => {
       const notifRef = doc(collection(db, 'notifications'));
       batch.set(notifRef, {
         userId: p.userId,
@@ -258,7 +267,7 @@ export function useOrgData() {
         timestamp: serverTimestamp(),
       });
     });
-    await batch.commit();
+    await commitFirestoreBatches(db, notificationOperations);
     return parts.length;
   }, [user]);
 

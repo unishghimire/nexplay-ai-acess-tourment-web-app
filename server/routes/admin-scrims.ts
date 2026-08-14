@@ -1,5 +1,7 @@
 import express from "express";
-import { db } from "../shared.js";
+import { db, authenticateToken, rateLimit } from "../shared.js";
+import { requireAdmin } from "../authz.js";
+import { commitBatchedWrites } from "../batchedWrites.js";
 
 const router = express.Router();
 
@@ -13,7 +15,7 @@ const router = express.Router();
  * - isScrim is true but matchType is 'tournament'
  * - Title contains "scrim" (case-insensitive) but matchType is not 'scrims'
  */
-router.get("/api/admin/audit-scrims", async (req, res) => {
+router.get("/api/admin/audit-scrims", authenticateToken, requireAdmin, rateLimit(10, 15 * 60 * 1000), async (req, res) => {
   try {
     const snapshot = await db.collection("tournaments").get();
     const suspects: any[] = [];
@@ -77,11 +79,11 @@ router.get("/api/admin/audit-scrims", async (req, res) => {
  * - If ids is provided, only fix those records. Otherwise fix all suspects with isScrim=true or title containing "scrim".
  * - If dryRun is true, return what would be changed without writing.
  */
-router.post("/api/admin/fix-scrims", async (req, res) => {
+router.post("/api/admin/fix-scrims", authenticateToken, requireAdmin, rateLimit(3, 15 * 60 * 1000), async (req, res) => {
   try {
     const { ids, dryRun } = req.body;
-    const batch = db.batch();
     const updates: any[] = [];
+    const operations: Array<(batch: FirebaseFirestore.WriteBatch) => void> = [];
 
     const snapshot = await db.collection("tournaments").get();
 
@@ -110,17 +112,17 @@ router.post("/api/admin/fix-scrims", async (req, res) => {
         });
 
         if (!dryRun) {
-          batch.update(doc.ref, {
+          operations.push(batch => batch.update(doc.ref, {
             matchType: 'scrims',
             isScrim: true,
             updatedAt: new Date().toISOString(),
-          });
+          }));
         }
       }
     });
 
-    if (!dryRun && updates.length > 0) {
-      await batch.commit();
+    if (!dryRun && operations.length > 0) {
+      await commitBatchedWrites(() => db.batch(), operations);
     }
 
     res.json({

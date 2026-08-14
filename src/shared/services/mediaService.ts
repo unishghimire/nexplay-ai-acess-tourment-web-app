@@ -5,7 +5,7 @@
 // ponytail: all image uploads go through this service — no component does its own upload
 
 import { getAuth } from "firebase/auth";
-import { doc, collection, setDoc, deleteDoc } from "firebase/firestore";
+import { doc, collection } from "firebase/firestore";
 import { db } from "../config/firebase";
 
 export enum MediaCategory {
@@ -130,19 +130,15 @@ export async function uploadImage(
       };
     }
 
-    const userId = auth.currentUser?.uid || "unknown";
     const mediaId = result.media?.id || doc(collection(db, "media")).id;
 
     const mediaRecord: MediaRecord = {
-      id: mediaId, userId, url: result.url, publicId: result.public_id || "",
+      id: mediaId, userId: auth.currentUser.uid, url: result.url, publicId: result.public_id || "",
       thumbUrl: result.media?.thumbUrl, mediumUrl: result.media?.mediumUrl,
       provider: result.media?.provider || "imgbb",
       fileName: file.name, fileSize: file.size, mimeType: file.type,
       category, createdAt: new Date().toISOString(),
     };
-
-    try { await setDoc(doc(db, "media", mediaId), mediaRecord); }
-    catch (dbErr) { console.warn("[Media Service] Could not index media record client-side:", dbErr); }
 
     return {
       success: true, url: result.url, publicId: result.public_id || "",
@@ -161,7 +157,7 @@ export async function uploadImage(
  * For ImgBB: uses the delete_url stored as publicId. If the delete_url is expired
  * or invalid, only the Firestore reference is removed (physical file may persist).
  */
-export async function deleteImage(mediaId: string, publicId: string): Promise<boolean> {
+export async function deleteImage(mediaId: string, _publicId: string): Promise<boolean> {
   try {
     const auth = getAuth();
     const token = await auth.currentUser?.getIdToken();
@@ -170,15 +166,14 @@ export async function deleteImage(mediaId: string, publicId: string): Promise<bo
     const response = await fetch("/api/media/delete", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ mediaId, publicId }),
+      body: JSON.stringify({ mediaId }),
     });
 
     const result = await response.json();
     if (!response.ok || !result.success) {
-      console.warn("[Media Service] Server-side delete failed, falling back to client Firestore purge:", result.message);
+      console.warn("[Media Service] Server-side delete failed:", result.message);
+      return false;
     }
-
-    if (mediaId) { await deleteDoc(doc(db, "media", mediaId)).catch(() => {}); }
     return true;
   } catch (err) {
     console.error("[Media Service] Failed to complete media deletion:", err);

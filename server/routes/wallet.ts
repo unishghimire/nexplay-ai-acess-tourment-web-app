@@ -1,5 +1,7 @@
 import { Router } from "express";
 import { db, admin, authenticateToken, rateLimit } from "../shared.js";
+import { ChunkProcessingError, commitBatchedWrites } from "../batchedWrites.js";
+import { validatePrizeWinners } from "../prizeValidation.js";
 
 const router = Router();
 
@@ -13,6 +15,7 @@ const router = Router();
 // Revenue split — mirrors src/shared/constants/finance.ts
 // ponytail: duplicated because server and client are separate build targets
 const REVENUE_SPLIT = { ORGANIZER: 0.85, PLATFORM: 0.15 } as const;
+const CANCELLATION_PAGE_SIZE = 100;
 
 // POST /api/wallet/deposit — create a pending deposit request
 router.post("/api/wallet/deposit",
@@ -473,19 +476,9 @@ router.post("/api/wallet/distribute-prizes",
       if (!tournamentId || typeof tournamentId !== 'string') {
         return res.status(400).json({ success: false, message: "Invalid tournament ID" });
       }
-      if (!Array.isArray(winners) || winners.length === 0) {
-        return res.status(400).json({ success: false, message: "Winners array is required" });
-      }
-      for (const w of winners) {
-        if (!w.userId || typeof w.userId !== 'string') {
-          return res.status(400).json({ success: false, message: "Invalid winner data" });
-        }
-        if (typeof w.prize !== 'number' || w.prize < 0 || w.prize > 1000000) {
-          return res.status(400).json({ success: false, message: "Invalid prize amount" });
-        }
-        if (typeof w.rank !== 'number' || w.rank < 1 || w.rank > 999) {
-          return res.status(400).json({ success: false, message: "Invalid rank" });
-        }
+      const winnerValidationError = validatePrizeWinners(winners);
+      if (winnerValidationError) {
+        return res.status(400).json({ success: false, message: winnerValidationError });
       }
 
       const result = await db.runTransaction(async (tx) => {
@@ -502,6 +495,16 @@ router.post("/api/wallet/distribute-prizes",
         const totalPrizes = winners.reduce((sum: number, w: any) => sum + (w.prize || 0), 0);
         const prizePool = tData.prizePool || 0;
         if (totalPrizes > prizePool) throw new Error(`Total prizes (${totalPrizes}) exceed prize pool (${prizePool})`);
+
+        // Firestore transactions require all reads before writes. Reading every
+        // winner up-front also prevents a completed tournament from silently
+        // skipping a missing payout recipient.
+        const winnerProfiles = new Map<string, FirebaseFirestore.DocumentSnapshot>();
+        for (const winner of winners) {
+          const userDoc = await tx.get(db.collection('users').doc(winner.userId));
+          if (!userDoc.exists) throw new Error(`Winner not found: ${winner.userId}`);
+          winnerProfiles.set(winner.userId, userDoc);
+        }
 
         tx.update(tRef, { status: 'completed', completedAt: admin.firestore.FieldValue.serverTimestamp() });
 
@@ -526,8 +529,7 @@ router.post("/api/wallet/distribute-prizes",
         // Distribute prizes to each winner — read each user's balance for audit
         for (const winner of winners) {
           const uRef = db.collection('users').doc(winner.userId);
-          const uDoc = await tx.get(uRef);
-          if (!uDoc.exists) continue; // skip non-existent users
+          const uDoc = winnerProfiles.get(winner.userId)!;
           const balanceBefore = uDoc.data()?.balance || 0;
           const balanceAfter = balanceBefore + winner.prize;
 
@@ -601,15 +603,149 @@ router.post("/api/wallet/distribute-prizes",
       });
     } catch (error: any) {
       const msg = error.message || "Failed to distribute prizes";
-      const code = ["Not authorized", "already completed"].includes(msg) ? 403 : 500;
+      const code = msg.startsWith("Not authorized") ? 403 : msg.startsWith("Tournament not found") ? 404 : 500;
       return res.status(code).json({ success: false, message: msg });
     }
   }
 );
 
+// POST /api/wallet/cancel-tournament — admin-only, paginated and idempotent
+// Each participant refund gets a deterministic ledger document. Retrying a page
+// therefore cannot credit the same registration twice, even after a timeout.
+router.post("/api/wallet/cancel-tournament",
+  authenticateToken,
+  rateLimit(30, 60 * 60 * 1000),
+  async (req: any, res) => {
+    try {
+      if (req.user.role !== 'admin') return res.status(403).json({ success: false, message: 'Admin access required' });
+      const { tournamentId, lastParticipantId } = req.body || {};
+      if (!tournamentId || typeof tournamentId !== 'string' || tournamentId.length > 128) {
+        return res.status(400).json({ success: false, message: 'Invalid tournament ID' });
+      }
+      if (lastParticipantId !== undefined && (typeof lastParticipantId !== 'string' || lastParticipantId.length > 256)) {
+        return res.status(400).json({ success: false, message: 'Invalid cancellation cursor' });
+      }
+
+      const tournamentRef = db.collection('tournaments').doc(tournamentId);
+      const tournament = await db.runTransaction(async tx => {
+        const snapshot = await tx.get(tournamentRef);
+        if (!snapshot.exists) throw new Error('Tournament not found');
+        const data = snapshot.data()!;
+        if (data.status === 'completed') throw new Error('Completed tournaments cannot be cancelled');
+        if (data.status !== 'cancelled') {
+          tx.update(tournamentRef, {
+            status: 'cancelled',
+            cancellationStartedAt: admin.firestore.FieldValue.serverTimestamp(),
+            cancelledBy: req.user.userId,
+          });
+        }
+        return data;
+      });
+
+      let participantQuery = db.collection('participants')
+        .where('tournamentId', '==', tournamentId)
+        .orderBy(admin.firestore.FieldPath.documentId())
+        .limit(CANCELLATION_PAGE_SIZE);
+      if (lastParticipantId) {
+        const cursor = await db.collection('participants').doc(lastParticipantId).get();
+        if (!cursor.exists || cursor.data()?.tournamentId !== tournamentId) {
+          return res.status(400).json({ success: false, message: 'Invalid cancellation cursor' });
+        }
+        participantQuery = participantQuery.startAfter(cursor);
+      }
+      const participants = await participantQuery.get();
+      let refunded = 0;
+      let alreadyRefunded = 0;
+      const entryFee = Number(tournament.entryFee || 0);
+      const refundAmount = Number.isFinite(entryFee) && entryFee > 0 ? entryFee : 0;
+
+      for (const participant of participants.docs) {
+        const participantData = participant.data();
+        const refundRef = db.collection('transactions').doc(`CANCEL_REFUND_${participant.id}`);
+        const userRef = db.collection('users').doc(participantData.userId);
+        const outcome = await db.runTransaction(async tx => {
+          const [currentParticipant, currentRefund, user] = await Promise.all([
+            tx.get(participant.ref),
+            tx.get(refundRef),
+            tx.get(userRef),
+          ]);
+          if (!currentParticipant.exists || currentRefund.exists) return 'already-refunded' as const;
+          if (!user.exists) throw new Error(`Participant account not found: ${participant.id}`);
+
+          const userData = user.data()!;
+          const balanceBefore = Number(userData.balance || 0);
+          const balanceAfter = balanceBefore + refundAmount;
+          tx.update(participant.ref, { status: 'refunded', refundedAt: admin.firestore.FieldValue.serverTimestamp() });
+          if (refundAmount > 0) {
+            tx.update(userRef, { balance: admin.firestore.FieldValue.increment(refundAmount) });
+            tx.set(refundRef, {
+              id: refundRef.id,
+              userId: participantData.userId,
+              username: participantData.username || userData.username || '',
+              type: 'refund',
+              amount: refundAmount,
+              method: 'Tournament Cancellation',
+              refId: `CANCEL-${tournamentId}-${participant.id}`,
+              status: 'refunded',
+              timestamp: admin.firestore.FieldValue.serverTimestamp(),
+              desc: `Refund for cancelled tournament: ${tournament.title || ''}`,
+              tournamentId,
+              balanceBefore,
+              balanceAfter,
+              cancelledBy: req.user.userId,
+            });
+          } else {
+            tx.set(refundRef, {
+              id: refundRef.id,
+              userId: participantData.userId,
+              type: 'refund',
+              amount: 0,
+              status: 'refunded',
+              tournamentId,
+              timestamp: admin.firestore.FieldValue.serverTimestamp(),
+              desc: 'No-fee cancellation recorded',
+            });
+          }
+          const notificationRef = db.collection('notifications').doc(`CANCELLED_${participant.id}`);
+          tx.set(notificationRef, {
+            userId: participantData.userId,
+            title: 'Tournament Cancelled',
+            message: `The tournament "${tournament.title || 'Tournament'}" has been cancelled.${refundAmount > 0 ? ' Your entry fee has been refunded.' : ''}`,
+            type: 'info',
+            read: false,
+            link: '/profile',
+            timestamp: admin.firestore.FieldValue.serverTimestamp(),
+          }, { merge: true });
+          return 'refunded' as const;
+        });
+        if (outcome === 'refunded') refunded++;
+        else alreadyRefunded++;
+      }
+
+      const lastParticipant = participants.docs.at(-1);
+      const hasMore = participants.size === CANCELLATION_PAGE_SIZE;
+      if (!hasMore) {
+        await tournamentRef.update({ cancellationCompletedAt: admin.firestore.FieldValue.serverTimestamp() });
+      }
+      return res.json({
+        success: true,
+        refunded,
+        alreadyRefunded,
+        processed: participants.size,
+        hasMore,
+        nextParticipantId: hasMore ? lastParticipant?.id : null,
+      });
+    } catch (error: any) {
+      const message = error.message || 'Tournament cancellation failed';
+      const status = message === 'Tournament not found' ? 404 : message.includes('cannot be cancelled') ? 409 : 500;
+      return res.status(status).json({ success: false, message: status === 500 ? 'Tournament cancellation failed' : message });
+    }
+  },
+);
+
 // GET /api/migrate-room-creds — one-time migration of room creds to subcollection
 // ponytail: one-time migration endpoint — safe to delete after deployment
-router.get("/api/migrate-room-creds", authenticateToken, async (req: any, res) => {
+router.get("/api/migrate-room-creds", authenticateToken, rateLimit(1, 60 * 60 * 1000), async (req: any, res) => {
   if (req.user.role !== 'admin') {
     return res.status(403).json({ success: false, message: "Admin only" });
   }
@@ -618,37 +754,58 @@ router.get("/api/migrate-room-creds", authenticateToken, async (req: any, res) =
     let migrated = 0;
     let skipped = 0;
 
-    const batch = db.batch();
+    const operations: Array<(batch: FirebaseFirestore.WriteBatch) => void> = [];
     for (const tDoc of tSnap.docs) {
       const data = tDoc.data() as any;
-      const hasRoomCreds = data.roomId || data.roomPass;
+      const hasRoomCreds = data.roomId || data.roomPass ||
+        (Array.isArray(data.groups) && data.groups.some((group: any) => group?.roomId || group?.roomPass));
       if (!hasRoomCreds) { skipped++; continue; }
 
       const credRef = db.collection('tournaments').doc(tDoc.id).collection('credentials').doc('main');
-      batch.set(credRef, {
+      operations.push(batch => batch.set(credRef, {
         roomId: data.roomId || '',
         roomPass: data.roomPass || '',
         migratedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }));
+
+      const legacyGroups = Array.isArray(data.groups) ? data.groups : [];
+      const sanitizedGroups = legacyGroups.map((group: any) => {
+        const { roomId: _roomId, roomPass: _roomPass, ...publicGroup } = group || {};
+        return publicGroup;
       });
 
       if (Array.isArray(data.groups)) {
         for (const group of data.groups) {
-          if (group.roomId || group.roomPass) {
+          if (group?.roomId || group?.roomPass) {
+            if (typeof group.id !== 'string' || !group.id || group.id.length > 128 || group.id.includes('/')) {
+              throw new Error('Invalid legacy group credential identifier');
+            }
             const gCredRef = db.collection('tournaments').doc(tDoc.id).collection('credentials').doc(`group_${group.id}`);
-            batch.set(gCredRef, {
+            operations.push(batch => batch.set(gCredRef, {
               roomId: group.roomId || '',
               roomPass: group.roomPass || '',
               migratedAt: admin.firestore.FieldValue.serverTimestamp(),
-            });
+            }));
           }
         }
       }
+      operations.push(batch => batch.update(tDoc.ref, {
+        roomId: admin.firestore.FieldValue.delete(),
+        roomPass: admin.firestore.FieldValue.delete(),
+        ...(Array.isArray(data.groups) ? { groups: sanitizedGroups } : {}),
+      }));
       migrated++;
     }
 
-    await batch.commit();
-    return res.json({ success: true, migrated, skipped, total: tSnap.size });
+    const progress = await commitBatchedWrites(() => db.batch(), operations);
+    return res.json({ success: true, migrated, skipped, total: tSnap.size, writes: operations.length, batches: progress.completedChunks });
   } catch (error: any) {
-    return res.status(500).json({ success: false, message: error.message });
+    if (error instanceof ChunkProcessingError) {
+      return res.status(500).json({
+        success: false,
+        message: `Migration stopped after ${error.progress.completedItems} idempotent writes. Retry the migration to continue.`,
+      });
+    }
+    return res.status(500).json({ success: false, message: "Room credential migration failed" });
   }
 });

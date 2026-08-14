@@ -1,8 +1,9 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { XCircle, CheckCircle2, User } from 'lucide-react';
-import { doc, updateDoc, writeBatch } from 'firebase/firestore';
+import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../../../shared/config/firebase';
+import { commitFirestoreBatches } from '../../../../shared/utils/firestoreBatches';
 import { TournamentAdminTabProps } from './types';
 
 export const ParticipantsTab: React.FC<TournamentAdminTabProps> = (props) => {
@@ -42,11 +43,10 @@ export const ParticipantsTab: React.FC<TournamentAdminTabProps> = (props) => {
         if (approved.length === 0) { showToast('No approved players pending check-in', 'info'); return; }
         if (!window.confirm(`Check in all ${approved.length} approved players?`)) return;
         try {
-            const batch = writeBatch(db);
-            for (const p of approved) {
+            const operations = approved.map(p => batch => {
                 batch.update(doc(db, 'participants', p.id), { checkedIn: true, checkedInAt: new Date() });
-            }
-            await batch.commit();
+            });
+            await commitFirestoreBatches(db, operations);
             setParticipants(participants.map(p => p.status === 'approved' && !p.checkedIn ? { ...p, checkedIn: true, checkedInAt: new Date() as any } : p));
             showToast(`${approved.length} players checked in`, 'success');
         } catch { showToast('Failed to bulk check-in', 'error'); }
