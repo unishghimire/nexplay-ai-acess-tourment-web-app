@@ -202,7 +202,7 @@ const Leaderboard: React.FC = () => {
                             aria-label="Select leaderboard season"
                             value={season}
                             onChange={(e) => setSeason(e.target.value)}
-                            className="appearance-none bg-card/50 border border-gray-800 text-white px-6 py-3 pr-12 rounded-2xl font-black text-sm uppercase tracking-widest focus:border-brand-500 outline-none transition cursor-pointer"
+                            className="appearance-none bg-card/50 border border-gray-800 text-white px-6 py-3 pr-12 min-h-[44px] rounded-2xl font-black text-sm uppercase tracking-widest focus:border-brand-500 outline-none transition cursor-pointer"
                         >
                             <option>Season 4</option>
                             <option>Season 3</option>
@@ -217,7 +217,7 @@ const Leaderboard: React.FC = () => {
                             type="button"
                             aria-pressed={view === 'players'}
                             onClick={() => setView('players')}
-                            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-black uppercase tracking-widest text-xs transition ${view === 'players' ? 'bg-brand-500 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}
+                            className={`flex items-center gap-2 px-6 py-2.5 min-h-[44px] rounded-xl font-black uppercase tracking-widest text-xs transition ${view === 'players' ? 'bg-brand-500 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}
                         >
                             <Users className="w-4 h-4" /> Players
                         </button>
@@ -225,7 +225,7 @@ const Leaderboard: React.FC = () => {
                             type="button"
                             aria-pressed={view === 'teams'}
                             onClick={() => setView('teams')}
-                            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-black uppercase tracking-widest text-xs transition ${view === 'teams' ? 'bg-brand-500 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}
+                            className={`flex items-center gap-2 px-6 py-2.5 min-h-[44px] rounded-xl font-black uppercase tracking-widest text-xs transition ${view === 'teams' ? 'bg-brand-500 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}
                         >
                             <Trophy className="w-4 h-4" /> Teams
                         </button>

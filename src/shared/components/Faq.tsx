@@ -45,7 +45,7 @@ export const Faq: React.FC<FaqProps> = ({ items, title = 'Frequently Asked Quest
                         >
                             <summary className="font-bold text-white text-base md:text-lg list-none flex justify-between items-center gap-4 select-none">
                                 <span>{item.question}</span>
-                                <span className="text-brand-500 font-bold text-xl group-open:rotate-45 transition-transform duration-200">
+                                <span aria-hidden="true" className="text-brand-500 font-bold text-xl group-open:rotate-45 transition-transform duration-200">
                                     +
                                 </span>
                             </summary>
