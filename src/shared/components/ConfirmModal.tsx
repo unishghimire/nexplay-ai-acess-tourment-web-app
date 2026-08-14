@@ -14,6 +14,7 @@ interface ConfirmModalProps {
 }
 
 const ConfirmModal: React.FC<ConfirmModalProps> = ({
+    isLoading = false,
     isOpen,
     title,
     message,
@@ -24,27 +25,36 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
     isDestructive = false
 }) => {
     return (
-        <Modal isOpen={isOpen} onClose={onCancel} title={title}>
+        <Modal isOpen={isOpen} onClose={onCancel} title={title} role="alertdialog">
             <div className="text-gray-300 mb-6">
                 {message}
             </div>
             <div className="flex flex-col sm:flex-row justify-end gap-3">
                 <button
+                    type="button"
                     onClick={onCancel}
-                    className="px-4 py-3 bg-surface hover:bg-surface text-white rounded-lg touch-target font-bold transition"
+                    disabled={isLoading}
+                    className="px-4 py-3 bg-surface hover:bg-surface text-white rounded-lg touch-target font-bold transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {cancelText}
                 </button>
                 <button
+                    type="button"
                     onClick={() => {
                         onConfirm();
                         onCancel();
                     }}
-                    className={`px-4 py-3 text-white rounded-lg touch-target font-bold transition ${
+                    disabled={isLoading}
+                    className={`px-4 py-3 text-white rounded-lg touch-target font-bold transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
                         isDestructive ? 'bg-red-600 hover:bg-red-500' : 'bg-brand-600 hover:bg-brand-500'
                     }`}
                 >
-                    {confirmText}
+                    {isLoading ? (
+                        <>
+                            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" aria-hidden="true" />
+                            <span aria-live="polite">Processing...</span>
+                        </>
+                    ) : confirmText}
                 </button>
             </div>
         </Modal>
