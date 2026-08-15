@@ -314,6 +314,15 @@ export default function TournamentDetails() {
         }
     };
 
+    // Fetch room credentials from secure subcollection (not the public tournament doc)
+    useEffect(() => {
+        if (!tournament || !isJoined || !user) return;
+        if (tournament.status !== 'live' && tournament.status !== 'upcoming') return;
+        fetchRoomCredentials(tournament.id).then(creds => {
+            if (creds) setRoomCreds(creds);
+        });
+    }, [tournament?.id, tournament?.status, isJoined, user]);
+
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh]">
@@ -327,15 +336,6 @@ export default function TournamentDetails() {
 
     const bannerUrl = tournament.bannerUrl || DEFAULT_BANNER;
     const bannerStyle = { backgroundImage: `url('${bannerUrl}')`, backgroundSize: 'cover', backgroundPosition: 'center' };
-    // Fetch room credentials from secure subcollection (not the public tournament doc)
-    useEffect(() => {
-        if (!tournament || !isJoined || !user) return;
-        if (tournament.status !== 'live' && tournament.status !== 'upcoming') return;
-        fetchRoomCredentials(tournament.id).then(creds => {
-            if (creds) setRoomCreds(creds);
-        });
-    }, [tournament?.id, tournament?.status, isJoined, user]);
-
     const showRoom = tournament.matchType === 'scrims' && isJoined && (tournament.status === 'live' || (roomCreds?.roomId && tournament.status === 'upcoming'));
     const ytId = getYoutubeId(tournament.ytLink);
 

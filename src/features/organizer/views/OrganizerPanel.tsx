@@ -4,6 +4,7 @@ import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import DashboardLayout from '../../../shared/components/layouts/DashboardLayout';
 import TournamentCreateModal from '../../tournaments/components/TournamentCreateModal';
+import ScrimCreateModal from '../../scrims/components/ScrimCreateModal';
 import {
   LayoutDashboard, Trophy, Gamepad2, Radio, Users,
   Wallet, Settings as SettingsIcon, Menu, X,
@@ -67,10 +68,13 @@ const OrganizerPanel: React.FC = () => {
   const [roomPass, setRoomPass] = useState('');
   const [streamUrl, setStreamUrl] = useState('');
 
-  // Tournament create modal
+  // Tournament & Scrim create modals
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editTournament, setEditTournament] = useState<any>(null);
   const [createMatchType, setCreateMatchType] = useState<'tournament' | 'scrims'>('tournament');
+
+  const [showScrimCreateModal, setShowScrimCreateModal] = useState(false);
+  const [editScrim, setEditScrim] = useState<any>(null);
 
   // Loading states for async operations
   const [isTogglingSlot, setIsTogglingSlot] = useState(false);
@@ -298,7 +302,7 @@ const OrganizerPanel: React.FC = () => {
               onOpenSlotGrid={handleOpenSlotGrid}
               onToggleSlot={handleToggleSlot}
               onViewDetails={handleViewScrimDetails}
-              onCreateScrim={() => handleCreateTournament('scrims')}
+              onCreateScrim={() => { setEditScrim(null); setShowScrimCreateModal(true); }}
             />
           </TabErrorBoundary>
         );
@@ -452,6 +456,16 @@ const OrganizerPanel: React.FC = () => {
           onSuccess={() => { setShowCreateModal(false); setEditTournament(null); org.fetchHostedTournaments(); }}
           editTournament={editTournament}
           defaultMatchType={createMatchType}
+        />
+      )}
+
+      {/* Scrim Create & Edit Modal */}
+      {showScrimCreateModal && (
+        <ScrimCreateModal
+          isOpen={showScrimCreateModal}
+          onClose={() => { setShowScrimCreateModal(false); setEditScrim(null); }}
+          onSuccess={() => { setShowScrimCreateModal(false); setEditScrim(null); org.fetchHostedTournaments(); }}
+          editScrim={editScrim}
         />
       )}
     </DashboardLayout>
