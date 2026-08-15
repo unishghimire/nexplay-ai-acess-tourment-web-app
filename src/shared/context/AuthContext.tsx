@@ -1,20 +1,34 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { doc, onSnapshot, setDoc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
+import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
+import { doc, onSnapshot, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { onAuthStateChanged, signOut, User as FirebaseUser } from 'firebase/auth';
 import { db, auth } from '../config/firebase';
 import { UserProfile } from '../types/types';
+import { ensureUserDocument, ensurePublicProfile } from '../services/userProfileService';
+
+export interface AuthUser {
+    uid: string;
+    email: string;
+    username: string;
+    role: string;
+}
 
 interface AuthContextType {
-    user: { uid: string; email: string; username: string; role: string } | null;
+    user: AuthUser | null;
     profile: UserProfile | null;
     loading: boolean;
+    profileLoading: boolean;
+    authError: string | null;
+    retryAuth: () => void;
     logout: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType>({ 
-    user: null, 
-    profile: null, 
+const AuthContext = createContext<AuthContextType>({
+    user: null,
+    profile: null,
     loading: true,
+    profileLoading: false,
+    authError: null,
+    retryAuth: () => {},
     logout: async () => {}
 });
 
@@ -23,11 +37,31 @@ export const useAuth = () => useContext(AuthContext);
 // ponytail: 8s timeout — if onAuthStateChanged never fires (network issue, Firebase down),
 // unblock the UI and render as logged-out. Prevents infinite loading screen.
 const AUTH_TIMEOUT_MS = 8000;
+// Bounded profile initialization. The authenticated session is kept regardless of
+// the outcome; a failure sets authError so the UI can offer retry instead of
+// silently logging the user out.
+const PROFILE_TIMEOUT_MS = 15000;
+
+const deriveUsername = (firebaseUser: FirebaseUser): string =>
+    firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User';
+
+const withTimeout = <T,>(promise: Promise<T>, ms: number): Promise<T> =>
+    new Promise<T>((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error('timed out')), ms);
+        promise.then(
+            (value) => { clearTimeout(timer); resolve(value); },
+            (error) => { clearTimeout(timer); reject(error); }
+        );
+    });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [user, setUser] = useState<{ uid: string; email: string; username: string; role: string } | null>(null);
+    const [user, setUser] = useState<AuthUser | null>(null);
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
+    const [profileLoading, setProfileLoading] = useState(false);
+    const [authError, setAuthError] = useState<string | null>(null);
+    const firebaseUserRef = useRef<FirebaseUser | null>(null);
+    const initInFlightRef = useRef(false);
 
     const logout = async () => {
         if (user) {
@@ -41,12 +75,58 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
         }
         await signOut(auth);
+        firebaseUserRef.current = null;
+        setAuthError(null);
         setUser(null);
         setProfile(null);
     };
 
+    const initProfile = useCallback(async () => {
+        const firebaseUser = firebaseUserRef.current;
+        if (!firebaseUser || initInFlightRef.current) return;
+        initInFlightRef.current = true;
+        setAuthError(null);
+        setProfileLoading(true);
+        try {
+            const userRef = doc(db, 'users', firebaseUser.uid);
+            let nextProfile: UserProfile | null = null;
+
+            await withTimeout((async () => {
+                const userSnap = await getDoc(userRef);
+
+                if (!userSnap.exists()) {
+                    // Create user document if it doesn't exist (e.g., first Google Sign-In)
+                    const username = deriveUsername(firebaseUser);
+                    await ensureUserDocument({ uid: firebaseUser.uid, email: firebaseUser.email || '', username });
+                    await ensurePublicProfile({ uid: firebaseUser.uid, username });
+
+                    const refreshedSnap = await getDoc(userRef);
+                    nextProfile = refreshedSnap.exists()
+                        ? refreshedSnap.data() as UserProfile
+                        : { uid: firebaseUser.uid, email: firebaseUser.email || '', username, role: 'player' } as UserProfile;
+                } else {
+                    nextProfile = userSnap.data() as UserProfile;
+                }
+            })(), PROFILE_TIMEOUT_MS);
+
+            // Only apply the result if the session is still the one we resolved for
+            // (guards against a logout racing the in-flight initialization).
+            if (firebaseUserRef.current?.uid === firebaseUser.uid && nextProfile) {
+                setProfile(nextProfile);
+                setUser(prev => prev ? { ...prev, username: nextProfile.username, role: nextProfile.role || 'player' } : prev);
+            }
+        } catch (error) {
+            console.error('Auth: profile initialization failed:', error);
+            setAuthError('Could not load your profile. Check your connection and try again.');
+        } finally {
+            setProfileLoading(false);
+            initInFlightRef.current = false;
+        }
+    }, []);
+
     useEffect(() => {
         let settled = false;
+        let disposed = false;
 
         const markDone = () => {
             if (!settled) {
@@ -55,89 +135,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
         };
 
-        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-            try {
-                if (firebaseUser) {
-                    const userRef = doc(db, 'users', firebaseUser.uid);
-                    let userSnap;
-                    try {
-                        userSnap = await getDoc(userRef);
-                    } catch (e) {
-                        // [AUTH] Failed to getDoc userRef
-                        throw e;
-                    }
-                    
-                    if (!userSnap.exists()) {
-                        // Create user document if it doesn't exist (e.g., first Google Sign-In)
-                        const newUser = {
-                            uid: firebaseUser.uid,
-                            email: firebaseUser.email || '',
-                            username: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
-                            role: 'player',
-                            balance: 0,
-                            totalEarnings: 0,
-                            inGameId: '',
-                            inGameName: '',
-                            teamName: '',
-                            phone: '',
-                            isBanned: false,
-                            createdAt: serverTimestamp(),
-                            isOrganizer: false,
-                        };
-                        try {
-                            await setDoc(userRef, newUser);
-                        } catch (e) {
-                            // [AUTH] Failed to setDoc userRef
-                            throw e;
-                        }
-                        
-                        // Create public profile
-                        try {
-                            await setDoc(doc(db, 'users_public', firebaseUser.uid), {
-                                uid: firebaseUser.uid,
-                                username: newUser.username,
-                                totalEarnings: 0,
-                                inGameId: '',
-                                inGameName: '',
-                                role: newUser.role,
-                                updatedAt: serverTimestamp(),
-                            });
-                        } catch (e) {
-                            // [AUTH] Failed to setDoc users_public
-                            throw e;
-                        }
-                        
-                        setUser({ uid: newUser.uid, email: newUser.email, username: newUser.username, role: newUser.role });
-                        setProfile(newUser as UserProfile);
-                    } else {
-                        const data = userSnap.data() as UserProfile;
-                        setUser({ uid: data.uid, email: data.email, username: data.username, role: data.role || 'player' });
-                        setProfile(data);
-                    }
-                } else {
-                    setUser(null);
-                    setProfile(null);
-                }
-            } catch (error) {
-                console.error("Auth state change error:", error);
+        const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+            if (disposed) return;
+            firebaseUserRef.current = firebaseUser;
+
+            if (firebaseUser) {
+                // Keep the authenticated user even if the profile cannot be loaded;
+                // authError carries the failure so the UI can offer a retry.
+                setUser({ uid: firebaseUser.uid, email: firebaseUser.email || '', username: deriveUsername(firebaseUser), role: 'player' });
+                setAuthError(null);
+                markDone();
+                void initProfile();
+            } else {
+                firebaseUserRef.current = null;
                 setUser(null);
                 setProfile(null);
-            } finally {
+                setAuthError(null);
                 markDone();
             }
         });
 
         // Timeout fallback — if onAuthStateChanged never fires, unblock the UI
         const timeoutId = setTimeout(() => {
-            console.warn("Auth: Firebase auth timed out after 8s, rendering as logged-out");
+            console.warn('Auth: Firebase auth timed out after 8s, rendering as logged-out');
             markDone();
         }, AUTH_TIMEOUT_MS);
 
         return () => {
+            disposed = true;
             unsubscribe();
             clearTimeout(timeoutId);
         };
-    }, []);
+    }, [initProfile]);
 
     const statusRef = React.useRef<string | undefined>(profile?.status);
     useEffect(() => {
@@ -163,7 +192,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             let presenceTimer: ReturnType<typeof setTimeout> | null = null;
             const updatePresence = async (status: 'online' | 'idle' | 'offline' | 'dnd') => {
                 if (statusRef.current === 'dnd' && status !== 'offline') return;
-                
+
                 if (presenceTimer) clearTimeout(presenceTimer);
                 presenceTimer = setTimeout(async () => {
                     try {
@@ -206,7 +235,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, [user?.uid]);
 
     return (
-        <AuthContext.Provider value={{ user, profile, loading, logout }}>
+        <AuthContext.Provider value={{ user, profile, loading, profileLoading, authError, retryAuth: () => void initProfile(), logout }}>
             {children}
         </AuthContext.Provider>
     );

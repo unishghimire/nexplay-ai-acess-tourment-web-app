@@ -9,7 +9,7 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles }) => {
-    const { user, profile, loading } = useAuth();
+    const { user, profile, loading, authError } = useAuth();
     const location = useLocation();
     // ponytail: 5s timeout — if profile never loads (Firestore hang), stop blocking
     // Ceiling: user with truly missing profile doc gets redirected to dashboard instead of stuck spinner
@@ -34,6 +34,13 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
     }
 
     if (!user) {
+        return <Navigate to="/login" state={{ from: location }} replace />;
+    }
+
+    // The user is authenticated but the profile could not be loaded (Firestore
+    // error/timeout). Send them to /login where a retry is offered instead of
+    // rendering the app with a missing profile.
+    if (authError) {
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
