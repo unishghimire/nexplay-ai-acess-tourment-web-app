@@ -211,7 +211,7 @@ const Profile: React.FC = () => {
             setShowSettingsModal(false);
         } catch (error: any) {
             console.error("Error updating profile:", error);
-            showToast('Error saving profile', 'error');
+            showToast(`Error saving profile (${error?.code || 'unknown'})`, 'error');
         } finally {
             setIsSaving(false);
         }

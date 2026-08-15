@@ -1,7 +1,8 @@
 import Seo from '../../../shared/components/Seo';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useNotification } from '../../../shared/context/NotificationContext';
+import { useAuth } from '../../../shared/context/AuthContext';
 import { motion } from 'motion/react';
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, CheckCircle, XCircle, ShieldCheck, Phone, Hash } from 'lucide-react';
 import { createUserWithEmailAndPassword, sendEmailVerification, signInWithPopup, updateProfile } from 'firebase/auth';
@@ -27,9 +28,20 @@ const Register: React.FC = () => {
 
     const [passwordStrength, setPasswordStrength] = useState(0);
     const [passwordFeedback, setPasswordFeedback] = useState<string[]>([]);
+    const [registered, setRegistered] = useState(false);
+    const pendingTargetRef = useRef<string>('/dashboard');
 
     const { showToast } = useNotification();
+    const { user } = useAuth();
     const navigate = useNavigate();
+
+    // Redirect only once the AuthContext session is settled — navigating to the
+    // protected /dashboard before that lets ProtectedRoute bounce back to /login.
+    useEffect(() => {
+        if (registered && user) {
+            navigate(pendingTargetRef.current, { replace: true });
+        }
+    }, [registered, user, navigate]);
 
     useEffect(() => {
     }, []);
@@ -133,7 +145,8 @@ const Register: React.FC = () => {
                     : 'Account created. Verify your email from Firebase to unlock all features.',
                 verificationSent ? 'success' : 'warning'
             );
-            navigate('/dashboard');
+            pendingTargetRef.current = '/dashboard';
+            setRegistered(true);
         } catch (err: any) {
             console.error('Registration error:', err);
             const firebaseErrMap: Record<string, string> = {
@@ -157,7 +170,8 @@ const Register: React.FC = () => {
         try {
             await signInWithPopup(auth, googleProvider);
             showToast('Welcome to Nexplay!', 'success');
-            navigate('/dashboard');
+            pendingTargetRef.current = '/dashboard';
+            setRegistered(true);
         } catch (err: any) {
             console.error('Google Sign-In error:', err);
             const errMsg = 'Google Sign-In failed. Please try again.';

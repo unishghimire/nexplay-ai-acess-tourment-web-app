@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { doc, writeBatch, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
@@ -40,27 +40,63 @@ const CompleteProfile: React.FC = () => {
             const userRef = doc(db, 'users', user.uid);
             const publicRef = doc(db, 'users_public', user.uid);
 
-            batch.set(userRef, {
-                inGameId: inGameId.trim(),
-                inGameName: inGameName.trim(),
-                profilePicUrl: selectedAvatar,
-                updatedAt: serverTimestamp()
-            }, { merge: true });
+            const userSnap = await getDoc(userRef);
+            if (userSnap.exists()) {
+                batch.set(userRef, {
+                    inGameId: inGameId.trim(),
+                    inGameName: inGameName.trim(),
+                    profilePicUrl: selectedAvatar,
+                    updatedAt: serverTimestamp()
+                }, { merge: true });
+            } else {
+                // Legacy/missing private profile — create a rule-compliant document
+                batch.set(userRef, {
+                    uid: user.uid,
+                    email: profile?.email || '',
+                    username: profile?.username || 'User',
+                    role: profile?.role || 'player',
+                    balance: 0,
+                    totalEarnings: 0,
+                    inGameId: inGameId.trim(),
+                    inGameName: inGameName.trim(),
+                    teamName: '',
+                    phone: '',
+                    isBanned: false,
+                    createdAt: serverTimestamp(),
+                    isOrganizer: false
+                });
+            }
 
-            batch.set(publicRef, {
-                inGameId: inGameId.trim(),
-                inGameName: inGameName.trim(),
-                profilePicUrl: selectedAvatar,
-                updatedAt: serverTimestamp()
-            }, { merge: true });
+            const publicSnap = await getDoc(publicRef);
+            if (publicSnap.exists()) {
+                batch.set(publicRef, {
+                    inGameId: inGameId.trim(),
+                    inGameName: inGameName.trim(),
+                    profilePicUrl: selectedAvatar,
+                    updatedAt: serverTimestamp()
+                }, { merge: true });
+            } else {
+                // Missing public profile — a merged set on a nonexistent doc is a CREATE,
+                // and the create rule requires uid/role/totalEarnings, so write them up front
+                batch.set(publicRef, {
+                    uid: user.uid,
+                    username: profile?.username || 'User',
+                    role: profile?.role || 'player',
+                    totalEarnings: 0,
+                    inGameId: inGameId.trim(),
+                    inGameName: inGameName.trim(),
+                    profilePicUrl: selectedAvatar,
+                    updatedAt: serverTimestamp()
+                });
+            }
 
             await batch.commit();
 
             showToast('Profile completed! Welcome to NexPlayOrg.', 'success');
             navigate('/dashboard');
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error completing profile:", error);
-            showToast('Failed to save details', 'error');
+            showToast(`Failed to save details (${error?.code || 'unknown'})`, 'error');
         } finally {
             setIsSaving(false);
         }
