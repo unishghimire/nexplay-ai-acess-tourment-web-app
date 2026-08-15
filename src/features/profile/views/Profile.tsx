@@ -4,7 +4,7 @@ import { updateEmail, sendPasswordResetEmail } from 'firebase/auth';
 import { db, auth } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
-import { formatCurrency, formatDate, calculateLevel, getLevelProgress, getXPForNextLevel } from '../../../shared/utils/utils';
+import { formatCurrency, formatDate, calculateLevel, getLevelProgress, getXPForNextLevel, toDateSafe } from '../../../shared/utils/utils';
 import ConfirmModal from '../../../shared/components/ConfirmModal';
 import Modal from '../../../shared/components/Modal';
 import { useInvisibleImage } from '../../../shared/hooks/useInvisibleImage';
@@ -135,8 +135,8 @@ const Profile: React.FC = () => {
                     const snap = await getDocs(q);
                     let txs = snap.docs.map(d => ({ id: d.id, ...d.data() } as Transaction));
                     txs.sort((a,b) => {
-                        const aTime = a.timestamp?.toMillis ? a.timestamp.toMillis() : 0;
-                        const bTime = b.timestamp?.toMillis ? b.timestamp.toMillis() : 0;
+                        const aTime = toDateSafe(a.timestamp)?.getTime() || 0;
+                        const bTime = toDateSafe(b.timestamp)?.getTime() || 0;
                         return bTime - aTime;
                     });
                     setRecentActivity(txs.slice(0, 10));
