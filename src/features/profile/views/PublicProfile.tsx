@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import Seo from '../../../shared/components/Seo';
-import { doc, getDoc, collection, query, where, getDocs, addDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, orderBy, limit, getDocs, addDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { UserProfile, Team, Tournament, OrgPost, MatchHistory } from '../../../shared/types/types';
@@ -47,14 +47,15 @@ const PublicProfile: React.FC = () => {
 
                 const promises: Promise<any>[] = [];
 
-                // 2. Fetch Teams
+                // 2. Fetch Teams — batch team reads in `__name__ in` chunks of 10
                 promises.push(getDocs(query(collection(db, 'team_members'), where('userId', '==', id))).then(async (memberSnap) => {
                     const teamIds = memberSnap.docs.map(d => d.data().teamId);
                     if (teamIds.length > 0) {
                         const teamsData: Team[] = [];
-                        for (const teamId of teamIds) {
-                            const teamDoc = await getDoc(doc(db, 'teams', teamId));
-                            if (teamDoc.exists()) {
+                        for (let i = 0; i < teamIds.length; i += 10) {
+                            const chunk = teamIds.slice(i, i + 10);
+                            const teamSnap = await getDocs(query(collection(db, 'teams'), where('__name__', 'in', chunk)));
+                            for (const teamDoc of teamSnap.docs) {
                                 teamsData.push({ id: teamDoc.id, ...teamDoc.data() } as Team);
                             }
                         }
@@ -62,10 +63,9 @@ const PublicProfile: React.FC = () => {
                     }
                 }));
 
-                // 4. Fetch Match History
-                promises.push(getDocs(query(collection(db, 'match_history'), where('userId', '==', id))).then(snap => {
+                // 4. Fetch Match History — bounded to the latest 20
+                promises.push(getDocs(query(collection(db, 'match_history'), where('userId', '==', id), orderBy('timestamp', 'desc'), limit(20))).then(snap => {
                     const matches = snap.docs.map(d => ({ id: d.id, ...d.data() } as MatchHistory));
-                    matches.sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
                     setMatchHistory(matches);
                 }));
 

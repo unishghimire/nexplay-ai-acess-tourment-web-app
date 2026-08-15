@@ -53,24 +53,40 @@ const ScrimsContent: React.FC = () => {
     const fetchScrims = useCallback(async () => {
         setLoading(true);
         setFetchError(null);
-        let successfulSources = 0;
-        let list: ScrimRecord[] = [];
-
         // Scrims are public tournament records. Query their discriminating field directly
         // instead of scanning every published tournament, which avoids unbounded reads and
         // keeps this public page independent of privileged server credentials.
-        const [tournamentScrims, flaggedTournamentScrims, legacyScrims] = await Promise.allSettled([
-            getDocs(query(collection(db, 'tournaments'), where('matchType', '==', 'scrims'))),
-            getDocs(query(collection(db, 'tournaments'), where('isScrim', '==', true))),
-            getDocs(query(collection(db, 'scrims'), where('status', 'in', ['open', 'live']))),
-        ]);
+        // Sources are tried in order — the primary source (tournaments/matchType == 'scrims')
+        // is authoritative; the legacy scans only run if it fails, so we never duplicate reads.
+        let successfulSources = 0;
+        let list: ScrimRecord[] = [];
 
-        for (const result of [tournamentScrims, flaggedTournamentScrims, legacyScrims]) {
-            if (result.status === 'fulfilled') {
+        // Primary source: tournaments collection. Only reads the discriminating field.
+        try {
+            const primary = await getDocs(query(collection(db, 'tournaments'), where('matchType', '==', 'scrims')));
+            successfulSources += 1;
+            list.push(...primary.docs.map(docSnap => toScrimRecord(docSnap.id, docSnap.data())));
+        } catch (err) {
+            console.warn('Primary scrim source failed:', err);
+        }
+
+        // Legacy/flagged records only when the primary source returned nothing.
+        if (list.length === 0) {
+            try {
+                const flagged = await getDocs(query(collection(db, 'tournaments'), where('isScrim', '==', true)));
                 successfulSources += 1;
-                list.push(...result.value.docs.map(docSnap => toScrimRecord(docSnap.id, docSnap.data())));
-            } else {
-                console.warn('A public scrim data source failed:', result.reason);
+                list.push(...flagged.docs.map(docSnap => toScrimRecord(docSnap.id, docSnap.data())));
+            } catch (err) {
+                console.warn('Legacy flagged-scrim source failed:', err);
+            }
+        }
+        if (list.length === 0) {
+            try {
+                const legacy = await getDocs(query(collection(db, 'scrims'), where('status', 'in', ['open', 'live'])));
+                successfulSources += 1;
+                list.push(...legacy.docs.map(docSnap => toScrimRecord(docSnap.id, docSnap.data())));
+            } catch (err) {
+                console.warn('Legacy scrims source failed:', err);
             }
         }
 

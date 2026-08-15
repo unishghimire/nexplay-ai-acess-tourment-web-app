@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
-import { Tournament, SiteSettings, Team } from '../../../shared/types/types';
+import { Tournament } from '../../../shared/types/types';
 import { formatCurrency, formatGameName, toDateSafe } from '../../../shared/utils/utils';
 import { useNavigate } from 'react-router-dom';
-import { Trophy, Eye, Upload, BarChart, User, Shield, Users } from 'lucide-react';
+import { Trophy, Eye, Upload, BarChart, User, Shield, Users, AlertCircle } from 'lucide-react';
 import ResultUploadModal from '../../results/components/ResultUploadModal';
 import TournamentResultModal from '../../tournaments/components/TournamentResultModal';
 import { Seo } from '../../../shared/components/Seo';
@@ -14,9 +14,8 @@ import { fetchRoomCredentials } from '../../../shared/services/roomCredentials';
 const Dashboard: React.FC = () => {
     const { user, profile } = useAuth();
     const [myTournaments, setMyTournaments] = useState<(Tournament & { role: 'participant' | 'organizer'; registration?: any })[]>([]);
-    const [, setMyTeams] = useState<Team[]>([]);
-    const [, setSettings] = useState<SiteSettings | null>(null);
     const [loading, setLoading] = useState(true);
+    const [fetchError, setFetchError] = useState<string | null>(null);
     const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
     const [isResultModalOpen, setIsResultModalOpen] = useState(false);
     const [viewResultTournament, setViewResultTournament] = useState<Tournament | null>(null);
@@ -24,6 +23,7 @@ const Dashboard: React.FC = () => {
 
     const fetchAllData = async () => {
         if (!user) return;
+        setFetchError(null);
         try {
             // Fetch Joined Tournaments
             const partSnap = await getDocs(query(
@@ -96,36 +96,9 @@ const Dashboard: React.FC = () => {
             }));
             setMyTournaments(tournamentsWithCredentials);
 
-            // Fetch My Teams
-            const memberQ = query(collection(db, 'team_members'), where('userId', '==', user.uid));
-            const memberSnap = await getDocs(memberQ);
-            const myTeamIds = [...new Set(memberSnap.docs.map(d => d.data().teamId))];
-            
-            if (myTeamIds.length > 0) {
-                const teamsData: Team[] = [];
-                const chunks = [];
-                for (let i = 0; i < myTeamIds.length; i += 10) {
-                    chunks.push(myTeamIds.slice(i, i + 10));
-                }
-                
-                for (const chunk of chunks) {
-                    const q = query(collection(db, 'teams'), where('__name__', 'in', chunk));
-                    const teamSnap = await getDocs(q);
-                    teamSnap.docs.forEach(teamDoc => {
-                        teamsData.push({ id: teamDoc.id, ...teamDoc.data() } as Team);
-                    });
-                }
-                setMyTeams(teamsData);
-            }
-
-            // Fetch Site Settings
-            const settingsSnap = await getDoc(doc(db, 'settings', 'site'));
-            if (settingsSnap.exists()) {
-                setSettings(settingsSnap.data() as SiteSettings);
-            }
-
         } catch (error: any) {
             console.error("Error fetching dashboard data:", error);
+            setFetchError(error?.message || "Something went wrong while loading your dashboard.");
         } finally {
             setLoading(false);
         }
@@ -145,6 +118,23 @@ const Dashboard: React.FC = () => {
             <div className="min-h-[60vh] flex flex-col items-center justify-center">
                 <div className="w-12 h-12 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mb-4"></div>
                 <p className="text-xs text-gray-500 font-black uppercase tracking-widest">Loading Dashboard...</p>
+            </div>
+        );
+    }
+
+    if (fetchError) {
+        return (
+            <div className="min-h-[60vh] flex flex-col items-center justify-center text-center gap-4 px-4">
+                <div className="w-14 h-14 rounded-2xl bg-red-500/10 text-red-400 flex items-center justify-center border border-red-500/30">
+                    <AlertCircle className="w-7 h-7" />
+                </div>
+                <p className="text-sm text-gray-400 font-bold max-w-md">{fetchError}</p>
+                <button
+                    onClick={fetchAllData}
+                    className="px-6 py-3 bg-brand-500 hover:bg-brand-600 text-black font-black uppercase tracking-widest rounded-xl transition"
+                >
+                    Try Again
+                </button>
             </div>
         );
     }

@@ -1,11 +1,11 @@
 import Seo from '../../../shared/components/Seo';
 import React, { useEffect, useState } from 'react';
-import { collection, query, getDocs, limit } from 'firebase/firestore';
+import { collection, query, getDocs, limit, where, orderBy } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { Tournament } from '../../../shared/types/types';
 import { Trophy, Calendar, Gamepad2, ChevronRight, Search } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
-import { formatCurrency, formatDate, formatGameName, toDateSafe } from '../../../shared/utils/utils';
+import { formatCurrency, formatDate, formatGameName } from '../../../shared/utils/utils';
 
 const Results: React.FC = () => {
     const [results, setResults] = useState<Tournament[]>([]);
@@ -18,22 +18,16 @@ const Results: React.FC = () => {
         const fetchResults = async () => {
             setLoading(true);
             try {
-                // To avoid index requirements during development, we fetch tournaments
-                // and filter/sort in memory. For production with large datasets, 
-                // creating the composite index (status, startTime) is recommended.
                 const resultsSnap = await getDocs(query(
                     collection(db, 'tournaments'),
-                    limit(100) // Fetch a reasonable batch
+                    where('status', '==', 'completed'),
+                    orderBy('startTime', 'desc'),
+                    limit(50)
                 ));
-                
+
                 const resultsData = resultsSnap.docs
                     .map(doc => ({ id: doc.id, ...doc.data() } as Tournament))
-                    .filter(t => t.status === 'completed' && (t as any).matchType !== 'scrims' && (t as any).isScrim !== true && (t as any).type !== 'scrim' && (t as any).type !== 'scrims')
-                    .sort((a, b) => {
-                        const timeA = toDateSafe(a.startTime)?.getTime() || 0;
-                        const timeB = toDateSafe(b.startTime)?.getTime() || 0;
-                        return timeB - timeA;
-                    })
+                    .filter(t => (t as any).matchType !== 'scrims' && (t as any).isScrim !== true && (t as any).type !== 'scrim' && (t as any).type !== 'scrims')
                     .slice(0, 50);
 
                 setResults(resultsData);

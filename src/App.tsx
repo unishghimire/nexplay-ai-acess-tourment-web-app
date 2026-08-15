@@ -14,12 +14,15 @@ import ProfileCompletionGuard from './features/auth/components/ProfileCompletion
 import ProtectedRoute from './shared/components/ProtectedRoute';
 
 
-// ponytail: auto-retry chunk loads on new deployment hash mismatches — one reload, then let it throw
+// ponytail: auto-retry chunk loads on new deployment hash mismatches — one reload per load attempt,
+// then let it throw. The flag is cleared on success so a later deployment's mismatch can also recover.
 const lazyWithRetry = (componentImport: () => Promise<any>) =>
   lazy(async () => {
     const reloaded = sessionStorage.getItem('chunk-reloaded');
     try {
-      return await componentImport();
+      const mod = await componentImport();
+      sessionStorage.removeItem('chunk-reloaded');
+      return mod;
     } catch (error: any) {
       if (!reloaded) {
         sessionStorage.setItem('chunk-reloaded', 'true');

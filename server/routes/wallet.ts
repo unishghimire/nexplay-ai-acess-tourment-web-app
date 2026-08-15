@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { createHash } from "crypto";
 import { db, admin, authenticateToken, rateLimit } from "../shared.js";
 import { ChunkProcessingError, commitBatchedWrites } from "../batchedWrites.js";
 import { validatePrizeWinners } from "../prizeValidation.js";
@@ -68,7 +69,9 @@ router.post("/api/wallet/deposit",
       }
 
       // Deposit is pending — balance credited when admin approves (atomic in useAdminData handleApproveTx)
-      const txRef = db.collection('transactions').doc();
+      // Deterministic ID makes concurrent double-submits converge on a single doc (idempotent replay).
+      const depositKey = createHash('sha1').update(`${uid}|${numAmount}|${transactionCode}`).digest('hex').slice(0, 24);
+      const txRef = db.collection('transactions').doc(`${uid}_DEP_${depositKey}`);
       await txRef.set({
         id: txRef.id,
         userId: uid,
@@ -551,6 +554,14 @@ router.post("/api/wallet/distribute-prizes",
           const userDoc = await tx.get(db.collection('users').doc(winner.userId));
           if (!userDoc.exists) throw new Error(`Winner not found: ${winner.userId}`);
           winnerProfiles.set(winner.userId, userDoc);
+
+          // A winner must be an approved participant of this tournament —
+          // prevents hosts from paying arbitrary accounts (or themselves).
+          const partDoc = await tx.get(db.collection('participants').doc(`${tournamentId}_${winner.userId}`));
+          if (!partDoc.exists) throw new Error(`Winner is not a participant: ${winner.userId}`);
+          if ((partDoc.data()?.status ?? 'pending') !== 'approved') {
+            throw new Error(`Winner is not an approved participant: ${winner.userId}`);
+          }
         }
 
         tx.update(tRef, { status: 'completed', completedAt: admin.firestore.FieldValue.serverTimestamp() });

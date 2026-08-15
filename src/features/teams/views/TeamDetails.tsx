@@ -5,7 +5,7 @@ import { db } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { Team, TeamMember, UserProfile, TeamInvite, TeamActivity } from '../../../shared/types/types';
-import {Users, UserPlus, Settings, LogOut, X, ArrowLeft, Crown, Activity, Globe, Calendar, Trophy, Zap, ChevronRight, Star, Camera} from 'lucide-react';
+import {Users, UserPlus, Settings, LogOut, X, ArrowLeft, Crown, Activity, Globe, Calendar, Trophy, Zap, ChevronRight, Star, Camera, AlertCircle} from 'lucide-react';
 import { useInvisibleImage } from '../../../shared/hooks/useInvisibleImage';
 import { MediaCategory } from '../../../shared/services/mediaService';
 import { timeAgo, formatDate, formatCurrency } from '../../../shared/utils/utils';
@@ -24,6 +24,7 @@ const TeamDetails: React.FC = () => {
     const [invites, setInvites] = useState<TeamInvite[]>([]);
     const [activities, setActivities] = useState<TeamActivity[]>([]);
     const [loading, setLoading] = useState(true);
+    const [fetchError, setFetchError] = useState<string | null>(null);
     
     const [isEditing, setIsEditing] = useState(false);
     const [editName, setEditName] = useState('');
@@ -75,6 +76,7 @@ const TeamDetails: React.FC = () => {
 
     const fetchTeamData = async () => {
         setLoading(true);
+        setFetchError(null);
         try {
             if (!id) return;
             const teamDoc = await getDoc(doc(db, 'teams', id));
@@ -149,6 +151,7 @@ const TeamDetails: React.FC = () => {
 
         } catch (error: any) {
             console.error("Error fetching team:", error);
+            setFetchError(error?.message || "Something went wrong while loading this team.");
         } finally {
             setLoading(false);
         }
@@ -365,6 +368,21 @@ const TeamDetails: React.FC = () => {
             <div className="min-h-[60vh] flex flex-col items-center justify-center">
                 <div className="w-12 h-12 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mb-4"></div>
                 <p className="text-xs text-gray-500 font-black uppercase tracking-widest">Loading Team...</p>
+            </div>
+        );
+    }
+
+    if (fetchError) {
+        return (
+            <div className="min-h-[60vh] flex flex-col items-center justify-center text-center gap-4 px-4">
+                <AlertCircle className="w-14 h-14 text-red-400" />
+                <p className="text-sm text-gray-400 font-bold max-w-md">{fetchError}</p>
+                <button
+                    onClick={fetchTeamData}
+                    className="px-6 py-3 bg-brand-500 hover:bg-brand-600 text-black font-black uppercase tracking-widest rounded-xl transition"
+                >
+                    Try Again
+                </button>
             </div>
         );
     }

@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { UserProfile, Team } from '../../../shared/types/types';
-import { Trophy, Users, ArrowUp, ArrowDown, Minus, Search, Filter, ChevronRight } from 'lucide-react';
+import { Trophy, Users, ArrowUp, ArrowDown, Minus, Search, ChevronRight, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { motion } from 'motion/react';
@@ -129,18 +129,19 @@ const Leaderboard: React.FC = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
     const [view, setView] = useState<'players' | 'teams'>('players');
-    const [season, setSeason] = useState('Season 4');
     const [players, setPlayers] = useState<UserProfile[]>([]);
     const [teams, setTeams] = useState<Team[]>([]);
     const [loading, setLoading] = useState(true);
+    const [fetchError, setFetchError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
         fetchLeaderboard();
-    }, [view, season]);
+    }, [view]);
 
     const fetchLeaderboard = async () => {
         setLoading(true);
+        setFetchError(null);
         try {
             if (view === 'players') {
                 const q = query(
@@ -169,6 +170,7 @@ const Leaderboard: React.FC = () => {
             }
         } catch (error: any) {
             console.error("Error fetching leaderboard:", error);
+            setFetchError(error?.message || "Something went wrong while loading the leaderboard.");
         } finally {
             setLoading(false);
         }
@@ -196,21 +198,6 @@ const Leaderboard: React.FC = () => {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-4">
-                    {/* Season Filter */}
-                    <div className="relative">
-                        <select 
-                            aria-label="Select leaderboard season"
-                            value={season}
-                            onChange={(e) => setSeason(e.target.value)}
-                            className="appearance-none bg-card/50 border border-gray-800 text-white px-6 py-3 pr-12 min-h-[44px] rounded-2xl font-black text-sm uppercase tracking-widest focus:border-brand-500 outline-none transition cursor-pointer"
-                        >
-                            <option>Season 4</option>
-                            <option>Season 3</option>
-                            <option>All Time</option>
-                        </select>
-                        <Filter className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
-                    </div>
-
                     {/* View Toggle */}
                     <div className="flex bg-card/50 p-1.5 rounded-2xl border border-gray-800">
                         <button 
@@ -250,6 +237,18 @@ const Leaderboard: React.FC = () => {
                 <div className="flex flex-col items-center justify-center py-20">
                     <div className="w-12 h-12 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mb-4"></div>
                     <p className="text-gray-500 font-black uppercase tracking-widest text-xs">Fetching Rankings...</p>
+                </div>
+            ) : fetchError ? (
+                <div role="alert" className="text-center py-20 bg-card/50 rounded-3xl border border-red-500/30">
+                    <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+                    <p className="text-red-300 font-black uppercase tracking-widest mb-2">Unable to Load Rankings</p>
+                    <p className="text-gray-400 font-bold max-w-sm mx-auto mb-8">{fetchError}</p>
+                    <button
+                        onClick={fetchLeaderboard}
+                        className="px-6 py-3 bg-brand-500 hover:bg-brand-600 text-black font-black uppercase tracking-widest rounded-xl transition"
+                    >
+                        Try Again
+                    </button>
                 </div>
             ) : (
                 <>

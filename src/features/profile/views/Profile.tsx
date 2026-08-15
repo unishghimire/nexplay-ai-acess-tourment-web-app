@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { doc, updateDoc, writeBatch, serverTimestamp, collection, query, where, getDocs, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, writeBatch, serverTimestamp, collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { updateEmail, sendPasswordResetEmail } from 'firebase/auth';
 import { db, auth } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
-import { formatCurrency, formatDate, calculateLevel, getLevelProgress, getXPForNextLevel, toDateSafe } from '../../../shared/utils/utils';
+import { formatCurrency, formatDate, calculateLevel, getLevelProgress, getXPForNextLevel } from '../../../shared/utils/utils';
 import ConfirmModal from '../../../shared/components/ConfirmModal';
 import Modal from '../../../shared/components/Modal';
 import { useInvisibleImage } from '../../../shared/hooks/useInvisibleImage';
 import { MediaCategory } from '../../../shared/services/mediaService';
 import { DEFAULT_AVATAR, NEXPLAY_LOGO, PRESET_AVATARS, PRESET_PLAYER_BANNERS } from '../../../shared/constants/constants';
 import { User, Mail, Phone, Shield, Trophy, Wallet as WalletIcon, Save, Info, Briefcase, Users, Hash, Clock, ArrowDown, ArrowUp, Copy, CheckCircle2, Image as ImageIcon, Settings as SettingsIcon, X } from 'lucide-react';
-import { Transaction, SiteSettings } from '../../../shared/types/types';
+import { Transaction } from '../../../shared/types/types';
+import { useSiteSettings } from '../../../shared/context/SiteSettingsContext';
 import { Seo } from '../../../shared/components/Seo';
 
 const Profile: React.FC = () => {
@@ -47,7 +48,7 @@ const Profile: React.FC = () => {
     const [showSettingsModal, setShowSettingsModal] = useState(false);
     const [newEmail, setNewEmail] = useState('');
     const [isUpdatingEmail, setIsUpdatingEmail] = useState(false);
-    const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null);
+    const { settings: siteSettings } = useSiteSettings();
 
     const { handlePaste, handleDrop, handleDragOver, processAndUpload } = useInvisibleImage({
         folder: `profiles/${user?.uid}`,
@@ -91,20 +92,6 @@ const Profile: React.FC = () => {
     const closeConfirmModal = () => setConfirmModal(prev => ({ ...prev, isOpen: false }));
 
     useEffect(() => {
-        const fetchSettings = async () => {
-            try {
-                const snap = await getDoc(doc(db, 'settings', 'site'));
-                if (snap.exists()) {
-                    setSiteSettings(snap.data() as SiteSettings);
-                }
-            } catch (error) {
-                console.error("Error fetching settings:", error);
-            }
-        };
-        fetchSettings();
-    }, []);
-
-    useEffect(() => {
         if (user) {
             const fetchFollowCounts = async () => {
                 try {
@@ -130,16 +117,13 @@ const Profile: React.FC = () => {
                 try {
                     const q = query(
                         collection(db, 'transactions'),
-                        where('userId', '==', user.uid)
+                        where('userId', '==', user.uid),
+                        orderBy('timestamp', 'desc'),
+                        limit(10)
                     );
                     const snap = await getDocs(q);
-                    let txs = snap.docs.map(d => ({ id: d.id, ...d.data() } as Transaction));
-                    txs.sort((a,b) => {
-                        const aTime = toDateSafe(a.timestamp)?.getTime() || 0;
-                        const bTime = toDateSafe(b.timestamp)?.getTime() || 0;
-                        return bTime - aTime;
-                    });
-                    setRecentActivity(txs.slice(0, 10));
+                    const txs = snap.docs.map(d => ({ id: d.id, ...d.data() } as Transaction));
+                    setRecentActivity(txs);
                 } catch (error: any) {
                     console.error("Error fetching activity:", error);
                 } finally {

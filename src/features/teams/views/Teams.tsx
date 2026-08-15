@@ -5,7 +5,7 @@ import { db } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { Team } from '../../../shared/types/types';
-import { Users, Plus, Search, ArrowRight, Image as ImageIcon, CheckCircle2 } from 'lucide-react';
+import { Users, Plus, Search, ArrowRight, Image as ImageIcon, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useInvisibleImage } from '../../../shared/hooks/useInvisibleImage';
 import { MediaCategory } from '../../../shared/services/mediaService';
@@ -20,6 +20,7 @@ const Teams: React.FC = () => {
     const [teams, setTeams] = useState<Team[]>([]);
     const [myTeams, setMyTeams] = useState<Team[]>([]);
     const [loading, setLoading] = useState(true);
+    const [fetchError, setFetchError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     
     const [isCreating, setIsCreating] = useState(false);
@@ -49,6 +50,7 @@ const Teams: React.FC = () => {
 
     const fetchTeams = async () => {
         setLoading(true);
+        setFetchError(null);
         try {
             // Fetch all teams
             const q = query(collection(db, 'teams'));
@@ -66,6 +68,7 @@ const Teams: React.FC = () => {
             }
         } catch (error: any) {
             console.error("Error fetching teams:", error);
+            setFetchError(error?.message || "Something went wrong while loading teams.");
         } finally {
             setLoading(false);
         }
@@ -326,6 +329,18 @@ const Teams: React.FC = () => {
                 {loading ? (
                     <div className="flex justify-center py-12">
                         <div className="w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                ) : fetchError ? (
+                    <div role="alert" className="text-center py-20 bg-card/50 rounded-3xl border border-red-500/30">
+                        <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+                        <p className="text-red-300 font-black uppercase tracking-widest mb-2">Unable to Load Teams</p>
+                        <p className="text-gray-400 font-bold max-w-sm mx-auto mb-8">{fetchError}</p>
+                        <button
+                            onClick={fetchTeams}
+                            className="px-6 py-3 bg-brand-500 hover:bg-brand-600 text-black font-black uppercase tracking-widest rounded-xl transition"
+                        >
+                            Try Again
+                        </button>
                     </div>
                 ) : filteredTeams.length === 0 ? (
                     <div className="text-center py-20 bg-card/50 rounded-3xl border border-gray-800">

@@ -14,6 +14,7 @@ import { useInvisibleImage } from '../../../shared/hooks/useInvisibleImage';
 import { ImageUploader } from '../../../shared/components/ImageUploader';
 import { MediaCategory } from '../../../shared/services/mediaService';
 import { PRESET_TOURNAMENT_BANNERS } from '../../../shared/constants/constants';
+import { withStaticCache } from '../../../shared/utils/staticCache';
 import { 
   Trophy, 
   Gamepad2, 
@@ -99,7 +100,9 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
 
   useEffect(() => {
     const fetchGames = async () => {
-      const snap = await getDocs(query(collection(db, 'games'), where('isPublished', '==', true)));
+      const snap = await withStaticCache('games_published', () =>
+        getDocs(query(collection(db, 'games'), where('isPublished', '==', true)))
+      );
       setGames(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     };
     fetchGames();

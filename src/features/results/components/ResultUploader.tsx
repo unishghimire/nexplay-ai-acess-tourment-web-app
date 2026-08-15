@@ -247,23 +247,25 @@ export const ResultUploader: React.FC<ResultUploaderProps> = ({ isOpen, onClose,
                 groups: updatedGroups
             });
 
-            // Update participant stats
+            // Update participant stats — fetch the tournament's participants once,
+            // index by userId, and look up in memory instead of N+1 queries.
             const batch = writeBatch(db);
+            const participantsSnap = await getDocs(query(
+                collection(db, 'participants'),
+                where('tournamentId', '==', tournament.id)
+            ));
+            const participantsByUser = new Map<string, { ref: any; data: any }>();
+            for (const docSnap of participantsSnap.docs) {
+                participantsByUser.set(docSnap.data().userId, { ref: docSnap.ref, data: docSnap.data() });
+            }
             for (const res of scoredResults) {
-                const q = query(collection(db, 'participants'),
-                    where('tournamentId', '==', tournament.id),
-                    where('userId', '==', res.teamId)
-                );
-                const snap = await getDocs(q);
-                if (!snap.empty) {
-                    const pDoc = snap.docs[0];
-                    const pData = pDoc.data();
-                    batch.update(pDoc.ref, {
-                        totalKills: (pData.totalKills || 0) + res.kills,
-                        totalPoints: (pData.totalPoints || 0) + res.totalPoints,
-                        matchesPlayed: (pData.matchesPlayed || 0) + 1
-                    });
-                }
+                const p = participantsByUser.get(res.teamId);
+                if (!p) continue;
+                batch.update(p.ref, {
+                    totalKills: (p.data.totalKills || 0) + res.kills,
+                    totalPoints: (p.data.totalPoints || 0) + res.totalPoints,
+                    matchesPlayed: (p.data.matchesPlayed || 0) + 1
+                });
             }
             await batch.commit();
 

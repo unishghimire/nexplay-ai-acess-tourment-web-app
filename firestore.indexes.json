@@ -235,6 +235,20 @@
       ]
     },
     {
+      "collectionGroup": "match_history",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "userId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "timestamp",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "tournaments",
       "queryScope": "COLLECTION",
       "fields": [

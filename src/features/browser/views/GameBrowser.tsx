@@ -6,6 +6,7 @@ import { Game } from '../../../shared/types/types';
 import GameCard from '../../home/components/GameCard';
 import { Search, Filter, Gamepad2 } from 'lucide-react';
 import { formatGameModeLabel } from '../../../shared/utils/utils';
+import { withStaticCache } from '../../../shared/utils/staticCache';
 
 export default function GameBrowser() {
     const [games, setGames] = useState<Game[]>([]);
@@ -17,11 +18,9 @@ export default function GameBrowser() {
         const fetchGames = async () => {
             setLoading(true);
             try {
-                const q = query(
-                    collection(db, 'games'), 
-                    where('isPublished', '==', true)
+                const snap = await withStaticCache('games_published', () =>
+                    getDocs(query(collection(db, 'games'), where('isPublished', '==', true)))
                 );
-                const snap = await getDocs(q);
                 let gamesData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Game));
                 gamesData.sort((a,b) => {
                     const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;

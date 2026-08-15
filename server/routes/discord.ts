@@ -114,50 +114,64 @@ async function sendDiscordWebhook(webhookUrl: string, embed: object, content?: s
 }
 
 router.post('/api/discord/announce', authenticateToken, rateLimit(10, 15 * 60 * 1000), async (req: any, res) => {
-  const { type, data, channel } = req.body as {
-    type: DiscordAnnouncementType;
-    data: Record<string, any>;
-    channel: 'tournaments' | 'scrims';
-  };
+  try {
+    const { type, data, channel } = req.body as {
+      type: DiscordAnnouncementType;
+      data: Record<string, any>;
+      channel: 'tournaments' | 'scrims';
+    };
 
-  if (req.user.role !== 'organizer' && req.user.role !== 'admin') {
-    return res.status(403).json({ success: false, message: 'Only organizers and admins can send Discord announcements.' });
-  }
-  if (!type || !data || !channel) {
-    return res.status(400).json({ success: false, message: 'type, data, and channel are required.' });
-  }
-  if (!ANNOUNCEMENT_TYPES.includes(type) || !['tournaments', 'scrims'].includes(channel) ||
-      typeof data !== 'object' || Array.isArray(data) || typeof data.tournamentId !== 'string' || data.tournamentId.length > 128) {
-    return res.status(400).json({ success: false, message: 'Invalid announcement payload.' });
-  }
-  if ((channel === 'scrims') !== type.startsWith('scrim_')) {
-    return res.status(400).json({ success: false, message: 'Announcement type does not match the requested channel.' });
-  }
-  const tournament = await db.collection('tournaments').doc(data.tournamentId).get();
-  if (!tournament.exists) return res.status(404).json({ success: false, message: 'Tournament not found.' });
-  if (req.user.role !== 'admin' && tournament.data()?.hostUid !== req.user.userId) {
-    return res.status(403).json({ success: false, message: 'You can only announce your own tournaments.' });
-  }
+    if (req.user.role !== 'organizer' && req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Only organizers and admins can send Discord announcements.' });
+    }
+    if (!type || !data || !channel) {
+      return res.status(400).json({ success: false, message: 'type, data, and channel are required.' });
+    }
+    if (!ANNOUNCEMENT_TYPES.includes(type) || !['tournaments', 'scrims'].includes(channel) ||
+        typeof data !== 'object' || Array.isArray(data) || typeof data.tournamentId !== 'string' || data.tournamentId.length > 128) {
+      return res.status(400).json({ success: false, message: 'Invalid announcement payload.' });
+    }
+    if ((channel === 'scrims') !== type.startsWith('scrim_')) {
+      return res.status(400).json({ success: false, message: 'Announcement type does not match the requested channel.' });
+    }
+    if (typeof data.title !== 'string' || data.title.length === 0 || data.title.length > 200) {
+      return res.status(400).json({ success: false, message: 'data.title is required and must be a string (max 200 chars).' });
+    }
+    if (type === 'group_published' &&
+        (!Array.isArray(data.groups) || data.groups.length === 0 ||
+         !data.groups.every((g: unknown) => typeof g === 'string'))) {
+      return res.status(400).json({ success: false, message: 'data.groups must be a non-empty array of group names for group_published announcements.' });
+    }
 
-  const webhookUrl = channel === 'scrims' ? process.env.DISCORD_WEBHOOK_SCRIMS : process.env.DISCORD_WEBHOOK_TOURNAMENTS;
-  if (!webhookUrl) {
-    return res.status(503).json({ success: false, message: `Discord webhook for #${channel} is not configured. Add DISCORD_WEBHOOK_${channel.toUpperCase()} to your .env file.` });
-  }
+    const tournament = await db.collection('tournaments').doc(data.tournamentId).get();
+    if (!tournament.exists) return res.status(404).json({ success: false, message: 'Tournament not found.' });
+    if (req.user.role !== 'admin' && tournament.data()?.hostUid !== req.user.userId) {
+      return res.status(403).json({ success: false, message: 'You can only announce your own tournaments.' });
+    }
 
-  const embed = buildDiscordEmbed(type, data);
-  if (!embed) return res.status(400).json({ success: false, message: `Unknown announcement type: ${type}` });
+    const webhookUrl = channel === 'scrims' ? process.env.DISCORD_WEBHOOK_SCRIMS : process.env.DISCORD_WEBHOOK_TOURNAMENTS;
+    if (!webhookUrl) {
+      return res.status(503).json({ success: false, message: `Discord webhook for #${channel} is not configured. Add DISCORD_WEBHOOK_${channel.toUpperCase()} to your .env file.` });
+    }
 
-  const sent = await sendDiscordWebhook(webhookUrl, embed);
-  if (sent) {
-    try {
-      await db.collection('discordLogs').add({
-        type, channel, tournamentId: data.tournamentId || null,
-        sentBy: req.user.userId, sentAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
-    } catch (logErr) { console.warn('[Discord Log] Firestore log failed:', logErr); }
-    return res.json({ success: true, message: `Announcement sent to #${channel}` });
+    const embed = buildDiscordEmbed(type, data);
+    if (!embed) return res.status(400).json({ success: false, message: `Unknown announcement type: ${type}` });
+
+    const sent = await sendDiscordWebhook(webhookUrl, embed);
+    if (sent) {
+      try {
+        await db.collection('discordLogs').add({
+          type, channel, tournamentId: data.tournamentId || null,
+          sentBy: req.user.userId, sentAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+      } catch (logErr) { console.warn('[Discord Log] Firestore log failed:', logErr); }
+      return res.json({ success: true, message: `Announcement sent to #${channel}` });
+    }
+    return res.status(502).json({ success: false, message: 'Discord webhook delivery failed. Check webhook URL and Discord server settings.' });
+  } catch (error: any) {
+    console.error('[Discord Announce] Unhandled error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to send Discord announcement.' });
   }
-  return res.status(502).json({ success: false, message: 'Discord webhook delivery failed. Check webhook URL and Discord server settings.' });
 });
 
 export default router;

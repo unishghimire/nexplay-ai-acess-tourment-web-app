@@ -1,4 +1,4 @@
-import { collection, addDoc, serverTimestamp, query, where, orderBy, onSnapshot, doc, updateDoc, getDocs } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, orderBy, limit, onSnapshot, doc, updateDoc, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { Notification } from '../types/types';
 
@@ -60,14 +60,15 @@ export const NotificationService = {
         }
     },
 
-    // Listen for all notifications for a user
+    // Listen for all notifications for a user (bounded to the latest 50)
     onNotifications: (userId: string, callback: (notifications: Notification[]) => void) => {
         if (!userId) return () => {};
         try {
             const q = query(
                 collection(db, 'notifications'),
                 where('userId', '==', userId),
-                orderBy('timestamp', 'desc')
+                orderBy('timestamp', 'desc'),
+                limit(50)
             );
             return onSnapshot(q, (snapshot) => {
                 let notifications = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Notification));

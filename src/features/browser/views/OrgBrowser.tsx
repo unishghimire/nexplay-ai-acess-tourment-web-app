@@ -1,6 +1,6 @@
 import Seo from '../../../shared/components/Seo';
 import React, { useState, useEffect } from 'react';
-import { collection, query, getDocs, where, addDoc, deleteDoc, doc } from 'firebase/firestore';
+import { collection, query, getDocs, where, addDoc, deleteDoc, doc, limit } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
@@ -25,7 +25,7 @@ const OrgBrowser: React.FC = () => {
     const fetchOrgs = async () => {
         setLoading(true);
         try {
-            const snap = await getDocs(query(collection(db, 'users_public')));
+            const snap = await getDocs(query(collection(db, 'users_public'), where('role', '==', 'organizer'), limit(200)));
             const orgsData = snap.docs
                 .map(d => ({ uid: d.id, ...(d.data() as any) }))
                 .filter((d: any) => d.role === 'organizer');

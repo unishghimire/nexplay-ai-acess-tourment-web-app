@@ -14,7 +14,7 @@ export const DashboardTab: React.FC<AdminPanelTabProps> = (props) => {
                                 <Users className="w-7 h-7" />
                             </div>
                             <div>
-                                <div className="text-xs text-blue-200/70 uppercase font-bold tracking-wider mb-1">Total Holdings</div>
+                                <div className="text-xs text-blue-200/70 uppercase font-bold tracking-wider mb-1">Total Holdings (recent users)</div>
                                 <div className="text-xl sm:text-2xl lg:text-3xl font-black text-white tracking-tight truncate">{formatCurrency(stats.totalBalance)}</div>
                             </div>
                         </div>

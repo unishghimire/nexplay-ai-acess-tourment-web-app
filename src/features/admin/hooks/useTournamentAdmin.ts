@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
-import { doc, onSnapshot, updateDoc, collection, query, where, getDocs, setDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { doc, onSnapshot, updateDoc, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
 import { db, auth } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { Tournament, TournamentGroup, Match, Team, TournamentEarning } from '../../../shared/types/types';
 import { formatDate } from '../../../shared/utils/utils';
-import { calculateRevenueSplit } from '../../../shared/constants/finance';
 import {
     announceNewTournament,
     announceTournamentLive,
@@ -116,37 +115,11 @@ export function useTournamentAdmin(
         try {
             await updateDoc(doc(db, 'tournaments', tournament.id), { status });
 
-            // ponytail: earnings record is now created server-side by /api/wallet/distribute-prizes
-            // Admin just updates status — earnings already created atomically with prize distribution
+            // ponytail: the earnings record is created server-side by
+            // /api/wallet/distribute-prizes (atomic, idempotent). No client-side
+            // fallback — revenue math must never run in the browser.
             if (status === 'completed') {
-                const existingEarnings = await getDocs(
-                    query(collection(db, 'tournamentEarnings'), where('tournamentId', '==', tournament.id))
-                );
-                if (existingEarnings.empty) {
-                    // Fallback: organizer hasn't distributed prizes yet, create earnings record
-                    const approvedParticipants = participants.filter(p => p.status === 'approved');
-                    const entryFeeTotal = approvedParticipants.length * (tournament.entryFee || 0);
-                    const prizePoolTotal = tournament.prizePool || 0;
-                    const profit = entryFeeTotal - prizePoolTotal;
-                    const { orgShare, nexplayShare } = calculateRevenueSplit(profit);
-
-                    await setDoc(doc(collection(db, 'tournamentEarnings')), {
-                        tournamentId: tournament.id,
-                        tournamentName: tournament.title,
-                        orgId: tournament.hostUid,
-                        orgName: tournament.hostName || '',
-                        entryFeeTotal,
-                        prizePoolTotal,
-                        profit,
-                        orgShare,
-                        nexplayShare,
-                        status: 'pending',
-                        createdAt: serverTimestamp(),
-                    });
-                    showToast('Tournament completed. Earnings record created.', 'success');
-                } else {
-                    showToast(`Tournament status updated to ${status}`, 'success');
-                }
+                showToast('Tournament completed. Prize distribution will create the earnings record.', 'success');
             } else {
                 showToast(`Tournament status updated to ${status}`, 'success');
             }

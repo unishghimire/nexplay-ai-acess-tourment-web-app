@@ -247,17 +247,17 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
                 // 1: all recent transactions
                 getDocs(query(collection(db, 'transactions'), orderBy('timestamp', 'desc'), limit(100))),
                 // 2: all tournaments
-                getDocs(query(collection(db, 'tournaments'), orderBy('createdAt', 'desc'))),
+                getDocs(query(collection(db, 'tournaments'), orderBy('createdAt', 'desc'), limit(500))),
                 // 3: slides
-                getDocs(query(collection(db, 'slides'), orderBy('createdAt', 'desc'))),
+                getDocs(query(collection(db, 'slides'), orderBy('createdAt', 'desc'), limit(200))),
                 // 4: promo codes
-                getDocs(query(collection(db, 'promocodes'), orderBy('createdAt', 'desc'))),
+                getDocs(query(collection(db, 'promocodes'), orderBy('createdAt', 'desc'), limit(200))),
                 // 5: games
-                getDocs(query(collection(db, 'games'), orderBy('createdAt', 'desc'))),
+                getDocs(query(collection(db, 'games'), orderBy('createdAt', 'desc'), limit(200))),
                 // 6: payment categories
-                getDocs(query(collection(db, 'paymentCategories'), orderBy('createdAt', 'desc'))),
+                getDocs(query(collection(db, 'paymentCategories'), orderBy('createdAt', 'desc'), limit(200))),
                 // 7: payment methods
-                getDocs(query(collection(db, 'paymentMethods'), orderBy('createdAt', 'desc'))),
+                getDocs(query(collection(db, 'paymentMethods'), orderBy('createdAt', 'desc'), limit(200))),
                 // 8: org applications
                 getDocs(query(collection(db, 'orgApplications'), where('status', '==', 'pending'))),
                 // 9: organizers + admins
@@ -267,11 +267,11 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
                 // 11: activity logs
                 getDocs(query(collection(db, 'activityLogs'), orderBy('timestamp', 'desc'), limit(10))),
                 // 12: tournament earnings
-                getDocs(query(collection(db, 'tournamentEarnings'), orderBy('createdAt', 'desc'))),
+                getDocs(query(collection(db, 'tournamentEarnings'), orderBy('createdAt', 'desc'), limit(300))),
                 // 14: site settings
                 getDoc(doc(db, 'settings', 'site')),
                 // 15: today's transactions for stats
-                getDocs(query(collection(db, 'transactions'), where('timestamp', '>=', new Date(new Date().setHours(0, 0, 0, 0))))),
+                getDocs(query(collection(db, 'transactions'), where('timestamp', '>=', new Date(new Date().setHours(0, 0, 0, 0))), limit(200))),
             ]);
 
             // Apply results — each one checked independently
@@ -367,7 +367,7 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
         };
 
         fetchData();
-    }, [profile]);
+    }, [profile?.uid, profile?.role]);
 
     useEffect(() => {
         setSelectedTx(null);

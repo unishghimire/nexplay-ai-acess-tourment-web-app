@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { collection, query, where, getDocs, doc, updateDoc, deleteDoc, setDoc, serverTimestamp, increment, writeBatch, orderBy, limit } from 'firebase/firestore';
+import { collection, query, where, getDocs, getDoc, doc, updateDoc, setDoc, serverTimestamp, increment, writeBatch, orderBy, limit } from 'firebase/firestore';
 import { db, auth } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { Tournament, Participant, Transaction } from '../../../shared/types/types';
@@ -13,6 +13,7 @@ export function useOrgData() {
   const [hostedTournaments, setHostedTournaments] = useState<Tournament[]>([]);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [orgEarnings, setOrgEarnings] = useState<any[]>([]);
   const [disputes, setDisputes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -113,15 +114,16 @@ export function useOrgData() {
     const prizePool = hostedTournaments.reduce((sum, t) => sum + (t.prizePool || 0), 0);
     const filledSlots = hostedTournaments.reduce((sum, t) => sum + getFilledSlotCount(t), 0);
     const totalSlots = hostedTournaments.reduce((sum, t) => sum + getSlotCount(t), 0);
-    const pendingPayouts = transactions.filter(t => t.type === 'withdrawal' && t.status === 'pending').reduce((sum, t) => sum + Math.abs(t.amount || 0), 0);
+    const pendingPayouts = orgEarnings
+      .filter(e => e.status === 'pending')
+      .reduce((sum, e) => sum + (e.orgShare || 0), 0);
 
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const monthlyRevenue = transactions
-      .filter(t => t.type === 'entry_fee' && t.status === 'success')
-      .reduce((sum, t) => {
-        const txTime = toDateSafe((t as any).timestamp)?.getTime() || 0;
-        return txTime >= monthStart.getTime() ? sum + (t.amount || 0) : sum;
+    const monthlyRevenue = orgEarnings
+      .reduce((sum, e) => {
+        const earnedAt = toDateSafe((e as any).createdAt)?.getTime() || 0;
+        return earnedAt >= monthStart.getTime() ? sum + (e.orgShare || 0) : sum;
       }, 0);
 
     const escrowBalance = hostedTournaments
@@ -140,7 +142,7 @@ export function useOrgData() {
       orgWalletBalance: profile?.orgWalletBalance || profile?.balance || 0,
       escrowBalance,
     };
-  }, [hostedTournaments, transactions, profile, scrims, teams]);
+  }, [hostedTournaments, orgEarnings, profile, scrims, teams]);
 
   const fetchParticipants = useCallback(async (tournamentId?: string) => {
     if (!user || hostedTournaments.length === 0) {
@@ -197,6 +199,24 @@ export function useOrgData() {
     }
   }, [user]);
 
+  // Org-scoped earnings (server-created by /api/wallet/distribute-prizes) — the
+  // source of truth for the organizer's revenue/payout KPIs, not personal wallet txs.
+  const fetchOrgEarnings = useCallback(async () => {
+    if (!user) return;
+    try {
+      const q = query(
+        collection(db, 'tournamentEarnings'),
+        where('orgId', '==', user.uid),
+        orderBy('createdAt', 'desc'),
+        limit(200)
+      );
+      const snap = await getDocs(q);
+      setOrgEarnings(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    } catch (err) {
+      console.error("Error fetching org earnings:", err);
+    }
+  }, [user]);
+
   // Fetch disputes for tournaments owned by this organizer
   const fetchDisputes = useCallback(async () => {
     if (!user || hostedTournaments.length === 0) {
@@ -226,51 +246,57 @@ export function useOrgData() {
 
   // --- Write operations ---
 
+  // Ownership guard — every organizer write to a tournament-scoped resource must
+  // pass through here so an organizer can never act on another org's data.
+  const assertTournamentHost = useCallback(async (tournamentId: string) => {
+    if (!user) throw new Error('Not authenticated');
+    const tSnap = await getDocs(query(collection(db, 'tournaments'), where('__name__', '==', tournamentId)));
+    if (tSnap.empty) throw new Error('Tournament not found');
+    if (tSnap.docs[0].data().hostUid !== user.uid) throw new Error('Not authorized — you do not own this tournament');
+  }, [user]);
+
   const deleteTournament = useCallback(async (id: string) => {
     if (!user) throw new Error('Not authenticated');
     const token = await auth.currentUser?.getIdToken();
     if (!token) throw new Error('Authentication required');
-    try {
-      const res = await fetch(`/api/tournaments/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
-      if (!res.ok) {
-        await deleteDoc(doc(db, 'tournaments', id)).catch(() => {});
-        await deleteDoc(doc(db, 'scrims', id)).catch(() => {});
-      }
-    } catch {
-      await deleteDoc(doc(db, 'tournaments', id)).catch(() => {});
-      await deleteDoc(doc(db, 'scrims', id)).catch(() => {});
+    const res = await fetch(`/api/tournaments/${id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!res.ok) {
+      throw new Error('Failed to delete tournament');
     }
     setHostedTournaments(prev => prev.filter(t => t.id !== id));
   }, [user]);
 
   const updateTournamentStatus = useCallback(async (id: string, status: Tournament['status']) => {
+    await assertTournamentHost(id);
     try {
       await updateDoc(doc(db, 'tournaments', id), { status });
     } catch {
       await updateDoc(doc(db, 'scrims', id), { status }).catch(() => {});
     }
     setHostedTournaments(prev => prev.map(t => t.id === id ? { ...t, status } : t));
-  }, []);
+  }, [assertTournamentHost]);
 
   const broadcastLobby = useCallback(async (tournamentId: string, roomId: string, roomPass: string, ytLink: string) => {
+    await assertTournamentHost(tournamentId);
     await Promise.all([
       setDoc(doc(db, 'tournaments', tournamentId, 'credentials', 'main'), { roomId, roomPass }, { merge: true }),
       updateDoc(doc(db, 'tournaments', tournamentId), { ytLink }),
     ]);
     setHostedTournaments(prev => prev.map(t => t.id === tournamentId ? { ...t, roomId, roomPass, ytLink } : t));
-  }, []);
+  }, [assertTournamentHost]);
 
   const updateParticipantStatus = useCallback(async (participantId: string, status: 'approved' | 'rejected', tournamentId: string) => {
+    await assertTournamentHost(tournamentId);
     const batch = writeBatch(db);
     batch.update(doc(db, 'participants', participantId), { status });
     const inc = status === 'approved' ? 1 : -1;
     batch.update(doc(db, 'tournaments', tournamentId), { currentPlayers: increment(inc) });
     await batch.commit();
     setParticipants(prev => prev.map(p => p.id === participantId ? { ...p, status } : p));
-  }, []);
+  }, [assertTournamentHost]);
 
   const requestWithdrawal = useCallback(async (amount: number, method: string, details: string) => {
     if (!user) throw new Error('Not authenticated');
@@ -394,6 +420,11 @@ export function useOrgData() {
   const resolveDispute = useCallback(async (disputeId: string, action: 'warn' | 'ban' | 'dismiss') => {
     if (!user) throw new Error('Not authenticated');
     const dRef = doc(db, 'disputes', disputeId);
+    const dSnap = await getDoc(dRef);
+    if (!dSnap.exists) throw new Error('Dispute not found');
+    const tournamentId = dSnap.data().tournamentId as string | undefined;
+    if (!tournamentId) throw new Error('Dispute has no tournament reference');
+    await assertTournamentHost(tournamentId);
     const status = action === 'dismiss' ? 'dismissed' : 'resolved';
     await updateDoc(dRef, {
       status,
@@ -402,12 +433,13 @@ export function useOrgData() {
       resolutionAction: action,
     });
     setDisputes(prev => prev.map(d => d.id === disputeId ? { ...d, status } : d));
-  }, [user]);
+  }, [user, assertTournamentHost]);
 
   useEffect(() => {
     fetchHostedTournaments();
     fetchTransactions();
-  }, [fetchHostedTournaments, fetchTransactions]);
+    fetchOrgEarnings();
+  }, [fetchHostedTournaments, fetchTransactions, fetchOrgEarnings]);
 
   useEffect(() => {
     if (hostedTournaments.length > 0) {
@@ -437,6 +469,7 @@ export function useOrgData() {
     fetchHostedTournaments,
     fetchParticipants,
     fetchTransactions,
+    fetchOrgEarnings,
     fetchDisputes,
     deleteTournament,
     updateTournamentStatus,

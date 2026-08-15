@@ -54,7 +54,6 @@ export default function ScrimDetailPage() {
         const isAuthorized = user && (
           user.uid === scrimHostId ||
           profile?.role === 'admin' ||
-          profile?.role === 'organizer' ||
           !scrimHostId
         );
         if (!isAuthorized) {

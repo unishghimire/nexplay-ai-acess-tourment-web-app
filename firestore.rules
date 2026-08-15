@@ -74,7 +74,8 @@ service cloud.firestore {
       return data.title is string && data.title.size() >= 5 && data.title.size() <= 100 &&
             data.game is string && data.game.size() >= 2 && data.game.size() <= 50 &&
             data.prizePool is number && data.prizePool >= 0 &&
-            data.status in ['draft', 'published', 'upcoming', 'live', 'paused', 'completed', 'cancelled'] &&
+            // 'open' is the lifecycle status used by practice scrims (stored in the tournaments collection)
+            data.status in ['draft', 'published', 'upcoming', 'live', 'paused', 'completed', 'cancelled', 'open'] &&
              isValidId(data.hostUid) &&
              !data.keys().hasAny(['roomId', 'roomPass']);
     }
@@ -127,7 +128,9 @@ service cloud.firestore {
             'contactInfo', 'inGameId', 'inGameName', 'teamName', 'teamId',
             'whatsapp', 'discord', 'youtube', 'status', 'customActivity',
             'lastActive', 'updatedAt', 'skills', 'orgName', 'email',
-            'orgStatus', 'resultPresets'
+            'orgStatus', 'resultPresets',
+            'youtubeUrl', 'twitchUrl',
+            'refereeName', 'refereeEnabled', 'casterName', 'casterEnabled'
           ]) &&
           incoming().uid == existing().uid &&
           incoming().role == existing().role &&
@@ -227,12 +230,17 @@ service cloud.firestore {
       // (Admin SDK bypasses rules, enforces atomic balance/overbooking/duplicate checks)
       allow create: if false;
 
-      // Organizer/admin can update status + check-in fields (approve/reject/check-in).
-      // Players can check themselves in (toggle checkedIn only).
+      // Organizer/admin can update status + check-in fields (approve/reject/check-in)
+      // and per-participant tournament stats/moderation fields (result upload, roster lock,
+      // strikes/warnings, bans). Players can check themselves in (toggle checkedIn only).
       // Player can delete their own registration (leave tournament).
       allow update: if isAdmin() ||
                        (isOrganizer() && isTournamentHost(existing().tournamentId) &&
-                        incoming().diff(existing()).affectedKeys().hasOnly(['status', 'checkedIn', 'checkedInAt'])) ||
+                        incoming().diff(existing()).affectedKeys().hasOnly([
+                          'status', 'checkedIn', 'checkedInAt',
+                          'totalKills', 'totalPoints', 'matchesPlayed',
+                          'rosterLocked', 'strikes', 'lastWarning', 'lastWarningAt', 'banned'
+                        ])) ||
                        (isVerified() && existing().userId == request.auth.uid &&
                         incoming().diff(existing()).affectedKeys().hasOnly(['checkedIn', 'checkedInAt']));
 
@@ -270,18 +278,14 @@ service cloud.firestore {
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // NOTIFICATIONS — users read own, system/org creates
+    // NOTIFICATIONS — users read own; verified users can notify each other
+    // (team invites, follow alerts, team-disband notices). Update/delete remain
+    // restricted to the recipient or an admin to prevent feed tampering.
     // ═══════════════════════════════════════════════════════════════
     match /notifications/{notificationId} {
       allow get:    if isOwner(existing().userId) && isValidId(notificationId);
       allow list:   if isSignedIn() && resource.data.userId == request.auth.uid;
-      // SECURITY FIX: Only admin/organizer can create notifications for others.
-      // Players can only create notifications for themselves (e.g. self-reminders).
-      allow create: if isSignedIn() && (
-        isAdmin() ||
-        isOrganizer() ||
-        incoming().userId == request.auth.uid
-      ) && incoming().userId is string;
+      allow create: if isVerified() && incoming().userId is string;
       allow update: if isOwner(existing().userId) &&
                        incoming().diff(existing()).affectedKeys().hasOnly(['read']);
       allow delete: if isOwner(existing().userId) || isAdmin();
@@ -324,19 +328,25 @@ service cloud.firestore {
                        isAdmin()
                     );
       allow create: if isVerified() && incoming().inviterId == request.auth.uid;
-      allow update: if isOwner(existing().inviteeId) &&
+      allow update: if (isOwner(existing().inviteeId) ||
+                        isTeamOwner(existing().teamId) ||
+                        isAdmin()) &&
                        incoming().diff(existing()).affectedKeys().hasOnly(['status']);
       allow delete: if isSignedIn() && (
                        isOwner(existing().inviteeId) ||
                        isOwner(existing().inviterId) ||
+                       isTeamOwner(existing().teamId) ||
                        isAdmin()
                     );
     }
 
     match /team_activity/{activityId} {
-      // Team activity logs — require auth (client filters by teamId)
+      // Team activity logs — require auth (client filters by teamId).
+      // Create: the acting user can only log their own actions.
+      // Update/delete: the acting user who owns the entry, the team owner, or an admin.
       allow read:  if isSignedIn();
-      allow write: if isAdmin() || isOwner(incoming().userId);
+      allow create: if isVerified() && isOwner(incoming().userId);
+      allow update, delete: if isAdmin() || isOwner(existing().userId) || isTeamOwner(existing().teamId);
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -359,7 +369,7 @@ service cloud.firestore {
 
     match /orgApplications/{appId} {
       allow read:   if isAdmin() || (isSignedIn() && existing().userId == request.auth.uid);
-      allow create: if isVerified();
+      allow create: if isVerified() && incoming().userId == request.auth.uid;
       allow update: if isAdmin();
     }
 

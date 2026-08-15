@@ -159,9 +159,11 @@ const Home: React.FC = () => {
                 console.warn("Could not fetch results:", error);
             }
 
-            // Fetch active users count for live analytics metadata
+            // Fetch active players count for live analytics metadata.
+            // Never read the `users` collection (PII: contact/wallet/XP data) for a
+            // cosmetic number — sample public profiles instead.
             try {
-                const usersSnap = await getDocs(query(collection(db, 'users'), limit(100)));
+                const usersSnap = await getDocs(query(collection(db, 'users_public'), limit(100)));
                 if (!usersSnap.empty) {
                     setTotalPlayersCount(Math.max(1350, usersSnap.size * 12));
                 }
