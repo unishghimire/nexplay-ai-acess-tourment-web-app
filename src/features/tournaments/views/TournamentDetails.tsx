@@ -248,8 +248,9 @@ export default function TournamentDetails() {
             return;
         }
 
-        // Requirement: Team ID is compulsory for team tournaments
-        if ((tournament.teamType === 'duo' || tournament.teamType === 'squad') && !profile.teamId) {
+        // Requirement: Team ID is compulsory for official team tournaments (scrims allow pick-up teams)
+        const isScrim = tournament.matchType === 'scrims' || (tournament as any).isScrim === true;
+        if (!isScrim && (tournament.teamType === 'duo' || tournament.teamType === 'squad') && !profile.teamId) {
             showToast("You must be in a team to join team tournaments!", "warning");
             navigate('/teams');
             return;
