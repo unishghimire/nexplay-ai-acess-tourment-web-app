@@ -9,6 +9,8 @@
     "vercel-build": "vite build",
     "preview": "vite preview",
     "seed:demo": "tsx tools/seed-demo.ts",
+    "db:audit": "tsx tools/cleanup-legacy-data.ts",
+    "db:clean": "tsx tools/cleanup-legacy-data.ts --clean",
     "deploy:hosting": "npm run build && firebase deploy --only hosting",
     "deploy:firestore-rules": "firebase deploy --only firestore:rules",
     "clean": "rm -rf dist",
