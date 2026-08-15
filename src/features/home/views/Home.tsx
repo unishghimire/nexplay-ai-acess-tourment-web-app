@@ -126,7 +126,7 @@ const Home: React.FC = () => {
                     where('isFeatured', '==', true)
                 ));
                 let tournamentsData = tournamentsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Tournament));
-                tournamentsData = tournamentsData.filter(t => t.status === 'upcoming');
+                tournamentsData = tournamentsData.filter(t => t.status === 'upcoming' && (t as any).matchType !== 'scrims' && (t as any).isScrim !== true && (t as any).type !== 'scrim' && (t as any).type !== 'scrims');
                 setFeaturedTournaments(tournamentsData.slice(0, 6));
             } catch (error) {
                 console.warn("Could not fetch tournaments:", error);

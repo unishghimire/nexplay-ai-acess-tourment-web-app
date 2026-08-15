@@ -280,7 +280,11 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
             if (results[1].status === 'fulfilled')
                 setAllTransactions(results[1].value.docs.map(d => ({ id: d.id, ...d.data() } as Transaction)));
             if (results[2].status === 'fulfilled')
-                setAllTournaments(results[2].value.docs.map(d => ({ id: d.id, ...d.data() } as Tournament)));
+                setAllTournaments(
+                    results[2].value.docs
+                        .map(d => ({ id: d.id, ...d.data() } as Tournament))
+                        .filter(t => (t as any).matchType !== 'scrims' && (t as any).isScrim !== true && (t as any).type !== 'scrim' && (t as any).type !== 'scrims')
+                );
             if (results[3].status === 'fulfilled')
                 setSlides(results[3].value.docs.map(d => ({ id: d.id, ...d.data() } as Slide)));
             if (results[4].status === 'fulfilled')
@@ -709,7 +713,9 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
         try {
             const q = query(collection(db, 'tournaments'), where('hostUid', '==', orgId));
             const snap = await getDocs(q);
-            let tours = snap.docs.map(d => ({ id: d.id, ...(d.data() as any) } as Tournament));
+            let tours = snap.docs
+                .map(d => ({ id: d.id, ...(d.data() as any) } as Tournament))
+                .filter(t => (t as any).matchType !== 'scrims' && (t as any).isScrim !== true && (t as any).type !== 'scrim' && (t as any).type !== 'scrims');
             tours.sort((a,b) => {
                 const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
                 const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;

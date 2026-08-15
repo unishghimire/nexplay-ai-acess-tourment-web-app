@@ -288,7 +288,7 @@ const OrganizerPanel: React.FC = () => {
         return (
           <TabErrorBoundary tabName="Tournaments Tab" resetKey={activeTab}>
             <TournamentsTab
-              hostedTournaments={org.hostedTournaments}
+              hostedTournaments={org.tournamentsOnly}
               onDelete={handleDelete}
               onUpdateStatus={handleUpdateStatus}
               onCreateTournament={() => handleCreateTournament('tournament')}

@@ -28,7 +28,7 @@ const Results: React.FC = () => {
                 
                 const resultsData = resultsSnap.docs
                     .map(doc => ({ id: doc.id, ...doc.data() } as Tournament))
-                    .filter(t => t.status === 'completed')
+                    .filter(t => t.status === 'completed' && (t as any).matchType !== 'scrims' && (t as any).isScrim !== true && (t as any).type !== 'scrim' && (t as any).type !== 'scrims')
                     .sort((a, b) => {
                         const timeA = toDateSafe(a.startTime)?.getTime() || 0;
                         const timeB = toDateSafe(b.startTime)?.getTime() || 0;
