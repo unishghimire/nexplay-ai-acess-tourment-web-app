@@ -328,7 +328,7 @@ const PublicProfile: React.FC = () => {
                                             </div>
                                             <div>
                                                 <h4 className="font-black text-white group-hover:text-brand-400 transition">{match.tournamentName}</h4>
-                                                <p className="text-xs text-gray-500 font-bold uppercase tracking-widest">{timeAgo(match.timestamp?.toDate())}</p>
+                                                <p className="text-xs text-gray-500 font-bold uppercase tracking-widest">{timeAgo(match.timestamp)}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-8 text-right">

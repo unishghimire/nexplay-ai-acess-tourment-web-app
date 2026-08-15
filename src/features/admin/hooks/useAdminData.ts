@@ -5,7 +5,7 @@ import { useAuth } from '../../../shared/context/AuthContext';
 import { Transaction, UserProfile, Slide, PromoCode, Game, PaymentMethod, PaymentCategory, SiteSettings, OrgApplication, Tournament, TournamentEarning, SubscriptionPlan } from '../../../shared/types/types';
 import { GameScoringConfig } from '../../../shared/types/scoring';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { formatCurrency, formatDate, formatGameName } from '../../../shared/utils/utils';
+import { formatCurrency, formatDate, formatGameName, toDateSafe } from '../../../shared/utils/utils';
 import { ImageUploader } from '../../../shared/components/ImageUploader';
 import { DEFAULT_BANNER, NEXPLAY_LOGO } from '../../../shared/constants/constants';
 import { NotificationService } from '../../../shared/services/NotificationService';
@@ -294,8 +294,8 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
             if (results[8].status === 'fulfilled') {
                 let orgApps = results[8].value.docs.map(d => ({ id: d.id, ...d.data() } as OrgApplication));
                 orgApps.sort((a, b) => {
-                    const aTime = a.timestamp?.toMillis ? a.timestamp.toMillis() : 0;
-                    const bTime = b.timestamp?.toMillis ? b.timestamp.toMillis() : 0;
+                    const aTime = toDateSafe(a.timestamp)?.getTime() || 0;
+                    const bTime = toDateSafe(b.timestamp)?.getTime() || 0;
                     return bTime - aTime;
                 });
                 setOrgApplications(orgApps);

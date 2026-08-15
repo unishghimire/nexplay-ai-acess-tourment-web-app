@@ -3,7 +3,7 @@ import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firesto
 import { db } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { Tournament, SiteSettings, Team } from '../../../shared/types/types';
-import { formatCurrency, formatGameName } from '../../../shared/utils/utils';
+import { formatCurrency, formatGameName, toDateSafe } from '../../../shared/utils/utils';
 import { useNavigate } from 'react-router-dom';
 import { Trophy, Eye, Upload, BarChart, User, Shield, Users } from 'lucide-react';
 import ResultUploadModal from '../../results/components/ResultUploadModal';
@@ -33,8 +33,8 @@ const Dashboard: React.FC = () => {
             
             const partDocs = partSnap.docs.map(doc => doc.data());
             partDocs.sort((a, b) => {
-                const aTime = a.timestamp?.toMillis ? a.timestamp.toMillis() : 0;
-                const bTime = b.timestamp?.toMillis ? b.timestamp.toMillis() : 0;
+                const aTime = toDateSafe(a.timestamp)?.getTime() || 0;
+                const bTime = toDateSafe(b.timestamp)?.getTime() || 0;
                 return bTime - aTime;
             });
             const joinedTours: (Tournament & { role: 'participant' | 'organizer'; registration?: any })[] = [];
