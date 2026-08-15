@@ -42,8 +42,19 @@ const AUTH_TIMEOUT_MS = 8000;
 // silently logging the user out.
 const PROFILE_TIMEOUT_MS = 15000;
 
-const deriveUsername = (firebaseUser: FirebaseUser): string =>
-    firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User';
+// Derive a username that always satisfies the users create rule:
+// isValidUserProfile() requires a string with 3 <= size <= 30. Google
+// display names can be empty, shorter than 3 chars, or longer than 30 —
+// any of those makes the auto-provision create fail the rule (which used
+// to silently log the user out, and now surfaces as authError).
+const deriveUsername = (firebaseUser: FirebaseUser): string => {
+    const candidate = (firebaseUser.displayName || firebaseUser.email?.split('@')[0] || '').trim().replace(/\s+/g, ' ');
+    if (candidate.length >= 3) {
+        return candidate.slice(0, 30);
+    }
+    const suffix = (firebaseUser.uid || 'user').replace(/[^a-zA-Z0-9]/g, '').slice(0, 6);
+    return `Player${suffix}`;
+};
 
 const withTimeout = <T,>(promise: Promise<T>, ms: number): Promise<T> =>
     new Promise<T>((resolve, reject) => {
@@ -115,9 +126,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setProfile(nextProfile);
                 setUser(prev => prev ? { ...prev, username: nextProfile.username, role: nextProfile.role || 'player' } : prev);
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Auth: profile initialization failed:', error);
-            setAuthError('Could not load your profile. Check your connection and try again.');
+            const code = typeof error?.code === 'string' ? error.code : '';
+            setAuthError(
+                code
+                    ? `Could not load your profile (${code}). Check your connection and try again.`
+                    : 'Could not load your profile. Check your connection and try again.'
+            );
         } finally {
             setProfileLoading(false);
             initInFlightRef.current = false;
