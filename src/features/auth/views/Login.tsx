@@ -1,7 +1,8 @@
 import Seo from '../../../shared/components/Seo';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useNotification } from '../../../shared/context/NotificationContext';
+import { useAuth } from '../../../shared/context/AuthContext';
 import { motion } from 'motion/react';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck } from 'lucide-react';
 import { signInWithEmailAndPassword, signInWithPopup, sendPasswordResetEmail } from 'firebase/auth';
@@ -16,11 +17,23 @@ const Login: React.FC = () => {
     const [isGoogleLoading, setIsGoogleLoading] = useState(false);
     const [error, setError] = useState('');
     const [captchaValue, setCaptchaValue] = useState<string | null>(null);
+    const [signedIn, setSignedIn] = useState(false);
+    const pendingTargetRef = useRef<string>('/');
     const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY?.trim();
 
     const { showToast } = useNotification();
+    const { user } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
+
+    // Redirect only once the AuthContext session is settled. Navigating immediately
+    // after signIn resolves lets ProtectedRoute see a transient logged-out state and
+    // bounce the user back to /login — leaving them stranded on the login page.
+    useEffect(() => {
+        if (signedIn && user) {
+            navigate(pendingTargetRef.current, { replace: true });
+        }
+    }, [signedIn, user, navigate]);
 
     useEffect(() => {
     }, []);
@@ -39,8 +52,8 @@ const Login: React.FC = () => {
         try {
             await signInWithEmailAndPassword(auth, email, password);
             showToast('Welcome back!', 'success');
-            const redirectTo = (location.state as { from?: { pathname: string } })?.from?.pathname || '/';
-            navigate(redirectTo);
+            pendingTargetRef.current = (location.state as { from?: { pathname: string } })?.from?.pathname || '/';
+            setSignedIn(true);
         } catch (err: any) {
             console.error('Login error:', err);
             const firebaseErrMap: Record<string, string> = {
@@ -66,8 +79,8 @@ const Login: React.FC = () => {
         try {
             await signInWithPopup(auth, googleProvider);
             showToast('Welcome back!', 'success');
-            const redirectTo = (location.state as { from?: { pathname: string } })?.from?.pathname || '/';
-            navigate(redirectTo);
+            pendingTargetRef.current = (location.state as { from?: { pathname: string } })?.from?.pathname || '/';
+            setSignedIn(true);
         } catch (err: any) {
             console.error('Google Sign-In error:', err);
             const errMsg = 'Google Sign-In failed. Please try again.';
