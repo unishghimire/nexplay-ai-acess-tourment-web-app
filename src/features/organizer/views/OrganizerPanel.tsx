@@ -307,6 +307,10 @@ const OrganizerPanel: React.FC = () => {
               onToggleSlot={handleToggleSlot}
               onViewDetails={handleViewScrimDetails}
               onCreateScrim={() => { setEditScrim(null); setShowScrimCreateModal(true); }}
+              onEditScrim={(scrim) => { setEditScrim(scrim); setShowScrimCreateModal(true); }}
+              onDeleteScrim={handleDelete}
+              onUpdateStatus={handleUpdateStatus}
+              onOpenRoomDispatch={handleOpenRoomDispatch}
             />
           </TabErrorBoundary>
         );

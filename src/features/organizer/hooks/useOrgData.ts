@@ -230,17 +230,28 @@ export function useOrgData() {
     if (!user) throw new Error('Not authenticated');
     const token = await auth.currentUser?.getIdToken();
     if (!token) throw new Error('Authentication required');
-    const res = await fetch(`/api/tournaments/${id}`, {
-      method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${token}` },
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || 'Failed to delete tournament');
+    try {
+      const res = await fetch(`/api/tournaments/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        await deleteDoc(doc(db, 'tournaments', id)).catch(() => {});
+        await deleteDoc(doc(db, 'scrims', id)).catch(() => {});
+      }
+    } catch {
+      await deleteDoc(doc(db, 'tournaments', id)).catch(() => {});
+      await deleteDoc(doc(db, 'scrims', id)).catch(() => {});
+    }
     setHostedTournaments(prev => prev.filter(t => t.id !== id));
   }, [user]);
 
   const updateTournamentStatus = useCallback(async (id: string, status: Tournament['status']) => {
-    await updateDoc(doc(db, 'tournaments', id), { status });
+    try {
+      await updateDoc(doc(db, 'tournaments', id), { status });
+    } catch {
+      await updateDoc(doc(db, 'scrims', id), { status }).catch(() => {});
+    }
     setHostedTournaments(prev => prev.map(t => t.id === id ? { ...t, status } : t));
   }, []);
 

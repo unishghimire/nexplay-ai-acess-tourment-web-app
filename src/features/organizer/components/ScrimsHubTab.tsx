@@ -1,5 +1,5 @@
 import React from 'react';
-import { Gamepad2, RefreshCw, Clock, DollarSign, Trophy, Plus, Settings2 } from 'lucide-react';
+import { Gamepad2, RefreshCw, Clock, DollarSign, Trophy, Plus, Settings2, Edit2, Trash2, Radio, Play, CheckCircle2, RotateCcw, XCircle } from 'lucide-react';
 import { toDateSafe } from '../../../shared/utils/utils';
 
 export interface ScrimsHubTabProps {
@@ -8,6 +8,10 @@ export interface ScrimsHubTabProps {
   onToggleSlot: (scrimId: any, slotNumber?: any) => void;
   onViewDetails?: (id: string) => void;
   onCreateScrim?: () => void;
+  onEditScrim?: (scrim: any) => void;
+  onDeleteScrim?: (scrimId: string, title: string) => void;
+  onUpdateStatus?: (scrimId: string, status: string) => void;
+  onOpenRoomDispatch?: (scrim: any) => void;
 }
 
 export const ScrimsHubTab: React.FC<ScrimsHubTabProps> = ({
@@ -16,6 +20,10 @@ export const ScrimsHubTab: React.FC<ScrimsHubTabProps> = ({
   onToggleSlot,
   onViewDetails,
   onCreateScrim,
+  onEditScrim,
+  onDeleteScrim,
+  onUpdateStatus,
+  onOpenRoomDispatch,
 }) => {
   const formatTime = (timeInput?: any) => {
     if (!timeInput) return 'TBD';
@@ -63,11 +71,10 @@ export const ScrimsHubTab: React.FC<ScrimsHubTabProps> = ({
             <h2 className="text-2xl font-black text-white tracking-tight">Scrims Hub</h2>
           </div>
           <p className="text-sm text-slate-400 mt-1">
-            Manage Free Fire scrim schedules and slot reservations
+            Manage Free Fire scrim schedules, slot reservations, and live matches
           </p>
         </div>
 
-        {/* BUG-010 FIX: "Schedule Scrim" now opens create modal instead of slot grid */}
         <button
           type="button"
           onClick={() => onCreateScrim?.()}
@@ -88,6 +95,13 @@ export const ScrimsHubTab: React.FC<ScrimsHubTabProps> = ({
           <p className="text-sm text-slate-400 max-w-sm">
             There are no active or upcoming Free Fire scrim sessions available right now.
           </p>
+          <button
+            type="button"
+            onClick={() => onCreateScrim?.()}
+            className="mt-4 inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-400 text-white px-4 py-2 rounded-lg text-xs font-semibold transition-colors"
+          >
+            <Plus className="w-4 h-4" /> Create First Scrim
+          </button>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6">
@@ -126,7 +140,7 @@ export const ScrimsHubTab: React.FC<ScrimsHubTabProps> = ({
                 key={scrim.id}
                 className="bg-dark/50 border border-slate-800 rounded-2xl p-5 space-y-5 transition-colors hover:border-gray-700/80"
               >
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                   <div className="space-y-1.5">
                     <div className="flex flex-wrap items-center gap-2.5">
                       <h3 className="text-lg font-bold text-white">{scrim.title}</h3>
@@ -139,6 +153,8 @@ export const ScrimsHubTab: React.FC<ScrimsHubTabProps> = ({
                             ? 'bg-red-500/10 text-red-400 border-red-500/20 animate-pulse'
                             : statusUpper === 'COMPLETED'
                             ? 'bg-surface text-slate-400 border-gray-700'
+                            : statusUpper === 'CANCELLED'
+                            ? 'bg-red-900/20 text-red-400 border-red-800'
                             : 'bg-green-500/10 text-green-400 border-green-500/20'
                         }`}
                       >
@@ -154,24 +170,100 @@ export const ScrimsHubTab: React.FC<ScrimsHubTabProps> = ({
                     )}
                   </div>
 
-                  <div className="flex gap-2">
+                  {/* Actions Header */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* Manage Scrim */}
                     {onViewDetails && (
                       <button
                         type="button"
                         onClick={() => onViewDetails(scrim.id)}
-                        className="self-start md:self-auto bg-brand-500 hover:bg-brand-400 text-white px-4 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 min-h-[44px]"
+                        className="bg-brand-500 hover:bg-brand-400 text-white px-3.5 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 min-h-[40px]"
                       >
                         <Settings2 className="w-3.5 h-3.5" />
-                        <span>Manage Scrim</span>
+                        <span>Manage</span>
                       </button>
                     )}
+
+                    {/* Edit Scrim */}
+                    {onEditScrim && (
+                      <button
+                        type="button"
+                        onClick={() => onEditScrim(scrim)}
+                        className="bg-card hover:bg-surface text-slate-200 border border-slate-800 px-3.5 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 min-h-[40px]"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                        <span>Edit</span>
+                      </button>
+                    )}
+
+                    {/* Room Details */}
+                    {onOpenRoomDispatch && (
+                      <button
+                        type="button"
+                        onClick={() => onOpenRoomDispatch(scrim)}
+                        className="bg-card hover:bg-surface text-slate-200 border border-slate-800 px-3.5 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 min-h-[40px]"
+                      >
+                        <Radio className="w-3.5 h-3.5 text-brand-400" />
+                        <span>Room</span>
+                      </button>
+                    )}
+
+                    {/* View Slot Grid */}
                     <button
                       type="button"
                       onClick={() => onOpenSlotGrid(scrim)}
-                      className="self-start md:self-auto bg-card hover:bg-surface text-slate-200 border border-slate-800 px-4 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center gap-2 cursor-pointer min-h-[44px]"
+                      className="bg-card hover:bg-surface text-slate-200 border border-slate-800 px-3.5 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 min-h-[40px]"
                     >
-                      View Slot Grid
+                      <span>Slot Grid</span>
                     </button>
+
+                    {/* Quick Status Toggles */}
+                    {onUpdateStatus && (
+                      <div className="flex items-center gap-1">
+                        {scrim.status !== 'live' && scrim.status !== 'completed' && (
+                          <button
+                            type="button"
+                            onClick={() => onUpdateStatus(scrim.id, 'live')}
+                            className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 p-2 rounded-lg text-xs font-semibold transition-colors"
+                            title="Go Live"
+                          >
+                            <Play className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        {scrim.status === 'live' && (
+                          <button
+                            type="button"
+                            onClick={() => onUpdateStatus(scrim.id, 'completed')}
+                            className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/30 p-2 rounded-lg text-xs font-semibold transition-colors"
+                            title="Complete / Finalize"
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        {scrim.status === 'completed' && (
+                          <button
+                            type="button"
+                            onClick={() => onUpdateStatus(scrim.id, 'open')}
+                            className="bg-surface hover:bg-card text-gray-300 border border-gray-700 p-2 rounded-lg text-xs font-semibold transition-colors"
+                            title="Reopen"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Delete Scrim */}
+                    {onDeleteScrim && (
+                      <button
+                        type="button"
+                        onClick={() => onDeleteScrim(scrim.id, scrim.title)}
+                        className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 p-2 rounded-lg text-xs font-semibold transition-colors min-h-[40px]"
+                        title="Delete Scrim"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                 </div>
 
