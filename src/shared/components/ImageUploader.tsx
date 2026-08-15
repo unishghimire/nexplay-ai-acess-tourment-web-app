@@ -1,11 +1,11 @@
 // FILE_ID: components/ImageUploader.tsx
 // MODULE: Media Management
-// PURPOSE: Reusable, accessibly styled dropzone and click banner image uploader that proxies to ImgBB and logs activity
-// DEPENDENCIES: services/imageService.ts
+// PURPOSE: Reusable, accessibly styled dropzone, file selector, and URL paste image uploader with resilient multi-provider fallbacks
+// DEPENDENCIES: services/mediaService.ts
 
 import React, { useState, useRef, useEffect } from "react";
 import { motion } from "motion/react";
-import { Upload, X, Image as RefreshCw, AlertCircle, CheckCircle } from "lucide-react";
+import { Upload, X, RefreshCw, AlertCircle, CheckCircle, Link2, Image as ImageIcon } from "lucide-react";
 import { MediaCategory, uploadImage, ALLOWED_MIME_TYPES } from "../services/mediaService";
 
 interface ImageUploaderProps {
@@ -35,11 +35,14 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [isUrlMode, setIsUrlMode] = useState(false);
+  const [urlInput, setUrlInput] = useState(value || "");
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Sync internal preview with external value
   useEffect(() => {
     setPreview(value);
+    setUrlInput(value || "");
   }, [value]);
 
   const handleDrag = (e: React.DragEvent) => {
@@ -78,7 +81,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     setError(null);
     setSuccess(false);
     setLoading(true);
-    setProgress(0);
+    setProgress(10);
 
     // Create a local fast preview while uploading
     const reader = new FileReader();
@@ -94,19 +97,28 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
 
       if (uploadResult.success && uploadResult.url) {
         setPreview(uploadResult.url);
+        setUrlInput(uploadResult.url);
         onChange(uploadResult.url);
         setSuccess(true);
         setTimeout(() => setSuccess(false), 3000);
       } else {
-        setError(uploadResult.error || "Upload failed. Please try again.");
-        setPreview(value);
+        setError(uploadResult.error || "Upload failed. Please try again or paste a direct image URL.");
       }
     } catch (err: any) {
       setError(err?.message || "An unexpected error occurred during processing.");
-      setPreview(value);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleApplyUrl = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!urlInput.trim()) return;
+    setPreview(urlInput.trim());
+    onChange(urlInput.trim());
+    setSuccess(true);
+    setError(null);
+    setTimeout(() => setSuccess(false), 3000);
   };
 
   const handleRemove = (e: React.MouseEvent) => {
@@ -115,6 +127,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     if (disabled || loading) return;
 
     setPreview("");
+    setUrlInput("");
     onChange("");
     setError(null);
     setSuccess(false);
@@ -136,7 +149,6 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     }
   };
 
-  // Determinar layout responsivo por aspect ratio
   const getAspectClass = () => {
     switch (aspectRatio) {
       case "avatar":
@@ -154,19 +166,57 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   };
 
   return (
-    <div className={`w-full max-w-full ${className}`} id={id}>
-      {label && (
-        <label htmlFor={`${id}-input`} className="block text-sm font-medium text-slate-300 mb-2 truncate">
-          {label}
-        </label>
-      )}
+    <div className={`w-full max-w-full space-y-2 ${className}`} id={id}>
+      <div className="flex items-center justify-between">
+        {label && (
+          <label htmlFor={`${id}-input`} className="block text-xs font-bold text-slate-300 uppercase tracking-wider truncate">
+            {label}
+          </label>
+        )}
+        <button
+          type="button"
+          onClick={() => setIsUrlMode(!isUrlMode)}
+          className="text-xs text-brand-400 hover:text-brand-300 font-semibold flex items-center gap-1 transition-colors"
+        >
+          {isUrlMode ? (
+            <>
+              <ImageIcon className="w-3.5 h-3.5" />
+              <span>Upload File</span>
+            </>
+          ) : (
+            <>
+              <Link2 className="w-3.5 h-3.5" />
+              <span>Paste URL</span>
+            </>
+          )}
+        </button>
+      </div>
+
+      {isUrlMode ? (
+        <div className="flex gap-2">
+          <input
+            type="url"
+            value={urlInput}
+            onChange={(e) => setUrlInput(e.target.value)}
+            placeholder="https://example.com/image.jpg"
+            className="flex-1 bg-card/60 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors min-h-[44px]"
+          />
+          <button
+            type="button"
+            onClick={handleApplyUrl}
+            className="bg-brand-500 hover:bg-brand-400 text-white px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors min-h-[44px]"
+          >
+            Apply
+          </button>
+        </div>
+      ) : null}
 
       <div
         className={`relative flex items-center justify-center border-2 border-dashed transition-all duration-200 cursor-pointer group bg-slate-900/50
           ${getAspectClass()}
-          ${dragActive ? "border-amber-500 bg-amber-500/10 scale-[0.99]" : "border-slate-800 hover:border-slate-700 hover:bg-slate-800/40"}
+          ${dragActive ? "border-brand-500 bg-brand-500/10 scale-[0.99]" : "border-slate-800 hover:border-slate-700 hover:bg-slate-800/40"}
           ${error ? "border-rose-500/80 bg-rose-500/5" : ""}
-          ${success ? "border-emerald-500bg-emerald-500/5" : ""}
+          ${success ? "border-emerald-500 bg-emerald-500/5" : ""}
           ${disabled ? "opacity-50 cursor-not-allowed hover:bg-transparent hover:border-slate-800" : ""}
         `}
         onDragEnter={handleDrag}
@@ -179,7 +229,6 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         role="button"
         aria-label={label ? `Upload ${label}` : "Upload image"}
       >
-        {/* Screen-reader-accessible file input (sr-only keeps it in tab order) */}
         <input
           ref={inputRef}
           type="file"
@@ -190,16 +239,19 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           disabled={disabled || loading}
         />
 
-        {/* Existing Image / Uploading Preview */}
         {preview ? (
           <div className="absolute inset-0 w-full h-full">
             <img
               src={preview}
               alt="Uploader Preview"
               className="w-full h-full object-cover select-none"
-              referrerPolicy="no-referrer" loading="lazy" />
-            
-            {/* Hover/focus overlay controls */}
+              referrerPolicy="no-referrer"
+              loading="lazy"
+              onError={() => {
+                setError("Failed to load image preview. Please check image URL or re-upload.");
+              }}
+            />
+
             {!loading && !disabled && (
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3 flex justify-between items-center opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-200">
                 <button
@@ -208,7 +260,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
                     e.stopPropagation();
                     onButtonClick();
                   }}
-                  className="px-3 py-1.5 min-h-[44px] rounded-lg text-xs font-semibold bg-slate-900/90 text-slate-100 hover:bg-amber-500 hover:text-black shadow flex items-center gap-1.5 transition-colors duration-150"
+                  className="px-3 py-1.5 min-h-[40px] rounded-lg text-xs font-semibold bg-slate-900/90 text-slate-100 hover:bg-brand-500 hover:text-white shadow flex items-center gap-1.5 transition-colors duration-150"
                 >
                   <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
                   Replace
@@ -216,7 +268,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
                 <button
                   type="button"
                   onClick={handleRemove}
-                  className="px-3 py-1.5 min-h-[44px] rounded-lg text-xs font-semibold bg-rose-500 text-white hover:bg-rose-600 shadow flex items-center gap-1.5 transition-colors duration-150"
+                  className="px-3 py-1.5 min-h-[40px] rounded-lg text-xs font-semibold bg-rose-500 text-white hover:bg-rose-600 shadow flex items-center gap-1.5 transition-colors duration-150"
                   aria-label="Remove image"
                 >
                   <X className="w-3.5 h-3.5" aria-hidden="true" />
@@ -226,16 +278,15 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
             )}
           </div>
         ) : (
-          /* Empty placeholder slot */
           <div className="flex flex-col items-center justify-center p-6 text-center select-none pointer-events-none">
             <div className="w-12 h-12 rounded-xl bg-slate-800/80 flex items-center justify-center mb-3 group-hover:bg-slate-700/80 group-hover:scale-110 transition-all duration-200 shadow-md">
-              <Upload className="w-6 h-6 text-slate-400 group-hover:text-amber-500 transition-colors" aria-hidden="true" />
+              <Upload className="w-6 h-6 text-slate-400 group-hover:text-brand-500 transition-colors" aria-hidden="true" />
             </div>
             <p className="text-sm font-semibold text-slate-200 mb-1">
               Drag & drop image here
             </p>
             <p className="text-xs text-slate-500 mb-1">
-              or <span className="text-amber-500 font-medium group-hover:underline">browse files</span>
+              or <span className="text-brand-400 font-medium group-hover:underline">browse files</span>
             </p>
             <p className="text-[10px] text-slate-600 max-w-xs mt-2">
               Supports JPEG, PNG, WEBP, GIF (Max 10MB)
@@ -243,14 +294,13 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           </div>
         )}
 
-        {/* Loading / Progress Panel */}
         {loading && (
-          <div className="absolute inset-0 bg-slate-950/80 flex flex-col items-center justify-center p-4" role="status" aria-live="polite">
-            <RefreshCw className="w-8 h-8 text-amber-500 animate-spin mb-3" aria-hidden="true" />
-            <span className="text-sm font-medium text-slate-200 mb-1">Uploading to ImgBB...</span>
-            <div className="w-2/3 h-1.5 bg-slate-850 rounded-full overflow-hidden mb-1">
+          <div className="absolute inset-0 bg-slate-950/85 flex flex-col items-center justify-center p-4 z-20" role="status" aria-live="polite">
+            <RefreshCw className="w-8 h-8 text-brand-500 animate-spin mb-3" aria-hidden="true" />
+            <span className="text-sm font-medium text-slate-200 mb-1">Processing image...</span>
+            <div className="w-2/3 h-1.5 bg-slate-800 rounded-full overflow-hidden mb-1">
               <motion.div
-                className="h-full bg-amber-500"
+                className="h-full bg-brand-500"
                 style={{ width: `${progress}%` }}
                 initial={{ width: "0%" }}
                 animate={{ width: `${progress}%` }}
@@ -261,7 +311,6 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           </div>
         )}
 
-        {/* Error Notification Banner inside dropzone */}
         {error && !loading && (
           <div className="absolute bottom-2 inset-x-2 bg-rose-950/90 hover:bg-rose-950 border border-rose-500/55 rounded-lg p-2 flex items-start gap-1.5 shadow-lg backdrop-blur-sm z-10" onClick={(e) => e.stopPropagation()}>
             <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" aria-hidden="true" />
@@ -275,14 +324,13 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
                 setError(null);
               }}
               aria-label="Dismiss error"
-              className="text-rose-400 hover:text-rose-300 p-1 transition-colors rounded-md min-h-[44px] min-w-[44px] flex items-center justify-center"
+              className="text-rose-400 hover:text-rose-300 p-1 transition-colors rounded-md min-h-[36px] min-w-[36px] flex items-center justify-center"
             >
               <X className="w-3 h-3" aria-hidden="true" />
             </button>
           </div>
         )}
 
-        {/* Success Tick */}
         {success && !loading && (
           <div className="absolute top-2 right-2 bg-emerald-950/95 border border-emerald-500/50 rounded-full p-1.5 shadow-md flex items-center justify-center z-10" onClick={(e) => e.stopPropagation()}>
             <CheckCircle className="w-4 h-4 text-emerald-400" aria-hidden="true" />

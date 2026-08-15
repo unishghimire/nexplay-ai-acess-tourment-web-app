@@ -213,12 +213,16 @@ export default function ScrimCreateModal({
       };
 
       if (editScrim) {
-        await updateDoc(doc(db, 'tournaments', editScrim.id), scrimPayload);
+        try {
+          await updateDoc(doc(db, 'tournaments', editScrim.id), scrimPayload);
+        } catch {
+          await updateDoc(doc(db, 'scrims', editScrim.id), scrimPayload).catch(() => {});
+        }
         if (formData.roomId || formData.roomPass) {
           await setDoc(doc(db, 'tournaments', editScrim.id, 'credentials', 'main'), {
             roomId: formData.roomId,
             roomPass: formData.roomPass,
-          }, { merge: true });
+          }, { merge: true }).catch(() => {});
         }
         showToast('Scrim updated successfully!', 'success');
       } else {
@@ -227,11 +231,18 @@ export default function ScrimCreateModal({
           createdAt: serverTimestamp(),
         });
 
+        // Also mirror to dedicated scrims collection
+        await setDoc(doc(db, 'scrims', docRef.id), {
+          ...scrimPayload,
+          id: docRef.id,
+          createdAt: serverTimestamp(),
+        }).catch(() => {});
+
         if (formData.roomId || formData.roomPass) {
           await setDoc(doc(db, 'tournaments', docRef.id, 'credentials', 'main'), {
             roomId: formData.roomId,
             roomPass: formData.roomPass,
-          });
+          }).catch(() => {});
         }
         showToast('Scrim created successfully!', 'success');
       }
