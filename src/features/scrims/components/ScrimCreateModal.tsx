@@ -25,6 +25,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { formatCurrency, formatGameName, toDateSafe } from '../../../shared/utils/utils';
 import { commitFirestoreBatches } from '../../../shared/utils/firestoreBatches';
+import { normalizeScrimSlots, countFilledScrimSlots, ScrimSlot } from '../../../shared/utils/scrimSlots';
 
 interface ScrimCreateModalProps {
   isOpen: boolean;
@@ -161,12 +162,29 @@ export default function ScrimCreateModal({
     setLoading(true);
     try {
       const slotCount = Number(formData.totalSlots) || 12;
-      const initialSlots = Array.from({ length: slotCount }, (_, idx) => ({
+      let slots: ScrimSlot[] = Array.from({ length: slotCount }, (_, idx) => ({
         slotNumber: idx + 1,
         status: 'open' as const,
         teamName: null,
         teamId: null,
       }));
+
+      if (editScrim) {
+        const existingSlots = normalizeScrimSlots(editScrim.slots, editScrim.totalSlots, editScrim.filledSlots ?? editScrim.currentPlayers);
+        if (slotCount <= existingSlots.length) {
+          slots = existingSlots.slice(0, slotCount);
+        } else {
+          const extra: ScrimSlot[] = Array.from({ length: slotCount - existingSlots.length }, (_, idx) => ({
+            slotNumber: existingSlots.length + idx + 1,
+            status: 'open' as const,
+            teamName: null,
+            teamId: null,
+          }));
+          slots = [...existingSlots, ...extra];
+        }
+      }
+
+      const filledSlots = countFilledScrimSlots(slots);
 
       const scrimPayload = {
         title: formData.title.trim(),
@@ -177,9 +195,9 @@ export default function ScrimCreateModal({
         matchType: 'scrims',
         isScrim: true,
         totalSlots: slotCount,
-        slots: initialSlots,
-        filledSlots: editScrim ? ((editScrim as any).filledSlots ?? editScrim.currentPlayers ?? 0) : 0,
-        currentPlayers: editScrim ? (editScrim.currentPlayers ?? 0) : 0,
+        slots,
+        filledSlots,
+        currentPlayers: filledSlots,
         entryFee: Number(formData.entryFee) || 0,
         prizePool: Number(formData.prizePool) || 0,
         currency: 'NPR',

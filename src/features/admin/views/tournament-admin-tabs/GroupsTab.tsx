@@ -82,7 +82,6 @@ export const GroupsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                 </div>
                             )}
                         </motion.div>
-    )
 
             {/* Create Group Modal */}
             <Modal isOpen={isCreateGroupModalOpen} onClose={() => setIsCreateGroupModalOpen(false)} title="Create New Group">

@@ -1116,7 +1116,7 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
 
     const handleViewParticipants = (tournament: Tournament) => {
         // Redirect to tournament page or show a modal
-        window.open(`/tournament/${tournament.id}`, '_blank');
+        window.open(`/tournaments/${tournament.id}`, '_blank');
     };
 
     const handleSaveSettings = async () => {
