@@ -170,6 +170,38 @@ const Wallet: React.FC = () => {
         }
     };
 
+    const handleExportStatement = () => {
+        if (!transactions || transactions.length === 0) {
+            showToast('No transactions to export yet', 'info');
+            return;
+        }
+        try {
+            const headers = ["Transaction ID", "Date", "Type", "Method", "Amount (NPR)", "Status", "Reference ID", "Description"];
+            const rows = transactions.map(tx => [
+                `"${tx.id || ''}"`,
+                `"${formatDate(tx.timestamp)}"`,
+                `"${tx.type || ''}"`,
+                `"${tx.method || 'System'}"`,
+                `"${tx.amount || 0}"`,
+                `"${tx.status || ''}"`,
+                `"${tx.refId || ''}"`,
+                `"${(tx.desc || tx.accountDetails || '').replace(/"/g, '""')}"`
+            ]);
+            const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `NexPlay_Statement_${user.uid.slice(0, 6)}_${new Date().toISOString().slice(0, 10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast("Statement downloaded successfully", "success");
+        } catch (err) {
+            console.error("Statement download error:", err);
+            showToast("Failed to generate statement file", "error");
+        }
+    };
+
     if (!user || !profile) return null;
 
     const isOrg = profile.role === 'organizer' || profile.role === 'admin';
@@ -285,9 +317,8 @@ const Wallet: React.FC = () => {
                     <div className="p-8 border-b border-gray-800 flex justify-between items-center">
                         <h3 className="text-sm font-black text-white uppercase tracking-widest">Transaction Ledger</h3>
                         <button 
-                            onClick={() => {
-                            }}
-                            className="text-xs font-black uppercase text-gray-400 hover:text-white bg-black px-5 py-2.5 min-h-[44px] rounded-2xl border border-gray-800 transition flex items-center gap-2"
+                            onClick={handleExportStatement}
+                            className="text-xs font-black uppercase text-gray-400 hover:text-white bg-black hover:bg-card px-5 py-2.5 min-h-[44px] rounded-2xl border border-gray-800 transition flex items-center gap-2"
                         >
                             <Download size={16} /> Statement
                         </button>
