@@ -1,12 +1,15 @@
 import Seo from '../../../shared/components/Seo';
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useNotification } from '../../../shared/context/NotificationContext';
+import { useAuth } from '../../../shared/context/AuthContext';
 import { motion } from 'motion/react';
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, CheckCircle, XCircle, ShieldCheck, Phone, Hash } from 'lucide-react';
 import { createUserWithEmailAndPassword, sendEmailVerification, signInWithPopup, updateProfile } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db, googleProvider } from '../../../shared/config/firebase';
+import { isSafeInternalPath } from '../../../shared/utils/utils';
+import { buildUserDocument, buildPublicProfile } from '../../../shared/services/userProfileService';
 import ReCAPTCHA from 'react-google-recaptcha';
 
 const Register: React.FC = () => {
@@ -25,14 +28,55 @@ const Register: React.FC = () => {
     const [captchaValue, setCaptchaValue] = useState<string | null>(null);
     const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY?.trim();
 
+    const { showToast } = useNotification();
+    const { user, loading: authLoading, profileLoading, authError, retryAuth } = useAuth();
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    const getRedirectTarget = () => {
+        const from = (location.state as { from?: { pathname?: string; search?: string } } | null)?.from;
+        if (from && isSafeInternalPath(from.pathname)) {
+            return from.pathname + (from.search || '');
+        }
+        return '/dashboard';
+    };
+
     const [passwordStrength, setPasswordStrength] = useState(0);
     const [passwordFeedback, setPasswordFeedback] = useState<string[]>([]);
+    // Captures the ProtectedRoute `from` on mount so a retry after authError lands
+    // back on the intended page; overwritten by the handlers on a fresh submit.
+    const [redirectTarget, setRedirectTarget] = useState<string>(() => getRedirectTarget());
+    const submittingRef = useRef(false);
 
-    const { showToast } = useNotification();
-    const navigate = useNavigate();
-
+    // Redirect only once the AuthContext session is fully settled — navigating to
+    // the protected /dashboard before that lets ProtectedRoute bounce back to /login.
     useEffect(() => {
-    }, []);
+        if (user && !authLoading && !profileLoading && !authError) {
+            navigate(redirectTarget, { replace: true });
+        }
+    }, [user, authLoading, profileLoading, authError, redirectTarget, navigate]);
+
+    // If profile initialization fails, release the loading state so the user can
+    // retry instead of staring at an indefinite spinner.
+    useEffect(() => {
+        if (authError && (isLoading || isGoogleLoading)) {
+            setIsLoading(false);
+            setIsGoogleLoading(false);
+        }
+    }, [authError, isLoading, isGoogleLoading]);
+
+    // Safety net: if registration succeeded but the auth state never settles,
+    // unblock the form after a bounded wait instead of leaving it stuck in loading.
+    useEffect(() => {
+        if ((!isLoading && !isGoogleLoading) || user || authLoading || authError) return;
+        const timer = setTimeout(() => {
+            submittingRef.current = false;
+            setIsLoading(false);
+            setIsGoogleLoading(false);
+            setError('Account creation could not be confirmed. Please try again.');
+        }, 10000);
+        return () => clearTimeout(timer);
+    }, [isLoading, isGoogleLoading, user, authLoading, authError]);
 
     useEffect(() => {
         const feedback: string[] = [];
@@ -56,6 +100,7 @@ const Register: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (submittingRef.current || user) return;
         setError('');
 
         if (password !== confirmPassword) {
@@ -83,6 +128,7 @@ const Register: React.FC = () => {
             return;
         }
 
+        submittingRef.current = true;
         setIsLoading(true);
 
         try {
@@ -93,31 +139,23 @@ const Register: React.FC = () => {
                 displayName: username
             });
 
-            const newUser = {
+            await setDoc(doc(db, 'users', user.uid), buildUserDocument({
                 uid: user.uid,
                 email: user.email || '',
-                username: username,
-                role: 'player',
-                balance: 0,
-                totalEarnings: 0,
-                inGameId: inGameId,
-                inGameName: inGameName,
+                username,
+                inGameId,
+                inGameName,
                 teamName: '',
-                phone: phone,
+                phone,
                 isBanned: false,
                 createdAt: serverTimestamp(),
-            };
-
-            await setDoc(doc(db, 'users', user.uid), newUser);
-            await setDoc(doc(db, 'users_public', user.uid), {
+            }));
+            await setDoc(doc(db, 'users_public', user.uid), buildPublicProfile({
                 uid: user.uid,
-                username: username,
-                totalEarnings: 0,
-                inGameId: inGameId,
-                inGameName: inGameName,
-                role: 'player',
-                updatedAt: serverTimestamp(),
-            });
+                username,
+                inGameId,
+                inGameName,
+            }));
 
             let verificationSent = true;
             try {
@@ -133,8 +171,12 @@ const Register: React.FC = () => {
                     : 'Account created. Verify your email from Firebase to unlock all features.',
                 verificationSent ? 'success' : 'warning'
             );
-            navigate('/dashboard');
+            setRedirectTarget(getRedirectTarget());
+            // Keep the loading state on success — the redirect effect above navigates
+            // once the session is settled, which prevents double-submits.
         } catch (err: any) {
+            submittingRef.current = false;
+            setIsLoading(false);
             console.error('Registration error:', err);
             const firebaseErrMap: Record<string, string> = {
                 'auth/email-already-in-use': 'This email is already registered',
@@ -145,26 +187,26 @@ const Register: React.FC = () => {
             const errMsg = firebaseErrMap[err.code] || 'Registration failed. Please try again.';
             setError(errMsg);
             showToast(errMsg, 'error');
-        } finally {
-            setIsLoading(false);
         }
     };
 
     const handleGoogleSignIn = async () => {
+        if (submittingRef.current || user) return;
         setError('');
+        submittingRef.current = true;
         setIsGoogleLoading(true);
 
         try {
             await signInWithPopup(auth, googleProvider);
             showToast('Welcome to Nexplay!', 'success');
-            navigate('/dashboard');
+            setRedirectTarget(getRedirectTarget());
         } catch (err: any) {
+            submittingRef.current = false;
+            setIsGoogleLoading(false);
             console.error('Google Sign-In error:', err);
             const errMsg = 'Google Sign-In failed. Please try again.';
             setError(errMsg);
             showToast(errMsg, "error");
-        } finally {
-            setIsGoogleLoading(false);
         }
     };
 
@@ -384,6 +426,23 @@ const Register: React.FC = () => {
                             </motion.div>
                         )}
 
+                        {authError && user && (
+                            <motion.div 
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                className="bg-amber-500/10 border border-amber-500/20 text-amber-400 px-5 py-4 rounded-2xl text-xs font-black uppercase tracking-widest flex flex-col gap-3"
+                            >
+                                <span>{authError}</span>
+                                <button
+                                    type="button"
+                                    onClick={() => retryAuth()}
+                                    className="self-start text-white bg-amber-500/20 hover:bg-amber-500/30 px-4 py-2 rounded-xl transition"
+                                >
+                                    Retry
+                                </button>
+                            </motion.div>
+                        )}
+
                         {recaptchaSiteKey ? (
                             <div className="flex justify-center">
                                 <ReCAPTCHA
@@ -396,7 +455,7 @@ const Register: React.FC = () => {
 
                         <button
                             type="submit"
-                            disabled={isLoading || isGoogleLoading}
+                            disabled={isLoading || isGoogleLoading || !!user}
                             className="w-full flex items-center justify-center py-5 px-6 rounded-2xl text-sm font-black text-white bg-brand-500 hover:bg-brand-400 focus:outline-none transition disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-widest shadow-lg shadow-brand-500/20"
                         >
                             {isLoading ? (
@@ -419,7 +478,7 @@ const Register: React.FC = () => {
                         <button
                             type="button"
                             onClick={handleGoogleSignIn}
-                            disabled={isLoading || isGoogleLoading}
+                            disabled={isLoading || isGoogleLoading || !!user}
                             className="w-full flex items-center justify-center py-5 px-6 border border-gray-800 rounded-2xl bg-black text-sm font-black text-white hover:bg-card focus:outline-none transition disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-widest"
                         >
                             {isGoogleLoading ? (

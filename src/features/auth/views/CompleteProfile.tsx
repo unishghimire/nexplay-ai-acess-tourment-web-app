@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { doc, writeBatch, serverTimestamp } from 'firebase/firestore';
+import { doc, runTransaction, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
+import { buildUserDocument, buildPublicProfile } from '../../../shared/services/userProfileService';
 import { User, Hash, Save, LogOut, CheckCircle2 } from 'lucide-react';
 import { PRESET_AVATARS } from '../../../shared/constants/constants';
 import { Seo } from '../../../shared/components/Seo';
@@ -36,31 +37,75 @@ const CompleteProfile: React.FC = () => {
 
         setIsSaving(true);
         try {
-            const batch = writeBatch(db);
             const userRef = doc(db, 'users', user.uid);
             const publicRef = doc(db, 'users_public', user.uid);
 
-            batch.set(userRef, {
-                inGameId: inGameId.trim(),
-                inGameName: inGameName.trim(),
-                profilePicUrl: selectedAvatar,
-                updatedAt: serverTimestamp()
-            }, { merge: true });
+            // Read + write as one atomic transaction so a concurrent create (e.g.
+            // AuthContext auto-provision on first login) can never be clobbered by a
+            // stale "document missing" read.
+            await runTransaction(db, async (transaction) => {
+                const userSnap = await transaction.get(userRef);
+                const publicSnap = await transaction.get(publicRef);
 
-            batch.set(publicRef, {
-                inGameId: inGameId.trim(),
-                inGameName: inGameName.trim(),
-                profilePicUrl: selectedAvatar,
-                updatedAt: serverTimestamp()
-            }, { merge: true });
+                const uid = user.uid;
+                const username = profile?.username || 'User';
+                const email = profile?.email || '';
+                const role = profile?.role || 'player';
+                const gameId = inGameId.trim();
+                const gameName = inGameName.trim();
 
-            await batch.commit();
+                if (userSnap.exists()) {
+                    transaction.set(userRef, {
+                        inGameId: gameId,
+                        inGameName: gameName,
+                        profilePicUrl: selectedAvatar,
+                        updatedAt: serverTimestamp()
+                    }, { merge: true });
+                } else {
+                    // Legacy/missing private profile — create a rule-compliant document
+                    transaction.set(userRef, buildUserDocument({
+                        uid,
+                        email,
+                        username,
+                        role,
+                        inGameId: gameId,
+                        inGameName: gameName,
+                        teamName: '',
+                        phone: '',
+                        profilePicUrl: selectedAvatar,
+                        isBanned: false,
+                        isOrganizer: false,
+                        createdAt: serverTimestamp(),
+                    }));
+                }
+
+                if (publicSnap.exists()) {
+                    transaction.set(publicRef, {
+                        inGameId: gameId,
+                        inGameName: gameName,
+                        profilePicUrl: selectedAvatar,
+                        updatedAt: serverTimestamp()
+                    }, { merge: true });
+                } else {
+                    // Missing public profile — a merged set on a nonexistent doc is a
+                    // CREATE, and the create rule requires uid/role/totalEarnings and
+                    // only permits the isValidPublicProfile() key set.
+                    transaction.set(publicRef, buildPublicProfile({
+                        uid,
+                        username,
+                        role,
+                        inGameId: gameId,
+                        inGameName: gameName,
+                        profilePicUrl: selectedAvatar,
+                    }));
+                }
+            });
 
             showToast('Profile completed! Welcome to NexPlayOrg.', 'success');
             navigate('/dashboard');
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error completing profile:", error);
-            showToast('Failed to save details', 'error');
+            showToast(`Failed to save details (${error?.code || 'unknown'})`, 'error');
         } finally {
             setIsSaving(false);
         }
