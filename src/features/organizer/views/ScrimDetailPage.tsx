@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { doc, onSnapshot, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { fetchRoomCredentials } from '../../../shared/services/roomCredentials';
 import { countFilledScrimSlots, normalizeScrimSlots } from '../../../shared/utils/scrimSlots';
+import { toDateSafe } from '../../../shared/utils/utils';
 import {
   ChevronLeft, Save, Radio, Users, DollarSign, Calendar,
   Gamepad2, Edit2, Check, X, Lock, Unlock, Copy, Trophy,
@@ -95,17 +96,18 @@ export default function ScrimDetailPage() {
         updatedSlots = [...currentSlots, ...extra];
       }
       const filled = countFilledScrimSlots(updatedSlots);
+      const startDate = toDateSafe(editForm.startTime);
 
       await updateDoc(doc(db, SCRIM_COLLECTION, id), {
         title: editForm.title.trim(),
-        startTime: editForm.startTime,
+        startTime: startDate ? Timestamp.fromDate(startDate) : (editForm.startTime || ''),
         entryFee,
         prizePool,
         slots: updatedSlots,
         totalSlots: newSlotCount,
         filledSlots: filled,
         currentPlayers: filled,
-        map: editForm.map,
+        map: editForm.map || 'Bermuda',
       });
       showToast('Scrim updated', 'success');
       setIsEditing(false);
@@ -229,7 +231,19 @@ export default function ScrimDetailPage() {
               </button>
             </>
           ) : (
-            <button onClick={() => { setEditForm({ title: scrim.title, startTime: scrim.startTime, entryFee: scrim.entryFee, prizePool: scrim.prizePool, slots: scrim.totalSlots || (Array.isArray(scrim.slots) ? scrim.slots.length : scrim.slots), map: scrim.map || '' }); setIsEditing(true); }} className="px-4 py-2 rounded-lg bg-surface text-white text-sm hover:bg-surface flex items-center gap-2 min-h-[44px]">
+            <button onClick={() => {
+              const startDate = toDateSafe(scrim.startTime);
+              const startFormatted = startDate ? new Date(startDate.getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) : '';
+              setEditForm({
+                title: scrim.title || '',
+                startTime: startFormatted,
+                entryFee: scrim.entryFee || 0,
+                prizePool: scrim.prizePool || 0,
+                slots: scrim.totalSlots || (Array.isArray(scrim.slots) ? scrim.slots.length : Number(scrim.slots) || 12),
+                map: scrim.map || ''
+              });
+              setIsEditing(true);
+            }} className="px-4 py-2 rounded-lg bg-surface text-white text-sm hover:bg-surface flex items-center gap-2 min-h-[44px]">
               <Edit2 className="w-4 h-4" /> Edit Scrim
             </button>
           )}

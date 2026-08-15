@@ -144,6 +144,7 @@ const AppContent = () => {
               <Route path="/results" element={<Results />} />
               <Route path="/games/:id" element={<GameModesBrowser />} />
               <Route path="/details/:id" element={<DetailsRedirect />} />
+              <Route path="/tournament/:id" element={<DetailsRedirect />} />
               <Route path="/tournaments/:id" element={<TournamentDetails />} />
               <Route path="/post/:id" element={<PostDetails />} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

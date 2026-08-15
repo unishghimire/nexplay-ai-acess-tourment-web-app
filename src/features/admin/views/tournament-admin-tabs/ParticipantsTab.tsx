@@ -43,7 +43,7 @@ export const ParticipantsTab: React.FC<TournamentAdminTabProps> = (props) => {
         if (approved.length === 0) { showToast('No approved players pending check-in', 'info'); return; }
         if (!window.confirm(`Check in all ${approved.length} approved players?`)) return;
         try {
-            const operations = approved.map(p => batch => {
+            const operations = approved.map(p => (batch: any) => {
                 batch.update(doc(db, 'participants', p.id), { checkedIn: true, checkedInAt: new Date() });
             });
             await commitFirestoreBatches(db, operations);

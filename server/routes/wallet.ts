@@ -261,7 +261,27 @@ router.post("/api/wallet/join-tournament",
         const newLevel = Math.floor(newXP / 500) + 1;
 
         tx.update(uRef, { balance: balanceAfter, xp: newXP, level: newLevel });
-        tx.update(tRef, { currentPlayers: (tData.currentPlayers || 0) + 1 });
+
+        const tournamentUpdates: any = {
+          currentPlayers: (tData.currentPlayers || 0) + 1,
+        };
+
+        if (Array.isArray(tData.slots) && tData.slots.length > 0) {
+          const slotIdx = tData.slots.findIndex((s: any) => s.status === 'open');
+          if (slotIdx !== -1) {
+            const updatedSlots = [...tData.slots];
+            updatedSlots[slotIdx] = {
+              ...updatedSlots[slotIdx],
+              status: 'filled',
+              teamName: uData.teamName || uData.username || 'Registered Team',
+              teamId: uData.teamId || uid,
+              inGameId: uData.inGameId || '',
+            };
+            tournamentUpdates.slots = updatedSlots;
+            tournamentUpdates.filledSlots = updatedSlots.filter((s: any) => s.status === 'filled').length;
+          }
+        }
+        tx.update(tRef, tournamentUpdates);
 
         const participantData: any = {
           userId: uid,
@@ -352,7 +372,26 @@ router.post("/api/wallet/leave-tournament",
         const balanceAfter = balanceBefore + refundAmount;
 
         tx.update(uRef, { balance: balanceAfter });
-        tx.update(tRef, { currentPlayers: Math.max(0, (tData.currentPlayers || 0) - 1) });
+
+        const tournamentUpdates: any = {
+          currentPlayers: Math.max(0, (tData.currentPlayers || 0) - 1),
+        };
+
+        if (Array.isArray(tData.slots) && tData.slots.length > 0) {
+          const slotIdx = tData.slots.findIndex((s: any) => s.teamId === uid || (uData.teamId && s.teamId === uData.teamId));
+          if (slotIdx !== -1) {
+            const updatedSlots = [...tData.slots];
+            updatedSlots[slotIdx] = {
+              slotNumber: updatedSlots[slotIdx].slotNumber,
+              status: 'open',
+              teamName: null,
+              teamId: null,
+            };
+            tournamentUpdates.slots = updatedSlots;
+            tournamentUpdates.filledSlots = updatedSlots.filter((s: any) => s.status === 'filled').length;
+          }
+        }
+        tx.update(tRef, tournamentUpdates);
         tx.delete(partRef);
 
         if (refundAmount > 0) {

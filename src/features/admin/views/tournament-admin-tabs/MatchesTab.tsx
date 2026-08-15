@@ -171,14 +171,25 @@ export const MatchesTab: React.FC<TournamentAdminTabProps> = (props) => {
 
             {/* Result Uploader */}
             {selectedMatch && selectedGroup && isResultUploaderOpen && (
-                <ResultUploader
-                    isOpen={isResultUploaderOpen}
-                    onClose={() => setIsResultUploaderOpen(false)}
-                    tournament={tournament}
-                    group={selectedGroup}
-                    match={selectedMatch.match}
-                    onSuccess={() => setIsResultUploaderOpen(false)}
-                />
+                (tournament as any).tournamentMode === 'PER_KILL_REWARD' ? (
+                    <PerKillResultUploader
+                        isOpen={isResultUploaderOpen}
+                        onClose={() => setIsResultUploaderOpen(false)}
+                        tournament={tournament}
+                        group={selectedGroup}
+                        match={selectedMatch.match}
+                        onSuccess={() => setIsResultUploaderOpen(false)}
+                    />
+                ) : (
+                    <ResultUploader
+                        isOpen={isResultUploaderOpen}
+                        onClose={() => setIsResultUploaderOpen(false)}
+                        tournament={tournament}
+                        group={selectedGroup}
+                        match={selectedMatch.match}
+                        onSuccess={() => setIsResultUploaderOpen(false)}
+                    />
+                )
             )}
 
             {/* Add Match Modal */}
