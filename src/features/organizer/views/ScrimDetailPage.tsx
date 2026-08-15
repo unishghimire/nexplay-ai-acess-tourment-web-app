@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { doc, onSnapshot, setDoc, updateDoc, Timestamp } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot, setDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
@@ -28,6 +28,7 @@ export default function ScrimDetailPage() {
   const [retryKey, setRetryKey] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<Record<string, any>>({});
+  const [scrimCollection, setScrimCollection] = useState<'tournaments' | 'scrims'>('tournaments');
   const [roomId, setRoomId] = useState('');
   const [roomPass, setRoomPass] = useState('');
   const [streamUrl, setStreamUrl] = useState('');
@@ -46,7 +47,7 @@ export default function ScrimDetailPage() {
     setLoading(true);
     setLoadError(null);
 
-    const unsub = onSnapshot(doc(db, SCRIM_COLLECTION, id), (snap) => {
+    const unsub = onSnapshot(doc(db, 'tournaments', id), (snap) => {
       if (snap.exists()) {
         const data = { id: snap.id, ...snap.data() } as any;
         // BUG-007 FIX: ownership check — redirect unauthorized organizers
@@ -56,17 +57,58 @@ export default function ScrimDetailPage() {
           return;
         }
         setScrim(data);
+        setScrimCollection('tournaments');
         fetchRoomCredentials(id).then(credentials => {
           setRoomId(credentials?.roomId || '');
           setRoomPass(credentials?.roomPass || '');
         });
         setStreamUrl((data as any).ytLink || (data as any).streamUrl || '');
+        setLoading(false);
+      } else {
+        // Fallback: check 'scrims' collection for legacy records
+        getDoc(doc(db, 'scrims', id)).then((legacySnap) => {
+          if (legacySnap.exists()) {
+            const data = { id: legacySnap.id, ...legacySnap.data() } as any;
+            if (data.hostUid !== user.uid && profile?.role !== 'admin') {
+              showToast('Unauthorized — you do not own this scrim', 'error');
+              navigate('/organizer?tab=scrims');
+              return;
+            }
+            setScrim(data);
+            setScrimCollection('scrims');
+            setStreamUrl((data as any).ytLink || (data as any).streamUrl || '');
+          } else {
+            setScrim(null);
+          }
+          setLoading(false);
+        }).catch((e) => {
+          console.warn('Fallback scrim load error:', e);
+          setLoading(false);
+        });
       }
-      setLoading(false);
     }, (err) => {
       console.error('Scrim load error:', err);
-      setLoadError('We could not load this scrim. Check your connection and try again.');
-      setLoading(false);
+      // Fallback check on permission or collection error
+      getDoc(doc(db, 'scrims', id)).then((legacySnap) => {
+        if (legacySnap.exists()) {
+          const data = { id: legacySnap.id, ...legacySnap.data() } as any;
+          if (data.hostUid !== user.uid && profile?.role !== 'admin') {
+            showToast('Unauthorized — you do not own this scrim', 'error');
+            navigate('/organizer?tab=scrims');
+            return;
+          }
+          setScrim(data);
+          setScrimCollection('scrims');
+          setStreamUrl((data as any).ytLink || (data as any).streamUrl || '');
+          setLoading(false);
+        } else {
+          setLoadError('We could not load this scrim. Check your connection and try again.');
+          setLoading(false);
+        }
+      }).catch(() => {
+        setLoadError('We could not load this scrim. Check your connection and try again.');
+        setLoading(false);
+      });
     });
 
     return () => unsub();
@@ -98,7 +140,7 @@ export default function ScrimDetailPage() {
       const filled = countFilledScrimSlots(updatedSlots);
       const startDate = toDateSafe(editForm.startTime);
 
-      await updateDoc(doc(db, SCRIM_COLLECTION, id), {
+      await updateDoc(doc(db, scrimCollection, id), {
         title: editForm.title.trim(),
         startTime: startDate ? Timestamp.fromDate(startDate) : (editForm.startTime || ''),
         entryFee,
@@ -114,7 +156,7 @@ export default function ScrimDetailPage() {
     } catch {
       showToast('Failed to update scrim', 'error');
     }
-  }, [id, scrim, editForm, showToast]);
+  }, [id, scrim, editForm, scrimCollection, showToast]);
 
   const handleToggleSlot = useCallback(async (slotNumber: number) => {
     if (!scrim) return;
@@ -128,34 +170,34 @@ export default function ScrimDetailPage() {
         return { ...s, status: 'filled', teamName: 'Reserved', teamId: null };
       });
       const filled = countFilledScrimSlots(newSlots);
-      await updateDoc(doc(db, SCRIM_COLLECTION, id), { slots: newSlots, filledSlots: filled, currentPlayers: filled });
+      await updateDoc(doc(db, scrimCollection, id), { slots: newSlots, filledSlots: filled, currentPlayers: filled });
       showToast(`Slot ${slotNumber} toggled`, 'info');
     } catch {
       showToast('Failed to toggle slot', 'error');
     }
-  }, [scrim, id, showToast]);
+  }, [scrim, id, scrimCollection, showToast]);
 
   const handleBroadcast = useCallback(async () => {
     if (!id) return;
     try {
       await Promise.all([
-        setDoc(doc(db, SCRIM_COLLECTION, id, 'credentials', 'main'), { roomId, roomPass }, { merge: true }),
-        updateDoc(doc(db, SCRIM_COLLECTION, id), { ytLink: streamUrl }),
+        setDoc(doc(db, scrimCollection, id, 'credentials', 'main'), { roomId, roomPass }, { merge: true }),
+        updateDoc(doc(db, scrimCollection, id), { ytLink: streamUrl }),
       ]);
       showToast('Room credentials broadcasted', 'success');
     } catch {
       showToast('Failed to broadcast', 'error');
     }
-  }, [id, roomId, roomPass, streamUrl, showToast]);
+  }, [id, roomId, roomPass, streamUrl, scrimCollection, showToast]);
 
   const handleStatusChange = useCallback(async (newStatus: string) => {
     try {
-      await updateDoc(doc(db, SCRIM_COLLECTION, id!), { status: newStatus });
+      await updateDoc(doc(db, scrimCollection, id!), { status: newStatus });
       showToast(`Scrim status: ${newStatus.toUpperCase()}`, 'success');
     } catch {
       showToast('Failed to update status', 'error');
     }
-  }, [id, showToast]);
+  }, [id, scrimCollection, showToast]);
 
   const copyToClipboard = async (text: string, label: string) => {
     try {

@@ -126,8 +126,12 @@ const OrganizerPanel: React.FC = () => {
     setShowCreateModal(true);
   }, []);
 
-  const handleManageTournament = useCallback((id: string) => {
-    navigate(`/tournament-admin/${id}`);
+  const handleManageTournament = useCallback((id: string, matchType?: string) => {
+    if (matchType === 'scrims') {
+      navigate(`/organizer/scrim/${id}`);
+    } else {
+      navigate(`/tournament-admin/${id}`);
+    }
   }, [navigate]);
 
   const handleEditTournament = useCallback((tournament: any) => {

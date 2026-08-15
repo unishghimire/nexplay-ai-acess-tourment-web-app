@@ -1,6 +1,6 @@
 import {useParams, useNavigate} from 'react-router-dom';
 import { useNotification } from '../../../shared/context/NotificationContext';
-import {Settings, Users, Calendar, Trophy, ArrowLeft, ShieldCheck, Download} from 'lucide-react';
+import {Settings, Users, Calendar, Trophy, ArrowLeft, ArrowRight, ShieldCheck, Download} from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
 
 import { OverviewTab, GroupsTab, MatchesTab, BracketsTab, SettingsTab, ParticipantsTab } from './tournament-admin-tabs';
@@ -84,6 +84,15 @@ export default function TournamentAdminPanel() {
                     <span className="px-3 sm:px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest bg-brand-500/10 text-brand-400 border border-brand-500/30">
                         {tournament.stage || 'registration'}
                     </span>
+                    {(tournament.matchType === 'scrims' || (tournament as any).isScrim) && (
+                        <button
+                            onClick={() => navigate(`/organizer/scrim/${tournament.id}`)}
+                            className="px-3 sm:px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/30 transition-colors flex items-center gap-1.5"
+                        >
+                            <span>Scrim Slot View</span>
+                            <ArrowRight className="w-3 h-3" />
+                        </button>
+                    )}
                 </div>
             </div>
 
