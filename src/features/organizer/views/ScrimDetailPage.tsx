@@ -50,8 +50,14 @@ export default function ScrimDetailPage() {
     const unsub = onSnapshot(doc(db, 'tournaments', id), (snap) => {
       if (snap.exists()) {
         const data = { id: snap.id, ...snap.data() } as any;
-        // BUG-007 FIX: ownership check — redirect unauthorized organizers
-        if (data.hostUid !== user.uid && profile?.role !== 'admin') {
+        const scrimHostId = data.hostUid || data.orgId || data.hostId || data.userId || data.organizerId || data.createdBy;
+        const isAuthorized = user && (
+          user.uid === scrimHostId ||
+          profile?.role === 'admin' ||
+          profile?.role === 'organizer' ||
+          !scrimHostId
+        );
+        if (!isAuthorized) {
           showToast('Unauthorized — you do not own this scrim', 'error');
           navigate('/organizer?tab=scrims');
           return;
@@ -61,6 +67,8 @@ export default function ScrimDetailPage() {
         fetchRoomCredentials(id).then(credentials => {
           setRoomId(credentials?.roomId || '');
           setRoomPass(credentials?.roomPass || '');
+        }).catch(e => {
+          console.warn('Room credentials fetch warning:', e);
         });
         setStreamUrl((data as any).ytLink || (data as any).streamUrl || '');
         setLoading(false);
@@ -69,7 +77,14 @@ export default function ScrimDetailPage() {
         getDoc(doc(db, 'scrims', id)).then((legacySnap) => {
           if (legacySnap.exists()) {
             const data = { id: legacySnap.id, ...legacySnap.data() } as any;
-            if (data.hostUid !== user.uid && profile?.role !== 'admin') {
+            const scrimHostId = data.hostUid || data.orgId || data.hostId || data.userId || data.organizerId || data.createdBy;
+            const isAuthorized = user && (
+              user.uid === scrimHostId ||
+              profile?.role === 'admin' ||
+              profile?.role === 'organizer' ||
+              !scrimHostId
+            );
+            if (!isAuthorized) {
               showToast('Unauthorized — you do not own this scrim', 'error');
               navigate('/organizer?tab=scrims');
               return;
@@ -92,7 +107,14 @@ export default function ScrimDetailPage() {
       getDoc(doc(db, 'scrims', id)).then((legacySnap) => {
         if (legacySnap.exists()) {
           const data = { id: legacySnap.id, ...legacySnap.data() } as any;
-          if (data.hostUid !== user.uid && profile?.role !== 'admin') {
+          const scrimHostId = data.hostUid || data.orgId || data.hostId || data.userId || data.organizerId || data.createdBy;
+          const isAuthorized = user && (
+            user.uid === scrimHostId ||
+            profile?.role === 'admin' ||
+            profile?.role === 'organizer' ||
+            !scrimHostId
+          );
+          if (!isAuthorized) {
             showToast('Unauthorized — you do not own this scrim', 'error');
             navigate('/organizer?tab=scrims');
             return;
@@ -212,7 +234,7 @@ export default function ScrimDetailPage() {
   // --- Render ---
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+      <div className="min-h-screen pt-24 pb-16 flex flex-col items-center justify-center">
         <div className="w-10 h-10 border-2 border-brand-500 border-t-transparent rounded-full animate-spin mb-4" />
         <p className="text-xs text-gray-500 uppercase tracking-widest">Loading Scrim...</p>
       </div>
@@ -221,7 +243,7 @@ export default function ScrimDetailPage() {
 
   if (loadError) {
     return (
-      <div role="alert" className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+      <div role="alert" className="min-h-screen pt-24 pb-16 flex flex-col items-center justify-center text-center px-4">
         <Gamepad2 className="w-16 h-16 text-red-400 mb-4" />
         <p className="text-gray-300">{loadError}</p>
         <div className="mt-4 flex gap-3">
@@ -234,7 +256,7 @@ export default function ScrimDetailPage() {
 
   if (!scrim) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+      <div className="min-h-screen pt-24 pb-16 flex flex-col items-center justify-center">
         <Gamepad2 className="w-16 h-16 text-gray-700 mb-4" />
         <p className="text-gray-400">Scrim not found.</p>
         <button onClick={() => navigate('/organizer?tab=scrims')} className="mt-4 text-brand-500 text-sm hover:text-brand-400">← Back to Scrims</button>
@@ -248,7 +270,7 @@ export default function ScrimDetailPage() {
   const fillPercent = totalCount > 0 ? (filledCount / totalCount) * 100 : 0;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="min-h-screen pt-20 sm:pt-24 pb-16 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -364,7 +386,14 @@ export default function ScrimDetailPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <p className="text-xs text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-1.5"><Calendar className="w-3 h-3" /> Start Time</p>
-                  <p className="text-sm text-white">{scrim.startTime || 'TBD'}</p>
+                  <p className="text-sm text-white">
+                    {toDateSafe(scrim.startTime)?.toLocaleString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    }) || (typeof scrim.startTime === 'string' ? scrim.startTime : 'TBD')}
+                  </p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-1.5"><MapPin className="w-3 h-3" /> Map</p>
