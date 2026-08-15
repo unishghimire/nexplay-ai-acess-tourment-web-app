@@ -242,7 +242,15 @@ router.post("/api/wallet/join-tournament",
         const uData = uDoc.data()!;
 
         if (!['upcoming', 'published', 'live'].includes(tData.status)) throw new Error("Tournament is not open for registration");
-        if (tData.currentPlayers >= tData.slots) throw new Error("Tournament is full");
+        const totalSlotsCount = typeof tData.totalSlots === 'number' && !isNaN(tData.totalSlots) && tData.totalSlots > 0
+          ? tData.totalSlots
+          : typeof tData.slots === 'number' && !isNaN(tData.slots) && tData.slots > 0
+          ? tData.slots
+          : Array.isArray(tData.slots)
+          ? tData.slots.length
+          : 0;
+
+        if (totalSlotsCount > 0 && (tData.currentPlayers || 0) >= totalSlotsCount) throw new Error("Tournament is full");
         if (uData.balance < (tData.entryFee || 0)) throw new Error("Insufficient balance");
 
         const entryFee = tData.entryFee || 0;

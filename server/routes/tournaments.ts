@@ -18,24 +18,28 @@ router.post("/api/tournaments/:id/groups/generate", authenticateToken, rateLimit
     if (tourneyData?.hostUid !== req.user.userId && req.user.role !== "admin") return res.status(403).json({ success: false, message: "Unauthorized" });
 
     const participantsSnap = await db.collection("participants").where("tournamentId", "==", id).get();
-    const participants = participantsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    if (participants.length === 0) return res.status(400).json({ success: false, message: "No participants registered" });
+    const participants = participantsSnap.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter((p: any) => p.status === 'approved' && !p.isDisqualified && !p.isWithdrawn);
+    if (participants.length === 0) return res.status(400).json({ success: false, message: "No approved participants registered" });
 
     const shuffled = participants.sort(() => Math.random() - 0.5);
     const operations: Array<(batch: FirebaseFirestore.WriteBatch) => void> = [];
-    const groups = [];
+    const groups: any[] = [];
     for (let i = 0; i < shuffled.length; i += teamsPerGroup) {
       const groupTeams = shuffled.slice(i, i + teamsPerGroup);
       const groupRef = db.collection("tournaments").doc(id).collection("groups").doc();
       const groupData = {
         id: groupRef.id, tournamentId: id, round: tourneyData?.currentRound || 1,
         name: `Group ${String.fromCharCode(65 + Math.floor(i / teamsPerGroup))}`,
-        teams: groupTeams.map((t: any) => ({ id: t.teamId || t.userId, name: t.teamName || t.username, score: 0, rank: 0, isQualified: false })),
-        status: "upcoming", createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        teams: groupTeams.map((t: any) => ({ id: t.teamId || t.userId, name: t.teamName || t.username, score: 0, rank: 0, isQualified: false, logoUrl: t.logoUrl || "" })),
+        status: "upcoming", matches: [], results: [], createdAt: admin.firestore.FieldValue.serverTimestamp(),
       };
       operations.push(batch => batch.set(groupRef, groupData));
       groups.push(groupData);
     }
+    // Sync to main document array so client UI updates immediately
+    operations.push(batch => batch.update(tourneyRef, { groups, stage: "group_stage", currentRound: tourneyData?.currentRound || 1 }));
     await commitBatchedWrites(() => db.batch(), operations);
     res.status(201).json({ success: true, message: "Groups generated successfully", groups });
   } catch (error: any) {
@@ -91,13 +95,25 @@ router.post("/api/tournaments/:id/results/upload", authenticateToken, rateLimit(
       screenshotUrl, uploadedBy: req.user.userId, verified: true,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     };
+
+    // Synchronize document array
+    const existingDocGroups = Array.isArray(tourneyData.groups) ? tourneyData.groups : [];
+    const updatedDocGroups = existingDocGroups.map((g: any) => {
+      if (g.id === groupId) {
+        return { ...g, status: "completed", results: processedResults };
+      }
+      return g;
+    });
+
     const groupRef = db.collection("tournaments").doc(id).collection("groups").doc(groupId);
     await db.runTransaction(async transaction => {
-      const group = await transaction.get(groupRef);
-      if (!group.exists || group.data()?.tournamentId !== id) throw new Error('Group not found');
-      if (group.data()?.status === 'completed') throw new Error('Results have already been uploaded for this group');
+      const groupSnap = await transaction.get(groupRef);
       transaction.set(resultRef, resultData);
-      transaction.update(groupRef, { status: "completed", results: processedResults });
+      if (groupSnap.exists) {
+        if (groupSnap.data()?.status === 'completed') throw new Error('Results have already been uploaded for this group');
+        transaction.update(groupRef, { status: "completed", results: processedResults });
+      }
+      transaction.update(tourneyRef, { groups: updatedDocGroups });
     });
     res.status(201).json({ success: true, message: "Result uploaded and points calculated", result: resultData });
   } catch (error: any) {
@@ -125,22 +141,37 @@ router.post("/api/tournaments/:id/advance", authenticateToken, rateLimit(10, 15 
     const currentRound = tourneyData.currentRound || 1;
     const roadmap = tourneyData.roadmap || [];
     const currentRoundConfig = roadmap.find((r: any) => r.roundNumber === currentRound);
-    if (!currentRoundConfig) return res.status(400).json({ success: false, message: "Round configuration not found" });
 
+    // Read groups from subcollection FIRST; if empty, read from tourneyData.groups array!
+    let allGroups: any[] = [];
     const groupsSnap = await db.collection("tournaments").doc(id).collection("groups").where("round", "==", currentRound).get();
-    const allGroups = groupsSnap.docs.map(doc => doc.data());
-    if (allGroups.some(g => g.status !== "completed")) return res.status(400).json({ success: false, message: "All groups in the current round must be completed first" });
+    if (!groupsSnap.empty) {
+      allGroups = groupsSnap.docs.map(doc => doc.data());
+    } else if (Array.isArray(tourneyData.groups)) {
+      allGroups = tourneyData.groups.filter((g: any) => g.round === currentRound || (!g.round && currentRound === 1));
+    }
+
+    if (allGroups.length === 0) return res.status(400).json({ success: false, message: "No groups found for current round" });
+
+    // Check if any group is incomplete
+    const incomplete = allGroups.some(g => g.status !== "completed" && (!g.matches || g.matches.some((m: any) => m.status !== "completed")));
+    if (incomplete) return res.status(400).json({ success: false, message: "All groups in the current round must be completed first" });
 
     const qualifiedTeams: any[] = [];
+    const qualificationLimit = currentRoundConfig?.qualificationRule || 2;
     allGroups.forEach(group => {
-      if (group.results) {
+      if (group.results && group.results.length > 0) {
         const sorted = [...group.results].sort((a: any, b: any) => b.totalPoints - a.totalPoints);
-        qualifiedTeams.push(...sorted.slice(0, currentRoundConfig.qualificationRule));
+        qualifiedTeams.push(...sorted.slice(0, qualificationLimit));
+      } else if (group.teams) {
+        qualifiedTeams.push(...group.teams.slice(0, qualificationLimit));
       }
     });
 
     const nextRound = currentRound + 1;
     const nextRoundConfig = roadmap.find((r: any) => r.roundNumber === nextRound);
+    const newDocGroups = [...(Array.isArray(tourneyData.groups) ? tourneyData.groups : [])];
+
     if (nextRoundConfig) {
       const numGroups = nextRoundConfig.numGroups || 1;
       const teamsPerGroup = Math.ceil(qualifiedTeams.length / numGroups);
@@ -149,15 +180,17 @@ router.post("/api/tournaments/:id/advance", authenticateToken, rateLimit(10, 15 
         const groupTeams = shuffled.slice(i * teamsPerGroup, (i + 1) * teamsPerGroup);
         if (groupTeams.length > 0) {
           const groupRef = db.collection("tournaments").doc(id).collection("groups").doc();
-          await groupRef.set({
-            id: groupRef.id, round: nextRound, name: `Round ${nextRound} - Group ${i + 1}`,
-            status: "scheduled", teams: groupTeams.map(t => ({ id: t.teamId || t.userId, name: t.teamName || t.username, logoUrl: t.logoUrl || "" })),
+          const newGroupData = {
+            id: groupRef.id, round: nextRound, name: `Round ${nextRound} - Group ${String.fromCharCode(65 + i)}`,
+            status: "scheduled", teams: groupTeams.map(t => ({ id: t.teamId || t.userId || t.id, name: t.teamName || t.username || t.name, logoUrl: t.logoUrl || "" })),
             results: [], matches: [], createdAt: admin.firestore.FieldValue.serverTimestamp(),
-          });
+          };
+          await groupRef.set(newGroupData);
+          newDocGroups.push(newGroupData);
         }
       }
     }
-    await tourneyRef.update({ currentRound: nextRound, status: nextRoundConfig ? "ongoing" : "completed", stage: nextRoundConfig ? "round_play" : "completed" });
+    await tourneyRef.update({ groups: newDocGroups, currentRound: nextRound, status: nextRoundConfig ? "ongoing" : "completed", stage: nextRoundConfig ? "round_play" : "completed" });
     res.json({ success: true, message: nextRoundConfig ? `Advanced to Round ${nextRound}` : "Tournament Completed", nextRound, qualifiedCount: qualifiedTeams.length, isCompleted: !nextRoundConfig });
   } catch (error: any) {
     console.error("Advance round error:", error);
