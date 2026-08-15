@@ -220,8 +220,22 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
     setLoading(true);
     try {
       const { roomId, roomPass, ...publicFormData } = formData;
+      const isScrim = formData.matchType === 'scrims';
+      const slotCount = Number(formData.slots) || 20;
+      const initialSlots = isScrim ? Array.from({ length: slotCount }, (_, idx) => ({
+        slotNumber: idx + 1,
+        status: 'open' as const,
+        teamName: null,
+        teamId: null,
+      })) : formData.slots;
+
       const tournamentData = {
         ...publicFormData,
+        matchType: formData.matchType || (isScrim ? 'scrims' : 'tournament'),
+        isScrim,
+        slots: initialSlots,
+        totalSlots: slotCount,
+        filledSlots: editTournament ? ((editTournament as any).filledSlots ?? editTournament.currentPlayers) : 0,
         tournamentMode: formData.tournamentMode,
         hostUid: editTournament ? editTournament.hostUid : user.uid,
         currentPlayers: editTournament ? editTournament.currentPlayers : 0,
