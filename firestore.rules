@@ -248,9 +248,9 @@ service cloud.firestore {
     // ═══════════════════════════════════════════════════════════════
     match /scrims/{scrimId} {
       allow read:   if true;
-      allow create: if isOrganizer() && incoming().orgId == request.auth.uid;
-      allow update: if isAdmin() || (isOrganizer() && existing().orgId == request.auth.uid);
-      allow delete: if isAdmin() || (isOrganizer() && existing().orgId == request.auth.uid);
+      allow create: if isOrganizer() && (incoming().hostUid == request.auth.uid || incoming().orgId == request.auth.uid || isAdmin());
+      allow update: if isAdmin() || (isOrganizer() && (existing().hostUid == request.auth.uid || existing().orgId == request.auth.uid));
+      allow delete: if isAdmin() || (isOrganizer() && (existing().hostUid == request.auth.uid || existing().orgId == request.auth.uid));
     }
 
     // ═══════════════════════════════════════════════════════════════
