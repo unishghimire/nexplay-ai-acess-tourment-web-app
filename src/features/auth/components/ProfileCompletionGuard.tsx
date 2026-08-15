@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../shared/context/AuthContext';
 
 const ProfileCompletionGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const { user, profile, loading } = useAuth();
+    const { user, profile, loading, authError } = useAuth();
     const location = useLocation();
     const navigate = useNavigate();
     // ponytail: 5s timeout — if profile never loads (Firestore issue), stop blocking.
@@ -30,8 +30,9 @@ const ProfileCompletionGuard: React.FC<{ children: React.ReactNode }> = ({ child
         setProfileTimeout(false);
     }, [user, profile, loading]);
 
-    // Only block if loading AND not timed out
-    if (loading || (user && !profile && !profileTimeout)) {
+    // Only block if loading AND not timed out. When authError is set the profile
+    // could not be loaded — don't block (e.g. the login page shows a retry there).
+    if (loading || (user && !profile && !authError && !profileTimeout)) {
         return (
             <div className="min-h-screen bg-dark flex items-center justify-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-brand-500"></div>

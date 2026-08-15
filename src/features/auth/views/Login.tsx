@@ -1,14 +1,29 @@
 import Seo from '../../../shared/components/Seo';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useNotification } from '../../../shared/context/NotificationContext';
+import { useAuth } from '../../../shared/context/AuthContext';
 import { motion } from 'motion/react';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck } from 'lucide-react';
 import { signInWithEmailAndPassword, signInWithPopup, sendPasswordResetEmail } from 'firebase/auth';
 import { auth, googleProvider } from '../../../shared/config/firebase';
+import { isSafeInternalPath } from '../../../shared/utils/utils';
 import ReCAPTCHA from 'react-google-recaptcha';
 
 const Login: React.FC = () => {
+    const { showToast } = useNotification();
+    const { user, loading: authLoading, profileLoading, authError, retryAuth } = useAuth();
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    const getRedirectTarget = () => {
+        const from = (location.state as { from?: { pathname?: string; search?: string } } | null)?.from;
+        if (from && isSafeInternalPath(from.pathname)) {
+            return from.pathname + (from.search || '');
+        }
+        return '/';
+    };
+
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -16,17 +31,48 @@ const Login: React.FC = () => {
     const [isGoogleLoading, setIsGoogleLoading] = useState(false);
     const [error, setError] = useState('');
     const [captchaValue, setCaptchaValue] = useState<string | null>(null);
+    // Captures the ProtectedRoute `from` on mount so a retry after authError lands
+    // back on the intended page; overwritten by the handlers on a fresh submit.
+    const [redirectTarget, setRedirectTarget] = useState<string>(() => getRedirectTarget());
+    const submittingRef = useRef(false);
     const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY?.trim();
 
-    const { showToast } = useNotification();
-    const navigate = useNavigate();
-    const location = useLocation();
-
+    // Redirect only once the session is fully settled: user present, auth resolved,
+    // and profile initialization finished without error. Navigating before that lets
+    // ProtectedRoute see a transient logged-out state and bounce back to /login —
+    // leaving the user stranded on the login page.
     useEffect(() => {
-    }, []);
+        if (user && !authLoading && !profileLoading && !authError) {
+            navigate(redirectTarget, { replace: true });
+        }
+    }, [user, authLoading, profileLoading, authError, redirectTarget, navigate]);
+
+    // If profile initialization fails, release the loading state so the user can
+    // retry instead of staring at an indefinite spinner.
+    useEffect(() => {
+        if (authError && (isLoading || isGoogleLoading)) {
+            setIsLoading(false);
+            setIsGoogleLoading(false);
+        }
+    }, [authError, isLoading, isGoogleLoading]);
+
+    // Safety net: if sign-in succeeded but the auth state never settles (e.g. the
+    // Firebase auth callback did not fire), unblock the form after a bounded wait
+    // instead of leaving it stuck in loading.
+    useEffect(() => {
+        if ((!isLoading && !isGoogleLoading) || user || authLoading || authError) return;
+        const timer = setTimeout(() => {
+            submittingRef.current = false;
+            setIsLoading(false);
+            setIsGoogleLoading(false);
+            setError('Sign-in could not be confirmed. Please try again.');
+        }, 10000);
+        return () => clearTimeout(timer);
+    }, [isLoading, isGoogleLoading, user, authLoading, authError]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (submittingRef.current || user) return;
         setError('');
 
         if (recaptchaSiteKey && !captchaValue) {
@@ -34,14 +80,18 @@ const Login: React.FC = () => {
             return;
         }
 
+        submittingRef.current = true;
         setIsLoading(true);
 
         try {
             await signInWithEmailAndPassword(auth, email, password);
             showToast('Welcome back!', 'success');
-            const redirectTo = (location.state as { from?: { pathname: string } })?.from?.pathname || '/';
-            navigate(redirectTo);
+            setRedirectTarget(getRedirectTarget());
+            // Keep the loading state on success — the redirect effect above navigates
+            // once the session is settled, which prevents double-submits.
         } catch (err: any) {
+            submittingRef.current = false;
+            setIsLoading(false);
             console.error('Login error:', err);
             const firebaseErrMap: Record<string, string> = {
                 'auth/invalid-credential': 'Invalid email or password',
@@ -54,27 +104,26 @@ const Login: React.FC = () => {
             const errMsg = firebaseErrMap[err.code] || 'Login failed. Please try again.';
             setError(errMsg);
             showToast(errMsg, 'error');
-        } finally {
-            setIsLoading(false);
         }
     };
 
     const handleGoogleSignIn = async () => {
+        if (submittingRef.current || user) return;
         setError('');
+        submittingRef.current = true;
         setIsGoogleLoading(true);
 
         try {
             await signInWithPopup(auth, googleProvider);
             showToast('Welcome back!', 'success');
-            const redirectTo = (location.state as { from?: { pathname: string } })?.from?.pathname || '/';
-            navigate(redirectTo);
+            setRedirectTarget(getRedirectTarget());
         } catch (err: any) {
+            submittingRef.current = false;
+            setIsGoogleLoading(false);
             console.error('Google Sign-In error:', err);
             const errMsg = 'Google Sign-In failed. Please try again.';
             setError(errMsg);
             showToast(errMsg, 'error');
-        } finally {
-            setIsGoogleLoading(false);
         }
     };
 
@@ -180,6 +229,23 @@ const Login: React.FC = () => {
                             </motion.div>
                         )}
 
+                        {authError && user && (
+                            <motion.div 
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                className="bg-amber-500/10 border border-amber-500/20 text-amber-400 px-5 py-4 rounded-2xl text-xs font-black uppercase tracking-widest flex flex-col gap-3"
+                            >
+                                <span>{authError}</span>
+                                <button
+                                    type="button"
+                                    onClick={() => retryAuth()}
+                                    className="self-start text-white bg-amber-500/20 hover:bg-amber-500/30 px-4 py-2 rounded-xl transition"
+                                >
+                                    Retry
+                                </button>
+                            </motion.div>
+                        )}
+
                         {recaptchaSiteKey ? (
                             <div className="flex justify-center">
                                 <ReCAPTCHA
@@ -192,7 +258,7 @@ const Login: React.FC = () => {
 
                         <button
                             type="submit"
-                            disabled={isLoading || isGoogleLoading}
+                            disabled={isLoading || isGoogleLoading || !!user}
                             className="w-full flex items-center justify-center py-5 px-6 rounded-2xl text-sm font-black text-white bg-brand-500 hover:bg-brand-400 focus:outline-none transition disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-widest shadow-lg shadow-brand-500/20"
                         >
                             {isLoading ? (
@@ -215,7 +281,7 @@ const Login: React.FC = () => {
                         <button
                             type="button"
                             onClick={handleGoogleSignIn}
-                            disabled={isLoading || isGoogleLoading}
+                            disabled={isLoading || isGoogleLoading || !!user}
                             className="w-full flex items-center justify-center py-5 px-6 border border-gray-800 rounded-2xl bg-black text-sm font-black text-white hover:bg-card focus:outline-none transition disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-widest"
                         >
                             {isGoogleLoading ? (
