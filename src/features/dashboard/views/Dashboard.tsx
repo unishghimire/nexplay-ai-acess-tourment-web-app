@@ -73,7 +73,9 @@ const Dashboard: React.FC = () => {
                     collection(db, 'tournaments'),
                     where('hostUid', '==', user.uid)
                 ));
-                hostedTours = hostedSnap.docs.map(d => ({ id: d.id, ...d.data(), role: 'organizer' } as Tournament & { role: 'participant' | 'organizer'; registration?: any }));
+                hostedTours = hostedSnap.docs
+                    .map(d => ({ id: d.id, ...d.data(), role: 'organizer' } as Tournament & { role: 'participant' | 'organizer'; registration?: any }))
+                    .filter(t => (t as any).matchType !== 'scrims' && (t as any).isScrim !== true && (t as any).type !== 'scrim' && (t as any).type !== 'scrims');
                 hostedTours.sort((a, b) => {
                     const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
                     const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;

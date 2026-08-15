@@ -50,7 +50,9 @@ const Tournaments: React.FC = () => {
                     getDocs(query(collection(db, 'games'), where('isPublished', '==', true)))
                 ]);
                 
-                let tours = tournamentsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Tournament));
+                let tours = tournamentsSnap.docs
+                    .map(doc => ({ id: doc.id, ...doc.data() } as Tournament))
+                    .filter(t => (t as any).matchType !== 'scrims' && (t as any).isScrim !== true && (t as any).type !== 'scrim' && (t as any).type !== 'scrims');
                 
                 tours.sort((a, b) => {
                     if (a.status === 'live' && b.status !== 'live') return -1;

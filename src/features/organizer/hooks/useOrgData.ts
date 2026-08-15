@@ -47,9 +47,15 @@ export function useOrgData() {
     }
   }, [user]);
 
-  // Derive scrims with comprehensive field matching
+  // Pure Tournaments (strictly excluding all scrims)
+  const tournamentsOnly = useMemo(() =>
+    hostedTournaments.filter(t => (t as any).matchType !== 'scrims' && (t as any).isScrim !== true && (t as any).type !== 'scrim' && (t as any).type !== 'scrims'),
+    [hostedTournaments]
+  );
+
+  // Pure Scrims (strictly excluding all standard tournaments)
   const scrims = useMemo(() =>
-    hostedTournaments.filter(t => (t as any).matchType === 'scrims' || (t as any).isScrim === true || (t.title && t.title.toLowerCase().includes('scrim'))),
+    hostedTournaments.filter(t => (t as any).matchType === 'scrims' || (t as any).isScrim === true || (t as any).type === 'scrim' || (t as any).type === 'scrims' || (t.title && t.title.toLowerCase().includes('scrim'))),
     [hostedTournaments]
   );
 
@@ -406,6 +412,7 @@ export function useOrgData() {
 
   return {
     hostedTournaments,
+    tournamentsOnly,
     participants,
     transactions,
     disputes,
