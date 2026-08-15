@@ -113,6 +113,14 @@ const Register: React.FC = () => {
             return;
         }
 
+        // Must match isValidUserProfile() in firestore.rules: 3 <= size <= 30.
+        // Trailing/leading spaces count toward size, so trim before validating.
+        const trimmedUsername = username.trim();
+        if (trimmedUsername.length < 3 || trimmedUsername.length > 30) {
+            setError('Username must be between 3 and 30 characters');
+            return;
+        }
+
         if (!agreeTerms) {
             setError('You must agree to the Terms & Conditions');
             return;
@@ -136,13 +144,13 @@ const Register: React.FC = () => {
             const user = userCredential.user;
 
             await updateProfile(user, {
-                displayName: username
+                displayName: trimmedUsername
             });
 
             await setDoc(doc(db, 'users', user.uid), buildUserDocument({
                 uid: user.uid,
                 email: user.email || '',
-                username,
+                username: trimmedUsername,
                 inGameId,
                 inGameName,
                 teamName: '',
@@ -152,7 +160,7 @@ const Register: React.FC = () => {
             }));
             await setDoc(doc(db, 'users_public', user.uid), buildPublicProfile({
                 uid: user.uid,
-                username,
+                username: trimmedUsername,
                 inGameId,
                 inGameName,
             }));
@@ -167,7 +175,7 @@ const Register: React.FC = () => {
 
             showToast(
                 verificationSent
-                    ? `Welcome to Nexplay, ${username}! Check your email to verify your account.`
+                    ? `Welcome to Nexplay, ${trimmedUsername}! Check your email to verify your account.`
                     : 'Account created. Verify your email from Firebase to unlock all features.',
                 verificationSent ? 'success' : 'warning'
             );
