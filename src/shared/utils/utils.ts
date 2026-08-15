@@ -132,3 +132,18 @@ export function sanitizeUrl(url: string | undefined | null): string {
         return '#';
     }
 }
+
+/**
+ * Validates a client-supplied internal redirect target (e.g. the `from`
+ * location passed by ProtectedRoute). Only same-app absolute paths are
+ * allowed; protocol-relative, backslash, scheme and auth-page targets are
+ * rejected to avoid open redirects and redirect loops.
+ */
+export function isSafeInternalPath(pathname: unknown): pathname is string {
+    if (typeof pathname !== 'string' || !pathname) return false;
+    if (!pathname.startsWith('/')) return false;
+    if (pathname.startsWith('//') || pathname.startsWith('/\\')) return false;
+    if (pathname.includes('://')) return false;
+    if (pathname === '/login' || pathname === '/register' || pathname === '/complete-profile') return false;
+    return true;
+}
