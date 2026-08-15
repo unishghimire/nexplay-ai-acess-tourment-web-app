@@ -26,22 +26,17 @@ service cloud.firestore {
         request.auth.token.firebase.sign_in_provider == 'google.com'
       );
     }
-    // Role checks — prefer Custom Claims, fall back to Firestore doc for migration period
-    // ponytail: dual-check during migration from doc-based to claims-based roles.
-    // Upgrade path: remove the get() fallback once all users have custom claims set.
+    // Role checks — Custom Claims are the SINGLE source of truth (BUG-030).
+    // The Firestore-doc fallback was removed. Migration: run the
+    // /api/admin/sync-claims endpoint once BEFORE deploying this ruleset so
+    // existing doc-role admins/orgs are migrated to claims.
     function isAdmin() {
-      return isSignedIn() && (
-        request.auth.token.role == 'admin' ||
-        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
-      );
+      return isSignedIn() && request.auth.token.role == 'admin';
     }
     function isOrganizer() {
       return isSignedIn() && (
         isAdmin() ||
-        request.auth.token.role == 'organizer' ||
-        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'organizer')
+        request.auth.token.role == 'organizer'
       );
     }
     function isOwner(userId) {
@@ -56,6 +51,24 @@ service cloud.firestore {
       return isSignedIn() && teamId is string &&
              exists(/databases/$(database)/documents/teams/$(teamId)) &&
              get(/databases/$(database)/documents/teams/$(teamId)).data.ownerId == request.auth.uid;
+    }
+
+    // BUG-035: team_members can only be created via an ACCEPTED team invite,
+    // or by the team owner when creating their own initial admin membership.
+    // Prevents a user injecting themselves into any team to game eligibility.
+    function canJoinTeam() {
+      return isVerified() &&
+             isOwner(incoming().userId) &&
+             incoming().teamId is string &&
+             incoming().userId is string &&
+             (
+               (incoming().role == 'admin' && isTeamOwner(incoming().teamId)) ||
+               (incoming().inviteId is string &&
+                exists(/databases/$(database)/documents/team_invites/$(incoming().inviteId)) &&
+                get(/databases/$(database)/documents/team_invites/$(incoming().inviteId)).data.inviteeId == incoming().userId &&
+                get(/databases/$(database)/documents/team_invites/$(incoming().inviteId)).data.teamId == incoming().teamId &&
+                get(/databases/$(database)/documents/team_invites/$(incoming().inviteId)).data.status == 'accepted')
+             );
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -221,10 +234,19 @@ service cloud.firestore {
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // PARTICIPANTS — players self-register, organizer can approve
+    // PARTICIPANTS — players self-register, organizer can approve.
+    // Reads scoped (BUG-037): a participant doc is only readable by the
+    // registered player, the tournament host, or an admin. LIST stays
+    // signed-in so host/admin roster queries and self/team join-status
+    // queries work; list results are filtered per-doc by the get rule.
     // ═══════════════════════════════════════════════════════════════
     match /participants/{participantId} {
-      allow read: if isSignedIn(); // ponytail: was public — exposed userId/inGameId/teammates to anyone
+      allow get: if isSignedIn() && (
+        isAdmin() ||
+        existing().userId == request.auth.uid ||
+        isTournamentHost(existing().tournamentId)
+      );
+      allow list: if isSignedIn();
 
       // Client-side creation blocked — all joins go through /api/wallet/join-tournament
       // (Admin SDK bypasses rules, enforces atomic balance/overbooking/duplicate checks)
@@ -292,17 +314,16 @@ service cloud.firestore {
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // TRANSACTIONS — server-only writes via /api/wallet/* endpoints
-    // Clients can only read their own transactions; all creates/updates
-    // go through the server (Admin SDK bypasses rules)
+    // TRANSACTIONS — server-only writes via /api/wallet/* and the admin
+    // money endpoints (/api/admin/transactions/*, /api/admin/balance/adjust).
+    // Clients can only read their own transactions (BUG-031).
     // ═══════════════════════════════════════════════════════════════
     match /transactions/{transactionId} {
       allow get:    if (isOwner(existing().userId) || isAdmin()) && isValidId(transactionId);
       allow list:   if isSignedIn() && resource.data.userId == request.auth.uid;
-      // Client creates blocked — server-only via /api/wallet/* (Admin SDK bypasses rules)
-      // Admin can create adjustment/refund transactions from the admin panel
-      allow create: if isAdmin() && isValidId(transactionId) && incoming().userId is string;
-      allow update, delete: if isAdmin();
+      // All creates/updates/deletes are server-side — Admin SDK bypasses rules
+      allow create: if false;
+      allow update, delete: if false;
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -317,7 +338,8 @@ service cloud.firestore {
 
     match /team_members/{memberId} {
       allow read:   if true;
-      allow create: if isVerified() && isOwner(incoming().userId);
+      // Create requires an accepted team invite, or owner self-join at team creation (BUG-035)
+      allow create: if canJoinTeam();
       allow delete: if isAdmin() || isOwner(existing().userId) || isTeamOwner(existing().teamId);
     }
 
@@ -400,7 +422,9 @@ service cloud.firestore {
       allow get:  if isAdmin() || (isSignedIn() && existing().orgId == request.auth.uid);
       // Allow organizers to list their own earnings (filtered by orgId in client query)
       allow list: if isAdmin() || (isSignedIn() && resource.data.orgId == request.auth.uid);
-      allow write: if isAdmin();
+      // Writes are server-only — created by /api/wallet/distribute-prizes and
+      // released by /api/admin/earnings/release (BUG-031). Admin SDK bypasses rules.
+      allow create, update, delete: if false;
     }
 
     // ═══════════════════════════════════════════════════════════════

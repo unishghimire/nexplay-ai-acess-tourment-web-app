@@ -26,6 +26,7 @@ router.post("/api/forgot-password", rateLimit(3, 15 * 60 * 1000), legacyAuthEndp
 router.post("/api/reset-password", rateLimit(5, 15 * 60 * 1000), legacyAuthEndpoint);
 
 // Verify Token
+// [BUG-026] maintenance-only endpoint — no client callers; kept for debugging/token verification.
 router.get("/api/me", authenticateToken, async (req: any, res) => {
   try {
     const userSnap = await db.collection("users").doc(req.user.userId).get();
@@ -52,6 +53,30 @@ router.post("/api/admin/set-claims", authenticateToken, requireAdmin, rateLimit(
     res.json({ success: true, message: `Custom claims set: role=${role} for uid=${uid}` });
   } catch (error: any) {
     console.error("Set claims error:", error);
+    res.status(500).json({ success: false, message: error.message || "Internal server error" });
+  }
+});
+
+// Admin-only: Backfill custom claims for every user whose `users` doc carries a
+// non-player role. Custom claims are the single source of truth for authorization
+// (BUG-030) — run this ONCE before deploying the claims-only rules/authenticateToken,
+// otherwise doc-role admins/orgs would lose access. Safe to re-run at any time.
+router.post("/api/admin/sync-claims", authenticateToken, requireAdmin, rateLimit(1, 15 * 60 * 1000), async (req: any, res) => {
+  try {
+    const snapshot = await db.collection("users").select("role").get();
+    const toSync: Array<{ uid: string; role: string }> = [];
+    snapshot.forEach((docSnap) => {
+      const role = docSnap.data()?.role;
+      if (role && role !== "player") toSync.push({ uid: docSnap.id, role });
+    });
+    let synced = 0;
+    for (const { uid, role } of toSync) {
+      await admin.auth().setCustomUserClaims(uid, { role });
+      synced++;
+    }
+    res.json({ success: true, synced, message: `Custom claims synced for ${synced} user(s)` });
+  } catch (error: any) {
+    console.error("Sync claims error:", error);
     res.status(500).json({ success: false, message: error.message || "Internal server error" });
   }
 });

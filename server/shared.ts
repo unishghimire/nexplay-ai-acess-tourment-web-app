@@ -333,21 +333,11 @@ export const authenticateToken = async (req: any, res: any, next: any) => {
   if (!token) return res.status(401).json({ success: false, message: "Unauthorized" });
   try {
     const decodedIdToken = await admin.auth().verifyIdToken(token);
-    // Prefer custom claims for role (set via admin.auth().setCustomUserClaims).
-    // The profile lookup remains only for the existing Firestore-role migration.
-    let role = decodedIdToken.role || "player";
-    let username = decodedIdToken.name || decodedIdToken.email?.split("@")[0] || "User";
-    if (!decodedIdToken.role) {
-      try {
-        const userDoc = await db.collection("users").doc(decodedIdToken.uid).get();
-        if (userDoc.exists) {
-          const userData = userDoc.data();
-          if (userData) { role = userData.role || "player"; username = userData.username || username; }
-        }
-      } catch (error) {
-        console.error("Firestore user fetch error in auth middleware", error);
-      }
-    }
+    // Custom claims are the single source of truth for role (BUG-030).
+    // The Firestore-doc fallback has been REMOVED — run /api/admin/sync-claims
+    // before deploying so existing doc-role admins/orgs are migrated to claims.
+    const role = decodedIdToken.role || "player";
+    const username = decodedIdToken.name || decodedIdToken.email?.split("@")[0] || "User";
     req.user = { userId: decodedIdToken.uid, email: decodedIdToken.email, username, role };
     return next();
   } catch (error) {

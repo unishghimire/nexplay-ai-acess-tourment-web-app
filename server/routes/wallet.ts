@@ -176,6 +176,7 @@ router.post("/api/wallet/withdraw",
 );
 
 // GET /api/wallet/transactions — list own transactions (paginated)
+// [BUG-026] maintenance-only endpoint — no client callers; client uses direct Firestore reads.
 router.get("/api/wallet/transactions",
   authenticateToken,
   rateLimit(30, 15 * 60 * 1000),

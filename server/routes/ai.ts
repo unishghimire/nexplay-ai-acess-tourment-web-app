@@ -96,6 +96,7 @@ Context: title=${cleanTitle}; game=${cleanGame}; type=${cleanType}; tournamentTy
 });
 
 // Web Page Auditor
+// [BUG-026] maintenance-only endpoint — no client callers; kept for ops/debugging.
 router.post("/api/audit", authenticateToken, rateLimit(3, 15 * 60 * 1000), async (req: any, res: any) => {
   try {
     if (req.user.role !== 'admin' && req.user.role !== 'organizer') {
@@ -198,6 +199,7 @@ Be direct, detailed, and highly technical. Never generate fake boilerplate findi
 });
 
 // Audit Discussion
+// [BUG-026] maintenance-only endpoint — no client callers; kept for ops/debugging.
 router.post("/api/audit/discuss", authenticateToken, rateLimit(5, 15 * 60 * 1000), async (req: any, res: any) => {
   try {
     if (req.user.role !== 'admin' && req.user.role !== 'organizer') {

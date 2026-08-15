@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, query, where, getDocs, doc, updateDoc, deleteDoc, orderBy, limit, setDoc, serverTimestamp, getDoc, writeBatch, increment, Timestamp, runTransaction } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, updateDoc, deleteDoc, orderBy, limit, setDoc, serverTimestamp, getDoc, writeBatch, Timestamp } from 'firebase/firestore';
 import { db, auth } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { Transaction, UserProfile, Slide, PromoCode, Game, PaymentMethod, PaymentCategory, SiteSettings, OrgApplication, Tournament, TournamentEarning, SubscriptionPlan } from '../../../shared/types/types';
@@ -373,35 +373,25 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
         setSelectedTx(null);
     }, [activeTab]);
 
+    // Server-side money operations (BUG-031) — deposit approval, refunds,
+    // rejection, balance adjustments, and earnings release all run on the
+    // server with atomic transactions + server-authored audit records.
+    const adminPost = async (path: string, body: object) => {
+        const token = await auth.currentUser?.getIdToken();
+        if (!token) throw new Error('Authentication required');
+        const response = await fetch(path, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify(body),
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) throw new Error(result.message || 'Request failed');
+        return result;
+    };
+
     const handleApproveTx = async (tx: Transaction) => {
         try {
-            const txRef = doc(db, 'transactions', tx.id);
-            const userRef = doc(db, 'users', tx.userId);
-
-            // ponytail: runTransaction — checks tx.status to prevent double-approve on retry
-            await runTransaction(db, async (transaction) => {
-                const txDoc = await transaction.get(txRef);
-                if (!txDoc.exists()) throw new Error('Transaction not found');
-                const txData = txDoc.data();
-                if (txData.status === 'success') throw new Error('Transaction already approved');
-                if (txData.status === 'rejected') throw new Error('Transaction already rejected');
-
-                let balanceBefore = 0;
-                let balanceAfter = 0;
-                if (tx.type === 'deposit') {
-                    const userDoc = await transaction.get(userRef);
-                    balanceBefore = userDoc.data()?.balance || 0;
-                    balanceAfter = balanceBefore + tx.amount;
-                    transaction.update(userRef, { balance: increment(tx.amount) });
-                }
-                transaction.update(txRef, { 
-                    status: 'success',
-                    confirmedBy: profile?.uid,
-                    confirmedByUsername: profile?.username,
-                    balanceBefore,
-                    balanceAfter
-                });
-            });
+            await adminPost('/api/admin/transactions/approve', { transactionId: tx.id });
 
             // Send Notification
             await NotificationService.create(
@@ -434,23 +424,7 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
             message: `Are you sure you want to refund ${formatCurrency(Math.abs(tx.amount))} to ${tx.username}? This will add the amount back to their wallet balance.`,
             onConfirm: async () => {
                 try {
-                    const txRef = doc(db, 'transactions', tx.id);
-                    const userRef = doc(db, 'users', tx.userId);
-
-                    // ponytail: runTransaction — checks tx.status to prevent double-refund
-                    await runTransaction(db, async (transaction) => {
-                        const txDoc = await transaction.get(txRef);
-                        if (!txDoc.exists()) throw new Error('Transaction not found');
-                        const txData = txDoc.data();
-                        if (txData.status === 'refunded') throw new Error('Transaction already refunded');
-
-                        transaction.update(userRef, { balance: increment(Math.abs(tx.amount)) });
-                        transaction.update(txRef, { 
-                            status: 'refunded',
-                            confirmedBy: profile?.uid,
-                            confirmedByUsername: profile?.username
-                        });
-                    });
+                    await adminPost('/api/admin/transactions/refund', { transactionId: tx.id });
 
                     // Send Notification
                     await NotificationService.create(
@@ -464,9 +438,9 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
                     showToast('Transaction Refunded', 'success');
                     setAllTransactions(prev => prev.map(t => t.id === tx.id ? { ...t, status: 'refunded' } : t));
                     setSelectedTx(null);
-                } catch (error) {
+                } catch (error: any) {
                     // Error refunding transaction
-                    showToast('Failed to refund transaction', 'error');
+                    showToast(error.message || 'Failed to refund transaction', 'error');
                 }
             }
         });
@@ -474,27 +448,7 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
 
     const executeRejectTx = async (tx: Transaction, reason: string) => {
         try {
-            const txRef = doc(db, 'transactions', tx.id);
-            const userRef = doc(db, 'users', tx.userId);
-
-            // ponytail: runTransaction — checks tx.status to prevent double-reject
-            await runTransaction(db, async (transaction) => {
-                const txDoc = await transaction.get(txRef);
-                if (!txDoc.exists()) throw new Error('Transaction not found');
-                const txData = txDoc.data();
-                if (txData.status === 'rejected') throw new Error('Transaction already rejected');
-                if (txData.status === 'success') throw new Error('Transaction already approved');
-
-                if (tx.type === 'withdrawal') {
-                    transaction.update(userRef, { balance: increment(Math.abs(tx.amount)) });
-                }
-                transaction.update(txRef, { 
-                    status: 'rejected',
-                    rejectionReason: reason || 'No reason provided',
-                    confirmedBy: profile?.uid,
-                    confirmedByUsername: profile?.username
-                });
-            });
+            await adminPost('/api/admin/transactions/reject', { transactionId: tx.id, reason: reason || 'No reason provided' });
 
             // Send Notification
             await NotificationService.create(
@@ -509,9 +463,9 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
             setPendingTransactions(prev => prev.filter(t => t.id !== tx.id));
             setSelectedTx(null);
             setRejectionReason('');
-        } catch (error) {
+        } catch (error: any) {
             // Error rejecting transaction
-            showToast('Failed to reject transaction', 'error');
+            showToast(error.message || 'Failed to reject transaction', 'error');
         }
     };
 
@@ -536,35 +490,13 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
 
         try {
             const finalAmount = adjustmentType === 'add' ? amount : -amount;
-            const userRef = doc(db, 'users', selectedUser.uid);
-
-            // ponytail: runTransaction — balance update + ledger entry must be atomic
-            await runTransaction(db, async (transaction) => {
-                const userDoc = await transaction.get(userRef);
-                if (!userDoc.exists()) throw new Error('User not found');
-                const balanceBefore = userDoc.data()?.balance || 0;
-                if (adjustmentType === 'subtract' && balanceBefore < amount) {
-                    throw new Error('Insufficient balance');
-                }
-                const balanceAfter = balanceBefore + finalAmount;
-
-                transaction.update(userRef, { balance: increment(finalAmount) });
-
-                const txRef = doc(collection(db, 'transactions'));
-                transaction.set(txRef, {
-                    userId: selectedUser.uid,
-                    username: selectedUser.username || '',
-                    amount: Math.abs(finalAmount),
-                    type: 'adjustment',
-                    method: 'Admin Adjustment',
-                    status: 'success',
-                    timestamp: serverTimestamp(),
-                    desc: `Admin Adjustment: ${adjustmentType === 'add' ? 'Added' : 'Subtracted'} ${amount}`,
-                    confirmedBy: profile?.uid,
-                    confirmedByUsername: profile?.username,
-                    balanceBefore,
-                    balanceAfter
-                });
+            // Server-side balance adjustment (BUG-031) — atomic transaction +
+            // ledger entry + audit record on the server.
+            await adminPost('/api/admin/balance/adjust', {
+                userId: selectedUser.uid,
+                amount,
+                type: adjustmentType,
+                desc: `Admin Adjustment: ${adjustmentType === 'add' ? 'Added' : 'Subtracted'} ${amount}`,
             });
 
             showToast('Balance Adjusted', 'success');
@@ -1272,43 +1204,9 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
             isDestructive: false,
             onConfirm: async () => {
                 try {
-                    const earningRef = doc(db, 'tournamentEarnings', earning.id);
-                    const orgRef = doc(db, 'users', earning.orgId);
-                    const txRef = doc(collection(db, 'transactions'));
-
-                    // ponytail: atomic transaction — reads earning status to prevent double-release on retry
-                    await runTransaction(db, async (transaction) => {
-                        const earningDoc = await transaction.get(earningRef);
-                        if (!earningDoc.exists()) throw new Error('Earnings record not found');
-                        const earningData = earningDoc.data();
-                        if (earningData.status === 'released') throw new Error('Earnings already released');
-                        if (earningData.status !== 'pending') throw new Error(`Earnings status is ${earningData.status}, cannot release`);
-
-                        transaction.update(earningRef, {
-                            status: 'released',
-                            releasedAt: serverTimestamp()
-                        });
-
-                        transaction.update(orgRef, {
-                            orgPendingEarnings: increment(-earning.orgShare),
-                            orgWalletBalance: increment(earning.orgShare)
-                        });
-
-                        transaction.set(txRef, {
-                            userId: earning.orgId,
-                            username: earning.orgName,
-                            type: 'prize',
-                            amount: earning.orgShare,
-                            method: 'Tournament Earnings',
-                            refId: `EARN-${earning.tournamentId.slice(0, 8)}`,
-                            status: 'success',
-                            timestamp: serverTimestamp(),
-                            desc: `Earnings released for tournament: ${earning.tournamentName}`,
-                            tournamentId: earning.tournamentId,
-                            confirmedBy: profile?.uid,
-                            confirmedByUsername: profile?.username
-                        });
-                    });
+                    // Server-side earnings release (BUG-031) — atomic transaction
+                    // that guards against double-release and writes the ledger + audit.
+                    await adminPost('/api/admin/earnings/release', { earningId: earning.id });
                     
                     await NotificationService.create(
                         earning.orgId,
@@ -1317,8 +1215,6 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
                         'success',
                         '/wallet'
                     );
-                    
-                    await logAdminAction('earnings_released', `Released ${formatCurrency(earning.orgShare)} to ${earning.orgName} for tournament ${earning.tournamentName}`);
                     
                     setTournamentEarnings(prev => prev.map(e => e.id === earning.id ? { ...e, status: 'released' } : e));
                     showToast('Earnings released successfully', 'success');

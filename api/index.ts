@@ -9,6 +9,7 @@ import aiRoutes from "../server/routes/ai.js";
 import discordRoutes from "../server/routes/discord.js";
 import walletRoutes from "../server/routes/wallet.js";
 import adminScrimRoutes from "../server/routes/admin-scrims.js";
+import adminMoneyRoutes from "../server/routes/admin-money.js";
 import { generateSitemapXml, handleIndexNow } from "../server/seo.js";
 
 const app = express();
@@ -28,6 +29,7 @@ app.use(mediaRoutes);
 app.use(aiRoutes);
 app.use(walletRoutes);
 app.use(adminScrimRoutes);
+app.use(adminMoneyRoutes);
 app.use(discordRoutes);
 
 // Dynamic Sitemap for SEO

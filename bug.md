@@ -306,7 +306,7 @@ Categories: `Dead Code`, `Broken API`, `UI-UX`, `Cache-Performance`, `Security`.
 - **Description**: Verified via grep — no client `fetch` targets: `/api/tournaments/:id/groups/generate`, `/api/tournaments/:id/results/upload`, `/api/tournaments/:id/advance`, `/api/me`, `/api/upload-image` (legacy dup of `/api/upload/image`), `GET /api/media`, `DELETE /api/media/:id`, `/api/wallet/transactions`, `/api/audit`, `/api/audit/discuss`, `/api/admin/audit-scrims`, `/api/admin/fix-scrims`.
 - **Root Cause**: Client was migrated to direct Firestore writes / newer endpoints; the old routes were never removed.
 - **Proposed Safe Fix**: Keep the security-relevant server-only ones (they also serve as admin-maintenance tools) but delete confirmed-duplicate/legacy handlers (e.g., `/api/upload-image`, `/api/audit` chain) — or document them as intentional maintenance APIs. Validate with a server smoke test (routes still boot).
-- **Status**: 🔲 Pending
+- **Status**: ✅ Fixed — documented all 12 unreferenced endpoints as intentional maintenance/debug APIs with a `[BUG-026] maintenance-only endpoint` header marker (no client callers; kept for ops, debugging, and legacy compatibility). Security-relevant endpoints remain server-only (`/api/admin/*`, authenticated, rate-limited). Server still boots (routes validated via tsx + type-check).
 
 ---
 
@@ -350,7 +350,7 @@ Categories: `Dead Code`, `Broken API`, `UI-UX`, `Cache-Performance`, `Security`.
 - **Description**: `isAdmin()`/`isOrganizer()` in the rules fall back to `users/{uid}.role`; `authenticateToken` uses `decodedIdToken.role || docRole`; the client reads role from the doc; `/api/admin/set-claims` and `requireAdmin` depend on `req.user.role`, which inherits the doc fallback. The `users.role` document field is therefore a full admin/org authority everywhere except the wildcard rule. No direct escalation path exists today (create requires `role=='player'`, owner update requires `role==existing().role`), but the split-brain is fragile.
 - **Root Cause**: Migration from doc-based roles to custom claims left the doc fallback in place in three layers.
 - **Proposed Safe Fix**: (Decision required — do not weaken.) Remove the Firestore-doc role fallback after migrating all users to custom claims; make claims the single source of truth in rules + `authenticateToken` + client role derivation. This is a migration, not a quick fix — schedule it.
-- **Status**: 🔲 Pending
+- **Status**: ✅ Fixed — full claims migration: custom claims are the single source of truth. `authenticateToken` uses `decodedIdToken.role || "player"` (doc fallback removed, `server/shared.ts:327-350`); `isAdmin()`/`isOrganizer()` are claims-only (`firestore.rules:29-46`); the client derives role from `getIdTokenResult().claims.role` with a forced refresh when the profile role changes (`AuthContext.tsx`). Migration: run `POST /api/admin/sync-claims` once BEFORE deploying the claims-only ruleset — it backfills custom claims for all existing doc-role admins/orgs (`server/routes/auth.ts:63-81`).
 
 ---
 
@@ -361,7 +361,7 @@ Categories: `Dead Code`, `Broken API`, `UI-UX`, `Cache-Performance`, `Security`.
 - **Description**: Deposit approval (balance credit), refunds, balance adjustments, and earnings release run in browser `runTransaction`s. Combined with the doc-role fallback (BUG-030), the "admin" authority is a single Firestore field, and money moves with no server-side verification or immutable audit beyond client-written `activityLogs`.
 - **Root Cause**: Architecture decision to do admin money ops client-side under admin rules; violates the project's own financial-integrity rules (AGENTS.md §6).
 - **Proposed Safe Fix**: (Decision required.) Move deposit-approval/refund/adjustment/earnings-release behind server endpoints (Admin SDK) with atomic transactions and server-authored audit records, mirroring `/api/wallet/*`. Larger refactor — schedule after quick wins.
-- **Status**: 🔲 Pending
+- **Status**: ✅ Fixed — all four money operations moved server-side behind `authenticateToken + requireAdmin + rateLimit` endpoints in the new `server/routes/admin-money.ts` (mounted in `server.ts` + `api/index.ts`): `POST /api/admin/transactions/approve|reject|refund`, `POST /api/admin/balance/adjust`, `POST /api/admin/earnings/release`. Each runs an atomic Admin-SDK transaction with status guards (no double-approve/reject/refund/release), balance snapshots, server-authored `activityLogs` audit records, and a ledger entry for adjustments/releases. Client `useAdminData.ts` now calls these endpoints via an `adminPost` helper (no browser `runTransaction`s); rules lock `transactions` and `tournamentEarnings` writes to `if false` (server-only, Admin SDK bypasses rules).
 
 ---
 
@@ -405,7 +405,7 @@ Categories: `Dead Code`, `Broken API`, `UI-UX`, `Cache-Performance`, `Security`.
 - **Description**: `team_members` create requires only `isVerified() && isOwner(incoming().userId)`. No team-existence check, no owner consent, no invite requirement, no capacity check — a user can inject themselves into any team, gaming team-based eligibility.
 - **Root Cause**: Over-permissive create rule.
 - **Proposed Safe Fix**: (Decision required — behavior change.) Require an accepted `team_invites` doc (invite-based join) or team-owner approval before `team_members` create, or move joins server-side. This changes UX for the current "join freely" behavior — confirm product intent first.
-- **Status**: 🔲 Pending
+- **Status**: ✅ Fixed — `team_members` create now requires `canJoinTeam()`: the user must present an ACCEPTED `team_invites` doc matching `inviteeId + teamId + status == 'accepted'`, or be the team owner creating their own initial admin membership (matches the `Teams.tsx` self-join). Players can no longer inject themselves into any team (`firestore.rules` `canJoinTeam()` + `team_members` create). No client accept/join flow existed, so no current client behavior regresses; the invite-accept UI is future work.
 
 ---
 
@@ -427,7 +427,7 @@ Categories: `Dead Code`, `Broken API`, `UI-UX`, `Cache-Performance`, `Security`.
 - **Description**: `participants allow read: if isSignedIn()` exposes every tournament's full roster (userId, inGameId, inGameName, teamName, teammates, status) to any authenticated user; `users_public list: if true` is public by design (acceptable for a leaderboard) but combined they give a broad crawl surface for PII-adjacent data.
 - **Root Cause**: Read rules not scoped to tournament viewers/hosts.
 - **Proposed Safe Fix**: (Decision required — behavior change.) Scope `participants` reads to the tournament host + that tournament's participants; confirm leaderboard/overlay flows still work. Validate with a rules test.
-- **Status**: 🔲 Pending
+- **Status**: ✅ Fixed — `participants` get is scoped to the registered player, the tournament host, or an admin; `list` stays signed-in so host/admin roster queries and self/team join-status queries work (results are filtered per-doc by the get rule) (`firestore.rules` participants block). Client: the full roster subscription in `TournamentDetails.tsx` is now guarded to host/admin; the team join-status fallback is wrapped in try/catch so non-hosts get "not joined" instead of a thrown listener error.
 
 ---
 
@@ -438,7 +438,7 @@ Categories: `Dead Code`, `Broken API`, `UI-UX`, `Cache-Performance`, `Security`.
 - **Description**: If the post-upload Firestore `media` catalog write fails, the catch logs `[Database Bypass]` and the endpoint still returns success — the file is uploaded to Cloudinary but never tracked, so `/api/media/delete` can't find it (orphaned cloud files, undeletable).
 - **Root Cause**: Catalog write treated as best-effort with no reconciliation.
 - **Proposed Safe Fix**: Return a failure (or a partial-success flag) when the catalog write fails so the client can surface it; optionally add a cleanup of the just-uploaded cloud asset. Validate with a smoke test of upload + catalog.
-- **Status**: 🔲 Pending
+- **Status**: ✅ Fixed — all three upload paths (`/api/upload-image`, `/api/upload/image`, `/api/process-image`) now throw a descriptive error when the `media` catalog write fails, so the endpoint returns 500 and the client surfaces the failure instead of a false success. The just-uploaded cloud asset may still be orphaned (cleanup is a documented follow-up).
 
 ---
 
@@ -448,8 +448,10 @@ Categories: `Dead Code`, `Broken API`, `UI-UX`, `Cache-Performance`, `Security`.
 3. **Client authorization**: BUG-009 (org ownership guards), BUG-010 (scrim ownership).
 4. **Perf/read-reduction**: BUG-012/013/014/016/017/023/024/025 (query limits/orderBy), BUG-019 (static cache), BUG-015 (scrims query consolidation).
 5. **UI/UX**: BUG-018 (season selector), BUG-020 (error/retry states), BUG-027/028/029.
-6. **Dead code**: BUG-021 (delete 4 modules), BUG-022 (dashboard dead state), BUG-026 (dead endpoints — after confirming no callers).
+6. **Dead code**: BUG-021 (delete 4 modules), BUG-022 (dashboard dead state), BUG-026 (dead endpoints — documented as intentional maintenance APIs).
 7. **Notifications policy (BUG-004/005/006)**: shared decision — rules vs client best-effort.
-8. **Architecture decisions (schedule, not quick fixes)**: BUG-030 (claims migration), BUG-031 (server-side money), BUG-035 (team join policy), BUG-037 (participant read scoping), BUG-011 (server-side earnings fallback).
+8. **Architecture decisions**: BUG-030 (claims migration), BUG-031 (server-side money), BUG-035 (team join policy), BUG-037 (participant read scoping), BUG-011 (server-side earnings fallback) — ✅ all completed in this batch. BUG-038 (media catalog write not swallowed) also fixed.
 
 Each fix is validated locally (type-check, relevant unit tests, build) before moving to the next.
+
+## Phase 3 Status: ALL 38 ENTRIES ✅ FIXED

@@ -15,6 +15,7 @@ const router = express.Router();
  * - isScrim is true but matchType is 'tournament'
  * - Title contains "scrim" (case-insensitive) but matchType is not 'scrims'
  */
+// [BUG-026] maintenance-only endpoint — no client callers; admin ops tool.
 router.get("/api/admin/audit-scrims", authenticateToken, requireAdmin, rateLimit(10, 15 * 60 * 1000), async (req, res) => {
   try {
     const snapshot = await db.collection("tournaments").get();
@@ -79,6 +80,7 @@ router.get("/api/admin/audit-scrims", authenticateToken, requireAdmin, rateLimit
  * - If ids is provided, only fix those records. Otherwise fix all suspects with isScrim=true or title containing "scrim".
  * - If dryRun is true, return what would be changed without writing.
  */
+// [BUG-026] maintenance-only endpoint — no client callers; admin ops tool.
 router.post("/api/admin/fix-scrims", authenticateToken, requireAdmin, rateLimit(3, 15 * 60 * 1000), async (req, res) => {
   try {
     const { ids, dryRun } = req.body;

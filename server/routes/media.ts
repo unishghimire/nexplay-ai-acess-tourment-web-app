@@ -137,6 +137,7 @@ async function uploadBase64MultiProvider(
 // ═══════════════════════════════════════════════════════════════
 
 // Upload Image (legacy endpoint — kept for backward compat)
+// [BUG-026] maintenance-only endpoint — no client callers; kept for legacy/debugging.
 router.post("/api/upload-image", authenticateToken, rateLimit(10, 15 * 60 * 1000), upload.single("image"), async (req: any, res) => {
   try {
     const uid = req.user.userId;
@@ -153,7 +154,15 @@ router.post("/api/upload-image", authenticateToken, rateLimit(10, 15 * 60 * 1000
       fileName: result.fileName, fileSize: result.fileSize, mimeType: result.mimeType,
       category, createdAt: admin.firestore.FieldValue.serverTimestamp(),
     };
-    try { await mediaRef.set(mediaData); } catch (dbErr) { console.warn("[Database Bypass]", dbErr); }
+    // BUG-038: catalog write failure must NOT be swallowed — report it so the
+    // client can surface the error instead of showing a success for an
+    // untracked (orphaned) cloud asset.
+    try {
+      await mediaRef.set(mediaData);
+    } catch (dbErr: any) {
+      console.error("[Database Bypass] media catalog write failed for upload:", dbErr);
+      throw new Error("Upload succeeded but media catalog write failed — please retry or contact support");
+    }
     res.status(201).json({ success: true, url: result.url, public_id: result.publicId, media: mediaData });
   } catch (error: any) {
     console.error("Upload error:", error);
@@ -178,7 +187,13 @@ router.post("/api/upload/image", authenticateToken, rateLimit(10, 15 * 60 * 1000
       fileName: result.fileName, fileSize: result.fileSize, mimeType: result.mimeType,
       category, createdAt: admin.firestore.FieldValue.serverTimestamp(),
     };
-    try { await mediaRef.set(mediaData); } catch (dbErr) { console.warn("[Database Bypass]", dbErr); }
+    // BUG-038: catalog write failure must NOT be swallowed (see /api/upload-image).
+    try {
+      await mediaRef.set(mediaData);
+    } catch (dbErr: any) {
+      console.error("[Database Bypass] media catalog write failed for upload:", dbErr);
+      throw new Error("Upload succeeded but media catalog write failed — please retry or contact support");
+    }
     return res.status(200).json({ success: true, url: result.url, public_id: result.publicId, media: mediaData });
   } catch (error: any) {
     console.error("[Upload API] Upload failed:", error);
@@ -223,6 +238,7 @@ router.post("/api/media/delete", authenticateToken, rateLimit(10, 15 * 60 * 1000
 });
 
 // Get All Media (admin: all, user: own only)
+// [BUG-026] maintenance-only endpoint — no client callers; client uses direct Firestore reads.
 router.get("/api/media", authenticateToken, rateLimit(30, 15 * 60 * 1000), async (req: any, res) => {
   try {
     const pageLimit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 100);
@@ -266,7 +282,13 @@ router.post("/api/process-image", authenticateToken, rateLimit(10, 15 * 60 * 100
       fileName: result.fileName, fileSize: result.fileSize, mimeType: result.mimeType,
       category, createdAt: admin.firestore.FieldValue.serverTimestamp(),
     };
-    try { await mediaRef.set(mediaData); } catch (dbErr) { console.warn("[Database Bypass]", dbErr); }
+    // BUG-038: catalog write failure must NOT be swallowed (see /api/upload-image).
+    try {
+      await mediaRef.set(mediaData);
+    } catch (dbErr: any) {
+      console.error("[Database Bypass] media catalog write failed for upload:", dbErr);
+      throw new Error("Upload succeeded but media catalog write failed — please retry or contact support");
+    }
     return res.status(200).json({ success: true, url: result.url, public_id: result.publicId, media: mediaData });
   } catch (error: any) {
     console.error("Process image error:", error);
@@ -275,6 +297,7 @@ router.post("/api/process-image", authenticateToken, rateLimit(10, 15 * 60 * 100
 });
 
 // Delete media by ID
+// [BUG-026] maintenance-only endpoint — no client callers; client uses POST /api/media/delete.
 router.delete('/api/media/:id', authenticateToken, rateLimit(10, 15 * 60 * 1000), async (req: any, res) => {
   try {
     const mediaId = req.params.id;

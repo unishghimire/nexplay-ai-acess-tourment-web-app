@@ -75,10 +75,9 @@ export default function TournamentDetails() {
             }).finally(() => setLoading(false));
         });
 
-        // 2. Participants Listener
-        const unsubParticipants = onSnapshot(query(collection(db, 'participants'), where('tournamentId', '==', id)), (snapshot) => {
-            setParticipants(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
-        }, (err) => console.warn('Participants subscription failed:', err));
+        // 2. Participants Listener — moved to a separate effect so the full
+        // roster subscription is limited to host/admin (BUG-037). Non-hosts
+        // only see their own registration via per-doc get rules.
 
         // 3. Related Tournaments & Host Profile (One-time fetch is okay)
         const fetchMeta = async () => {
@@ -115,9 +114,21 @@ export default function TournamentDetails() {
 
         return () => {
             unsubTournament();
-            unsubParticipants();
         };
     }, [id]);
+
+    // Participants roster subscription — full roster is only readable by the
+    // tournament host or an admin (BUG-037). Non-hosts get their own
+    // registration only, so the full list is not subscribed for them.
+    useEffect(() => {
+        if (!id) return;
+        const isHostOrAdmin = tournament?.hostUid === user?.uid || user?.role === 'admin';
+        if (!isHostOrAdmin) return;
+        const unsubParticipants = onSnapshot(query(collection(db, 'participants'), where('tournamentId', '==', id)), (snapshot) => {
+            setParticipants(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+        }, (err) => console.warn('Participants subscription failed:', err));
+        return () => unsubParticipants();
+    }, [id, tournament, user]);
 
     // Independent effect for join status (depends on user/profile which might resolve later)
     useEffect(() => {
@@ -132,13 +143,20 @@ export default function TournamentDetails() {
             where('userId', '==', user.uid)
         ), async (snapshot) => {
             let joined = !snapshot.empty;
+            // Team-registration fallback (BUG-037): the team query may be
+            // filtered to self for non-hosts — treat a failure as "not joined"
+            // rather than throwing into the listener.
             if (!joined && profile?.teamId) {
-                const teamSnap = await getDocs(query(
-                    collection(db, 'participants'),
-                    where('tournamentId', '==', id),
-                    where('teamId', '==', profile.teamId)
-                ));
-                if (!teamSnap.empty) joined = true;
+                try {
+                    const teamSnap = await getDocs(query(
+                        collection(db, 'participants'),
+                        where('tournamentId', '==', id),
+                        where('teamId', '==', profile.teamId)
+                    ));
+                    if (!teamSnap.empty) joined = true;
+                } catch (err) {
+                    console.warn('Team join-status fallback failed:', err);
+                }
             }
             setIsJoined(joined);
         }, (err) => console.warn('Join status subscription failed:', err));

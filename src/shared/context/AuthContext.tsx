@@ -65,6 +65,18 @@ const withTimeout = <T,>(promise: Promise<T>, ms: number): Promise<T> =>
         );
     });
 
+// Custom claims are the single source of truth for role (BUG-030). Read the role
+// claim from the ID token; returns null when no claim is set yet (migration window).
+const getClaimRole = async (firebaseUser: FirebaseUser, forceRefresh = false): Promise<string | null> => {
+    try {
+        const idTokenResult = await withTimeout(firebaseUser.getIdTokenResult(forceRefresh), 5000);
+        const role = (idTokenResult as any).claims?.role;
+        return typeof role === 'string' && role ? role : null;
+    } catch {
+        return null;
+    }
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<AuthUser | null>(null);
     const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -162,6 +174,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setAuthError(null);
                 markDone();
                 void initProfile();
+                // Pull the role claim from the ID token (claims are the source of truth).
+                void getClaimRole(firebaseUser, false).then((claimRole) => {
+                    if (claimRole && firebaseUserRef.current?.uid === firebaseUser.uid) {
+                        setUser(prev => prev ? { ...prev, role: claimRole } : prev);
+                    }
+                });
             } else {
                 firebaseUserRef.current = null;
                 setUser(null);
@@ -249,6 +267,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             };
         }
     }, [user?.uid]);
+
+    // When the profile role changes (admin promoted/demoted a user), force-refresh the
+    // ID token so the custom-claims role is picked up (BUG-030). Claims win over the
+    // doc role when present; the doc role remains a display fallback during migration.
+    useEffect(() => {
+        const fu = firebaseUserRef.current;
+        if (!fu) return;
+        let cancelled = false;
+        void getClaimRole(fu, true).then((claimRole) => {
+            if (cancelled || firebaseUserRef.current?.uid !== fu.uid) return;
+            if (claimRole) setUser(prev => prev ? { ...prev, role: claimRole } : prev);
+        });
+        return () => { cancelled = true; };
+    }, [profile?.role]);
 
     return (
         <AuthContext.Provider value={{ user, profile, loading, profileLoading, authError, retryAuth: () => void initProfile(), logout }}>

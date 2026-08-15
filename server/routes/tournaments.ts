@@ -5,6 +5,7 @@ import { commitBatchedWrites } from "../batchedWrites.js";
 const router = Router();
 
 // Generate Groups
+// [BUG-026] maintenance-only endpoint — no client callers; kept for ops/debugging.
 router.post("/api/tournaments/:id/groups/generate", authenticateToken, rateLimit(5, 15 * 60 * 1000), async (req: any, res) => {
   try {
     const { id } = req.params;
@@ -49,6 +50,7 @@ router.post("/api/tournaments/:id/groups/generate", authenticateToken, rateLimit
 });
 
 // Upload Result & Calculate Points
+// [BUG-026] maintenance-only endpoint — no client callers; kept for ops/debugging.
 router.post("/api/tournaments/:id/results/upload", authenticateToken, rateLimit(10, 15 * 60 * 1000), async (req: any, res) => {
   try {
     const { id } = req.params;
@@ -126,6 +128,7 @@ router.post("/api/tournaments/:id/results/upload", authenticateToken, rateLimit(
 });
 
 // Advance Round
+// [BUG-026] maintenance-only endpoint — no client callers; kept for ops/debugging.
 router.post("/api/tournaments/:id/advance", authenticateToken, rateLimit(10, 15 * 60 * 1000), async (req: any, res) => {
   try {
     const { id } = req.params;
