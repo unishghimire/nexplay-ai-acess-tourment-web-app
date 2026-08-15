@@ -1,5 +1,5 @@
 import React from 'react';
-import { Gamepad2, RefreshCw, Clock, DollarSign, Trophy, Plus } from 'lucide-react';
+import { Gamepad2, RefreshCw, Clock, DollarSign, Trophy, Plus, Settings2 } from 'lucide-react';
 import { toDateSafe } from '../../../shared/utils/utils';
 
 export interface ScrimsHubTabProps {
@@ -159,9 +159,10 @@ export const ScrimsHubTab: React.FC<ScrimsHubTabProps> = ({
                       <button
                         type="button"
                         onClick={() => onViewDetails(scrim.id)}
-                        className="self-start md:self-auto bg-brand-500 hover:bg-brand-400 text-white px-4 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center gap-2 min-h-[44px]"
+                        className="self-start md:self-auto bg-brand-500 hover:bg-brand-400 text-white px-4 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 min-h-[44px]"
                       >
-                        View Details
+                        <Settings2 className="w-3.5 h-3.5" />
+                        <span>Manage Scrim</span>
                       </button>
                     )}
                     <button
