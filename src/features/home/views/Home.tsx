@@ -4,9 +4,10 @@ import React, { useEffect, useState } from 'react';
 import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { Tournament, Game, Slide } from '../../../shared/types/types';
+import { PromoSlide } from '../components/HotPromotionsSlider';
 import TournamentCard from '../../tournaments/components/TournamentCard';
 import GameCard from '../components/GameCard';
-import HotPromotionsSlider, { PromoSlide } from '../components/HotPromotionsSlider';
+import HotPromotionsSlider from '../components/HotPromotionsSlider';
 import { useNavigate, Link } from 'react-router-dom';
 import { 
     Star, 
@@ -25,42 +26,7 @@ import { formatGameName } from '../../../shared/utils/utils';
 
 
 
-// Sample data for Hot Promotions Slider with high quality illustrative fallback gradients
-const promoSlides: PromoSlide[] = [
-    {
-        id: 1,
-        tournamentName: "NEXPLAY GRAND LEAGUE",
-        game: "FREE FIRE",
-        format: "SQUAD",
-        status: "UPCOMING",
-        prizePool: "Rs. 100,000",
-        startDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        image: "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=1280",
-        link: "/tournaments"
-    },
-    {
-        id: 2,
-        tournamentName: "CCC REGIONAL TOURNAMENT",
-        game: "PUBG MOBILE",
-        format: "SQUAD",
-        status: "LIVE",
-        prizePool: "Rs. 50,000",
-        startDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-        image: "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&q=80&w=1280",
-        link: "/tournaments"
-    },
-    {
-        id: 3,
-        tournamentName: "VALORANT SHOWDOWN",
-        game: "VALORANT",
-        format: "5V5",
-        status: "UPCOMING",
-        prizePool: "Rs. 75,000",
-        startDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
-        image: "https://images.unsplash.com/photo-1553481187-be93c21490a9?auto=format&fit=crop&q=80&w=1280",
-        link: "/tournaments"
-    }
-];
+
 
 
 const homeFaqs = [
@@ -94,7 +60,7 @@ const Home: React.FC = () => {
     const [slides, setSlides] = useState<Slide[]>([]);
     const [recentResults, setRecentResults] = useState<Tournament[]>([]);
     const [loading, setLoading] = useState(true);
-    const [totalPlayersCount, setTotalPlayersCount] = useState(1350); // Live fallback stats
+    const [totalPlayersCount, setTotalPlayersCount] = useState(0);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -167,7 +133,7 @@ const Home: React.FC = () => {
             try {
                 const usersSnap = await getDocs(query(collection(db, 'users_public'), limit(100)));
                 if (!usersSnap.empty) {
-                    setTotalPlayersCount(Math.max(1350, usersSnap.size * 12));
+                    setTotalPlayersCount(usersSnap.size * 12);
                 }
             } catch (e) {
                 console.warn("Analytics fetch failed, using fallback values", e);
@@ -249,9 +215,11 @@ const Home: React.FC = () => {
                     </div>
                 </div>
                 <div className="flex flex-wrap gap-4">
+                    {totalPlayersCount > 0 && (
                     <span className="flex items-center gap-2 bg-surface/50 px-4 py-2 rounded-full border border-gray-700 text-xs text-brand-300 font-black uppercase tracking-widest">
-                        <Users className="w-4 h-4" /> {totalPlayersCount}+ Players
+                        <Users className="w-4 h-4" /> {totalPlayersCount.toLocaleString()}+ Players
                     </span>
+                    )}
                     <span className="flex items-center gap-2 bg-surface/50 px-4 py-2 rounded-full border border-gray-700 text-xs text-yellow-500 font-black uppercase tracking-widest">
                         <Wallet className="w-4 h-4" /> Instant Payouts
                     </span>
@@ -265,8 +233,7 @@ const Home: React.FC = () => {
                 </div>
             )}
 
-            {/* Hot Promotions Section */}
-            <HotPromotionsSlider slides={promoSlides} variant="hot" />
+            {/* Hot Promotions Section — only show when real promo data exists */}
 
             {/* Value Highlights (Conversion Funnel Indicators) */}
             <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
