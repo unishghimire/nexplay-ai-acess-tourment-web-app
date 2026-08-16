@@ -120,12 +120,26 @@ const Login: React.FC = () => {
         } catch (err: any) {
             submittingRef.current = false;
             setIsGoogleLoading(false);
+            console.error('Google Sign-In error code:', err?.code);
             console.error('Google Sign-In error:', err);
-            const errMsg = 'Google Sign-In failed. Please try again.';
+
+            const googleErrMap: Record<string, string> = {
+                'auth/popup-blocked': 'Popup was blocked by your browser. Please allow popups for this site and try again.',
+                'auth/popup-closed-by-user': 'Sign-in was cancelled. Please try again.',
+                'auth/cancelled-popup-request': 'Another sign-in is already in progress.',
+                'auth/unauthorized-domain': 'This domain is not authorised in Firebase. Add it to Firebase Console → Authentication → Authorized Domains.',
+                'auth/operation-not-allowed': 'Google Sign-In is not enabled. Enable it in Firebase Console → Authentication → Sign-in method.',
+                'auth/account-exists-with-different-credential': 'An account already exists with this email using a different sign-in method. Please log in with email/password.',
+                'auth/network-request-failed': 'Network error. Check your connection and try again.',
+                'auth/internal-error': 'An internal error occurred. Please try again.',
+            };
+
+            const errMsg = googleErrMap[err?.code] || `Google Sign-In failed (${err?.code || 'unknown'}). Please try again.`;
             setError(errMsg);
             showToast(errMsg, 'error');
         }
     };
+
 
     const handleForgotPassword = async () => {
         if (!email || !email.includes('@')) {
