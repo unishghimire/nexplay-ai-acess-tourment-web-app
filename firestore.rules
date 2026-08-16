@@ -107,7 +107,11 @@ service cloud.firestore {
       return data.keys().hasOnly([
         'uid', 'username', 'inGameId', 'inGameName', 'role',
         'profilePicUrl', 'bannerUrl', 'teamName', 'teamId', 'orgName',
-        'skills', 'status', 'customActivity', 'totalEarnings', 'updatedAt'
+        'skills', 'status', 'customActivity', 'totalEarnings', 'updatedAt',
+        // PublicProfile schema fields (firebase-blueprint.json) — present on
+        // existing docs, so they must be allowed or every update is denied.
+        'points', 'wins', 'tournamentsPlayed', 'winRate', 'rankChange',
+        'isVerified', 'isChampion', 'rank'
       ]);
     }
 

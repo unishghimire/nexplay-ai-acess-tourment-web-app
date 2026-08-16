@@ -156,6 +156,7 @@ const Wallet: React.FC = () => {
                 type: selectedTxForDispute.type,
                 reason: disputeReason,
                 status: 'open',
+                tournamentId: selectedTxForDispute.tournamentId || null,
                 createdAt: serverTimestamp()
             });
             showToast('Dispute reported successfully. Our team will review it.', 'success');

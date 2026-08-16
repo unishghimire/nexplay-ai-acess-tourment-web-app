@@ -207,8 +207,6 @@ router.get("/api/wallet/transactions",
   }
 );
 
-export default router;
-
 // ═══════════════════════════════════════════════════════════════
 // TOURNAMENT ENTRY FEE — server-side atomic deduction
 // ═══════════════════════════════════════════════════════════════
@@ -370,7 +368,7 @@ router.post("/api/wallet/leave-tournament",
         const uData = uDoc.data()!;
 
         if (partDoc.data().status === 'refunded') throw new Error("Already refunded");
-        if (['completed', 'cancelled'].includes(tData.status)) throw new Error("Cannot leave a completed tournament");
+        if (['live', 'paused', 'completed', 'cancelled'].includes(tData.status)) throw new Error("Cannot leave a tournament that has already started");
         const refundAmount = tData.entryFee || 0;
         const balanceBefore = uData.balance;
         const balanceAfter = balanceBefore + refundAmount;
@@ -868,3 +866,5 @@ router.get("/api/migrate-room-creds", authenticateToken, rateLimit(1, 60 * 60 * 
     return res.status(500).json({ success: false, message: "Room credential migration failed" });
   }
 });
+
+export default router;

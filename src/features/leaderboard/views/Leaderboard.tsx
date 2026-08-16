@@ -12,39 +12,10 @@ import { formatCurrency } from '../../../shared/utils/utils';
 const RankIndicator = ({ change }: { change?: number }) => {
     if (change === undefined || change === 0) return <Minus className="w-3 h-3 text-gray-600" />;
     if (change > 0) return (
-        <>
-        <Seo
-            title="Leaderboard | NexPlay — Nepal Esports Rankings"
-            description="Check NexPlay's national esports leaderboard. See top players and teams in Nepal's competitive gaming scene. Rankings updated daily based on tournament performance."
-            canonicalPath="/leaderboard"
-            jsonLd={{
-                "@context": "https://schema.org",
-                "@type": "FAQPage",
-                mainEntity: [
-                    {
-                        "@type": "Question",
-                        name: "How are NexPlay leaderboard rankings calculated?",
-                        acceptedAnswer: {
-                            "@type": "Answer",
-                            text: "NexPlay rankings are based on tournament performance, including wins, placement, and prize earnings. Rankings are updated daily to reflect the latest results."
-                        }
-                    },
-                    {
-                        "@type": "Question",
-                        name: "Can I see my rank on the NexPlay leaderboard?",
-                        acceptedAnswer: {
-                            "@type": "Answer",
-                            text: "Yes, registered players can view their current rank, rating, and tournament history on the leaderboard page."
-                        }
-                    }
-                ]
-            }}
-        />
         <div className="flex items-center text-green-500 gap-0.5">
             <ArrowUp className="w-3 h-3" />
             <span className="text-xs font-bold">{change}</span>
         </div>
-        </>
     );
     return (
         <div className="flex items-center text-red-500 gap-0.5">
@@ -190,6 +161,33 @@ const Leaderboard: React.FC = () => {
 
     return (
         <div className="max-w-6xl mx-auto px-4 py-12 animate-fade-in">
+            <Seo
+                title="Leaderboard | NexPlay — Nepal Esports Rankings"
+                description="Check NexPlay's national esports leaderboard. See top players and teams in Nepal's competitive gaming scene. Rankings updated daily based on tournament performance."
+                canonicalPath="/leaderboard"
+                jsonLd={{
+                    "@context": "https://schema.org",
+                    "@type": "FAQPage",
+                    mainEntity: [
+                        {
+                            "@type": "Question",
+                            name: "How are NexPlay leaderboard rankings calculated?",
+                            acceptedAnswer: {
+                                "@type": "Answer",
+                                text: "NexPlay rankings are based on tournament performance, including wins, placement, and prize earnings. Rankings are updated daily to reflect the latest results."
+                            }
+                        },
+                        {
+                            "@type": "Question",
+                            name: "Can I see my rank on the NexPlay leaderboard?",
+                            acceptedAnswer: {
+                                "@type": "Answer",
+                                text: "Yes, registered players can view their current rank, rating, and tournament history on the leaderboard page."
+                            }
+                        }
+                    ]
+                }}
+            />
             {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-8 mb-8 sm:mb-12">
                 <div>

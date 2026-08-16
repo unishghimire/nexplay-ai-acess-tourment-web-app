@@ -1,6 +1,6 @@
 import Seo from '../../../shared/components/Seo';
 import React, { useState, useEffect } from 'react';
-import { collection, query, getDocs, addDoc, serverTimestamp, where, doc, setDoc, updateDoc } from 'firebase/firestore';
+import { collection, query, getDocs, serverTimestamp, where, doc, setDoc, updateDoc, orderBy, limit, writeBatch } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
@@ -52,8 +52,8 @@ const Teams: React.FC = () => {
         setLoading(true);
         setFetchError(null);
         try {
-            // Fetch all teams
-            const q = query(collection(db, 'teams'));
+            // Fetch all teams (ordered by creation date, capped at 200 — avoids full-collection scan)
+            const q = query(collection(db, 'teams'), orderBy('createdAt', 'desc'), limit(200));
             const snap = await getDocs(q);
             const allTeams = snap.docs.map(d => ({ id: d.id, ...d.data() } as Team));
             setTeams(allTeams);
@@ -84,32 +84,43 @@ const Teams: React.FC = () => {
 
         setCreating(true);
         try {
-            const teamData = {
+            // Use a pre-generated ref so team and member writes are atomic via writeBatch.
+            // Sequential addDoc calls could leave an orphaned team with no admin member
+            // on partial failure (BUG-052).
+            const teamRef = doc(collection(db, 'teams'));
+            const memberRef = doc(collection(db, 'team_members'));
+            const userRef = doc(db, 'users', user.uid);
+            const publicUserRef = doc(db, 'users_public', user.uid);
+
+            const batch = writeBatch(db);
+
+            batch.set(teamRef, {
                 name: newTeamName,
                 description: newTeamDesc,
                 logoUrl: newTeamLogo,
                 ownerId: user.uid,
                 createdAt: serverTimestamp()
-            };
-            const docRef = await addDoc(collection(db, 'teams'), teamData);
-            
-            // Add creator as admin
-            await addDoc(collection(db, 'team_members'), {
-                teamId: docRef.id,
+            });
+
+            // Add creator as admin member — satisfies canJoinTeam() admin self-join path
+            batch.set(memberRef, {
+                teamId: teamRef.id,
                 userId: user.uid,
                 role: 'admin',
                 joinedAt: serverTimestamp()
             });
 
             // Auto-fill team name and ID in profile
-            await updateDoc(doc(db, 'users', user.uid), { 
+            batch.update(userRef, {
                 teamName: newTeamName,
-                teamId: docRef.id 
+                teamId: teamRef.id
             });
-            await setDoc(doc(db, 'users_public', user.uid), { 
+            batch.set(publicUserRef, {
                 teamName: newTeamName,
-                teamId: docRef.id 
+                teamId: teamRef.id
             }, { merge: true });
+
+            await batch.commit();
 
 
             showToast('Team created successfully!', 'success');

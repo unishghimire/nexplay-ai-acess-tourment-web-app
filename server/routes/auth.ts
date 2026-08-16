@@ -38,9 +38,6 @@ router.get("/api/me", authenticateToken, async (req: any, res) => {
   }
 });
 
-export default router;
-
-
 // Admin-only: Set custom claims for a user (called when admin changes role)
 router.post("/api/admin/set-claims", authenticateToken, requireAdmin, rateLimit(10, 15 * 60 * 1000), async (req: any, res) => {
   try {
@@ -80,3 +77,5 @@ router.post("/api/admin/sync-claims", authenticateToken, requireAdmin, rateLimit
     res.status(500).json({ success: false, message: error.message || "Internal server error" });
   }
 });
+
+export default router;
