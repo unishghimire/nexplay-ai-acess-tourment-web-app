@@ -19,9 +19,9 @@ const Footer: React.FC = () => {
                     <nav aria-label="Compete links">
                         <h3 className="text-white font-bold text-sm mb-3 flex items-center gap-1.5"><Trophy className="w-4 h-4" aria-hidden="true" /> Compete</h3>
                         <ul className="space-y-1 text-sm">
-                            <li><Link to="/tournaments" className="text-gray-400 hover:text-white transition inline-block py-2">Tournaments</Link></li>
-                            <li><Link to="/scrims" className="text-gray-400 hover:text-white transition inline-block py-2">Scrims</Link></li>
-                            <li><Link to="/leaderboard" className="text-gray-400 hover:text-white transition inline-block py-2">Leaderboard</Link></li>
+                            <li><Link to="/results" className="text-gray-400 hover:text-white transition inline-block py-2">Results</Link></li>
+                            <li><Link to="/dashboard" className="text-gray-400 hover:text-white transition inline-block py-2">Dashboard</Link></li>
+                            <li><Link to="/wallet" className="text-gray-400 hover:text-white transition inline-block py-2">Wallet</Link></li>
                         </ul>
                     </nav>
 

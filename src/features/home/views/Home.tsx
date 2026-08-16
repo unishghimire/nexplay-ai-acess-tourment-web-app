@@ -198,7 +198,7 @@ const Home: React.FC = () => {
                 },
             }]}
         />
-        <div className="animate-fade-in space-y-16 pb-20 relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="animate-fade-in space-y-8 sm:space-y-12 md:space-y-16 pb-12 sm:pb-20 relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             
             {/* SEO: h1 for search engines — visually hidden */}
             <h1 className="sr-only">NexPlay — Esports Tournaments & Scrims in Nepal</h1>
@@ -207,23 +207,19 @@ const Home: React.FC = () => {
             <div className="bg-gradient-to-br from-gray-900 to-black border border-gray-800 rounded-2xl sm:rounded-3xl p-5 sm:p-8 flex flex-col md:flex-row justify-between items-center gap-4 sm:gap-6 shadow-2xl">
                 <div className="flex items-center gap-4">
                     <div className="bg-brand-500/10 p-3 rounded-2xl shrink-0">
-                        <CheckCircle2 className="text-brand-400 w-8 h-8" />
+                        <CheckCircle2 className="text-brand-400 w-7 h-7 sm:w-8 sm:h-8" />
                     </div>
                     <div>
-                        <h3 className="text-lg font-black text-white uppercase tracking-tight">Secure Matchmaking Active</h3>
-                        <p className="text-sm text-gray-400">All escrow entries and payouts are guarded server-side.</p>
+                        <h3 className="text-base sm:text-lg font-black text-white uppercase tracking-tight">Secure Matchmaking Active</h3>
+                        <p className="text-xs sm:text-sm text-gray-400">All escrow entries and payouts are guarded server-side.</p>
                     </div>
                 </div>
-                <div className="flex flex-wrap gap-4">
-                    {totalPlayersCount > 0 && (
-                    <span className="flex items-center gap-2 bg-surface/50 px-4 py-2 rounded-full border border-gray-700 text-xs text-brand-300 font-black uppercase tracking-widest">
-                        <Users className="w-4 h-4" /> {totalPlayersCount.toLocaleString()}+ Players
-                    </span>
-                    )}
-                    <span className="flex items-center gap-2 bg-surface/50 px-4 py-2 rounded-full border border-gray-700 text-xs text-yellow-500 font-black uppercase tracking-widest">
-                        <Wallet className="w-4 h-4" /> Instant Payouts
-                    </span>
-                </div>
+                <button
+                    onClick={() => handleCtaClick('/wallet', 'InstantPayouts')}
+                    className="flex items-center gap-2 bg-brand-500/10 hover:bg-brand-500/20 px-5 py-3 rounded-xl border border-brand-500/40 text-xs sm:text-sm text-brand-400 font-black uppercase tracking-widest transition-all shrink-0 cursor-pointer"
+                >
+                    <Wallet className="w-4 h-4 sm:w-5 sm:h-5" /> Instant Payouts
+                </button>
             </div>
 
             {/* Main Promotion Carousel Section */}
@@ -236,53 +232,53 @@ const Home: React.FC = () => {
             {/* Hot Promotions Section — only show when real promo data exists */}
 
             {/* Value Highlights (Conversion Funnel Indicators) */}
-            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="bg-card/50 p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-brand-500/50 transition-all hover:-translate-y-1">
-                    <div className="bg-brand-500/10 p-4 rounded-2xl text-brand-500 mb-6 inline-block">
-                        <Trophy className="w-8 h-8" />
+            <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+                <div className="bg-card/50 p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-brand-500/50 transition-all duration-300 hover:-translate-y-1 group">
+                    <div className="bg-brand-500/10 p-3 sm:p-4 rounded-xl sm:rounded-2xl text-brand-500 mb-4 sm:mb-6 inline-block group-hover:scale-110 transition-transform">
+                        <Trophy className="w-6 h-6 sm:w-8 sm:h-8" />
                     </div>
-                    <h4 className="text-white font-black uppercase text-lg mb-2">Tournaments</h4>
-                    <p className="text-sm text-gray-500">Compete in verified, admin-refereed ladders.</p>
+                    <h4 className="text-white font-black uppercase text-sm sm:text-base md:text-lg mb-1 sm:mb-2">Tournaments</h4>
+                    <p className="text-xs sm:text-sm text-gray-500">Compete in verified, admin-refereed ladders.</p>
                 </div>
-                <div className="bg-card/50 p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-emerald-500/50 transition-all hover:-translate-y-1">
-                    <div className="bg-emerald-500/10 p-4 rounded-2xl text-emerald-500 mb-6 inline-block">
-                        <Flame className="w-8 h-8" />
+                <div className="bg-card/50 p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-emerald-500/50 transition-all duration-300 hover:-translate-y-1 group">
+                    <div className="bg-emerald-500/10 p-3 sm:p-4 rounded-xl sm:rounded-2xl text-emerald-500 mb-4 sm:mb-6 inline-block group-hover:scale-110 transition-transform">
+                        <Flame className="w-6 h-6 sm:w-8 sm:h-8" />
                     </div>
-                    <h4 className="text-white font-black uppercase text-lg mb-2">Daily Scrims</h4>
-                    <p className="text-sm text-gray-500">Train with top competitive squads daily.</p>
+                    <h4 className="text-white font-black uppercase text-sm sm:text-base md:text-lg mb-1 sm:mb-2">Daily Scrims</h4>
+                    <p className="text-xs sm:text-sm text-gray-500">Train with top competitive squads daily.</p>
                 </div>
-                <div className="bg-card/50 p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-yellow-500/50 transition-all hover:-translate-y-1">
-                    <div className="bg-yellow-500/10 p-4 rounded-2xl text-yellow-500 mb-6 inline-block">
-                        <Wallet className="w-8 h-8" />
+                <div className="bg-card/50 p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-yellow-500/50 transition-all duration-300 hover:-translate-y-1 group">
+                    <div className="bg-yellow-500/10 p-3 sm:p-4 rounded-xl sm:rounded-2xl text-yellow-500 mb-4 sm:mb-6 inline-block group-hover:scale-110 transition-transform">
+                        <Wallet className="w-6 h-6 sm:w-8 sm:h-8" />
                     </div>
-                    <h4 className="text-white font-black uppercase text-lg mb-2">Secure Wallet</h4>
-                    <p className="text-sm text-gray-500">Double-guarded entry escrows and fast logs.</p>
+                    <h4 className="text-white font-black uppercase text-sm sm:text-base md:text-lg mb-1 sm:mb-2">Secure Wallet</h4>
+                    <p className="text-xs sm:text-sm text-gray-500">Double-guarded entry escrows and fast logs.</p>
                 </div>
-                <div className="bg-card/50 p-5 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-purple-500/50 transition-all hover:-translate-y-1">
-                    <div className="bg-purple-500/10 p-4 rounded-2xl text-purple-500 mb-6 inline-block">
-                        <Users className="w-8 h-8" />
+                <div className="bg-card/50 p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-purple-500/50 transition-all duration-300 hover:-translate-y-1 group">
+                    <div className="bg-purple-500/10 p-3 sm:p-4 rounded-xl sm:rounded-2xl text-purple-500 mb-4 sm:mb-6 inline-block group-hover:scale-110 transition-transform">
+                        <Users className="w-6 h-6 sm:w-8 sm:h-8" />
                     </div>
-                    <h4 className="text-white font-black uppercase text-lg mb-2">Organizations</h4>
-                    <p className="text-sm text-gray-500">Join gaming teams or host custom matches.</p>
+                    <h4 className="text-white font-black uppercase text-sm sm:text-base md:text-lg mb-1 sm:mb-2">Organizations</h4>
+                    <p className="text-xs sm:text-sm text-gray-500">Join gaming teams or host custom matches.</p>
                 </div>
             </section>
 
             {/* Featured Tournaments Container */}
-            <section className="px-2" aria-labelledby="featured-tournaments-heading">
-                <div className="flex justify-between items-center mb-8">
-                    <div className="space-y-1">
-                        <h2 id="featured-tournaments-heading" className="text-2xl md:text-4xl font-black text-white uppercase tracking-tight flex items-center gap-3">
-                            <Star className="text-yellow-500 w-6 h-6 md:w-8 md:h-8 fill-yellow-500" />
-                            Featured <span className="text-brand-500">Tournaments</span>
+            <section className="px-0 sm:px-2" aria-labelledby="featured-tournaments-heading">
+                <div className="flex justify-between items-center mb-6 sm:mb-8">
+                    <div className="space-y-1 min-w-0">
+                        <h2 id="featured-tournaments-heading" className="text-xl sm:text-2xl md:text-4xl font-black text-white uppercase tracking-tight flex items-center gap-2 sm:gap-3">
+                            <Star className="text-yellow-500 w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 fill-yellow-500 shrink-0" />
+                            Featured <span className="text-yellow-500">Tournaments</span>
                         </h2>
-                        <p className="text-gray-500 text-xs md:text-sm font-medium">Join the most prestigious battles on Nexplay</p>
+                        <p className="text-gray-500 text-xs md:text-sm font-medium hidden sm:block">Join the most prestigious battles on Nexplay</p>
                     </div>
                     <button 
                         onClick={() => handleCtaClick('/tournaments', 'ViewAllFeatured')} 
-                        className="bg-surface/50 hover:bg-surface text-white min-h-[44px] px-4 py-2.5 md:px-6 md:py-3 rounded-xl text-xs md:text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 border border-gray-700 shrink-0"
+                        className="bg-surface/50 hover:bg-surface text-white min-h-[44px] px-3 py-2 sm:px-4 sm:py-2.5 md:px-6 md:py-3 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all flex items-center gap-1 sm:gap-2 border border-gray-700 shrink-0"
                         aria-label="View all scheduled tournaments"
                     >
-                        View All <ChevronRight className="w-4 h-4" />
+                        View All <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
                     </button>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
@@ -299,21 +295,21 @@ const Home: React.FC = () => {
             </section>
 
             {/* Popular Games Browser Layout */}
-            <section className="px-2" aria-labelledby="popular-games-heading">
-                <div className="flex justify-between items-center mb-8">
-                    <div className="space-y-1">
-                        <h2 id="popular-games-heading" className="text-2xl md:text-4xl font-black text-white uppercase tracking-tight flex items-center gap-3">
-                            <Gamepad2 className="text-brand-500 w-6 h-6 md:w-8 md:h-8" />
+            <section className="px-0 sm:px-2" aria-labelledby="popular-games-heading">
+                <div className="flex justify-between items-center mb-6 sm:mb-8">
+                    <div className="space-y-1 min-w-0">
+                        <h2 id="popular-games-heading" className="text-xl sm:text-2xl md:text-4xl font-black text-white uppercase tracking-tight flex items-center gap-2 sm:gap-3">
+                            <Gamepad2 className="text-brand-500 w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 shrink-0" />
                             Popular <span className="text-brand-500">Games</span>
                         </h2>
-                        <p className="text-gray-500 text-xs md:text-sm font-medium">Explore tournaments across your favorite titles</p>
+                        <p className="text-gray-500 text-xs md:text-sm font-medium hidden sm:block">Explore tournaments across your favorite titles</p>
                     </div>
                     <button 
                         onClick={() => handleCtaClick('/games', 'ViewAllGames')} 
-                        className="bg-surface/50 hover:bg-surface text-white min-h-[44px] px-4 py-2.5 md:px-6 md:py-3 rounded-xl text-xs md:text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 border border-gray-700 shrink-0"
+                        className="bg-surface/50 hover:bg-surface text-white min-h-[44px] px-3 py-2 sm:px-4 sm:py-2.5 md:px-6 md:py-3 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all flex items-center gap-1 sm:gap-2 border border-gray-700 shrink-0"
                         aria-label="Explore tournament categories by game"
                     >
-                        Explore <ChevronRight className="w-4 h-4" />
+                        Explore <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
                     </button>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-8">
@@ -329,21 +325,21 @@ const Home: React.FC = () => {
 
             {/* Concluded Tournaments (Hall of Fame) */}
             {recentResults.length > 0 && (
-                <section className="px-2" aria-labelledby="hall-of-fame-heading">
-                    <div className="flex justify-between items-center mb-8">
-                        <div className="space-y-1">
-                            <h2 id="hall-of-fame-heading" className="text-2xl md:text-4xl font-black text-white uppercase tracking-tight flex items-center gap-3">
-                                <Trophy className="text-yellow-500 w-6 h-6 md:w-8 md:h-8 fill-yellow-500" />
+                <section className="px-0 sm:px-2" aria-labelledby="hall-of-fame-heading">
+                    <div className="flex justify-between items-center mb-6 sm:mb-8">
+                        <div className="space-y-1 min-w-0">
+                            <h2 id="hall-of-fame-heading" className="text-xl sm:text-2xl md:text-4xl font-black text-white uppercase tracking-tight flex items-center gap-2 sm:gap-3">
+                                <Trophy className="text-yellow-500 w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 fill-yellow-500 shrink-0" />
                                 Hall of <span className="text-brand-500">Fame</span>
                             </h2>
-                            <p className="text-gray-500 text-xs md:text-sm font-medium">Recently concluded battles and their champions</p>
+                            <p className="text-gray-500 text-xs md:text-sm font-medium hidden sm:block">Recently concluded battles and their champions</p>
                         </div>
                         <button 
                             onClick={() => handleCtaClick('/results', 'ViewAllResults')} 
-                            className="bg-surface/50 hover:bg-surface text-white min-h-[44px] px-4 py-2.5 md:px-6 md:py-3 rounded-xl text-xs md:text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 border border-gray-700 shrink-0"
+                            className="bg-surface/50 hover:bg-surface text-white min-h-[44px] px-3 py-2 sm:px-4 sm:py-2.5 md:px-6 md:py-3 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all flex items-center gap-1 sm:gap-2 border border-gray-700 shrink-0"
                             aria-label="View all historic results"
                         >
-                            View All <ChevronRight className="w-4 h-4" />
+                            View All <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
                         </button>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
@@ -388,38 +384,38 @@ const Home: React.FC = () => {
                 </section>
             )}
             {/* Quick Links — internal linking for SEO */}
-            <section className="mb-12">
-                <h2 className="text-white font-black text-xl uppercase tracking-tight mb-4">Explore NexPlay</h2>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                    <Link to="/tournaments" className="bg-card rounded-2xl border border-gray-800 p-4 hover:border-brand-500/50 touch-target transition-all group">
-                        <Trophy className="w-6 h-6 text-brand-500 mb-2 group-hover:scale-110 transition-transform" />
-                        <h3 className="text-white font-bold text-sm">Tournaments</h3>
-                        <p className="text-gray-500 text-xs">Browse & register</p>
+            <section className="mb-8 sm:mb-12">
+                <h2 className="text-white font-black text-lg sm:text-xl uppercase tracking-tight mb-3 sm:mb-4">Explore NexPlay</h2>
+                <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 md:gap-4">
+                    <Link to="/tournaments" className="bg-card rounded-xl sm:rounded-2xl border border-gray-800 p-3 sm:p-4 hover:border-brand-500/50 touch-target transition-all group">
+                        <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-brand-500 mb-1.5 sm:mb-2 group-hover:scale-110 transition-transform" />
+                        <h3 className="text-white font-bold text-xs sm:text-sm">Tournaments</h3>
+                        <p className="text-gray-500 text-[10px] sm:text-xs hidden sm:block">Browse & register</p>
                     </Link>
-                    <Link to="/scrims" className="bg-card rounded-2xl border border-gray-800 p-4 hover:border-brand-500/50 touch-target transition-all group">
-                        <Gamepad2 className="w-6 h-6 text-brand-500 mb-2 group-hover:scale-110 transition-transform" />
-                        <h3 className="text-white font-bold text-sm">Scrims</h3>
-                        <p className="text-gray-500 text-xs">Practice matches</p>
+                    <Link to="/scrims" className="bg-card rounded-xl sm:rounded-2xl border border-gray-800 p-3 sm:p-4 hover:border-brand-500/50 touch-target transition-all group">
+                        <Gamepad2 className="w-5 h-5 sm:w-6 sm:h-6 text-brand-500 mb-1.5 sm:mb-2 group-hover:scale-110 transition-transform" />
+                        <h3 className="text-white font-bold text-xs sm:text-sm">Scrims</h3>
+                        <p className="text-gray-500 text-[10px] sm:text-xs hidden sm:block">Practice matches</p>
                     </Link>
-                    <Link to="/games" className="bg-card rounded-2xl border border-gray-800 p-4 hover:border-brand-500/50 touch-target transition-all group">
-                        <Gamepad2 className="w-6 h-6 text-brand-500 mb-2 group-hover:scale-110 transition-transform" />
-                        <h3 className="text-white font-bold text-sm">Games</h3>
-                        <p className="text-gray-500 text-xs">Browse by game</p>
+                    <Link to="/games" className="bg-card rounded-xl sm:rounded-2xl border border-gray-800 p-3 sm:p-4 hover:border-brand-500/50 touch-target transition-all group">
+                        <Gamepad2 className="w-5 h-5 sm:w-6 sm:h-6 text-brand-500 mb-1.5 sm:mb-2 group-hover:scale-110 transition-transform" />
+                        <h3 className="text-white font-bold text-xs sm:text-sm">Games</h3>
+                        <p className="text-gray-500 text-[10px] sm:text-xs hidden sm:block">Browse by game</p>
                     </Link>
-                    <Link to="/organizations" className="bg-card rounded-2xl border border-gray-800 p-4 hover:border-brand-500/50 touch-target transition-all group">
-                        <Building2 className="w-6 h-6 text-brand-500 mb-2 group-hover:scale-110 transition-transform" />
-                        <h3 className="text-white font-bold text-sm">Organizations</h3>
-                        <p className="text-gray-500 text-xs">Esports orgs</p>
+                    <Link to="/organizations" className="bg-card rounded-xl sm:rounded-2xl border border-gray-800 p-3 sm:p-4 hover:border-brand-500/50 touch-target transition-all group">
+                        <Building2 className="w-5 h-5 sm:w-6 sm:h-6 text-brand-500 mb-1.5 sm:mb-2 group-hover:scale-110 transition-transform" />
+                        <h3 className="text-white font-bold text-xs sm:text-sm">Organizations</h3>
+                        <p className="text-gray-500 text-[10px] sm:text-xs hidden sm:block">Esports orgs</p>
                     </Link>
-                    <Link to="/news" className="bg-card rounded-2xl border border-gray-800 p-4 hover:border-brand-500/50 touch-target transition-all group">
-                        <Newspaper className="w-6 h-6 text-brand-500 mb-2 group-hover:scale-110 transition-transform" />
-                        <h3 className="text-white font-bold text-sm">News</h3>
-                        <p className="text-gray-500 text-xs">Latest updates</p>
+                    <Link to="/news" className="bg-card rounded-xl sm:rounded-2xl border border-gray-800 p-3 sm:p-4 hover:border-brand-500/50 touch-target transition-all group">
+                        <Newspaper className="w-5 h-5 sm:w-6 sm:h-6 text-brand-500 mb-1.5 sm:mb-2 group-hover:scale-110 transition-transform" />
+                        <h3 className="text-white font-bold text-xs sm:text-sm">News</h3>
+                        <p className="text-gray-500 text-[10px] sm:text-xs hidden sm:block">Latest updates</p>
                     </Link>
-                    <Link to="/leaderboard" className="bg-card rounded-2xl border border-gray-800 p-4 hover:border-brand-500/50 touch-target transition-all group">
-                        <BarChart3 className="w-6 h-6 text-brand-500 mb-2 group-hover:scale-110 transition-transform" />
-                        <h3 className="text-white font-bold text-sm">Leaderboard</h3>
-                        <p className="text-gray-500 text-xs">Top rankings</p>
+                    <Link to="/leaderboard" className="bg-card rounded-xl sm:rounded-2xl border border-gray-800 p-3 sm:p-4 hover:border-brand-500/50 touch-target transition-all group">
+                        <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 text-brand-500 mb-1.5 sm:mb-2 group-hover:scale-110 transition-transform" />
+                        <h3 className="text-white font-bold text-xs sm:text-sm">Leaderboard</h3>
+                        <p className="text-gray-500 text-[10px] sm:text-xs hidden sm:block">Top rankings</p>
                     </Link>
                 </div>
             </section>
