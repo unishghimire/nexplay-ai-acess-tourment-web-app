@@ -140,11 +140,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
         } catch (error: any) {
             console.error('Auth: profile initialization failed:', error);
+            const isDebug = import.meta.env?.VITE_DEBUG_AUTH === 'true';
             const code = typeof error?.code === 'string' ? error.code : '';
+            const detailedMsg = isDebug ? JSON.stringify(error, null, 2) : '';
             setAuthError(
                 code
                     ? `Could not load your profile (${code}). Check your connection and try again.`
-                    : 'Could not load your profile. Check your connection and try again.'
+                    : detailedMsg || 'Could not load your profile. Check your connection and try again.'
             );
         } finally {
             setProfileLoading(false);

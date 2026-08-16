@@ -81,9 +81,23 @@ export function buildPublicProfile(input: PublicProfileInput): Record<string, un
  * Google sign-in) it is a compliant create.
  */
 export async function ensureUserDocument(input: UserDocumentInput): Promise<void> {
-    await setDoc(doc(db, 'users', input.uid), buildUserDocument(input), { merge: true });
+    try {
+        await setDoc(doc(db, 'users', input.uid), buildUserDocument(input), { merge: true });
+    } catch (e:any) {
+        console.error('ensureUserDocument failed:', e);
+        if (import.meta.env.VITE_DEBUG_AUTH === 'true') {
+            throw e;
+        }
+    }
 }
 
 export async function ensurePublicProfile(input: PublicProfileInput): Promise<void> {
-    await setDoc(doc(db, 'users_public', input.uid), buildPublicProfile(input), { merge: true });
+    try {
+        await setDoc(doc(db, 'users_public', input.uid), buildPublicProfile(input), { merge: true });
+    } catch (e:any) {
+        console.error('ensurePublicProfile failed:', e);
+        if (import.meta.env.VITE_DEBUG_AUTH === 'true') {
+            throw e;
+        }
+    }
 }
