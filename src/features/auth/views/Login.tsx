@@ -48,13 +48,17 @@ const Login: React.FC = () => {
     }, [user, authLoading, profileLoading, authError, redirectTarget, navigate]);
 
     // Handle the result of signInWithRedirect (fires after the page reloads from Google OAuth).
-    // Must run before the user interacts with the form so the loading state is set early.
+    // Only set the loading state if we actually initiated a redirect (flag set in handleGoogleSignIn).
     useEffect(() => {
         let cancelled = false;
-        setIsGoogleLoading(true);
+        const pendingRedirect = sessionStorage.getItem('google-redirect-pending') === 'true';
+        if (pendingRedirect) {
+            setIsGoogleLoading(true);
+        }
         getRedirectResult(auth)
             .then((result) => {
                 if (cancelled) return;
+                sessionStorage.removeItem('google-redirect-pending');
                 if (result) {
                     showToast('Welcome back!', 'success');
                     setRedirectTarget(getRedirectTarget());
@@ -65,10 +69,10 @@ const Login: React.FC = () => {
             })
             .catch((err: any) => {
                 if (cancelled) return;
+                sessionStorage.removeItem('google-redirect-pending');
                 setIsGoogleLoading(false);
                 console.error('Google redirect result error:', err?.code, err);
                 const googleErrMap: Record<string, string> = {
-                    'auth/popup-blocked': 'Popup was blocked. Please allow popups and try again.',
                     'auth/unauthorized-domain': 'This domain is not authorised in Firebase. Add it to Firebase Console → Authentication → Authorized Domains.',
                     'auth/operation-not-allowed': 'Google Sign-In is not enabled. Enable it in Firebase Console → Authentication → Sign-in method.',
                     'auth/account-exists-with-different-credential': 'An account already exists with this email using a different sign-in method.',
@@ -152,6 +156,8 @@ const Login: React.FC = () => {
         try {
             // Use redirect instead of popup — popup gets stuck at the Firebase auth
             // handler on some environments (blank white screen at __/auth/handler).
+            // Set a flag so getRedirectResult knows to show loading after the page reloads.
+            sessionStorage.setItem('google-redirect-pending', 'true');
             await signInWithRedirect(auth, googleProvider);
             // Page will reload after Google OAuth — result handled in the useEffect above.
         } catch (err: any) {
