@@ -5,7 +5,7 @@ import { useNotification } from '../../../shared/context/NotificationContext';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { motion } from 'motion/react';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck } from 'lucide-react';
-import { signInWithEmailAndPassword, signInWithPopup, sendPasswordResetEmail } from 'firebase/auth';
+import { signInWithEmailAndPassword, signInWithRedirect, getRedirectResult, sendPasswordResetEmail } from 'firebase/auth';
 import { auth, googleProvider } from '../../../shared/config/firebase';
 import { isSafeInternalPath } from '../../../shared/utils/utils';
 import ReCAPTCHA from 'react-google-recaptcha';
@@ -47,6 +47,42 @@ const Login: React.FC = () => {
         }
     }, [user, authLoading, profileLoading, authError, redirectTarget, navigate]);
 
+    // Handle the result of signInWithRedirect (fires after the page reloads from Google OAuth).
+    // Must run before the user interacts with the form so the loading state is set early.
+    useEffect(() => {
+        let cancelled = false;
+        setIsGoogleLoading(true);
+        getRedirectResult(auth)
+            .then((result) => {
+                if (cancelled) return;
+                if (result) {
+                    showToast('Welcome back!', 'success');
+                    setRedirectTarget(getRedirectTarget());
+                    // Keep loading — the auth state change will navigate once settled.
+                } else {
+                    setIsGoogleLoading(false);
+                }
+            })
+            .catch((err: any) => {
+                if (cancelled) return;
+                setIsGoogleLoading(false);
+                console.error('Google redirect result error:', err?.code, err);
+                const googleErrMap: Record<string, string> = {
+                    'auth/popup-blocked': 'Popup was blocked. Please allow popups and try again.',
+                    'auth/unauthorized-domain': 'This domain is not authorised in Firebase. Add it to Firebase Console → Authentication → Authorized Domains.',
+                    'auth/operation-not-allowed': 'Google Sign-In is not enabled. Enable it in Firebase Console → Authentication → Sign-in method.',
+                    'auth/account-exists-with-different-credential': 'An account already exists with this email using a different sign-in method.',
+                    'auth/network-request-failed': 'Network error. Check your connection and try again.',
+                    'auth/internal-error': 'An internal error occurred. Please try again.',
+                };
+                const errMsg = googleErrMap[err?.code] || `Google Sign-In failed (${err?.code || 'unknown'}). Please try again.`;
+                setError(errMsg);
+                showToast(errMsg, 'error');
+            });
+        return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     // If profile initialization fails, release the loading state so the user can
     // retry instead of staring at an indefinite spinner.
     useEffect(() => {
@@ -66,7 +102,7 @@ const Login: React.FC = () => {
             setIsLoading(false);
             setIsGoogleLoading(false);
             setError('Sign-in could not be confirmed. Please try again.');
-        }, 10000);
+        }, 15000);
         return () => clearTimeout(timer);
     }, [isLoading, isGoogleLoading, user, authLoading, authError]);
 
@@ -114,26 +150,20 @@ const Login: React.FC = () => {
         setIsGoogleLoading(true);
 
         try {
-            await signInWithPopup(auth, googleProvider);
-            showToast('Welcome back!', 'success');
-            setRedirectTarget(getRedirectTarget());
+            // Use redirect instead of popup — popup gets stuck at the Firebase auth
+            // handler on some environments (blank white screen at __/auth/handler).
+            await signInWithRedirect(auth, googleProvider);
+            // Page will reload after Google OAuth — result handled in the useEffect above.
         } catch (err: any) {
             submittingRef.current = false;
             setIsGoogleLoading(false);
-            console.error('Google Sign-In error code:', err?.code);
-            console.error('Google Sign-In error:', err);
-
+            console.error('Google Sign-In redirect error:', err?.code, err);
             const googleErrMap: Record<string, string> = {
-                'auth/popup-blocked': 'Popup was blocked by your browser. Please allow popups for this site and try again.',
-                'auth/popup-closed-by-user': 'Sign-in was cancelled. Please try again.',
-                'auth/cancelled-popup-request': 'Another sign-in is already in progress.',
-                'auth/unauthorized-domain': 'This domain is not authorised in Firebase. Add it to Firebase Console → Authentication → Authorized Domains.',
+                'auth/unauthorized-domain': 'This domain is not authorised in Firebase. Add it in Firebase Console → Authentication → Authorized Domains.',
                 'auth/operation-not-allowed': 'Google Sign-In is not enabled. Enable it in Firebase Console → Authentication → Sign-in method.',
-                'auth/account-exists-with-different-credential': 'An account already exists with this email using a different sign-in method. Please log in with email/password.',
                 'auth/network-request-failed': 'Network error. Check your connection and try again.',
                 'auth/internal-error': 'An internal error occurred. Please try again.',
             };
-
             const errMsg = googleErrMap[err?.code] || `Google Sign-In failed (${err?.code || 'unknown'}). Please try again.`;
             setError(errMsg);
             showToast(errMsg, 'error');
