@@ -134,8 +134,8 @@ service cloud.firestore {
                        isOwner(userId) &&
                        isValidUserProfile(incoming()) &&
                        incoming().role == 'player' &&
-                       incoming().balance == 0 &&
-                       incoming().totalEarnings == 0;
+                       incoming().get('balance', 0) == 0 &&
+                       incoming().get('totalEarnings', 0) == 0;
 
       // Players can update their own profile fields only — financial and role fields are locked
       allow update: if isValidId(userId) && (
@@ -153,8 +153,8 @@ service cloud.firestore {
           incoming().role == existing().role &&
           incoming().balance == existing().balance &&
           incoming().totalEarnings == existing().totalEarnings &&
-          incoming().orgWalletBalance == existing().orgWalletBalance &&
-          incoming().orgPendingEarnings == existing().orgPendingEarnings
+          incoming().get('orgWalletBalance', 0) == existing().get('orgWalletBalance', 0) &&
+          incoming().get('orgPendingEarnings', 0) == existing().get('orgPendingEarnings', 0)
         ) ||
         (existing().teamId is string && isTeamOwner(existing().teamId) &&
           incoming().diff(existing()).affectedKeys().hasOnly(['teamName', 'teamId', 'updatedAt']) &&
