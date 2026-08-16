@@ -1,7 +1,9 @@
 {
-  "projectId": "nexplayorg-app",
-  "appId": "1:109244835123257425088:web:nexplayorg-app",
+  "apiKey": "AIzaSyANcdsPT054jotKUvU950kj9wWyBMZJ8g8",
   "authDomain": "nexplayorg-app.firebaseapp.com",
+  "projectId": "nexplayorg-app",
   "storageBucket": "nexplayorg-app.firebasestorage.app",
-  "messagingSenderId": "109244835123257425088"
+  "messagingSenderId": "882712406279",
+  "appId": "1:882712406279:web:86cc15d0ce544241abfda2",
+  "measurementId": "G-1CP04R5PV9"
 }
