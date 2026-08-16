@@ -37,15 +37,14 @@ const Login: React.FC = () => {
     const submittingRef = useRef(false);
     const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY?.trim();
 
-    // Redirect only once the session is fully settled: user present, auth resolved,
-    // and profile initialization finished without error. Navigating before that lets
-    // ProtectedRoute see a transient logged-out state and bounce back to /login —
-    // leaving the user stranded on the login page.
+    // Redirect once session is settled: user present and auth resolved.
+    // Don't wait for profileLoading — that can delay navigation indefinitely
+    // on first Google sign-in while the profile doc is being created.
     useEffect(() => {
-        if (user && !authLoading && !profileLoading && !authError) {
+        if (user && !authLoading && !authError) {
             navigate(redirectTarget, { replace: true });
         }
-    }, [user, authLoading, profileLoading, authError, redirectTarget, navigate]);
+    }, [user, authLoading, authError, redirectTarget, navigate]);
 
     // Handle the result of signInWithRedirect (fires after the page reloads from Google OAuth).
     // Only set the loading state if we actually initiated a redirect (flag set in handleGoogleSignIn).

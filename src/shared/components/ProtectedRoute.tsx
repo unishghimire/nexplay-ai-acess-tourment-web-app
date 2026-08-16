@@ -9,11 +9,8 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles }) => {
-    const { user, profile, loading, authError } = useAuth();
+    const { user, profile, loading, authError, retryAuth } = useAuth();
     const location = useLocation();
-    // ponytail: 5s timeout — if profile never loads (Firestore hang), stop blocking
-    // Ceiling: user with truly missing profile doc gets redirected to dashboard instead of stuck spinner
-    // Upgrade: server-side profile creation on first login
     const [profileTimeout, setProfileTimeout] = useState(false);
 
     useEffect(() => {
@@ -33,19 +30,28 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
         );
     }
 
+    // Not authenticated at all — redirect to login
     if (!user) {
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
-    // The user is authenticated but the profile could not be loaded (Firestore
-    // error/timeout). Send them to /login where a retry is offered instead of
-    // rendering the app with a missing profile.
+    // User IS authenticated but profile failed to load — show retry instead of
+    // redirecting to /login (which creates a bounce loop: login sees user → redirects back)
     if (authError) {
-        return <Navigate to="/login" state={{ from: location }} replace />;
+        return (
+            <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
+                <p className="text-red-400 font-bold text-center max-w-sm">{authError}</p>
+                <button
+                    onClick={retryAuth}
+                    className="px-6 py-2 bg-brand-500 hover:bg-brand-400 text-white font-bold rounded-lg transition-colors"
+                >
+                    Retry
+                </button>
+            </div>
+        );
     }
 
-    // Wait for profile to load before checking roles — prevents race condition
-    // where authorized users get redirected to /dashboard during initial load
+    // Wait for profile to load before checking roles
     if (allowedRoles && !profile && !profileTimeout) {
         return (
             <div className="min-h-[60vh] flex flex-col items-center justify-center">
@@ -55,7 +61,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
         );
     }
 
-    // Profile timed out or role doesn't match
     if (allowedRoles && profileTimeout && !profile) {
         return <Navigate to="/dashboard" replace />;
     }
