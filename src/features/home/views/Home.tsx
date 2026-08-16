@@ -106,7 +106,8 @@ const Home: React.FC = () => {
             try {
                 const slidesSnap = await getDocs(query(
                     collection(db, 'slides'),
-                    where('isActive', '==', true)
+                    where('isActive', '==', true),
+                    limit(10)
                 ));
                 let slidesData = slidesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Slide));
                 slidesData.sort((a, b) => {
@@ -123,7 +124,8 @@ const Home: React.FC = () => {
             try {
                 const tournamentsSnap = await getDocs(query(
                     collection(db, 'tournaments'),
-                    where('isFeatured', '==', true)
+                    where('isFeatured', '==', true),
+                    limit(10)
                 ));
                 let tournamentsData = tournamentsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Tournament));
                 tournamentsData = tournamentsData.filter(t => t.status === 'upcoming' && (t as any).matchType !== 'scrims' && (t as any).isScrim !== true && (t as any).type !== 'scrim' && (t as any).type !== 'scrims');

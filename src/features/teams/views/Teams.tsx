@@ -1,6 +1,6 @@
 import Seo from '../../../shared/components/Seo';
 import React, { useState, useEffect } from 'react';
-import { collection, query, getDocs, serverTimestamp, where, doc, setDoc, updateDoc, orderBy, limit, writeBatch } from 'firebase/firestore';
+import { collection, query, getDocs, serverTimestamp, where, doc, orderBy, limit, writeBatch } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
@@ -129,7 +129,7 @@ const Teams: React.FC = () => {
             setNewTeamDesc('');
             setNewTeamLogo('');
             fetchTeams();
-            navigate(`/team/${docRef.id}`);
+            navigate(`/team/${teamRef.id}`);
         } catch (error: any) {
             console.error("Error creating team:", error);
             showToast('Failed to create team', 'error');

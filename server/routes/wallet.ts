@@ -622,10 +622,13 @@ router.post("/api/wallet/distribute-prizes",
           }
         }
 
-        // Revenue split (85/15) — atomic with prize distribution
-        const approvedCount = tData.approvedCount || 0;
+        // Revenue split (85/15) — atomic with prize distribution.
+        // Use currentPlayers as the authoritative participant count, falling back to
+        // winners.length. The denormalized approvedCount field is unreliable — it may be
+        // 0 for manual-registration tournaments or lag due to async increments (BUG-044).
         const entryFee = tData.entryFee || 0;
-        const entryFeeTotal = approvedCount * entryFee;
+        const participantCount = tData.currentPlayers || tData.approvedCount || winners.length || 0;
+        const entryFeeTotal = participantCount * entryFee;
         const prizePoolTotal = tData.prizePool || 0;
         const profit = entryFeeTotal - prizePoolTotal;
         const orgShare = Math.round(profit * REVENUE_SPLIT.ORGANIZER);

@@ -6,7 +6,7 @@ import { useAuth } from '../../../shared/context/AuthContext';
 import { motion } from 'motion/react';
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, CheckCircle, XCircle, ShieldCheck, Phone, Hash } from 'lucide-react';
 import { createUserWithEmailAndPassword, sendEmailVerification, signInWithPopup, updateProfile } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
 import { auth, db, googleProvider } from '../../../shared/config/firebase';
 import { isSafeInternalPath } from '../../../shared/utils/utils';
 import { buildUserDocument, buildPublicProfile } from '../../../shared/services/userProfileService';
@@ -205,7 +205,39 @@ const Register: React.FC = () => {
         setIsGoogleLoading(true);
 
         try {
-            await signInWithPopup(auth, googleProvider);
+            const result = await signInWithPopup(auth, googleProvider);
+            const firebaseUser = result.user;
+
+            // Provision Firestore profile for first-time Google sign-ups (BUG-049).
+            // Idempotent: skip if the doc already exists (returning user).
+            const userRef = doc(db, 'users', firebaseUser.uid);
+            const existingDoc = await getDoc(userRef);
+            if (!existingDoc.exists()) {
+                const derivedUsername = (
+                    firebaseUser.displayName?.trim().replace(/\s+/g, ' ') ||
+                    firebaseUser.email?.split('@')[0] ||
+                    ''
+                ).slice(0, 30) || `Player${firebaseUser.uid.slice(0, 6)}`;
+
+                await setDoc(userRef, buildUserDocument({
+                    uid: firebaseUser.uid,
+                    email: firebaseUser.email || '',
+                    username: derivedUsername,
+                    inGameId: '',
+                    inGameName: '',
+                    teamName: '',
+                    phone: '',
+                    isBanned: false,
+                    createdAt: serverTimestamp(),
+                }));
+                await setDoc(doc(db, 'users_public', firebaseUser.uid), buildPublicProfile({
+                    uid: firebaseUser.uid,
+                    username: derivedUsername,
+                    inGameId: '',
+                    inGameName: '',
+                }));
+            }
+
             showToast('Welcome to Nexplay!', 'success');
             setRedirectTarget(getRedirectTarget());
         } catch (err: any) {

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { collection, query, where, getDocs, onSnapshot, getDoc, doc } from 'firebase/firestore';
+import { collection, query, where, getDocs, onSnapshot, doc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from './AuthContext';
 import { Tournament } from '../types/types';
@@ -42,6 +42,9 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         let isMounted = true;
         const notifiedSet = notifiedTournamentsRef.current;
         const unsubList: (() => void)[] = [];
+        // Shared tournament IDs ref — populated by setupLiveListeners, reused by checkUpcoming
+        // so we avoid fetching participants twice (BUG-045).
+        const tourIdsRef: { current: string[] } = { current: [] };
 
         const setupLiveListeners = async () => {
             try {
@@ -55,6 +58,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
                 const tourIds = Array.from(
                     new Set(partSnap.docs.map(d => d.data().tournamentId).filter(Boolean))
                 );
+                // Store for reuse by checkUpcoming — avoids a duplicate participant query
+                tourIdsRef.current = tourIds;
 
                 if (tourIds.length === 0) return;
 
@@ -90,20 +95,41 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         const checkUpcoming = async () => {
             const now = new Date();
             const thirtyMinsLater = new Date(now.getTime() + 30 * 60000);
-            
+
             try {
-                const partSnap = await getDocs(query(collection(db, 'participants'), where('userId', '==', user.uid)));
-                const tourIds = partSnap.docs.map(d => d.data().tournamentId);
-                
-                for (const id of tourIds) {
-                    if (notifiedSet.has(id + '_upcoming')) continue;
-                    
-                    const tDoc = await getDoc(doc(db, 'tournaments', id));
-                    if (tDoc.exists()) {
-                        const t = { id: tDoc.id, ...tDoc.data() } as Tournament;
+                // Reuse IDs already fetched by setupLiveListeners when available.
+                // Fall back to a fresh participant query only on the first interval tick
+                // before setupLiveListeners has completed.
+                let tourIds = tourIdsRef.current;
+                if (tourIds.length === 0) {
+                    const partSnap = await getDocs(query(collection(db, 'participants'), where('userId', '==', user.uid)));
+                    tourIds = partSnap.docs.map(d => d.data().tournamentId).filter(Boolean);
+                    tourIdsRef.current = tourIds;
+                }
+
+                // Filter to only IDs not yet notified to avoid unnecessary reads
+                const unnotified = tourIds.filter(id => !notifiedSet.has(id + '_upcoming'));
+                if (unnotified.length === 0) return;
+
+                // Batch-fetch tournament docs using __name__ in (max 30 per query)
+                // instead of N sequential getDoc calls — reduces N reads to ceil(N/30) reads.
+                const BATCH_SIZE = 30;
+                const snapshots = await Promise.all(
+                    Array.from({ length: Math.ceil(unnotified.length / BATCH_SIZE) }, (_, i) => {
+                        const batch = unnotified.slice(i * BATCH_SIZE, (i + 1) * BATCH_SIZE);
+                        return getDocs(query(
+                            collection(db, 'tournaments'),
+                            where('__name__', 'in', batch)
+                        ));
+                    })
+                );
+
+                for (const snap of snapshots) {
+                    for (const tDocSnap of snap.docs) {
+                        const t = { id: tDocSnap.id, ...tDocSnap.data() } as Tournament;
+                        if (notifiedSet.has(t.id + '_upcoming')) continue;
                         const startTime = toDateSafe(t.startTime);
                         if (!startTime) continue;
-                        
                         if (startTime > now && startTime <= thirtyMinsLater && t.status === 'upcoming') {
                             await NotificationService.create(
                                 user.uid,
@@ -112,7 +138,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
                                 'warning',
                                 `/tournaments/${t.id}`
                             );
-                            notifiedSet.add(id + '_upcoming');
+                            notifiedSet.add(t.id + '_upcoming');
                             showToast(`${t.title} starts in 30m!`, 'warning');
                         }
                     }

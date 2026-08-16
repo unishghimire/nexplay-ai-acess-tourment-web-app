@@ -307,6 +307,26 @@
           "order": "DESCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "users_public",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "totalEarnings",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "teams",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "totalEarnings",
+          "order": "DESCENDING"
+        }
+      ]
     }
   ]
 }

@@ -27,7 +27,7 @@ async function startServer() {
   app.use(mediaRoutes);
   app.use(aiRoutes);
   app.use(walletRoutes);
-app.use(adminScrimRoutes);
+  app.use(adminScrimRoutes);
   app.use(adminMoneyRoutes);
   app.use(discordRoutes);
 
@@ -46,6 +46,20 @@ app.use(adminScrimRoutes);
   // IndexNow Endpoint for SEO
   app.post("/api/indexnow", authenticateToken, requireAdmin, rateLimit(5, 15 * 60 * 1000), async (req, res) => {
     await handleIndexNow(req, res);
+  });
+
+  // Centralized error handler — mirrors api/index.ts (BUG-047).
+  // Must be registered after all routes and before the Vite middleware so that
+  // unhandled async errors don't leave requests hanging in development.
+  app.use((err: any, req: any, res: any, _next: any) => {
+    console.error("Dev server error:", err);
+    const status = err.status || err.statusCode || 500;
+    if (!res.headersSent) {
+      res.status(status).json({
+        success: false,
+        message: err.message || "Internal server error"
+      });
+    }
   });
 
   // Vite Middleware

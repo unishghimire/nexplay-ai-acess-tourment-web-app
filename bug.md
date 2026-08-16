@@ -454,7 +454,7 @@ Categories: `Dead Code`, `Broken API`, `UI-UX`, `Cache-Performance`, `Security`.
 
 Each fix is validated locally (type-check, relevant unit tests, build) before moving to the next.
 
-## Phase 3 Status: ALL 38 ENTRIES ✅ FIXED
+## Phase 3 & 4 Status: ALL 53 ENTRIES ✅ FIXED
 
 ---
 
@@ -469,7 +469,7 @@ Each fix is validated locally (type-check, relevant unit tests, build) before mo
 - **Description**: `export default router` is placed at line ~41, **before** `router.post("/api/admin/set-claims", ...)` and `router.post("/api/admin/sync-claims", ...)` are defined. In CommonJS/ts-node/tsx module loading the file executes top-to-bottom, so routes are still registered on the router object before the importing module uses it. However, this is a severe maintenance trap — any developer adding a route above the export will not notice the pattern; linters and code reviewers will flag it; and some bundlers that perform tree-shaking or re-order top-level statements could break these routes silently in future. More importantly, it signals that the routes were added as an afterthought after the export and could easily be missed during future audits.
 - **Root Cause**: Routes were appended below `export default router` during incremental development without reorganizing the file.
 - **Proposed Safe Fix**: Move `export default router` to the very end of the file (after all `router.post`/`router.get` definitions).
-- **Status**: 🔲 Pending
+- **Status**: ✅ Fixed — `export default router` is located on the final line of `server/routes/auth.ts` (line 81).
 
 ---
 
@@ -480,7 +480,7 @@ Each fix is validated locally (type-check, relevant unit tests, build) before mo
 - **Description**: `export default router` is at line ~210, but `POST /api/wallet/join-tournament`, `POST /api/wallet/leave-tournament`, `POST /api/wallet/redeem-promo`, `POST /api/wallet/distribute-prizes`, and `POST /api/wallet/cancel-tournament` are all defined **after** the export statement. Same maintenance-trap concern as BUG-039 — routes work today due to CommonJS module semantics but are invisible to static analysis, create confusion, and could silently break under different runtime environments.
 - **Root Cause**: Critical wallet routes were added incrementally below the export statement without reorganizing.
 - **Proposed Safe Fix**: Move `export default router` to the last line of the file, after all route definitions.
-- **Status**: 🔲 Pending
+- **Status**: ✅ Fixed — `export default router` is located on the final line of `server/routes/wallet.ts` (line 873).
 
 ---
 
@@ -491,7 +491,7 @@ Each fix is validated locally (type-check, relevant unit tests, build) before mo
 - **Description**: `handleReportDispute` creates a dispute doc in `disputes` WITHOUT a `tournamentId` field. The Firestore `disputes` read rule includes `isTournamentHost(existing().tournamentId)` — when `tournamentId` is absent, `existing().tournamentId` is `null`/`undefined`, and the `isTournamentHost` function calls `get(/databases/.../tournaments/undefined)` which is a Firestore error, effectively preventing tournament hosts from ever reading or managing these disputes. The dispute is orphaned from all tournament management workflows.
 - **Root Cause**: The dispute form was built for generic transaction disputes; the `tournamentId` field was not included in the `addDoc` payload despite the rules referencing it.
 - **Proposed Safe Fix**: Add `tournamentId: selectedTxForDispute.tournamentId || null` to the `addDoc` payload in `handleReportDispute`. For transactions that have no `tournamentId`, the field should be explicitly `null` (not missing) so the rule `isTournamentHost(null)` short-circuits cleanly rather than fetching `tournaments/undefined`.
-- **Status**: 🔲 Pending
+- **Status**: ✅ Fixed — `handleReportDispute` includes `tournamentId: selectedTxForDispute.tournamentId || null` in the `addDoc` payload (`Wallet.tsx:159`).
 
 ---
 
@@ -502,7 +502,7 @@ Each fix is validated locally (type-check, relevant unit tests, build) before mo
 - **Description**: The file imports `ref`, `uploadBytes`, `getDownloadURL` from `firebase/storage`; `ImageUploader` from components; `DEFAULT_BANNER`, `NEXPLAY_LOGO` from constants; and `SubscriptionPlan` from types — none of which are used anywhere in the file. These symbols are imported but never referenced, adding dead weight to the bundle and triggering TypeScript `noUnusedLocals` warnings.
 - **Root Cause**: Imports left over from an earlier version of the hook before the upload logic was extracted to `useInvisibleImage`.
 - **Proposed Safe Fix**: Remove the six unused import lines: `ref`/`uploadBytes`/`getDownloadURL`, `ImageUploader`, `DEFAULT_BANNER`/`NEXPLAY_LOGO`, and `SubscriptionPlan`.
-- **Status**: 🔲 Pending
+- **Status**: ✅ Fixed — unused imports (`ref`, `uploadBytes`, `getDownloadURL`, `ImageUploader`, `DEFAULT_BANNER`, `NEXPLAY_LOGO`, `SubscriptionPlan`) were removed from `useAdminData.ts`.
 
 ---
 
@@ -513,7 +513,7 @@ Each fix is validated locally (type-check, relevant unit tests, build) before mo
 - **Description**: The `leave-tournament` endpoint only blocks leaving `completed` or `cancelled` tournaments (`if (['completed', 'cancelled'].includes(tData.status)) throw new Error("Cannot leave a completed tournament")`). A player in a **live** tournament can call this API directly (bypassing the client-side `status !== 'upcoming'` guard) and receive a full entry-fee refund mid-game, then continue playing or rejoin. This is exploitable: register → tournament goes live → call leave API → get refund → play for free.
 - **Root Cause**: Server-side status check is incomplete; `live` (and `paused`) are not blocked.
 - **Proposed Safe Fix**: Add `'live'` and `'paused'` to the blocked statuses: `if (['live', 'paused', 'completed', 'cancelled'].includes(tData.status)) throw new Error("Cannot leave a tournament that has already started")`.
-- **Status**: 🔲 Pending
+- **Status**: ✅ Fixed — status guard in `/api/wallet/leave-tournament` includes `live` and `paused`: `if (['live', 'paused', 'completed', 'cancelled'].includes(tData.status))` (`server/routes/wallet.ts:371`).
 
 ---
 
@@ -524,7 +524,7 @@ Each fix is validated locally (type-check, relevant unit tests, build) before mo
 - **Description**: In `/api/wallet/distribute-prizes`, revenue is calculated as `const approvedCount = tData.approvedCount || 0; const entryFeeTotal = approvedCount * entryFee;`. The `approvedCount` field is a denormalized counter that may be stale, missing, or zero (never incremented for `registrationType === 'manual'` tournaments). If it is 0, the platform records `profit = 0 - prizePool = negative`, and the organizer earns nothing despite collecting entry fees. The correct value is the count of approved participants who paid entry fees — available atomically in the same transaction via the participants collection.
 - **Root Cause**: Denormalized counter used instead of querying the authoritative participants collection.
 - **Proposed Safe Fix**: Inside the `distribute-prizes` transaction, count participants with `status === 'approved'` who have a corresponding successful `entry_fee` transaction for this tournament, OR simply count approved participants (already validated as paid via the join-tournament flow). Replace `approvedCount` with the `winners.length` (the actual paying participants who are being distributed to), or count approved participants directly. At minimum, add a fallback: `const approvedCount = tData.approvedCount || tData.currentPlayers || winners.length || 0`.
-- **Status**: 🔲 Pending
+- **Status**: ✅ Fixed — participant count uses authoritative `currentPlayers` fallback: `tData.currentPlayers || tData.approvedCount || winners.length || 0` (`server/routes/wallet.ts:630`).
 
 ---
 
@@ -535,7 +535,7 @@ Each fix is validated locally (type-check, relevant unit tests, build) before mo
 - **Description**: `checkUpcoming` runs every 5 minutes and: (1) queries all participant docs for the user, (2) loops over each `tournamentId` and does a sequential `await getDoc(doc(db, 'tournaments', id))` for each. For a user in N tournaments, this is 1 + N Firestore reads every 5 minutes. For a user in 10 tournaments: 11 reads × 12 intervals/hour = 132 reads/hour from this one component alone. Additionally, `setupLiveListeners` also queries all participant docs in a separate `getDocs` call, meaning `participants where userId==uid` is fetched **twice** on mount.
 - **Root Cause**: Sequential `getDoc` loop instead of batched reads; duplicate participant query.
 - **Proposed Safe Fix**: (1) Deduplicate the participant query: share the result from `setupLiveListeners` with `checkUpcoming` via a ref. (2) In `checkUpcoming`, filter `tourIds` to only those not yet notified, then batch-fetch tournament docs using `__name__ in` chunks (max 10 per query per Firestore `in` constraint). This reduces 11 sequential reads to 1-2 batched reads.
-- **Status**: 🔲 Pending
+- **Status**: ✅ Fixed — `NotificationContext` deduplicates participant queries via `tourIdsRef` and batch-fetches tournament docs using `__name__ in` chunks (`NotificationContext.tsx:62,103-125`).
 
 ---
 
@@ -546,7 +546,7 @@ Each fix is validated locally (type-check, relevant unit tests, build) before mo
 - **Description**: `getDocs(query(collection(db, 'teams')))` fetches the **entire** teams collection with no `limit()` or `orderBy()`. As the platform grows, this could transfer hundreds of documents (including full team data) on every page mount. The search/filter is done entirely client-side after fetching all teams.
 - **Root Cause**: Missing `limit()` and pagination on the teams query.
 - **Proposed Safe Fix**: Add `orderBy('createdAt', 'desc')` and `limit(100)` to the teams query. Add a composite index for `teams: createdAt DESC` if not present. For search, consider server-side filtering or an Algolia/Typesense integration for production scale.
-- **Status**: 🔲 Pending
+- **Status**: ✅ Fixed — `Teams.tsx` fetches teams using `orderBy('createdAt', 'desc')` and `limit(200)` (`Teams.tsx:56`).
 
 ---
 
@@ -557,7 +557,7 @@ Each fix is validated locally (type-check, relevant unit tests, build) before mo
 - **Description**: `api/index.ts` (production Vercel handler) has a centralized error handler: `app.use((err, req, res, next) => { ... })`. `server.ts` (the local development server) has no such handler. Express 4 does not automatically propagate unhandled promise rejections in async route handlers to error middleware. Any uncaught error in development (e.g., Firestore timeout, missing environment variable) will leave requests hanging without a response and log an unhandled rejection — making local debugging harder.
 - **Root Cause**: Error handler was added to `api/index.ts` but not mirrored in `server.ts`.
 - **Proposed Safe Fix**: Add the same centralized error handler middleware to `server.ts` after all route mounts and before the Vite middleware.
-- **Status**: 🔲 Pending
+- **Status**: ✅ Fixed — centralized error handler middleware registered in `server.ts` matching `api/index.ts` (`server.ts:54-63`).
 
 ---
 
@@ -568,7 +568,7 @@ Each fix is validated locally (type-check, relevant unit tests, build) before mo
 - **Description**: `vercel.json` sets `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, and `Permissions-Policy` but does NOT include a `Content-Security-Policy` (CSP) header. Without CSP, any XSS vulnerability in the React app (e.g., a dangerously-rendered user-provided string) can load arbitrary scripts from any origin, exfiltrate auth tokens, or perform clickjacking. The existing `X-Frame-Options: SAMEORIGIN` is superseded by CSP `frame-ancestors` in modern browsers.
 - **Root Cause**: CSP was not configured during initial deployment setup.
 - **Proposed Safe Fix**: Add a `Content-Security-Policy` header in `vercel.json` for the `/(.*)`  source. A reasonable starting policy: `default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://www.google.com https://apis.google.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://api.cloudinary.com; frame-src https://www.youtube.com https://www.google.com; font-src 'self' data:;`. Note: `unsafe-inline` for scripts is required for Vite's HMR in dev, but the production build should use nonces or hashes for stricter enforcement.
-- **Status**: 🔲 Pending
+- **Status**: ✅ Fixed — `Content-Security-Policy` header added to `vercel.json` (`vercel.json:39-41`).
 
 ---
 
@@ -579,7 +579,7 @@ Each fix is validated locally (type-check, relevant unit tests, build) before mo
 - **Description**: `handleGoogleSignIn` calls `signInWithPopup(auth, googleProvider)` and on success immediately navigates to the dashboard with `showToast('Welcome to Nexplay!')`. It does **not** create a `users/{uid}` or `users_public/{uid}` Firestore document. If this is a new Google account (first sign-up), the user will have a valid Firebase Auth session but no profile document — `AuthContext` will fail to load the profile, `ProtectedRoute` will get stuck in the "Loading profile..." spinner for 5 seconds, then redirect to `/dashboard` where any profile-dependent feature will crash or show null data. The wallet will show 0 balance (no doc), tournaments will fail the `inGameId` check, etc.
 - **Root Cause**: The Google sign-up path was implemented without the profile document creation step that the email/password path includes.
 - **Proposed Safe Fix**: After `signInWithPopup` succeeds, check if `users/{uid}` exists; if not, create it using `buildUserDocument` and `buildPublicProfile` (same pattern as email registration). Use a `getDoc` + conditional `setDoc` pattern to be idempotent (safe for returning Google users who already have a profile).
-- **Status**: 🔲 Pending
+- **Status**: ✅ Fixed — `handleGoogleSignIn` checks for existing profile doc and provisions `users` + `users_public` docs for first-time Google sign-ups (`Register.tsx:211-239`).
 
 ---
 
@@ -590,7 +590,7 @@ Each fix is validated locally (type-check, relevant unit tests, build) before mo
 - **Description**: The featured tournaments query is `getDocs(query(collection(db, 'tournaments'), where('isFeatured', '==', true)))` with no `limit()`. If many tournaments are featured, this fetches all of them. The scrim filter (`matchType !== 'scrims' && isScrim !== true`) is applied client-side after the read. Additionally, `slides` query has no `limit()`.
 - **Root Cause**: Missing `limit()` on the `isFeatured` query and `slides` query.
 - **Proposed Safe Fix**: Add `limit(10)` to the featured tournaments query and `limit(10)` to the slides query. The scrim filter remains client-side (acceptable given the limit).
-- **Status**: 🔲 Pending
+- **Status**: ✅ Fixed — added `limit(10)` to featured tournaments query (`Home.tsx:127`) and `limit(10)` to slides query (`Home.tsx:110`).
 
 ---
 
@@ -601,7 +601,7 @@ Each fix is validated locally (type-check, relevant unit tests, build) before mo
 - **Description**: The `RankIndicator` component has a misplaced `<Seo>` component and full JSON-LD block inside the `if (change > 0) return (...)` branch. This means the `<Seo>` / `<Helmet>` is rendered into every leaderboard row where a player has a positive rank change — potentially rendering it dozens of times. `react-helmet-async` typically handles duplicate `<head>` entries via last-wins, but this causes unnecessary DOM manipulation on every row render and is semantically wrong (SEO tags belong in the page root, not a row-level indicator component).
 - **Root Cause**: The `<Seo>` block was accidentally placed inside the `RankIndicator` function during a copy-paste error.
 - **Proposed Safe Fix**: Move the `<Seo>` component out of `RankIndicator` and into the `Leaderboard` page component's render return (at the top level, similar to other pages).
-- **Status**: 🔲 Pending
+- **Status**: ✅ Fixed — `<Seo>` component is properly placed at the top-level of `Leaderboard.tsx` and not inside `RankIndicator`.
 
 ---
 
@@ -612,7 +612,7 @@ Each fix is validated locally (type-check, relevant unit tests, build) before mo
 - **Description**: `handleCreateTeam` calls `addDoc(collection(db, 'team_members'), { teamId: docRef.id, userId: user.uid, role: 'admin', joinedAt: serverTimestamp() })` **without** an `inviteId` field. The `canJoinTeam()` Firestore rule (BUG-035 fix) allows this ONLY if `incoming().role == 'admin' && isTeamOwner(incoming().teamId)`. However, the team doc is created via `addDoc` which generates a random ID returned as `docRef.id` — the `team_members` write occurs in the same function, so `isTeamOwner(docRef.id)` requires a Firestore read to verify `teams/{docRef.id}.ownerId == request.auth.uid`. Since `addDoc` has just completed, the team doc exists. This should work, but there is a subtle race: if the team `addDoc` and the `team_members` `addDoc` are not in a transaction, a partial failure leaves the team without any admin member, making it unmanageable. Additionally, `handleCreateTeam` does NOT check BUG-035's `canJoinTeam` requirement for `inviteId` — the admin self-join path is correct, but the code still uses direct client `addDoc` calls to `team_members` which could fail with permission-denied if the rules are stricter in future.
 - **Root Cause**: Team creation uses non-atomic sequential writes (team → member → profile updates) without a batch/transaction.
 - **Proposed Safe Fix**: Wrap the team creation in a `writeBatch`: (1) `batch.set(teamRef, teamData)` with a pre-generated ID via `doc(collection(db, 'teams'))`; (2) `batch.set(memberRef, memberData)`; (3) `batch.update(userRef, profile updates)`. This ensures either all succeed or none do, preventing orphaned teams.
-- **Status**: 🔲 Pending
+- **Status**: ✅ Fixed — `handleCreateTeam` uses `writeBatch` to atomically create the team doc, member doc, and update user profile (`Teams.tsx:95-123`).
 
 ---
 
@@ -623,6 +623,6 @@ Each fix is validated locally (type-check, relevant unit tests, build) before mo
 - **Description**: `Leaderboard.tsx` queries `users_public orderBy('totalEarnings', 'desc') limit(50)` and `teams orderBy('totalEarnings', 'desc') limit(50)`. Neither of these single-field `orderBy` queries requires a composite index (Firestore handles single-field ordering natively). However, the `firestore.indexes.json` file does not document these indexes, which means if a `where` clause is ever added (e.g., `where('role', '==', 'player')` to exclude orgs/admins from the player leaderboard), the query would silently fail until a composite index is manually created. Document the implicit indexes explicitly for maintainability.
 - **Root Cause**: Single-field orderBy indexes are auto-created by Firestore but not documented in `firestore.indexes.json`.
 - **Proposed Safe Fix**: Add explicit index entries to `firestore.indexes.json` for both `users_public: totalEarnings DESC` and `teams: totalEarnings DESC` to document intent and enable future composite index additions without guesswork.
-- **Status**: 🔲 Pending
+- **Status**: ✅ Fixed — added explicit `users_public: totalEarnings DESC` and `teams: totalEarnings DESC` index entries to `firestore.indexes.json`.
 
 ---
