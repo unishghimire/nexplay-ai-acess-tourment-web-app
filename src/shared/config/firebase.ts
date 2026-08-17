@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { getFirestore, enableNetwork, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getAnalytics, isSupported } from 'firebase/analytics';
@@ -9,6 +9,13 @@ import firebaseConfig from '../../../firebase-applet-config.json';
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
+
+// ponytail: explicitly set browserLocalPersistence (the default, but setting it
+// explicitly ensures the auth state survives popup/redirect round-trips and
+// browser restarts — critical for signInWithRedirect fallback on mobile).
+setPersistence(auth, browserLocalPersistence).catch((e) => {
+    console.warn('Failed to set auth persistence:', e);
+});
 
 // ponytail: use initializeFirestore with offline persistence when available.
 // Ceiling: persistentLocalCache uses IndexedDB — not available in SSR/Node.
