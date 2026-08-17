@@ -69,6 +69,57 @@ app.post("/api/admin/bootstrap", rateLimit(3, 60 * 60 * 1000), async (req, res) 
   }
 });
 
+// ═══════════════════════════════════════════════════════════════
+// ADMIN GAME SEED — creates a game with scoring config in Firestore.
+// Protected by super-admin email check.
+// ═══════════════════════════════════════════════════════════════
+app.post("/api/admin/seed-game", authenticateToken, rateLimit(5, 15 * 60 * 1000), async (req: any, res) => {
+  try {
+    // Super-admin email check
+    const SUPER_ADMIN_EMAILS = ["nexplayorg@gmail.com"];
+    if (!SUPER_ADMIN_EMAILS.includes(req.user.email || "")) {
+      return res.status(403).json({ success: false, message: "Super-admin access required" });
+    }
+
+    const { name, logoUrl, modes, isPublished, scoring } = req.body;
+    if (!name || !modes || !Array.isArray(modes)) {
+      return res.status(400).json({ success: false, message: "name and modes[] are required" });
+    }
+
+    // Check if game already exists by name (case-insensitive)
+    const existing = await db.collection("games").where("name", "==", name).get();
+    if (!existing.empty) {
+      // Update existing game
+      const gameDoc = existing.docs[0];
+      await gameDoc.ref.update({
+        name,
+        logoUrl: logoUrl || gameDoc.data().logoUrl || "",
+        modes,
+        isPublished: isPublished !== false,
+        scoring: scoring || gameDoc.data().scoring || null,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+      return res.json({ success: true, message: `Game "${name}" updated`, id: gameDoc.id });
+    }
+
+    // Create new game
+    const gameRef = db.collection("games").doc();
+    await gameRef.set({
+      name,
+      logoUrl: logoUrl || "",
+      modes,
+      isPublished: isPublished !== false,
+      scoring: scoring || null,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    res.json({ success: true, message: `Game "${name}" created`, id: gameRef.id });
+  } catch (error: any) {
+    console.error("Seed game error:", error);
+    res.status(500).json({ success: false, message: error.message || "Internal server error" });
+  }
+});
+
 // Mount route groups
 app.use(authRoutes);
 app.use(tournamentRoutes);

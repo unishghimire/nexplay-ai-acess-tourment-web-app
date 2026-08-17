@@ -413,17 +413,7 @@ const Home: React.FC = () => {
             {/* Quick Links — internal linking for SEO */}
             <section className="mb-8 sm:mb-12">
                 <h2 className="text-white font-black text-lg sm:text-xl uppercase tracking-tight mb-3 sm:mb-4">Explore NexPlay</h2>
-                <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 md:gap-4">
-                    <Link to="/tournaments" className="bg-card rounded-xl sm:rounded-2xl border border-gray-800 p-3 sm:p-4 hover:border-brand-500/50 touch-target transition-colors group">
-                        <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-brand-500 mb-1.5 sm:mb-2 group-hover:scale-110 transition-transform" />
-                        <h3 className="text-white font-bold text-xs sm:text-sm">Tournaments</h3>
-                        <p className="text-gray-500 text-[10px] sm:text-xs hidden sm:block">Browse & register</p>
-                    </Link>
-                    <Link to="/scrims" className="bg-card rounded-xl sm:rounded-2xl border border-gray-800 p-3 sm:p-4 hover:border-brand-500/50 touch-target transition-colors group">
-                        <Gamepad2 className="w-5 h-5 sm:w-6 sm:h-6 text-brand-500 mb-1.5 sm:mb-2 group-hover:scale-110 transition-transform" />
-                        <h3 className="text-white font-bold text-xs sm:text-sm">Scrims</h3>
-                        <p className="text-gray-500 text-[10px] sm:text-xs hidden sm:block">Practice matches</p>
-                    </Link>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
                     <Link to="/games" className="bg-card rounded-xl sm:rounded-2xl border border-gray-800 p-3 sm:p-4 hover:border-brand-500/50 touch-target transition-colors group">
                         <Gamepad2 className="w-5 h-5 sm:w-6 sm:h-6 text-brand-500 mb-1.5 sm:mb-2 group-hover:scale-110 transition-transform" />
                         <h3 className="text-white font-bold text-xs sm:text-sm">Games</h3>
