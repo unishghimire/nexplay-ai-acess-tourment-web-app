@@ -11,6 +11,12 @@ const ProfileCompletionGuard: React.FC<{ children: React.ReactNode }> = ({ child
     // Upgrade: server-side profile creation on first login.
     const [profileTimeout, setProfileTimeout] = useState(false);
 
+    // Auth pages (/login, /register) must mount immediately so they can call
+    // getRedirectResult after a Google OAuth redirect. Blocking them behind a
+    // spinner prevents the redirect result from being processed, leaving the
+    // user stuck on the login page after Google sign-in.
+    const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
+
     useEffect(() => {
         if (!loading && user && profile) {
             const isProfileIncomplete = !profile.inGameId || !profile.inGameName;
@@ -32,7 +38,8 @@ const ProfileCompletionGuard: React.FC<{ children: React.ReactNode }> = ({ child
 
     // Only block if loading AND not timed out. When authError is set the profile
     // could not be loaded — don't block (e.g. the login page shows a retry there).
-    if (loading || (user && !profile && !authError && !profileTimeout)) {
+    // Skip blocking entirely on /login and /register (see isAuthPage comment above).
+    if (!isAuthPage && (loading || (user && !profile && !authError && !profileTimeout))) {
         return (
             <div className="min-h-screen bg-dark flex items-center justify-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-brand-500"></div>

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import { doc, onSnapshot, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
-import { onAuthStateChanged, signOut, User as FirebaseUser } from 'firebase/auth';
+import { onAuthStateChanged, signOut, getRedirectResult, User as FirebaseUser } from 'firebase/auth';
 import { db, auth } from '../config/firebase';
 import { UserProfile } from '../types/types';
 import { ensureUserDocument, ensurePublicProfile } from '../services/userProfileService';
@@ -164,6 +164,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setLoading(false);
             }
         };
+
+        // Process any pending redirect result immediately on mount, so the
+        // auth state is restored even if the Login/Register component hasn't
+        // mounted yet (e.g., ProfileCompletionGuard could block them).
+        // onAuthStateChanged will fire with the user once the result is processed.
+        getRedirectResult(auth).catch((err) => {
+            if (!disposed) {
+                console.error('Auth: getRedirectResult error:', err?.code, err);
+            }
+        });
 
         const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
             if (disposed) return;

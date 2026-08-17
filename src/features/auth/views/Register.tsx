@@ -48,13 +48,15 @@ const Register: React.FC = () => {
     const [redirectTarget, setRedirectTarget] = useState<string>(() => getRedirectTarget());
     const submittingRef = useRef(false);
 
-    // Redirect only once the AuthContext session is fully settled — navigating to
-    // the protected /dashboard before that lets ProtectedRoute bounce back to /login.
+    // Redirect once the user is authenticated and auth has resolved.
+    // Don't wait for profileLoading or authError — the user IS authenticated,
+    // and authError only means the profile doc couldn't be loaded (not that
+    // the sign-in failed). ProtectedRoute handles authError with a retry UI.
     useEffect(() => {
-        if (user && !authLoading && !profileLoading && !authError) {
+        if (user && !authLoading) {
             navigate(redirectTarget, { replace: true });
         }
-    }, [user, authLoading, profileLoading, authError, redirectTarget, navigate]);
+    }, [user, authLoading, redirectTarget, navigate]);
 
     // If profile initialization fails, release the loading state so the user can
     // retry instead of staring at an indefinite spinner.
