@@ -141,7 +141,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // Only apply the result if the session is still the one we resolved for
             // (guards against a logout racing the in-flight initialization).
             if (firebaseUserRef.current?.uid === firebaseUser.uid && nextProfile) {
-                setProfile(nextProfile);
+                // Super-admin email gets admin role on profile
+                const isSuperAdminInit = SUPER_ADMIN_EMAILS.includes(firebaseUser.email || '');
+                setProfile(isSuperAdminInit ? { ...nextProfile, role: 'admin' } : nextProfile);
                 setUser(prev => prev ? { ...prev, username: nextProfile.username, role: nextProfile.role || 'player' } : prev);
             }
         } catch (error: any) {
@@ -234,7 +236,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const unsubscribeProfile = onSnapshot(userRef, (snapshot) => {
                 if (snapshot.exists()) {
                     const data = snapshot.data() as UserProfile;
-                    setProfile(data);
+                    // Super-admin email gets admin role on profile too, so dropdown/routes see it
+                    const isSuperAdmin = SUPER_ADMIN_EMAILS.includes(user.email || '');
+                    setProfile(isSuperAdmin ? { ...data, role: 'admin' } : data);
                     // Update user role if it changes in profile — super-admin email always wins
                     setUser(prev => {
                         if (!prev) return prev;
