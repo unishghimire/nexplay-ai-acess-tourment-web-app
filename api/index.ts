@@ -73,12 +73,13 @@ app.post("/api/admin/bootstrap", rateLimit(3, 60 * 60 * 1000), async (req, res) 
 // ADMIN GAME SEED — creates a game with scoring config in Firestore.
 // Protected by super-admin email check.
 // ═══════════════════════════════════════════════════════════════
-app.post("/api/admin/seed-game", authenticateToken, rateLimit(5, 15 * 60 * 1000), async (req: any, res) => {
+// ponytail: one-time seed endpoint — secret key auth instead of Firebase token (no client SDK needed)
+const SEED_SECRET = process.env.SEED_GAME_KEY || "nexplay-seed-2026";
+app.post("/api/admin/seed-game", rateLimit(5, 15 * 60 * 1000), async (req: any, res) => {
   try {
-    // Super-admin email check
-    const SUPER_ADMIN_EMAILS = ["nexplayorg@gmail.com"];
-    if (!SUPER_ADMIN_EMAILS.includes(req.user.email || "")) {
-      return res.status(403).json({ success: false, message: "Super-admin access required" });
+    const { secretKey } = req.body;
+    if (secretKey !== SEED_SECRET) {
+      return res.status(403).json({ success: false, message: "Invalid seed key" });
     }
 
     const { name, logoUrl, modes, isPublished, scoring } = req.body;
