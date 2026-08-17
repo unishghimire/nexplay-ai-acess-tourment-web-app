@@ -5,7 +5,7 @@ import { useNotification } from '../../../shared/context/NotificationContext';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { motion } from 'motion/react';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck } from 'lucide-react';
-import { signInWithEmailAndPassword, signInWithRedirect, getRedirectResult, sendPasswordResetEmail } from 'firebase/auth';
+import { signInWithEmailAndPassword, signInWithRedirect, signInWithPopup, getRedirectResult, sendPasswordResetEmail } from 'firebase/auth';
 import { auth, googleProvider } from '../../../shared/config/firebase';
 import { isSafeInternalPath } from '../../../shared/utils/utils';
 import ReCAPTCHA from 'react-google-recaptcha';
@@ -154,21 +154,36 @@ const Login: React.FC = () => {
         setIsGoogleLoading(true);
 
         try {
-            // Use redirect instead of popup — popup gets stuck at the Firebase auth
-            // handler on some environments (blank white screen at __/auth/handler).
-            // Set a flag so getRedirectResult knows to show loading after the page reloads.
-            sessionStorage.setItem('google-redirect-pending', 'true');
-            await signInWithRedirect(auth, googleProvider);
-            // Page will reload after Google OAuth — result handled in the useEffect above.
+            // ponytail: prefer popup (no cross-origin storage needed); fall back to
+            // redirect if the popup is blocked or fails.  signInWithRedirect requires
+            // third-party storage access on the auth domain, which modern browsers
+            // increasingly block — popup avoids that entirely.
+            try {
+                await signInWithPopup(auth, googleProvider);
+                // onAuthStateChanged in AuthContext handles the rest.
+            } catch (popupErr: any) {
+                if (popupErr?.code === 'auth/popup-blocked' || popupErr?.code === 'auth/cancelled-popup-request') {
+                    // Fall back to redirect — set flag for the redirect handler
+                    sessionStorage.setItem('google-redirect-pending', 'true');
+                    await signInWithRedirect(auth, googleProvider);
+                } else {
+                    throw popupErr;
+                }
+            }
         } catch (err: any) {
             submittingRef.current = false;
             setIsGoogleLoading(false);
-            console.error('Google Sign-In redirect error:', err?.code, err);
+            // User cancelling the popup is not an error
+            if (err?.code === 'auth/popup-closed-by-user' || err?.code === 'auth/cancelled-popup-request') {
+                return;
+            }
+            console.error('Google Sign-In error:', err?.code, err);
             const googleErrMap: Record<string, string> = {
                 'auth/unauthorized-domain': 'This domain is not authorised in Firebase. Add it in Firebase Console → Authentication → Authorized Domains.',
                 'auth/operation-not-allowed': 'Google Sign-In is not enabled. Enable it in Firebase Console → Authentication → Sign-in method.',
                 'auth/network-request-failed': 'Network error. Check your connection and try again.',
                 'auth/internal-error': 'An internal error occurred. Please try again.',
+                'auth/popup-blocked': 'Popup was blocked by the browser. Please allow popups for this site and try again.',
             };
             const errMsg = googleErrMap[err?.code] || `Google Sign-In failed (${err?.code || 'unknown'}). Please try again.`;
             setError(errMsg);

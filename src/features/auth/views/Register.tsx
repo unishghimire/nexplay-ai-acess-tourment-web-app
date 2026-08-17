@@ -5,7 +5,7 @@ import { useNotification } from '../../../shared/context/NotificationContext';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { motion } from 'motion/react';
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, CheckCircle, XCircle, ShieldCheck, Phone, Hash } from 'lucide-react';
-import { createUserWithEmailAndPassword, sendEmailVerification, signInWithRedirect, getRedirectResult, updateProfile } from 'firebase/auth';
+import { createUserWithEmailAndPassword, sendEmailVerification, signInWithRedirect, signInWithPopup, getRedirectResult, updateProfile } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db, googleProvider } from '../../../shared/config/firebase';
 import { isSafeInternalPath } from '../../../shared/utils/utils';
