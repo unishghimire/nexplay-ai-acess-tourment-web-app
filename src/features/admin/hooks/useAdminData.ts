@@ -7,6 +7,9 @@ import { formatCurrency, formatDate, formatGameName, toDateSafe } from '../../..
 import { NotificationService } from '../../../shared/services/NotificationService';
 import { useInvisibleImage } from '../../../shared/hooks/useInvisibleImage';
 import { MediaCategory, deleteImage } from '../../../shared/services/mediaService';
+import { GameScoringConfig } from '../../../shared/types/scoring';
+import { DEFAULT_BANNER, NEXPLAY_LOGO } from '../../../shared/constants/constants';
+import { ImageUploader } from '../../../shared/components/ImageUploader';
 
 export function useAdminData(showToast: (message: string, type: 'success' | 'error' | 'info' | 'warning') => void) {
     const { profile } = useAuth();
@@ -144,24 +147,21 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
         onUploadEnd: () => setUploading(false),
         onUploadSuccess: (url) => setSlideImage(url),
         onError: (err) => showToast(err, 'error'),
-        category: MediaCategory.OVERLAY_GRAPHIC,
-    });
+        category: MediaCategory.OVERLAY_GRAPHIC });
 
     const { handlePaste: handlePasteGame, handleDrop: handleDropGame, handleDragOver: handleDragOverGame, processAndUpload: processAndUploadGame } = useInvisibleImage({
         onUploadStart: () => setUploading(true),
         onUploadEnd: () => setUploading(false),
         onUploadSuccess: (url) => setGameLogo(url),
         onError: (err) => showToast(err, 'error'),
-        category: MediaCategory.OTHER,
-    });
+        category: MediaCategory.OTHER });
 
     const { handlePaste: handlePastePayment, handleDrop: handleDropPayment, handleDragOver: handleDragOverPayment, processAndUpload: processAndUploadPayment } = useInvisibleImage({
         onUploadStart: () => setUploading(true),
         onUploadEnd: () => setUploading(false),
         onUploadSuccess: (url) => setPaymentQr(url),
         onError: (err) => showToast(err, 'error'),
-        category: MediaCategory.OTHER,
-    });
+        category: MediaCategory.OTHER });
 
     // Transaction Review State
     const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
@@ -199,8 +199,7 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
         isOpen: false,
         title: '',
         message: '',
-        onConfirm: () => {},
-    });
+        onConfirm: () => {} });
 
     const closeConfirmModal = () => setConfirmModal(prev => ({ ...prev, isOpen: false }));
 
@@ -378,8 +377,7 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
         const response = await fetch(path, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-            body: JSON.stringify(body),
-        });
+            body: JSON.stringify(body) });
         const result = await response.json();
         if (!response.ok || !result.success) throw new Error(result.message || 'Request failed');
         return result;
@@ -492,8 +490,7 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
                 userId: selectedUser.uid,
                 amount,
                 type: adjustmentType,
-                desc: `Admin Adjustment: ${adjustmentType === 'add' ? 'Added' : 'Subtracted'} ${amount}`,
-            });
+                desc: `Admin Adjustment: ${adjustmentType === 'add' ? 'Added' : 'Subtracted'} ${amount}` });
 
             showToast('Balance Adjusted', 'success');
             setUsers(prev => prev.map(u => u.uid === selectedUser.uid ? { ...u, balance: u.balance + finalAmount } : u));
@@ -522,8 +519,7 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
             batch.set(publicUserRef, {
                 role: 'organizer',
                 orgName: app.orgName,
-                updatedAt: serverTimestamp(),
-            }, { merge: true });
+                updatedAt: serverTimestamp() }, { merge: true });
             
             await batch.commit();
 
@@ -534,8 +530,7 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
                     await fetch('/api/admin/set-claims', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                        body: JSON.stringify({ uid: app.userId, role: 'organizer' }),
-                    });
+                        body: JSON.stringify({ uid: app.userId, role: 'organizer' }) });
                 }
             } catch (claimsErr) {
                 console.error('Failed to sync custom claims for org approval:', claimsErr);
@@ -572,8 +567,7 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
                         const response = await fetch('/api/wallet/cancel-tournament', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                            body: JSON.stringify({ tournamentId: tournament.id, ...(cursor ? { lastParticipantId: cursor } : {}) }),
-                        });
+                            body: JSON.stringify({ tournamentId: tournament.id, ...(cursor ? { lastParticipantId: cursor } : {}) }) });
                         const result = await response.json();
                         if (!response.ok || !result.success) throw new Error(result.message || 'Failed to cancel tournament');
                         cursor = result.hasMore ? result.nextParticipantId : null;
@@ -612,8 +606,7 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
                     await fetch('/api/admin/set-claims', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                        body: JSON.stringify({ uid: app.userId, role: 'organizer' }),
-                    });
+                        body: JSON.stringify({ uid: app.userId, role: 'organizer' }) });
                 }
             } catch (claimsErr) {
                 console.error('Failed to sync custom claims for org approval:', claimsErr);
@@ -815,8 +808,7 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
                 maxPlacement: config.maxPlacement,
                 scoringVersion: config.scoringVersion,
                 updatedAt: serverTimestamp(),
-                updatedBy: auth.currentUser?.uid || '',
-            }
+                updatedBy: auth.currentUser?.uid || '' }
         };
         await updateDoc(gameRef, updateData);
         // Update local state
@@ -942,94 +934,6 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
     // Tournament Management State
     const [isTournamentModalOpen, setIsTournamentModalOpen] = useState(false);
     const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
-    const [subscriptionPlans, setSubscriptionPlans] = useState<SubscriptionPlan[]>([]);
-    const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
-    const [editingPlan, setEditingPlan] = useState<SubscriptionPlan | null>(null);
-    const [planName, setPlanName] = useState('');
-    const [planPrice, setPlanPrice] = useState('');
-    const [planDesc, setPlanDesc] = useState('');
-    const [planFeatures, setPlanFeatures] = useState('');
-    const [planMaxTournaments, setPlanMaxTournaments] = useState('10');
-    const [planIsActive, setPlanIsActive] = useState(true);
-
-    const handleSavePlan = async () => {
-        if (!planName || !planPrice) return showToast('Please fill all fields', 'warning');
-        try {
-            const planData = {
-                name: planName,
-                price: parseFloat(planPrice),
-                description: planDesc,
-                features: planFeatures.split(',').map(f => f.trim()).filter(f => f !== ''),
-                maxTournamentsPerMonth: parseInt(planMaxTournaments),
-                isActive: planIsActive
-            };
-
-            if (editingPlan) {
-                await updateDoc(doc(db, 'subscriptionPlans', editingPlan.id), planData);
-                setSubscriptionPlans(prev => prev.map(p => p.id === editingPlan.id ? { ...p, ...planData } : p));
-                showToast('Plan Updated', 'success');
-            } else {
-                const newRef = doc(collection(db, 'subscriptionPlans'));
-                await setDoc(newRef, planData);
-                setSubscriptionPlans(prev => [{ id: newRef.id, ...planData } as any, ...prev]);
-                showToast('Plan Added', 'success');
-            }
-            setIsPlanModalOpen(false);
-            setEditingPlan(null);
-            setPlanName('');
-            setPlanPrice('');
-            setPlanDesc('');
-            setPlanFeatures('');
-        } catch (error) {
-            console.error("Error saving plan:", error);
-            showToast('Failed to save subscription plan', 'error');
-        }
-    };
-
-    const handleUpdateUserSubscription = async (userId: string, planId: string) => {
-        try {
-            const plan = subscriptionPlans.find(p => p.id === planId);
-            if (!plan) return showToast('Plan not found', 'error');
-
-            const subscription = {
-                planId: plan.id,
-                planName: plan.name,
-                status: 'active' as 'active' | 'expired' | 'cancelled',
-                startDate: Timestamp.now(),
-                endDate: Timestamp.fromDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)), // 30 days
-                autoRenew: true
-            };
-
-            await updateDoc(doc(db, 'users', userId), { subscription });
-            setUsers(prev => prev.map(u => u.uid === userId ? { ...u, subscription } : u));
-            if (selectedUser?.uid === userId) {
-                setSelectedUser(prev => prev ? { ...prev, subscription } : null);
-            }
-            showToast(`Subscription updated to ${plan.name}`, 'success');
-        } catch (error) {
-            console.error("Error updating subscription:", error);
-            showToast('Failed to update subscription', 'error');
-        }
-    };
-
-    const handleDeletePlan = async (id: string) => {
-        setConfirmModal({
-            isOpen: true,
-            title: 'Delete Subscription Plan',
-            message: 'Are you sure you want to delete this plan? This may affect users subscribed to it.',
-            isDestructive: true,
-            onConfirm: async () => {
-                try {
-                    await deleteDoc(doc(db, 'subscriptionPlans', id));
-                    setSubscriptionPlans(prev => prev.filter(p => p.id !== id));
-                    showToast('Plan Deleted', 'success');
-                } catch (error) {
-                    showToast('Failed to delete plan', 'error');
-                }
-            }
-        });
-    };
-
     const handleEditTournament = (tournament: Tournament) => {
         setSelectedTournament(tournament);
         setIsTournamentModalOpen(true);
@@ -1099,8 +1003,7 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
                     await fetch('/api/admin/set-claims', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                        body: JSON.stringify({ uid, role: newRole }),
-                    });
+                        body: JSON.stringify({ uid, role: newRole }) });
                 }
             } catch (claimsErr) {
                 console.error('Failed to sync custom claims:', claimsErr);
@@ -1230,7 +1133,7 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
         const pendingWithdrawalsCount = pendingTransactions.filter(t => t.type === 'withdrawal').length;
         const pendingOrgCount = orgApplications.length;
 
-        const tabProps = { paymentQr, processAndUploadPayment, handleDragOverPayment, handleDropPayment, handlePastePayment, processAndUploadGame, handleDragOverGame, handleDropGame, handlePasteGame, processAndUploadSlide, handleDragOverSlide, handleDropSlide, handlePasteSlide, setPaymentType, setEditingOrg, setSelectedUser, setSelectedTx, setConfirmModal, DEFAULT_BANNER, ImageUploader, MediaCategory, NEXPLAY_LOGO, activeTab, activityLogs, allTournaments, allTransactions, categoryActive, categoryDescription, categoryName, closeConfirmModal, editingCategory, editingGame, editingPayment, editingPlan, editingPromo, editingSlide, executeRejectTx, fetchMedia, fetchOrgTournaments, formatCurrency, formatDate, formatGameName, gameLogo, gameModes, gameName, games, getRelativeTime, handleApproveOrg, handleApproveTx, handleCancelTournament, handleDeleteCategory, handleDeleteGame, handleDeleteMedia, handleDeletePayment, handleDeletePlan, handleDeletePromo, handleDeleteSlide, handleEditTournament, handleRejectOrg, handleReleaseEarnings, handleSaveCategory, handleSaveGame, handleSaveScoring, handleSaveOrgDetails, handleSavePayment, handleSavePlan, handleSavePromo, handleSaveSettings, handleSaveSlide, handleSuspendOrg, handleToggleFeatured, handleUpdateUserRole, handleViewParticipants, isCategoryModalOpen, isGameModalOpen, isScoringModalOpen, isNoticeActive, isOrgEditModalOpen, isPaymentModalOpen, isPlanModalOpen, isPromoModalOpen, isPublished, isSlideModalOpen, maintenanceMode, mediaFilter, mediaItems, mediaLoading, mediaSearch, minWithdrawal, mockUploadUrl, notice, openEditGame, orgApplications, orgDiscord, orgEmail, orgFormDescription, orgNameEdit, orgTournaments, orgWhatsapp, orgYoutube, organizers, paymentActive, paymentCategories, paymentCategoryId, paymentInstructions, paymentMethods, paymentName, pendingTransactions, planDesc, planFeatures, planIsActive, planMaxTournaments, planName, planPrice, promoActive, promoAmount, promoCode, promoCodes, promoMaxUses, searchQuery, selectedMediaCategory, selectedOrgId, setCategoryActive, setCategoryDescription, setCategoryName, setEditingCategory, setEditingGame, setEditingPayment, setEditingPlan, setEditingPromo, setEditingSlide, setGameLogo, setGameModes, setGameName, setIsCategoryModalOpen, setIsGameModalOpen, setIsScoringModalOpen, scoringModalGame, setScoringModalGame, setIsNoticeActive, setIsOrgEditModalOpen, setIsPaymentModalOpen, setIsPlanModalOpen, setIsPromoModalOpen, setIsPublished, setIsSlideModalOpen, setMaintenanceMode, setMediaFilter, setMediaSearch, setMinWithdrawal, setMockUploadUrl, setNotice, setOrgDiscord, setOrgEmail, setOrgFormDescription, setOrgNameEdit, setOrgWhatsapp, setOrgYoutube, setPaymentActive, setPaymentCategoryId, setPaymentInstructions, setPaymentName, setPaymentQr, setPlanDesc, setPlanFeatures, setPlanIsActive, setPlanMaxTournaments, setPlanName, setPlanPrice, setPromoActive, setPromoAmount, setPromoCode, setPromoMaxUses, setSearchQuery, setSelectedMediaCategory, setSlideBtnText, setSlideDescription, setSlideImage, setSlideIsActive, setSlideLink, setSlideTitle, setSupportEmail, setSupportPhone, showToast, siteSettings, slideBtnText, slideDescription, slideImage, slideIsActive, slideLink, slideTitle, slides, stats, subscriptionPlans, supportEmail, supportPhone, toggleOrgForm, togglePowerOrganizer, tournamentEarnings, uploading, users };
+        const tabProps = { paymentQr, processAndUploadPayment, handleDragOverPayment, handleDropPayment, handlePastePayment, processAndUploadGame, handleDragOverGame, handleDropGame, handlePasteGame, processAndUploadSlide, handleDragOverSlide, handleDropSlide, handlePasteSlide, setPaymentType, setEditingOrg, setSelectedUser, setSelectedTx, setConfirmModal, DEFAULT_BANNER, ImageUploader, MediaCategory, NEXPLAY_LOGO, activeTab, activityLogs, allTournaments, allTransactions, categoryActive, categoryDescription, categoryName, closeConfirmModal, editingCategory, editingGame, editingPayment, editingPromo, editingSlide, executeRejectTx, fetchMedia, fetchOrgTournaments, formatCurrency, formatDate, formatGameName, gameLogo, gameModes, gameName, games, getRelativeTime, handleApproveOrg, handleApproveTx, handleCancelTournament, handleDeleteCategory, handleDeleteGame, handleDeleteMedia, handleDeletePayment, handleDeletePromo, handleDeleteSlide, handleEditTournament, handleRejectOrg, handleReleaseEarnings, handleSaveCategory, handleSaveGame, handleSaveScoring, handleSaveOrgDetails, handleSavePayment, handleSavePromo, handleSaveSettings, handleSaveSlide, handleSuspendOrg, handleToggleFeatured, handleUpdateUserRole, handleViewParticipants, isCategoryModalOpen, isGameModalOpen, isScoringModalOpen, isNoticeActive, isOrgEditModalOpen, isPaymentModalOpen, isPromoModalOpen, isPublished, isSlideModalOpen, maintenanceMode, mediaFilter, mediaItems, mediaLoading, mediaSearch, minWithdrawal, mockUploadUrl, notice, openEditGame, orgApplications, orgDiscord, orgEmail, orgFormDescription, orgNameEdit, orgTournaments, orgWhatsapp, orgYoutube, organizers, paymentActive, paymentCategories, paymentCategoryId, paymentInstructions, paymentMethods, paymentName, pendingTransactions, promoActive, promoAmount, promoCode, promoCodes, promoMaxUses, searchQuery, selectedMediaCategory, selectedOrgId, setCategoryActive, setCategoryDescription, setCategoryName, setEditingCategory, setEditingGame, setEditingPayment, setEditingPromo, setEditingSlide, setGameLogo, setGameModes, setGameName, setIsCategoryModalOpen, setIsGameModalOpen, setIsScoringModalOpen, scoringModalGame, setScoringModalGame, setIsNoticeActive, setIsOrgEditModalOpen, setIsPaymentModalOpen, setIsPromoModalOpen, setIsPublished, setIsSlideModalOpen, setMaintenanceMode, setMediaFilter, setMediaSearch, setMinWithdrawal, setMockUploadUrl, setNotice, setOrgDiscord, setOrgEmail, setOrgFormDescription, setOrgNameEdit, setOrgWhatsapp, setOrgYoutube, setPaymentActive, setPaymentCategoryId, setPaymentInstructions, setPaymentName, setPaymentQr, setPromoActive, setPromoAmount, setPromoCode, setPromoMaxUses, setSearchQuery, setSelectedMediaCategory, setSlideBtnText, setSlideDescription, setSlideImage, setSlideIsActive, setSlideLink, setSlideTitle, setSupportEmail, setSupportPhone, showToast, siteSettings, slideBtnText, slideDescription, slideImage, slideIsActive, slideLink, slideTitle, slides, stats, supportEmail, supportPhone, toggleOrgForm, togglePowerOrganizer, tournamentEarnings, uploading, users };
     return {
         activeTab,
         activityLogs,
@@ -1241,7 +1144,6 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
         closeConfirmModal,
         confirmModal,
         editingOrg,
-        editingPlan,
         fetchOrgTournaments,
         games,
         getRelativeTime,
@@ -1250,9 +1152,7 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
         handleRefundTx,
         handleRejectTx,
         handleUpdateUserRole,
-        handleUpdateUserSubscription,
         isOrgEditModalOpen,
-        isPlanModalOpen,
         isSidebarOpen,
         isTournamentModalOpen,
         orgNameEdit,
@@ -1260,12 +1160,6 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
         pendingDepositsCount,
         pendingOrgCount,
         pendingWithdrawalsCount,
-        planDesc,
-        planFeatures,
-        planIsActive,
-        planMaxTournaments,
-        planName,
-        planPrice,
         rejectionReason,
         selectedOrgId,
         selectedTournament,
@@ -1284,7 +1178,6 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
         setTxFilterTournament,
         setTxFilterType,
         setTxSearchUser,
-        subscriptionPlans,
         tabProps,
         txDateFrom,
         txDateTo,

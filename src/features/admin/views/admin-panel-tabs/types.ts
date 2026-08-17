@@ -14,7 +14,6 @@ export type AdminPanelTabProps = Record<string, any> & {
     editingCategory?: any;
     editingGame?: any;
     editingPayment?: any;
-    editingPlan?: any;
     editingPromo?: any;
     editingSlide?: any;
     executeRejectTx?: any;
@@ -35,7 +34,6 @@ export type AdminPanelTabProps = Record<string, any> & {
     handleDeleteGame?: any;
     handleDeleteMedia?: any;
     handleDeletePayment?: any;
-    handleDeletePlan?: any;
     handleDeletePromo?: any;
     handleDeleteSlide?: any;
     handleEditTournament?: any;
@@ -45,7 +43,6 @@ export type AdminPanelTabProps = Record<string, any> & {
     handleSaveGame?: any;
     handleSaveOrgDetails?: any;
     handleSavePayment?: any;
-    handleSavePlan?: any;
     handleSavePromo?: any;
     handleSaveSettings?: any;
     handleSaveSlide?: any;
@@ -58,7 +55,6 @@ export type AdminPanelTabProps = Record<string, any> & {
     isNoticeActive?: any;
     isOrgEditModalOpen?: any;
     isPaymentModalOpen?: any;
-    isPlanModalOpen?: any;
     isPromoModalOpen?: any;
     isPublished?: any;
     isSlideModalOpen?: any;
@@ -88,12 +84,6 @@ export type AdminPanelTabProps = Record<string, any> & {
     paymentName?: any;
     paymentQr?: any;
     pendingTransactions?: any;
-    planDesc?: any;
-    planFeatures?: any;
-    planIsActive?: any;
-    planMaxTournaments?: any;
-    planName?: any;
-    planPrice?: any;
     promoActive?: any;
     promoAmount?: any;
     promoCode?: any;
@@ -108,7 +98,6 @@ export type AdminPanelTabProps = Record<string, any> & {
     setEditingCategory?: any;
     setEditingGame?: any;
     setEditingPayment?: any;
-    setEditingPlan?: any;
     setEditingPromo?: any;
     setEditingSlide?: any;
     setGameLogo?: any;
@@ -119,7 +108,6 @@ export type AdminPanelTabProps = Record<string, any> & {
     setIsNoticeActive?: any;
     setIsOrgEditModalOpen?: any;
     setIsPaymentModalOpen?: any;
-    setIsPlanModalOpen?: any;
     setIsPromoModalOpen?: any;
     setIsPublished?: any;
     setIsSlideModalOpen?: any;
@@ -140,12 +128,6 @@ export type AdminPanelTabProps = Record<string, any> & {
     setPaymentInstructions?: any;
     setPaymentName?: any;
     setPaymentQr?: any;
-    setPlanDesc?: any;
-    setPlanFeatures?: any;
-    setPlanIsActive?: any;
-    setPlanMaxTournaments?: any;
-    setPlanName?: any;
-    setPlanPrice?: any;
     setPromoActive?: any;
     setPromoAmount?: any;
     setPromoCode?: any;
@@ -170,7 +152,6 @@ export type AdminPanelTabProps = Record<string, any> & {
     slideTitle?: any;
     slides?: any;
     stats?: any;
-    subscriptionPlans?: any;
     supportEmail?: any;
     supportPhone?: any;
     toggleOrgForm?: any;

@@ -1,17 +1,6 @@
 import { Timestamp } from 'firebase/firestore';
 import { TournamentMode, RewardConfig, RewardSnapshot, PlayerKillReward, RewardAuditEntry } from './per-kill';
 
-export interface SubscriptionPlan {
-    id: string;
-    name: string;
-    price: number;
-    description: string;
-    features: string[];
-    maxTournamentsPerMonth: number;
-    hasAdvancedStats: boolean;
-    isActive: boolean;
-}
-
 export interface UserProfile {
     uid: string;
     email: string;
@@ -54,14 +43,6 @@ export interface UserProfile {
     lastActive?: Timestamp | any;
     orgPendingEarnings?: number;
     orgWalletBalance?: number;
-    subscription?: {
-        planId: string;
-        planName: string;
-        status: 'active' | 'expired' | 'cancelled';
-        startDate: Timestamp | any;
-        endDate: Timestamp | any;
-        autoRenew: boolean;
-    };
     stats?: {
         totalMatches: number;
         wins: number;

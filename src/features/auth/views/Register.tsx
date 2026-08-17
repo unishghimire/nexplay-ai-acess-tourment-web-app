@@ -5,8 +5,8 @@ import { useNotification } from '../../../shared/context/NotificationContext';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { motion } from 'motion/react';
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, CheckCircle, XCircle, ShieldCheck, Phone, Hash } from 'lucide-react';
-import { createUserWithEmailAndPassword, sendEmailVerification, signInWithPopup, updateProfile } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
+import { createUserWithEmailAndPassword, sendEmailVerification, signInWithRedirect, getRedirectResult, updateProfile } from 'firebase/auth';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db, googleProvider } from '../../../shared/config/firebase';
 import { isSafeInternalPath } from '../../../shared/utils/utils';
 import { buildUserDocument, buildPublicProfile } from '../../../shared/services/userProfileService';
@@ -97,6 +97,47 @@ const Register: React.FC = () => {
         setPasswordStrength(strength);
         setPasswordFeedback(feedback);
     }, [password]);
+
+    // Handle the result of signInWithRedirect (fires after the page reloads from Google OAuth).
+    // Only set the loading state if we actually initiated a redirect (flag set in handleGoogleSignIn).
+    // ponytail: mirrors Login.tsx redirect handling — AuthContext handles profile provisioning.
+    useEffect(() => {
+        let cancelled = false;
+        const pendingRedirect = sessionStorage.getItem('google-redirect-pending') === 'true';
+        if (pendingRedirect) {
+            setIsGoogleLoading(true);
+        }
+        getRedirectResult(auth)
+            .then((result) => {
+                if (cancelled) return;
+                sessionStorage.removeItem('google-redirect-pending');
+                if (result) {
+                    showToast('Welcome to Nexplay!', 'success');
+                    setRedirectTarget(getRedirectTarget());
+                    // Keep loading — the auth state change will navigate once settled.
+                } else {
+                    setIsGoogleLoading(false);
+                }
+            })
+            .catch((err: any) => {
+                if (cancelled) return;
+                sessionStorage.removeItem('google-redirect-pending');
+                setIsGoogleLoading(false);
+                console.error('Google redirect result error:', err?.code, err);
+                const googleErrMap: Record<string, string> = {
+                    'auth/unauthorized-domain': 'This domain is not authorised in Firebase. Add it to Firebase Console → Authentication → Authorized Domains.',
+                    'auth/operation-not-allowed': 'Google Sign-In is not enabled. Enable it in Firebase Console → Authentication → Sign-in method.',
+                    'auth/account-exists-with-different-credential': 'An account already exists with this email using a different sign-in method.',
+                    'auth/network-request-failed': 'Network error. Check your connection and try again.',
+                    'auth/internal-error': 'An internal error occurred. Please try again.',
+                };
+                const errMsg = googleErrMap[err?.code] || `Google Sign-In failed (${err?.code || 'unknown'}). Please try again.`;
+                setError(errMsg);
+                showToast(errMsg, 'error');
+            });
+        return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -205,48 +246,25 @@ const Register: React.FC = () => {
         setIsGoogleLoading(true);
 
         try {
-            const result = await signInWithPopup(auth, googleProvider);
-            const firebaseUser = result.user;
-
-            // Provision Firestore profile for first-time Google sign-ups (BUG-049).
-            // Idempotent: skip if the doc already exists (returning user).
-            const userRef = doc(db, 'users', firebaseUser.uid);
-            const existingDoc = await getDoc(userRef);
-            if (!existingDoc.exists()) {
-                const derivedUsername = (
-                    firebaseUser.displayName?.trim().replace(/\s+/g, ' ') ||
-                    firebaseUser.email?.split('@')[0] ||
-                    ''
-                ).slice(0, 30) || `Player${firebaseUser.uid.slice(0, 6)}`;
-
-                await setDoc(userRef, buildUserDocument({
-                    uid: firebaseUser.uid,
-                    email: firebaseUser.email || '',
-                    username: derivedUsername,
-                    inGameId: '',
-                    inGameName: '',
-                    teamName: '',
-                    phone: '',
-                    isBanned: false,
-                    createdAt: serverTimestamp(),
-                }));
-                await setDoc(doc(db, 'users_public', firebaseUser.uid), buildPublicProfile({
-                    uid: firebaseUser.uid,
-                    username: derivedUsername,
-                    inGameId: '',
-                    inGameName: '',
-                }));
-            }
-
-            showToast('Welcome to Nexplay!', 'success');
-            setRedirectTarget(getRedirectTarget());
+            // Use redirect instead of popup — popup gets stuck at the Firebase auth
+            // handler on some environments (blank white screen at __/auth/handler).
+            // AuthContext handles profile provisioning via initProfile on auth state change.
+            sessionStorage.setItem('google-redirect-pending', 'true');
+            await signInWithRedirect(auth, googleProvider);
+            // Page will reload after Google OAuth — result handled in the useEffect above.
         } catch (err: any) {
             submittingRef.current = false;
             setIsGoogleLoading(false);
-            console.error('Google Sign-In error:', err);
-            const errMsg = 'Google Sign-In failed. Please try again.';
+            console.error('Google Sign-In redirect error:', err?.code, err);
+            const googleErrMap: Record<string, string> = {
+                'auth/unauthorized-domain': 'This domain is not authorised in Firebase. Add it to Firebase Console → Authentication → Authorized Domains.',
+                'auth/operation-not-allowed': 'Google Sign-In is not enabled. Enable it in Firebase Console → Authentication → Sign-in method.',
+                'auth/network-request-failed': 'Network error. Check your connection and try again.',
+                'auth/internal-error': 'An internal error occurred. Please try again.',
+            };
+            const errMsg = googleErrMap[err?.code] || `Google Sign-In failed (${err?.code || 'unknown'}). Please try again.`;
             setError(errMsg);
-            showToast(errMsg, "error");
+            showToast(errMsg, 'error');
         }
     };
 
