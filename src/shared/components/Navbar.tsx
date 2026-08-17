@@ -72,7 +72,8 @@ const Navbar: React.FC = () => {
                         {user ? (
                             <>
                                 <NotificationDropdown />
-                                <div>
+                                {/* ponytail: wallet hidden on mobile — already shown in MobileMenu */}
+                                <div className="hidden sm:block">
                                     <WalletDisplay balance={profile?.balance || 0} onClick={() => navigate('/wallet')} />
                                 </div>
                                 <div>

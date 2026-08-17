@@ -47,7 +47,7 @@ export const PerKillLeaderboard: React.FC<PerKillLeaderboardProps> = ({ tourname
                     <Crown className="w-4 h-4 text-yellow-500" />
                     <h3 className="text-sm font-black text-white uppercase tracking-widest">Kill Leaderboard</h3>
                 </div>
-                <div className="bg-surface rounded-2xl border border-gray-800 overflow-hidden">
+                <div className="bg-surface rounded-2xl border border-gray-800 overflow-x-auto">
                     <table className="w-full">
                         <thead>
                             <tr className="border-b border-gray-800 bg-dark/30">
@@ -92,7 +92,7 @@ export const PerKillLeaderboard: React.FC<PerKillLeaderboardProps> = ({ tourname
                         <Users className="w-4 h-4 text-brand-500" />
                         <h3 className="text-sm font-black text-white uppercase tracking-widest">Team Leaderboard</h3>
                     </div>
-                    <div className="bg-surface rounded-2xl border border-gray-800 overflow-hidden">
+                    <div className="bg-surface rounded-2xl border border-gray-800 overflow-x-auto">
                         <table className="w-full">
                             <thead>
                                 <tr className="border-b border-gray-800 bg-dark/30">
