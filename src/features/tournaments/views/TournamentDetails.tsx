@@ -668,7 +668,7 @@ export default function TournamentDetails() {
                                             placeholder="Search player or ID..."
                                             value={searchTerm}
                                             onChange={(e) => setSearchTerm(e.target.value)}
-                                            className="w-full bg-surface border border-gray-800 rounded-xl py-2 pl-10 pr-4 text-xs sm:text-sm text-white focus:border-brand-500 outline-none transition"
+                                            className="w-full bg-surface border border-gray-800 rounded-xl py-2 pl-10 pr-4 text-xs sm:text-sm text-white focus:border-brand-500 focus-visible:outline-none transition"
                                         />
                                     </div>
                                 </div>

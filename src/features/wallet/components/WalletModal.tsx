@@ -315,7 +315,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
                       placeholder="Amount (Rs.)"
                       value={depositAmount}
                       onChange={(e) => setDepositAmount(e.target.value)}
-                      className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 outline-none font-bold"
+                      className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 focus-visible:outline-none font-bold"
                     />
                     <input 
                       type="text" 
@@ -323,7 +323,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
                       placeholder="Sender Number"
                       value={senderNumber}
                       onChange={(e) => setSenderNumber(e.target.value)}
-                      className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 outline-none font-bold"
+                      className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 focus-visible:outline-none font-bold"
                     />
                     <input 
                       type="text" 
@@ -331,7 +331,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
                       placeholder="Transaction Code / Name"
                       value={transactionCode}
                       onChange={(e) => setTransactionCode(e.target.value)}
-                      className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 outline-none font-bold"
+                      className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 focus-visible:outline-none font-bold"
                     />
                     
                     {/* Screenshot Upload */}
@@ -369,7 +369,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
                             }
                           }}
                           tabIndex={0}
-                          className="w-full bg-dark border-2 border-dashed border-gray-700 rounded-xl py-8 flex flex-col items-center gap-3 hover:border-brand-500 transition group cursor-pointer focus:outline-none focus:border-brand-500"
+                          className="w-full bg-dark border-2 border-dashed border-gray-700 rounded-xl py-8 flex flex-col items-center gap-3 hover:border-brand-500 transition group cursor-pointer focus:focus-visible:outline-none focus:border-brand-500"
                         >
                           {isUploading ? (
                             <>
@@ -423,13 +423,13 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
                   placeholder="Withdraw Amount"
                   value={withdrawAmount}
                   onChange={(e) => setWithdrawAmount(e.target.value)}
-                  className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 outline-none font-bold"
+                  className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 focus-visible:outline-none font-bold"
                 />
                 <select 
                   value={withdrawMethod}
                   aria-label="Withdraw Method"
                   onChange={(e) => setWithdrawMethod(e.target.value)}
-                  className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 outline-none font-bold"
+                  className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 focus-visible:outline-none font-bold"
                 >
                   <option value="">Select Method</option>
                   {paymentMethods.map(pm => (
@@ -441,7 +441,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
                   placeholder="Account Details (ID, Name, etc.)"
                   value={accountDetails}
                   onChange={(e) => setAccountDetails(e.target.value)}
-                  className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 outline-none font-bold h-24 resize-none"
+                  className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 focus-visible:outline-none font-bold h-24 resize-none"
                 />
                 <div className="bg-yellow-500/10 border border-yellow-500/20 p-3 rounded-xl flex gap-2">
                   <AlertTriangle className="w-4 h-4 text-yellow-500 shrink-0" />

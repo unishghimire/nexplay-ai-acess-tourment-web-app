@@ -361,7 +361,7 @@ export const ResultUploader: React.FC<ResultUploaderProps> = ({ isOpen, onClose,
                                             min="1"
                                             value={res.placement}
                                             onChange={e => handleUpdateResult(res.teamId, 'placement', parseInt(e.target.value) || 1)}
-                                            className={`w-full bg-surface border rounded-xl p-2.5 text-white text-sm font-bold text-center focus:outline-none transition ${
+                                            className={`w-full bg-surface border rounded-xl p-2.5 text-white text-sm font-bold text-center focus:focus-visible:outline-none transition ${
                                                 validation.valid
                                                     ? 'border-slate-800 focus:border-brand-500'
                                                     : 'border-red-500/50 focus:border-red-500'
@@ -378,7 +378,7 @@ export const ResultUploader: React.FC<ResultUploaderProps> = ({ isOpen, onClose,
                                             min="0"
                                             value={res.kills}
                                             onChange={e => handleUpdateResult(res.teamId, 'kills', parseInt(e.target.value) || 0)}
-                                            className={`w-full bg-surface border rounded-xl p-2.5 text-white text-sm font-bold text-center focus:outline-none transition ${
+                                            className={`w-full bg-surface border rounded-xl p-2.5 text-white text-sm font-bold text-center focus:focus-visible:outline-none transition ${
                                                 validation.valid
                                                     ? 'border-slate-800 focus:border-brand-500'
                                                     : 'border-red-500/50 focus:border-red-500'

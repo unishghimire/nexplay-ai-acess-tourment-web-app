@@ -281,7 +281,7 @@ export const PerKillResultUploader: React.FC<PerKillResultUploaderProps> = ({
                                                             value={player.killsInput}
                                                             onChange={(e) => handleKillChange(allIdx, e.target.value)}
                                                             placeholder="0"
-                                                            className="w-full bg-dark border border-gray-800 rounded-lg px-3 py-2 text-white text-center text-sm font-bold focus:border-brand-500 outline-none transition"
+                                                            className="w-full bg-dark border border-gray-800 rounded-lg px-3 py-2 text-white text-center text-sm font-bold focus:border-brand-500 focus-visible:outline-none transition"
                                                         />
                                                     </div>
                                                     <div className="col-span-3 sm:col-span-2 text-center">

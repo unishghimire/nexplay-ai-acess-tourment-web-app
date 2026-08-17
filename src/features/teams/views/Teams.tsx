@@ -187,7 +187,7 @@ const Teams: React.FC = () => {
                                     type="text" 
                                     value={newTeamName} 
                                     onChange={(e) => setNewTeamName(e.target.value)}
-                                    className="w-full bg-black border border-gray-800 rounded-2xl px-5 py-4 text-white focus:border-brand-500 outline-none transition font-bold"
+                                    className="w-full bg-black border border-gray-800 rounded-2xl px-5 py-4 text-white focus:border-brand-500 focus-visible:outline-none transition font-bold"
                                     placeholder="e.g. Cloud9"
                                 />
                             </div>
@@ -196,7 +196,7 @@ const Teams: React.FC = () => {
                                 <textarea 
                                     value={newTeamDesc} 
                                     onChange={(e) => setNewTeamDesc(e.target.value)}
-                                    className="w-full bg-black border border-gray-800 rounded-2xl px-5 py-4 text-white focus:border-brand-500 outline-none transition h-32 resize-none text-sm font-bold"
+                                    className="w-full bg-black border border-gray-800 rounded-2xl px-5 py-4 text-white focus:border-brand-500 focus-visible:outline-none transition h-32 resize-none text-sm font-bold"
                                     placeholder="What is your team about?"
                                 />
                             </div>
@@ -332,7 +332,7 @@ const Teams: React.FC = () => {
                                 setSearchTerm(val);
                             }}
                             placeholder="Search teams..."
-                            className="w-full bg-card/50 border border-gray-800 rounded-2xl pl-12 pr-4 py-3 text-sm text-white focus:border-brand-500 outline-none font-bold"
+                            className="w-full bg-card/50 border border-gray-800 rounded-2xl pl-12 pr-4 py-3 text-sm text-white focus:border-brand-500 focus-visible:outline-none font-bold"
                         />
                     </div>
                 </div>

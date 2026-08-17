@@ -528,7 +528,7 @@ const Wallet: React.FC = () => {
                                     type="text" 
                                     value={promoCode}
                                     onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                                    className="w-full bg-dark border-2 border-gray-800 rounded-2xl p-5 text-white font-mono text-center text-2xl focus:border-brand-500 outline-none transition uppercase tracking-widest placeholder-gray-700"
+                                    className="w-full bg-dark border-2 border-gray-800 rounded-2xl p-5 text-white font-mono text-center text-2xl focus:border-brand-500 focus-visible:outline-none transition uppercase tracking-widest placeholder-gray-700"
                                     placeholder="NEXPLAY-V1"
                                 />
                             </div>
@@ -576,7 +576,7 @@ const Wallet: React.FC = () => {
                                 <textarea 
                                     value={disputeReason}
                                     onChange={(e) => setDisputeReason(e.target.value)}
-                                    className="w-full bg-dark border-2 border-gray-800 rounded-2xl p-5 text-white focus:border-red-500/50 outline-none transition resize-none h-40 font-medium"
+                                    className="w-full bg-dark border-2 border-gray-800 rounded-2xl p-5 text-white focus:border-red-500/50 focus-visible:outline-none transition resize-none h-40 font-medium"
                                     placeholder="I initiated this withdrawal 3 days ago but haven't received it in my account yet..."
                                 />
                             </div>

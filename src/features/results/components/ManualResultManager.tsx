@@ -196,7 +196,7 @@ export default function ManualResultManager({ results, onChange, templateConfig,
                                     type="text" 
                                     onPaste={handleBulkPaste} 
                                     placeholder="Click here and Ctrl+V to paste bulk data"
-                                    className="flex-1 bg-dark border border-gray-800 rounded-lg px-3 py-1.5 text-xs text-white focus:border-brand-500 outline-none"
+                                    className="flex-1 bg-dark border border-gray-800 rounded-lg px-3 py-1.5 text-xs text-white focus:border-brand-500 focus-visible:outline-none"
                                 />
                             </div>
 
@@ -233,7 +233,7 @@ export default function ManualResultManager({ results, onChange, templateConfig,
                                                                         value={res.rank}
                                                                         onChange={(e) => handleResultChange(index, 'rank', parseInt(e.target.value) || 0)}
                                                                         disabled={autoRank}
-                                                                        className="w-full bg-dark border border-gray-700 rounded-lg px-2 py-1.5 text-sm text-center text-brand-400 font-black disabled:opacity-50 outline-none focus:border-brand-500"
+                                                                        className="w-full bg-dark border border-gray-700 rounded-lg px-2 py-1.5 text-sm text-center text-brand-400 font-black disabled:opacity-50 focus-visible:outline-none focus:border-brand-500"
                                                                     />
                                                                 </div>
 
@@ -243,7 +243,7 @@ export default function ManualResultManager({ results, onChange, templateConfig,
                                                                         value={res.team}
                                                                         onChange={(e) => handleResultChange(index, 'team', e.target.value)}
                                                                         placeholder="Team / Player Name"
-                                                                        className="w-full bg-dark border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-white font-bold outline-none focus:border-brand-500"
+                                                                        className="w-full bg-dark border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-white font-bold focus-visible:outline-none focus:border-brand-500"
                                                                     />
                                                                 </div>
 
@@ -253,7 +253,7 @@ export default function ManualResultManager({ results, onChange, templateConfig,
                                                                         value={res.score}
                                                                         onChange={(e) => handleResultChange(index, 'score', parseInt(e.target.value) || 0)}
                                                                         placeholder="Score"
-                                                                        className="w-full bg-dark border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-white font-bold outline-none focus:border-brand-500"
+                                                                        className="w-full bg-dark border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-white font-bold focus-visible:outline-none focus:border-brand-500"
                                                                     />
                                                                 </div>
 
@@ -261,7 +261,7 @@ export default function ManualResultManager({ results, onChange, templateConfig,
                                                                     <select 
                                                                         value={res.status}
                                                                         onChange={(e) => handleResultChange(index, 'status', e.target.value)}
-                                                                        className="w-full bg-dark border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-white font-bold outline-none focus:border-brand-500 appearance-none"
+                                                                        className="w-full bg-dark border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-white font-bold focus-visible:outline-none focus:border-brand-500 appearance-none"
                                                                     >
                                                                         <option value="Winner">Winner</option>
                                                                         <option value="Qualified">Qualified</option>
@@ -392,7 +392,7 @@ export default function ManualResultManager({ results, onChange, templateConfig,
                                                 value={presetName}
                                                 onChange={(e) => setPresetName(e.target.value)}
                                                 placeholder="Preset Name"
-                                                className="flex-1 bg-dark border border-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:border-brand-500 outline-none"
+                                                className="flex-1 bg-dark border border-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:border-brand-500 focus-visible:outline-none"
                                             />
                                             <button type="button" 
                                                 onClick={() => {

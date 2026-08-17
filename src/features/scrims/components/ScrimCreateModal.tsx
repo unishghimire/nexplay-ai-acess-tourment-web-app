@@ -307,7 +307,7 @@ export default function ScrimCreateModal({
                 placeholder="e.g. Free Fire Night Scrim #12"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="w-full bg-black border border-gray-800 rounded-xl p-3 text-sm text-white font-bold outline-none focus:border-emerald-500"
+                className="w-full bg-black border border-gray-800 rounded-xl p-3 text-sm text-white font-bold focus-visible:outline-none focus:border-emerald-500"
               />
             </div>
 
@@ -323,7 +323,7 @@ export default function ScrimCreateModal({
                     const defaultMap = MAP_OPTIONS[newGame]?.[0] || 'Default Map';
                     setFormData({ ...formData, game: newGame, map: defaultMap });
                   }}
-                  className="w-full bg-black border border-gray-800 rounded-xl p-3 text-sm text-white font-bold outline-none focus:border-emerald-500"
+                  className="w-full bg-black border border-gray-800 rounded-xl p-3 text-sm text-white font-bold focus-visible:outline-none focus:border-emerald-500"
                 >
                   {GAME_OPTIONS.map((g) => (
                     <option key={g} value={g}>
@@ -340,7 +340,7 @@ export default function ScrimCreateModal({
                 <select
                   value={formData.map}
                   onChange={(e) => setFormData({ ...formData, map: e.target.value })}
-                  className="w-full bg-black border border-gray-800 rounded-xl p-3 text-sm text-white font-bold outline-none focus:border-emerald-500"
+                  className="w-full bg-black border border-gray-800 rounded-xl p-3 text-sm text-white font-bold focus-visible:outline-none focus:border-emerald-500"
                 >
                   {(MAP_OPTIONS[formData.game] || ['Default Map']).map((m) => (
                     <option key={m} value={m}>
@@ -359,7 +359,7 @@ export default function ScrimCreateModal({
                 <select
                   value={formData.teamType}
                   onChange={(e) => setFormData({ ...formData, teamType: e.target.value })}
-                  className="w-full bg-black border border-gray-800 rounded-xl p-3 text-sm text-white font-bold outline-none focus:border-emerald-500"
+                  className="w-full bg-black border border-gray-800 rounded-xl p-3 text-sm text-white font-bold focus-visible:outline-none focus:border-emerald-500"
                 >
                   <option value="solo">Solo (1v1 / BR Solo)</option>
                   <option value="duo">Duo (2v2)</option>
@@ -375,7 +375,7 @@ export default function ScrimCreateModal({
                 <select
                   value={formData.totalSlots}
                   onChange={(e) => setFormData({ ...formData, totalSlots: Number(e.target.value) })}
-                  className="w-full bg-black border border-gray-800 rounded-xl p-3 text-sm text-white font-bold outline-none focus:border-emerald-500"
+                  className="w-full bg-black border border-gray-800 rounded-xl p-3 text-sm text-white font-bold focus-visible:outline-none focus:border-emerald-500"
                 >
                   <option value={12}>12 Slots (Classic BR)</option>
                   <option value={20}>20 Slots (Expanded BR)</option>
@@ -398,7 +398,7 @@ export default function ScrimCreateModal({
                 type="datetime-local"
                 value={formData.startTime}
                 onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                className="w-full bg-black border border-gray-800 rounded-xl p-3 text-sm text-white font-bold outline-none focus:border-emerald-500"
+                className="w-full bg-black border border-gray-800 rounded-xl p-3 text-sm text-white font-bold focus-visible:outline-none focus:border-emerald-500"
               />
             </div>
 
@@ -417,7 +417,7 @@ export default function ScrimCreateModal({
                     placeholder="e.g. 8492041"
                     value={formData.roomId}
                     onChange={(e) => setFormData({ ...formData, roomId: e.target.value })}
-                    className="w-full bg-black border border-gray-800 rounded-xl p-2.5 text-xs text-white font-mono outline-none focus:border-emerald-500"
+                    className="w-full bg-black border border-gray-800 rounded-xl p-2.5 text-xs text-white font-mono focus-visible:outline-none focus:border-emerald-500"
                   />
                 </div>
                 <div>
@@ -427,7 +427,7 @@ export default function ScrimCreateModal({
                     placeholder="e.g. ffpass"
                     value={formData.roomPass}
                     onChange={(e) => setFormData({ ...formData, roomPass: e.target.value })}
-                    className="w-full bg-black border border-gray-800 rounded-xl p-2.5 text-xs text-white font-mono outline-none focus:border-emerald-500"
+                    className="w-full bg-black border border-gray-800 rounded-xl p-2.5 text-xs text-white font-mono focus-visible:outline-none focus:border-emerald-500"
                   />
                 </div>
               </div>
@@ -442,7 +442,7 @@ export default function ScrimCreateModal({
                 placeholder="https://youtube.com/live/..."
                 value={formData.streamUrl}
                 onChange={(e) => setFormData({ ...formData, streamUrl: e.target.value })}
-                className="w-full bg-black border border-gray-800 rounded-xl p-3 text-sm text-white font-bold outline-none focus:border-emerald-500"
+                className="w-full bg-black border border-gray-800 rounded-xl p-3 text-sm text-white font-bold focus-visible:outline-none focus:border-emerald-500"
               />
             </div>
           </motion.div>
@@ -462,7 +462,7 @@ export default function ScrimCreateModal({
                   placeholder="0 for FREE"
                   value={formData.entryFee}
                   onChange={(e) => setFormData({ ...formData, entryFee: Number(e.target.value) })}
-                  className="w-full bg-black border border-gray-800 rounded-xl p-3 text-sm text-white font-bold outline-none focus:border-emerald-500"
+                  className="w-full bg-black border border-gray-800 rounded-xl p-3 text-sm text-white font-bold focus-visible:outline-none focus:border-emerald-500"
                 />
               </div>
 
@@ -476,7 +476,7 @@ export default function ScrimCreateModal({
                   placeholder="0 for no prize"
                   value={formData.prizePool}
                   onChange={(e) => setFormData({ ...formData, prizePool: Number(e.target.value) })}
-                  className="w-full bg-black border border-gray-800 rounded-xl p-3 text-sm text-white font-bold outline-none focus:border-emerald-500"
+                  className="w-full bg-black border border-gray-800 rounded-xl p-3 text-sm text-white font-bold focus-visible:outline-none focus:border-emerald-500"
                 />
               </div>
             </div>
@@ -514,7 +514,7 @@ export default function ScrimCreateModal({
                 rows={3}
                 value={formData.rules}
                 onChange={(e) => setFormData({ ...formData, rules: e.target.value })}
-                className="w-full bg-black border border-gray-800 rounded-xl p-3 text-xs text-white outline-none focus:border-emerald-500"
+                className="w-full bg-black border border-gray-800 rounded-xl p-3 text-xs text-white focus-visible:outline-none focus:border-emerald-500"
               />
             </div>
           </motion.div>

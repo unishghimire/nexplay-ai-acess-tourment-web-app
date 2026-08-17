@@ -189,7 +189,7 @@ const Results: React.FC = () => {
                     placeholder="Search by tournament name or game..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full bg-surface border border-gray-800 rounded-2xl py-4 pl-12 pr-6 text-white focus:border-brand-500 outline-none transition-colors shadow-xl font-bold"
+                    className="w-full bg-surface border border-gray-800 rounded-2xl py-4 pl-12 pr-6 text-white focus:border-brand-500 focus-visible:outline-none transition-colors shadow-xl font-bold"
                 />
             </div>
 

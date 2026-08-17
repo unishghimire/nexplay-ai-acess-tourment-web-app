@@ -19,7 +19,7 @@ const GameCard: React.FC<GameCardProps> = ({ game }) => {
             <Link
                 to={`/games/${game.id}`}
                 aria-label={`View ${formatGameName(game.name)} details`}
-                className="block focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:focus-visible:outline-none rounded-xl"
+                className="block focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:outline-none rounded-xl"
             >
                 <div className="relative h-36 sm:h-48 overflow-hidden">
                     <img

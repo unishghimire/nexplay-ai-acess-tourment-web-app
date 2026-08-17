@@ -417,7 +417,7 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
                 value={formData.title}
                 onChange={(e) => setFormData({...formData, title: e.target.value})}
                 placeholder="e.g. Pro League Season 1"
-                className="w-full bg-dark border border-gray-800 rounded-lg p-3 text-white focus:border-brand-500 outline-none transition"
+                className="w-full bg-dark border border-gray-800 rounded-lg p-3 text-white focus:border-brand-500 focus-visible:outline-none transition"
               />
             </div>
             <div>
@@ -430,7 +430,7 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
                   setSelectedGame(game);
                   setFormData({...formData, game: gameName, type: game?.modes?.[0] || 'Battle Royale'});
                 }}
-                className="w-full bg-dark border border-gray-800 rounded-lg p-3 text-white focus:border-brand-500 outline-none transition"
+                className="w-full bg-dark border border-gray-800 rounded-lg p-3 text-white focus:border-brand-500 focus-visible:outline-none transition"
               >
                 <option value="">Select a game</option>
                 {games.map(g => (
@@ -494,7 +494,7 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
                     const val = e.target.value as any;
                     setFormData({...formData, teamType: val, teamSize: val === 'solo' ? 1 : val === 'duo' ? 2 : 4});
                   }}
-                  className="w-full bg-dark border border-gray-800 rounded-lg p-3 text-white focus:border-brand-500 outline-none transition"
+                  className="w-full bg-dark border border-gray-800 rounded-lg p-3 text-white focus:border-brand-500 focus-visible:outline-none transition"
                 >
                   <option value="solo">Solo</option>
                   <option value="duo">Duo</option>
@@ -507,7 +507,7 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
                   <select 
                     value={formData.type}
                     onChange={(e) => setFormData({...formData, type: e.target.value})}
-                    className="w-full bg-dark border border-gray-800 rounded-lg p-3 text-white focus:border-brand-500 outline-none transition"
+                    className="w-full bg-dark border border-gray-800 rounded-lg p-3 text-white focus:border-brand-500 focus-visible:outline-none transition"
                   >
                     {selectedGame.modes.map((m: string) => (
                       <option key={m} value={m}>{m}</option>
@@ -519,7 +519,7 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
                     value={formData.type}
                     onChange={(e) => setFormData({...formData, type: e.target.value})}
                     placeholder="e.g. Battle Royale"
-                    className="w-full bg-dark border border-gray-800 rounded-lg p-3 text-white focus:border-brand-500 outline-none transition"
+                    className="w-full bg-dark border border-gray-800 rounded-lg p-3 text-white focus:border-brand-500 focus-visible:outline-none transition"
                   />
                 )}
               </div>
@@ -534,7 +534,7 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
                     value={(formData as any).roomId || ''}
                     onChange={(e) => setFormData({...formData, roomId: e.target.value})}
                     placeholder="e.g. 12345678"
-                    className="w-full bg-dark border border-gray-800 rounded-lg p-3 text-white focus:border-brand-500 outline-none transition"
+                    className="w-full bg-dark border border-gray-800 rounded-lg p-3 text-white focus:border-brand-500 focus-visible:outline-none transition"
                   />
                 </div>
                 <div>
@@ -544,7 +544,7 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
                     value={(formData as any).roomPass || ''}
                     onChange={(e) => setFormData({...formData, roomPass: e.target.value})}
                     placeholder="e.g. nexplay123"
-                    className="w-full bg-dark border border-gray-800 rounded-lg p-3 text-white focus:border-brand-500 outline-none transition"
+                    className="w-full bg-dark border border-gray-800 rounded-lg p-3 text-white focus:border-brand-500 focus-visible:outline-none transition"
                   />
                 </div>
               </div>
@@ -557,7 +557,7 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
                   <select 
                     value={formData.format}
                     onChange={(e) => setFormData({...formData, format: e.target.value as any})}
-                    className="w-full bg-dark border border-gray-800 rounded-lg p-3 text-white focus:border-brand-500 outline-none transition"
+                    className="w-full bg-dark border border-gray-800 rounded-lg p-3 text-white focus:border-brand-500 focus-visible:outline-none transition"
                   >
                     <option value="single_elimination">Single Elimination</option>
                     <option value="double_elimination">Double Elimination</option>
@@ -576,7 +576,7 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
                     const val = parseInt(e.target.value);
                     setFormData({...formData, slots: isNaN(val) ? 0 : val});
                   }}
-                  className="w-full bg-dark border border-gray-800 rounded-lg p-3 text-white focus:border-brand-500 outline-none transition"
+                  className="w-full bg-dark border border-gray-800 rounded-lg p-3 text-white focus:border-brand-500 focus-visible:outline-none transition"
                 />
               </div>
             </div>
@@ -607,7 +607,7 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
                   value={formData.map}
                   onChange={(e) => setFormData({...formData, map: e.target.value})}
                   placeholder="e.g. Erangel"
-                  className="w-full bg-dark border border-gray-800 rounded-lg p-3 text-white focus:border-brand-500 outline-none transition"
+                  className="w-full bg-dark border border-gray-800 rounded-lg p-3 text-white focus:border-brand-500 focus-visible:outline-none transition"
                 />
               </div>
               <div>
@@ -616,7 +616,7 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
                   type="datetime-local" 
                   value={formData.startTime}
                   onChange={(e) => setFormData({...formData, startTime: e.target.value})}
-                  className="w-full bg-dark border border-gray-800 rounded-lg p-3 text-white focus:border-brand-500 outline-none transition"
+                  className="w-full bg-dark border border-gray-800 rounded-lg p-3 text-white focus:border-brand-500 focus-visible:outline-none transition"
                 />
               </div>
             </div>
@@ -641,7 +641,7 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
                       const val = Number(e.target.value);
                       setFormData({...formData, prizePool: isNaN(val) ? 0 : val});
                     }}
-                    className="w-full bg-dark border border-gray-800 rounded-lg p-3 pl-10 text-white focus:border-brand-500 outline-none transition"
+                    className="w-full bg-dark border border-gray-800 rounded-lg p-3 pl-10 text-white focus:border-brand-500 focus-visible:outline-none transition"
                   />
                 </div>
               </div>
@@ -656,7 +656,7 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
                       const val = Number(e.target.value);
                       setFormData({...formData, entryFee: isNaN(val) ? 0 : val});
                     }}
-                    className="w-full bg-dark border border-gray-800 rounded-lg p-3 pl-10 text-white focus:border-brand-500 outline-none transition"
+                    className="w-full bg-dark border border-gray-800 rounded-lg p-3 pl-10 text-white focus:border-brand-500 focus-visible:outline-none transition"
                   />
                 </div>
               </div>
@@ -684,7 +684,7 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
                 onChange={(e) => setFormData({...formData, rules: e.target.value})}
                 rows={6}
                 placeholder="Enter tournament rules..."
-                className="w-full bg-dark border border-gray-800 rounded-lg p-3 text-white focus:border-brand-500 outline-none transition resize-none"
+                className="w-full bg-dark border border-gray-800 rounded-lg p-3 text-white focus:border-brand-500 focus-visible:outline-none transition resize-none"
               />
             </div>
             <div className="bg-brand-500/10 border border-brand-500/20 p-4 rounded-lg flex gap-3">

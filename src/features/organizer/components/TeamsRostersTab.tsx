@@ -85,7 +85,7 @@ export const TeamsRostersTab: React.FC<TeamsRostersTabProps> = ({
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search teams by name..."
-          className="w-full min-h-[44px] bg-dark border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors"
+          className="w-full min-h-[44px] bg-dark border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus-visible:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors"
         />
       </div>
 
@@ -184,7 +184,7 @@ export const TeamsRostersTab: React.FC<TeamsRostersTabProps> = ({
                             <button
                               type="button"
                               onClick={() => onToggleRosterLock(teamId)}
-                              className="min-w-[44px] min-h-[44px] inline-flex items-center justify-center p-1 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-black rounded-full"
+                              className="min-w-[44px] min-h-[44px] inline-flex items-center justify-center p-1 focus-visible:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-black rounded-full"
                               title={
                                 isLocked
                                   ? 'Roster locked — click to unlock'
@@ -364,7 +364,7 @@ export const TeamsRostersTab: React.FC<TeamsRostersTabProps> = ({
                       <button
                         type="button"
                         onClick={() => onToggleRosterLock(teamId)}
-                        className="min-w-[44px] min-h-[44px] inline-flex items-center justify-center p-1 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-black rounded-full"
+                        className="min-w-[44px] min-h-[44px] inline-flex items-center justify-center p-1 focus-visible:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-black rounded-full"
                         aria-label={
                           isLocked ? `Unlock roster for ${teamName}` : `Lock roster for ${teamName}`
                         }

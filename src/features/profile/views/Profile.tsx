@@ -600,7 +600,7 @@ const Profile: React.FC = () => {
                                         onChange={(e) => setInGameId(e.target.value)}
                                         placeholder="e.g. 512345678" 
                                         readOnly={isUidLocked}
-                                        className={`w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 outline-none transition font-bold min-h-[44px] ${isUidLocked ? 'opacity-60 cursor-not-allowed' : ''}`}
+                                        className={`w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 focus-visible:outline-none transition font-bold min-h-[44px] ${isUidLocked ? 'opacity-60 cursor-not-allowed' : ''}`}
                                     />
                                 </div>
                                 <div>
@@ -613,7 +613,7 @@ const Profile: React.FC = () => {
                                         value={inGameName} 
                                         onChange={(e) => setInGameName(e.target.value)}
                                         placeholder="Enter In-Game Name" 
-                                        className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 outline-none transition font-bold min-h-[44px]"
+                                        className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 focus-visible:outline-none transition font-bold min-h-[44px]"
                                     />
                                 </div>
                                 <div>
@@ -626,7 +626,7 @@ const Profile: React.FC = () => {
                                         value={teamName} 
                                         onChange={(e) => setTeamName(e.target.value)}
                                         placeholder="Enter Team Name" 
-                                        className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 outline-none transition font-bold min-h-[44px]"
+                                        className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 focus-visible:outline-none transition font-bold min-h-[44px]"
                                     />
                                 </div>
                                 {profile?.role === 'organizer' && (
@@ -641,7 +641,7 @@ const Profile: React.FC = () => {
                                         value={orgName} 
                                                 onChange={(e) => setOrgName(e.target.value)}
                                                 placeholder="Enter Org Name" 
-                                                className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 outline-none transition font-bold min-h-[44px]"
+                                                className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 focus-visible:outline-none transition font-bold min-h-[44px]"
                                             />
                                         </div>
                                         <div>
@@ -654,7 +654,7 @@ const Profile: React.FC = () => {
                                         value={orgWhatsapp} 
                                                 onChange={(e) => setOrgWhatsapp(e.target.value)}
                                                 placeholder="WhatsApp Number" 
-                                                className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 outline-none transition font-bold min-h-[44px]"
+                                                className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 focus-visible:outline-none transition font-bold min-h-[44px]"
                                             />
                                         </div>
                                         <div>
@@ -667,7 +667,7 @@ const Profile: React.FC = () => {
                                         value={orgDiscord} 
                                                 onChange={(e) => setOrgDiscord(e.target.value)}
                                                 placeholder="Discord Username" 
-                                                className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 outline-none transition font-bold min-h-[44px]"
+                                                className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 focus-visible:outline-none transition font-bold min-h-[44px]"
                                             />
                                         </div>
                                         <div>
@@ -680,7 +680,7 @@ const Profile: React.FC = () => {
                                         value={orgYoutube} 
                                                 onChange={(e) => setOrgYoutube(e.target.value)}
                                                 placeholder="YouTube Channel Link" 
-                                                className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 outline-none transition font-bold min-h-[44px]"
+                                                className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 focus-visible:outline-none transition font-bold min-h-[44px]"
                                             />
                                         </div>
                                     </>
@@ -695,7 +695,7 @@ const Profile: React.FC = () => {
                                         value={phone} 
                                         onChange={(e) => setPhone(e.target.value)}
                                         placeholder="e.g. 98XXXXXXXX"
-                                        className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 outline-none transition font-bold min-h-[44px]"
+                                        className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 focus-visible:outline-none transition font-bold min-h-[44px]"
                                     />
                                 </div>
                             </div>
@@ -709,7 +709,7 @@ const Profile: React.FC = () => {
                                         value={bio} 
                                         onChange={(e) => setBio(e.target.value)}
                                         placeholder="Tell us about yourself..." 
-                                        className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 outline-none transition h-[120px] resize-none text-sm leading-relaxed min-h-[44px]"
+                                        className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 focus-visible:outline-none transition h-[120px] resize-none text-sm leading-relaxed min-h-[44px]"
                                     />
                                 </div>
                                 <div>
@@ -722,7 +722,7 @@ const Profile: React.FC = () => {
                                         value={skills} 
                                         onChange={(e) => setSkills(e.target.value)}
                                         placeholder="e.g. React, Node.js, UI/UX"
-                                        className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 outline-none transition font-bold min-h-[44px]"
+                                        className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 focus-visible:outline-none transition font-bold min-h-[44px]"
                                     />
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -734,7 +734,7 @@ const Profile: React.FC = () => {
                                             value={status} 
                                             id="profileStatus"
                                             onChange={(e) => setStatus(e.target.value as any)}
-                                            className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 outline-none transition font-bold appearance-none min-h-[44px]"
+                                            className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 focus-visible:outline-none transition font-bold appearance-none min-h-[44px]"
                                         >
                                             <option value="online">🟢 Online</option>
                                             <option value="idle">🟡 Idle</option>
@@ -752,7 +752,7 @@ const Profile: React.FC = () => {
                                         value={customActivity} 
                                             onChange={(e) => setCustomActivity(e.target.value)}
                                             placeholder="e.g. Coding..."
-                                            className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 outline-none transition font-bold min-h-[44px]"
+                                            className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 focus-visible:outline-none transition font-bold min-h-[44px]"
                                         />
                                     </div>
                                 </div>
@@ -819,7 +819,7 @@ const Profile: React.FC = () => {
                                         value={newEmail}
                                         onChange={(e) => setNewEmail(e.target.value)}
                                         placeholder="New Email Address" 
-                                        className="bg-dark border border-gray-700 rounded-xl px-3 py-2 text-white flex-grow text-xs focus:border-brand-500 outline-none transition font-bold"
+                                        className="bg-dark border border-gray-700 rounded-xl px-3 py-2 text-white flex-grow text-xs focus:border-brand-500 focus-visible:outline-none transition font-bold"
                                     />
                                     <button type="button" 
                                         onClick={handleUpdateEmail} 
@@ -854,7 +854,7 @@ const Profile: React.FC = () => {
                                         value={orgName}
                                                 onChange={(e) => setOrgName(e.target.value)}
                                                 placeholder="Organization / Brand Name" 
-                                                className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white text-sm focus:border-brand-500 outline-none transition font-bold"
+                                                className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white text-sm focus:border-brand-500 focus-visible:outline-none transition font-bold"
                                             />
                                         </div>
                                         <div>
@@ -864,7 +864,7 @@ const Profile: React.FC = () => {
                                                 value={orgEmail}
                                                 onChange={(e) => setOrgEmail(e.target.value)}
                                                 placeholder="Business Email" 
-                                                className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white text-sm focus:border-brand-500 outline-none transition font-bold"
+                                                className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white text-sm focus:border-brand-500 focus-visible:outline-none transition font-bold"
                                             />
                                         </div>
                                     </div>
@@ -877,7 +877,7 @@ const Profile: React.FC = () => {
                                         value={orgWhatsapp}
                                                 onChange={(e) => setOrgWhatsapp(e.target.value)}
                                                 placeholder="+1234567890" 
-                                                className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white text-sm focus:border-brand-500 outline-none transition font-bold"
+                                                className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white text-sm focus:border-brand-500 focus-visible:outline-none transition font-bold"
                                             />
                                         </div>
                                         <div>
@@ -887,7 +887,7 @@ const Profile: React.FC = () => {
                                                 value={orgProofLink}
                                                 onChange={(e) => setOrgProofLink(e.target.value)}
                                                 placeholder="Link to previous work/socials" 
-                                                className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white text-sm focus:border-brand-500 outline-none transition font-bold"
+                                                className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white text-sm focus:border-brand-500 focus-visible:outline-none transition font-bold"
                                             />
                                         </div>
                                     </div>

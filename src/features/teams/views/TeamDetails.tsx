@@ -628,7 +628,7 @@ const TeamDetails: React.FC = () => {
                                             value={inviteUserId}
                                             onChange={(e) => setInviteUserId(e.target.value)}
                                             placeholder="Paste ID..."
-                                            className="flex-grow bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 outline-none transition text-sm font-mono"
+                                            className="flex-grow bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 focus-visible:outline-none transition text-sm font-mono"
                                         />
                                         <button type="button" 
                                             onClick={handleInvite}
@@ -689,7 +689,7 @@ const TeamDetails: React.FC = () => {
                                     type="text" 
                                     value={editName} 
                                     onChange={(e) => setEditName(e.target.value)}
-                                    className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 outline-none transition font-bold"
+                                    className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 focus-visible:outline-none transition font-bold"
                                 />
                             </div>
                             <div>
@@ -699,7 +699,7 @@ const TeamDetails: React.FC = () => {
                                     value={editTag} 
                                     onChange={(e) => setEditTag(e.target.value)}
                                     placeholder="e.g. NXP"
-                                    className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 outline-none transition font-bold"
+                                    className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 focus-visible:outline-none transition font-bold"
                                 />
                             </div>
                             <div>
@@ -709,7 +709,7 @@ const TeamDetails: React.FC = () => {
                                     value={editRegion} 
                                     onChange={(e) => setEditRegion(e.target.value)}
                                     placeholder="e.g. Nepal, Asia"
-                                    className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 outline-none transition font-bold"
+                                    className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 focus-visible:outline-none transition font-bold"
                                 />
                             </div>
                         </div>
@@ -719,7 +719,7 @@ const TeamDetails: React.FC = () => {
                                 <textarea 
                                     value={editDesc} 
                                     onChange={(e) => setEditDesc(e.target.value)}
-                                    className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 outline-none transition h-32 resize-none text-sm"
+                                    className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 focus-visible:outline-none transition h-32 resize-none text-sm"
                                 />
                             </div>
                         </div>
@@ -738,7 +738,7 @@ const TeamDetails: React.FC = () => {
                                     onDragOver={logoUpload.handleDragOver}
                                     placeholder={isUploadingLogo ? "Uploading..." : "Paste URL/Image or click to Browse"}
                                     disabled={isUploadingLogo}
-                                    className={`w-full bg-dark border ${isUploadingLogo ? 'border-brand-500' : 'border-gray-700 focus:border-brand-500'} rounded-xl px-4 py-3 text-white outline-none transition text-xs font-mono pr-16`}
+                                    className={`w-full bg-dark border ${isUploadingLogo ? 'border-brand-500' : 'border-gray-700 focus:border-brand-500'} rounded-xl px-4 py-3 text-white focus-visible:outline-none transition text-xs font-mono pr-16`}
                                 />
                                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
                                     <button
@@ -778,7 +778,7 @@ const TeamDetails: React.FC = () => {
                                     onDragOver={bannerUpload.handleDragOver}
                                     placeholder={isUploadingBanner ? "Uploading..." : "Paste URL/Image or click to Browse"}
                                     disabled={isUploadingBanner}
-                                    className={`w-full bg-dark border ${isUploadingBanner ? 'border-brand-500' : 'border-gray-700 focus:border-brand-500'} rounded-xl px-4 py-3 text-white outline-none transition text-xs font-mono pr-16`}
+                                    className={`w-full bg-dark border ${isUploadingBanner ? 'border-brand-500' : 'border-gray-700 focus:border-brand-500'} rounded-xl px-4 py-3 text-white focus-visible:outline-none transition text-xs font-mono pr-16`}
                                 />
                                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
                                     <button

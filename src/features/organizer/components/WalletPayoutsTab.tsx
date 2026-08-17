@@ -247,7 +247,7 @@ export const WalletPayoutsTab: React.FC<WalletPayoutsTabProps> = ({
                   if (error) setError(null);
                 }}
                 placeholder="e.g. 5000"
-                className="w-full bg-card border border-slate-800 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors"
+                className="w-full bg-card border border-slate-800 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus-visible:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors"
               />
             </div>
 
@@ -260,7 +260,7 @@ export const WalletPayoutsTab: React.FC<WalletPayoutsTabProps> = ({
                 id="withdraw-method"
                 value={withdrawMethod}
                 onChange={(e) => setWithdrawMethod(e.target.value)}
-                className="w-full bg-card border border-slate-800 rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors"
+                className="w-full bg-card border border-slate-800 rounded-lg px-3.5 py-2.5 text-sm text-white focus-visible:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors"
               >
                 <option value="Bank Transfer">Bank Transfer</option>
                 <option value="eSewa">eSewa</option>
@@ -283,7 +283,7 @@ export const WalletPayoutsTab: React.FC<WalletPayoutsTabProps> = ({
                   if (error) setError(null);
                 }}
                 placeholder="e.g. 9800000000 or Bank Acc No."
-                className="w-full bg-card border border-slate-800 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors"
+                className="w-full bg-card border border-slate-800 rounded-lg px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus-visible:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors"
               />
             </div>
           </div>

@@ -48,6 +48,7 @@ const ScrimsContent: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [searchParams] = useSearchParams();
     const [filterGame, setFilterGame] = useState(searchParams.get('game') || 'All');
+    const [filterMode, setFilterMode] = useState(searchParams.get('mode') || 'All');
     const navigate = useNavigate();
 
     const fetchScrims = useCallback(async () => {
@@ -125,7 +126,8 @@ const ScrimsContent: React.FC = () => {
         const gameMatch = s.game ? s.game.toLowerCase().includes(searchTerm.toLowerCase()) : false;
         const matchesSearch = !searchTerm || titleMatch || gameMatch;
         const matchesGame = filterGame === 'All' || s.game === filterGame;
-        return matchesSearch && matchesGame;
+        const matchesMode = filterMode === 'All' || s.type === filterMode;
+        return matchesSearch && matchesGame && matchesMode;
     });
 
     return (
@@ -191,7 +193,7 @@ const ScrimsContent: React.FC = () => {
                             placeholder="Search by title or game..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full bg-black border border-gray-800 rounded-2xl py-4 pl-12 pr-6 text-white focus:border-brand-500 outline-none transition-colors shadow-xl font-bold"
+                            className="w-full bg-black border border-gray-800 rounded-2xl py-4 pl-12 pr-6 text-white focus:border-brand-500 focus-visible:outline-none transition-colors shadow-xl font-bold"
                         />
                     </div>
                     <div className="md:col-span-4 relative">
@@ -200,7 +202,7 @@ const ScrimsContent: React.FC = () => {
                             aria-label="Filter scrims by game"
                             value={filterGame}
                             onChange={(e) => setFilterGame(e.target.value)}
-                            className="w-full bg-black border border-gray-800 rounded-2xl py-4 pl-12 pr-6 text-white focus:border-brand-500 outline-none transition-colors shadow-xl font-bold appearance-none"
+                            className="w-full bg-black border border-gray-800 rounded-2xl py-4 pl-12 pr-6 text-white focus:border-brand-500 focus-visible:outline-none transition-colors shadow-xl font-bold appearance-none"
                         >
                             <option value="All">All Games</option>
                             <option value="PUBG Mobile">PUBG Mobile</option>
@@ -317,7 +319,7 @@ const ScrimsContent: React.FC = () => {
                         </p>
                         <div className="flex justify-center gap-4">
                             <button type="button" 
-                                onClick={() => { setFilterGame('All'); setSearchTerm(''); }}
+                                onClick={() => { setFilterGame('All'); setFilterMode('All'); setSearchTerm(''); }}
                                 className="min-h-[44px] inline-flex items-center px-6 py-2.5 bg-brand-500 hover:bg-brand-400 text-white rounded-xl font-black uppercase tracking-widest text-xs transition-colors cursor-pointer"
                             >
                                 Clear Filters

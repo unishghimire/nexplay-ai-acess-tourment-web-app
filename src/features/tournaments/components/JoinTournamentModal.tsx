@@ -94,7 +94,7 @@ const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
                         <select 
                             value={teammate1}
                             onChange={(e) => setTeammate1(e.target.value)}
-                            className="w-full bg-dark border border-gray-700 rounded-xl p-4 text-white focus:border-brand-500 outline-none font-bold"
+                            className="w-full bg-dark border border-gray-700 rounded-xl p-4 text-white focus:border-brand-500 focus-visible:outline-none font-bold"
                         >
                             <option value="">Select a teammate</option>
                             {teamMembers.map(m => (
@@ -106,7 +106,7 @@ const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
                             type="text" 
                             value={teammate1}
                             onChange={(e) => setTeammate1(e.target.value)}
-                            className="w-full bg-dark border border-gray-700 rounded-xl p-4 text-white focus:border-brand-500 outline-none font-bold"
+                            className="w-full bg-dark border border-gray-700 rounded-xl p-4 text-white focus:border-brand-500 focus-visible:outline-none font-bold"
                             placeholder="Enter in-game name"
                         />
                     )}
@@ -120,7 +120,7 @@ const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
                                 <select 
                                     value={teammate2}
                                     onChange={(e) => setTeammate2(e.target.value)}
-                                    className="w-full bg-dark border border-gray-700 rounded-xl p-4 text-white focus:border-brand-500 outline-none font-bold"
+                                    className="w-full bg-dark border border-gray-700 rounded-xl p-4 text-white focus:border-brand-500 focus-visible:outline-none font-bold"
                                 >
                                     <option value="">Select a teammate</option>
                                     {teamMembers.map(m => (
@@ -132,7 +132,7 @@ const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
                                     type="text" 
                                     value={teammate2}
                                     onChange={(e) => setTeammate2(e.target.value)}
-                                    className="w-full bg-dark border border-gray-700 rounded-xl p-4 text-white focus:border-brand-500 outline-none font-bold"
+                                    className="w-full bg-dark border border-gray-700 rounded-xl p-4 text-white focus:border-brand-500 focus-visible:outline-none font-bold"
                                     placeholder="Enter in-game name"
                                 />
                             )}
@@ -143,7 +143,7 @@ const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
                                 <select 
                                     value={teammate3}
                                     onChange={(e) => setTeammate3(e.target.value)}
-                                    className="w-full bg-dark border border-gray-700 rounded-xl p-4 text-white focus:border-brand-500 outline-none font-bold"
+                                    className="w-full bg-dark border border-gray-700 rounded-xl p-4 text-white focus:border-brand-500 focus-visible:outline-none font-bold"
                                 >
                                     <option value="">Select a teammate</option>
                                     {teamMembers.map(m => (
@@ -155,7 +155,7 @@ const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
                                     type="text" 
                                     value={teammate3}
                                     onChange={(e) => setTeammate3(e.target.value)}
-                                    className="w-full bg-dark border border-gray-700 rounded-xl p-4 text-white focus:border-brand-500 outline-none font-bold"
+                                    className="w-full bg-dark border border-gray-700 rounded-xl p-4 text-white focus:border-brand-500 focus-visible:outline-none font-bold"
                                     placeholder="Enter in-game name"
                                 />
                             )}

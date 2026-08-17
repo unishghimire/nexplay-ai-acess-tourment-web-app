@@ -343,7 +343,7 @@ const ResultUploadModal: React.FC<ResultUploadModalProps> = ({ isOpen, onClose, 
                                                         const val = parseInt(e.target.value);
                                                         handleWinnerChange(index, 'rank', isNaN(val) ? 0 : val);
                                                     }}
-                                                    className="w-full bg-dark border border-gray-800 rounded-xl py-2.5 pl-9 pr-3 text-sm text-white focus:border-brand-500 outline-none font-black"
+                                                    className="w-full bg-dark border border-gray-800 rounded-xl py-2.5 pl-9 pr-3 text-sm text-white focus:border-brand-500 focus-visible:outline-none font-black"
                                                 />
                                             </div>
                                         </div>
@@ -354,7 +354,7 @@ const ResultUploadModal: React.FC<ResultUploadModalProps> = ({ isOpen, onClose, 
                                                 <select 
                                                     value={winner.uid}
                                                     onChange={(e) => handleWinnerChange(index, 'uid', e.target.value)}
-                                                    className="w-full bg-dark border border-gray-800 rounded-xl py-2.5 pl-9 pr-3 text-sm text-white focus:border-brand-500 outline-none font-bold appearance-none"
+                                                    className="w-full bg-dark border border-gray-800 rounded-xl py-2.5 pl-9 pr-3 text-sm text-white focus:border-brand-500 focus-visible:outline-none font-bold appearance-none"
                                                 >
                                                     <option value="">Select Player</option>
                                                     {participants.map(p => (
@@ -374,7 +374,7 @@ const ResultUploadModal: React.FC<ResultUploadModalProps> = ({ isOpen, onClose, 
                                                         const val = parseInt(e.target.value);
                                                         handleWinnerChange(index, 'amount', isNaN(val) ? 0 : val);
                                                     }}
-                                                    className="w-full bg-dark border border-gray-800 rounded-xl py-2.5 pl-9 pr-3 text-sm text-white focus:border-brand-500 outline-none font-black"
+                                                    className="w-full bg-dark border border-gray-800 rounded-xl py-2.5 pl-9 pr-3 text-sm text-white focus:border-brand-500 focus-visible:outline-none font-black"
                                                 />
                                             </div>
                                         </div>

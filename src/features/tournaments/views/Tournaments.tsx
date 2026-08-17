@@ -214,7 +214,7 @@ const Tournaments: React.FC = () => {
                                 setGameFilter(e.target.value);
                                 setModeFilter('all');
                             }}
-                            className="w-full min-h-[44px] bg-black border border-gray-800 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white focus:border-brand-500 outline-none transition text-sm font-bold cursor-pointer"
+                            className="w-full min-h-[44px] bg-black border border-gray-800 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white focus:border-brand-500 focus-visible:outline-none transition text-sm font-bold cursor-pointer"
                         >
                             <option value="all">All Games</option>
                             {games.map(g => <option key={g.id} value={g.name}>{formatGameName(g.name)}</option>)}
@@ -227,7 +227,7 @@ const Tournaments: React.FC = () => {
                             aria-label="Filter tournaments by mode"
                             value={modeFilter}
                             onChange={(e) => setModeFilter(e.target.value)}
-                            className="w-full min-h-[44px] bg-black border border-gray-800 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white focus:border-brand-500 outline-none transition text-sm font-bold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full min-h-[44px] bg-black border border-gray-800 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white focus:border-brand-500 focus-visible:outline-none transition text-sm font-bold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                             disabled={gameFilter === 'all' && availableModes.length === 0}
                         >
                             <option value="all">All Modes</option>
@@ -241,7 +241,7 @@ const Tournaments: React.FC = () => {
                             aria-label="Filter tournaments by entry type"
                             value={entryFilter}
                             onChange={(e) => setEntryFilter(e.target.value)}
-                            className="w-full min-h-[44px] bg-black border border-gray-800 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white focus:border-brand-500 outline-none transition text-sm font-bold cursor-pointer"
+                            className="w-full min-h-[44px] bg-black border border-gray-800 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white focus:border-brand-500 focus-visible:outline-none transition text-sm font-bold cursor-pointer"
                         >
                             <option value="all">All Types</option>
                             <option value="free">Free Entry</option>
@@ -255,7 +255,7 @@ const Tournaments: React.FC = () => {
                             aria-label="Filter tournaments by player size"
                             value={teamTypeFilter}
                             onChange={(e) => setTeamTypeFilter(e.target.value)}
-                            className="w-full min-h-[44px] bg-black border border-gray-800 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white focus:border-brand-500 outline-none transition text-sm font-bold cursor-pointer"
+                            className="w-full min-h-[44px] bg-black border border-gray-800 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white focus:border-brand-500 focus-visible:outline-none transition text-sm font-bold cursor-pointer"
                         >
                             <option value="all">All Sizes</option>
                             <option value="solo">Solo</option>

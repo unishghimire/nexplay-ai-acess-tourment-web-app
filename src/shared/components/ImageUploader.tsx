@@ -199,7 +199,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
             value={urlInput}
             onChange={(e) => setUrlInput(e.target.value)}
             placeholder="https://example.com/image.jpg"
-            className="flex-1 bg-card/60 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors min-h-[44px]"
+            className="flex-1 bg-card/60 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:focus-visible:outline-none focus:border-brand-500 transition-colors min-h-[44px]"
           />
           <button
             type="button"
