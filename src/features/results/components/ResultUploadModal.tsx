@@ -195,10 +195,10 @@ const ResultUploadModal: React.FC<ResultUploadModalProps> = ({ isOpen, onClose, 
                         { id: 'leaderboard', label: 'Leaderboard Builder', icon: List },
                         { id: 'manual', label: 'Payouts', icon: DollarSign },
                     ].map((tab) => (
-                        <button 
+                        <button type="button" 
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as any)}
-                            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black transition-all ${
+                            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black transition-colors ${
                                 activeTab === tab.id 
                                 ? 'bg-brand-600 text-white shadow-lg' 
                                 : 'text-gray-500 hover:text-gray-300'
@@ -232,7 +232,7 @@ const ResultUploadModal: React.FC<ResultUploadModalProps> = ({ isOpen, onClose, 
                                     onDragOver={handleDragOver}
                                     onClick={() => document.getElementById('result-proof-file-input')?.click()}
                                     className={`
-                                        border-2 border-dashed rounded-2xl sm:rounded-3xl p-4 sm:p-8 md:p-10 text-center transition-all duration-300 cursor-pointer
+                                        border-2 border-dashed rounded-2xl sm:rounded-3xl p-4 sm:p-8 md:p-10 text-center transition-colors duration-300 cursor-pointer
                                         ${resultUrl ? 'border-green-500/50 bg-green-500/5' : 'border-gray-800 bg-dark group-hover:border-brand-500/50 group-hover:bg-brand-500/5'}
                                         ${isProcessing ? 'border-brand-500 bg-brand-500/10' : ''}
                                     `}
@@ -316,9 +316,9 @@ const ResultUploadModal: React.FC<ResultUploadModalProps> = ({ isOpen, onClose, 
                                 <h4 className="text-xs font-black text-gray-500 uppercase tracking-widest flex items-center gap-2">
                                     <Trophy className="w-4 h-4 text-brand-500" /> Winners & Payouts
                                 </h4>
-                                <button 
+                                <button type="button" 
                                     onClick={handleAddWinner}
-                                    className="text-xs bg-brand-600/10 hover:bg-brand-600/20 text-brand-500 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all font-black uppercase tracking-wider border border-brand-500/20"
+                                    className="text-xs bg-brand-600/10 hover:bg-brand-600/20 text-brand-500 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors font-black uppercase tracking-wider border border-brand-500/20"
                                 >
                                     <Plus className="w-3 h-3" /> Add Winner
                                 </button>
@@ -378,9 +378,9 @@ const ResultUploadModal: React.FC<ResultUploadModalProps> = ({ isOpen, onClose, 
                                                 />
                                             </div>
                                         </div>
-                                        <button 
+                                        <button type="button" 
                                             onClick={() => handleRemoveWinner(index)}
-                                            className="absolute -top-2 -right-2 md:static md:mt-7 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white p-2.5 rounded-xl transition-all duration-300 border border-red-500/20"
+                                            className="absolute -top-2 -right-2 md:static md:mt-7 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white p-2.5 rounded-xl transition-colors duration-300 border border-red-500/20"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </button>
@@ -392,16 +392,16 @@ const ResultUploadModal: React.FC<ResultUploadModalProps> = ({ isOpen, onClose, 
                 </AnimatePresence>
 
                 <div className="pt-6 border-t border-gray-800 flex flex-col md:flex-row gap-3">
-                    <button 
+                    <button type="button" 
                         onClick={onClose}
-                        className="flex-1 bg-surface hover:bg-surface text-white py-4 rounded-2xl font-black uppercase tracking-widest transition-all active:scale-95"
+                        className="flex-1 bg-surface hover:bg-surface text-white py-4 rounded-2xl font-black uppercase tracking-widest transition-colors active:scale-95"
                     >
                         Cancel
                     </button>
-                    <button 
+                    <button type="button" 
                         onClick={handleSubmit}
                         disabled={loading || (activeTab === 'file' && !resultUrl) || (activeTab === 'manual' && winners.every(w => w.uid === ''))}
-                        className="flex-[2] bg-brand-600 hover:bg-brand-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] hover:shadow-[0_0_25px_rgba(var(--brand-primary-rgb),0.4)]"
+                        className="flex-[2] bg-brand-600 hover:bg-brand-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 transition-colors active:scale-[0.98] hover:shadow-[0_0_25px_rgba(var(--brand-primary-rgb),0.4)]"
                     >
                         {loading ? (
                             <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>

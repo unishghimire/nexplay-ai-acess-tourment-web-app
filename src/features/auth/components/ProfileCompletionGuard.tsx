@@ -41,7 +41,7 @@ const ProfileCompletionGuard: React.FC<{ children: React.ReactNode }> = ({ child
     // Skip blocking entirely on /login and /register (see isAuthPage comment above).
     if (!isAuthPage && (loading || (user && !profile && !authError && !profileTimeout))) {
         return (
-            <div className="min-h-screen bg-dark flex items-center justify-center">
+            <div className="min-h-[100dvh] bg-dark flex items-center justify-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-brand-500"></div>
             </div>
         );

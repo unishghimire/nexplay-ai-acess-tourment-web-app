@@ -51,7 +51,7 @@ export class TabErrorBoundary extends Component<Props, State> {
           </p>
           <button
             onClick={this.handleReset}
-            className="inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-400 text-white px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all min-h-[44px] shadow-lg shadow-brand-500/20 cursor-pointer"
+            className="inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-400 text-white px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-colors min-h-[44px] shadow-lg shadow-brand-500/20 cursor-pointer"
           >
             <RefreshCw className="w-4 h-4" />
             <span>Try Again</span>

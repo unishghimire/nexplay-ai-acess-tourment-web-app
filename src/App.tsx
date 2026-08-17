@@ -99,7 +99,7 @@ const AppContent = () => {
 
   if (isMaintenanceMode && location.pathname !== '/login') {
     return (
-      <div className="min-h-screen bg-dark flex flex-col items-center justify-center p-4">
+      <div className="min-h-[100dvh] bg-dark flex flex-col items-center justify-center p-4">
         <div className="text-brand-500 mb-8 font-black text-4xl tracking-widest uppercase">
           NEXPLAY
         </div>
@@ -115,7 +115,7 @@ const AppContent = () => {
   }
 
   return (
-    <div id="app" className="min-h-screen flex flex-col relative overflow-x-hidden">
+    <div id="app" className="min-h-[100dvh] flex flex-col relative overflow-x-hidden">
       <Navbar />
       
       {settings?.isNoticeActive && settings.notice && (

@@ -273,7 +273,7 @@ export default function ScrimCreateModal({
             return (
               <div key={step.id} className="flex items-center gap-2">
                 <div
-                  className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black transition-all ${
+                  className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black transition-colors ${
                     isActive
                       ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20'
                       : isDone

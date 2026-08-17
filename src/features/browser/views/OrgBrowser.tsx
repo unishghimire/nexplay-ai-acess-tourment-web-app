@@ -134,7 +134,7 @@ const OrgBrowser: React.FC = () => {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Search by name or organization..."
-                    className="w-full bg-black border border-gray-800 rounded-2xl py-4 pl-12 pr-6 text-white focus:border-brand-500 outline-none transition-all shadow-xl font-bold"
+                    className="w-full bg-black border border-gray-800 rounded-2xl py-4 pl-12 pr-6 text-white focus:border-brand-500 focus-visible:outline-none transition-colors shadow-xl font-bold"
                 />
             </div>
 
@@ -176,7 +176,7 @@ const OrgBrowser: React.FC = () => {
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: i * 0.08 }}
-                                        className="relative bg-card/50 rounded-[2rem] border border-brand-500/20 overflow-hidden group hover:border-brand-500/50 transition-all shadow-xl"
+                                        className="relative bg-card/50 rounded-[2rem] border border-brand-500/20 overflow-hidden group hover:border-brand-500/50 transition-colors shadow-xl"
                                     >
                                         {/* Banner strip */}
                                         <div className="h-20 bg-gradient-to-r from-brand-900/60 via-brand-800/30 to-black relative">
@@ -249,7 +249,7 @@ const OrgBrowser: React.FC = () => {
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: index * 0.04 }}
-                                    className="bg-card/50 rounded-3xl border border-gray-800 p-6 flex items-center justify-between gap-6 hover:border-gray-700 hover:bg-card transition-all group"
+                                    className="bg-card/50 rounded-3xl border border-gray-800 p-6 flex items-center justify-between gap-6 hover:border-gray-700 hover:bg-card transition-colors group"
                                 >
                                     <div className="flex items-center gap-4 min-w-0">
                                         <div className="w-14 h-14 rounded-2xl bg-black border border-gray-800 overflow-hidden shrink-0">

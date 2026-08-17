@@ -49,10 +49,10 @@ export function QualificationPanel({ tournament, onPublish, onClose }: Props) {
                     {roundStatus.completedMatches} / {roundStatus.totalMatches} matches completed
                 </p>
                 <div className="mt-3 w-full h-2 bg-gray-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-brand-500 rounded-full transition-all"
+                    <div className="h-full bg-brand-500 rounded-full transition-colors"
                         style={{ width: `${roundStatus.totalMatches > 0 ? (roundStatus.completedMatches / roundStatus.totalMatches) * 100 : 0}%` }} />
                 </div>
-                <button onClick={onClose} className="mt-4 w-full py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-white text-sm font-medium transition-colors min-h-[44px]">
+                <button type="button" onClick={onClose} className="mt-4 w-full py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-white text-sm font-medium transition-colors min-h-[44px]">
                     Close
                 </button>
             </div>
@@ -70,7 +70,7 @@ export function QualificationPanel({ tournament, onPublish, onClose }: Props) {
                     <h3 className="text-sm font-bold text-white uppercase tracking-wider">Qualification Preview</h3>
                     <p className="text-xs text-gray-500 mt-0.5">Round {preview.roundNumber} · {preview.totalQualified} qualified · {preview.totalEliminated} eliminated</p>
                 </div>
-                <button onClick={onClose} className="text-gray-500 hover:text-white text-sm">✕</button>
+                <button type="button" onClick={onClose} className="text-gray-500 hover:text-white text-sm">✕</button>
             </div>
 
             {hasTies && (
@@ -124,7 +124,7 @@ export function QualificationPanel({ tournament, onPublish, onClose }: Props) {
                     <span className="text-gray-500 font-bold">{preview.totalEliminated} eliminated</span>
                 </div>
                 <div className="flex gap-2 w-full sm:w-auto">
-                    <button onClick={onClose} className="flex-1 sm:flex-none py-2 px-4 rounded-lg bg-gray-800 hover:bg-gray-700 text-white text-xs font-medium transition-colors min-h-[44px]">
+                    <button type="button" onClick={onClose} className="flex-1 sm:flex-none py-2 px-4 rounded-lg bg-gray-800 hover:bg-gray-700 text-white text-xs font-medium transition-colors min-h-[44px]">
                         Cancel
                     </button>
                     <button

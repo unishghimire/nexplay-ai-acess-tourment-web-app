@@ -19,7 +19,7 @@ export const UsersTab: React.FC<AdminPanelTabProps> = (props) => {
                                 placeholder="Search users..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full bg-dark border border-gray-700 rounded-lg pl-10 pr-4 py-2 text-sm text-white focus:border-brand-500 outline-none"
+                                className="w-full bg-dark border border-gray-700 rounded-lg pl-10 pr-4 py-2 text-sm text-white focus:border-brand-500 focus-visible:outline-none"
                             />
                         </div>
                     </div>
@@ -58,7 +58,7 @@ export const UsersTab: React.FC<AdminPanelTabProps> = (props) => {
                                             <select 
                                                 value={u.role}
                                                 onChange={(e) => handleUpdateUserRole(u.uid, e.target.value as any)}
-                                                className="bg-dark border border-gray-700 rounded-lg px-2 py-2 text-xs text-white outline-none focus:border-brand-500"
+                                                className="bg-dark border border-gray-700 rounded-lg px-2 py-2 text-xs text-white focus-visible:outline-none focus:border-brand-500"
                                             >
                                                 <option value="player">Player</option>
                                                 <option value="organizer">Organizer</option>
@@ -75,16 +75,16 @@ export const UsersTab: React.FC<AdminPanelTabProps> = (props) => {
                                         </td>
                                         <td className="px-4 py-4 text-right">
                                             <div className="flex justify-end gap-2">
-                                                <button 
+                                                <button type="button" 
                                                     onClick={() => setSelectedUser(u)}
-                                                    className="p-2.5 bg-blue-600/20 text-blue-400 border border-blue-500/30 hover:bg-blue-600 hover:text-white rounded-lg transition-all"
+                                                    className="p-2.5 bg-blue-600/20 text-blue-400 border border-blue-500/30 hover:bg-blue-600 hover:text-white rounded-lg transition-colors"
                                                     title="Manage Balance & Role"
                                                 >
                                                     <Edit className="w-3.5 h-3.5" />
                                                 </button>
-                                                <button 
+                                                <button type="button" 
                                                     onClick={() => handleSuspendOrg(u.uid, !u.isBanned)}
-                                                    className={`p-2.5 rounded-lg border transition-all ${
+                                                    className={`p-2.5 rounded-lg border transition-colors ${
                                                         u.isBanned 
                                                             ? 'bg-green-600/20 text-green-400 border-green-500/30 hover:bg-green-600 hover:text-white' 
                                                             : 'bg-red-600/20 text-red-400 border-red-500/30 hover:bg-red-600 hover:text-white'

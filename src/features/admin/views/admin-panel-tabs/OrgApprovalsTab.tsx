@@ -41,10 +41,10 @@ export const OrgApprovalsTab: React.FC<AdminPanelTabProps> = (props) => {
                                         </a>
                                     </div>
                                     <div className="flex gap-3 pt-2">
-                                        <button onClick={() => handleRejectOrg(app)} className="flex-1 bg-red-600/20 hover:bg-red-600 text-red-500 hover:text-white border border-red-500/30 hover:border-red-500 py-2.5 rounded-xl text-xs font-bold uppercase transition-all">
+                                        <button type="button" onClick={() => handleRejectOrg(app)} className="flex-1 bg-red-600/20 hover:bg-red-600 text-red-500 hover:text-white border border-red-500/30 hover:border-red-500 py-2.5 rounded-xl text-xs font-bold uppercase transition-colors">
                                             Reject
                                         </button>
-                                        <button onClick={() => handleApproveOrg(app)} className="flex-1 bg-green-600 hover:bg-green-500 text-white py-2.5 rounded-xl text-xs font-bold uppercase transition-all">
+                                        <button type="button" onClick={() => handleApproveOrg(app)} className="flex-1 bg-green-600 hover:bg-green-500 text-white py-2.5 rounded-xl text-xs font-bold uppercase transition-colors">
                                             Approve
                                         </button>
                                     </div>

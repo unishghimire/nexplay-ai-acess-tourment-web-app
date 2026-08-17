@@ -425,7 +425,7 @@ const TeamDetails: React.FC = () => {
                     <ChevronRight className="w-3 h-3" />
                     <span className="text-white">Team Details</span>
                 </div>
-                <button 
+                <button type="button" 
                     onClick={() => navigate(-1)}
                     className="flex items-center gap-2 text-gray-400 hover:text-white font-bold text-xs uppercase tracking-widest transition py-2 touch-target"
                 >
@@ -470,7 +470,7 @@ const TeamDetails: React.FC = () => {
                                 </div>
                                 <div className="flex items-center gap-3 shrink-0">
                                     {isAdmin && !isEditing && (
-                                        <button 
+                                        <button type="button" 
                                             onClick={() => setIsEditing(true)}
                                             className="bg-surface hover:bg-surface text-white px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-xs transition flex items-center gap-2 border border-gray-700"
                                         >
@@ -478,7 +478,7 @@ const TeamDetails: React.FC = () => {
                                         </button>
                                     )}
                                     {isOwner && !isEditing && (
-                                        <button 
+                                        <button type="button" 
                                             onClick={handleDeleteTeam}
                                             disabled={saving}
                                             className="bg-red-600/20 hover:bg-red-600/30 text-red-500 px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-xs transition flex items-center gap-2 border border-red-500/20"
@@ -487,7 +487,7 @@ const TeamDetails: React.FC = () => {
                                         </button>
                                     )}
                                     {isMember && !isOwner && (
-                                        <button 
+                                        <button type="button" 
                                             onClick={handleLeaveTeam}
                                             className="bg-red-600/20 hover:bg-red-600/30 text-red-500 px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-xs transition flex items-center gap-2 border border-red-500/20"
                                         >
@@ -528,7 +528,7 @@ const TeamDetails: React.FC = () => {
                                 <Users className="w-5 h-5 text-brand-500" /> Team Roster ({members.length}/6)
                             </h3>
                             {isAdmin && (
-                                <button onClick={() => setInviteUserId('')} className="text-brand-400 hover:text-brand-300 text-xs font-black uppercase tracking-widest flex items-center gap-1 py-2 touch-target">
+                                <button type="button" onClick={() => setInviteUserId('')} className="text-brand-400 hover:text-brand-300 text-xs font-black uppercase tracking-widest flex items-center gap-1 py-2 touch-target">
                                     <UserPlus className="w-4 h-4" /> Invite
                                 </button>
                             )}
@@ -566,7 +566,7 @@ const TeamDetails: React.FC = () => {
                                             <p className="text-xs font-bold text-white">{member.joinedAt ? formatDate(member.joinedAt) : 'N/A'}</p>
                                         </div>
                                         {isAdmin && member.userId !== team.ownerId && (
-                                            <button 
+                                            <button type="button" 
                                                 onClick={() => handleRemoveMember(member.id, member.user?.username || 'Unknown User', member.userId)}
                                                 className="text-gray-500 hover:text-red-500 p-2 rounded-xl hover:bg-red-500/10 transition opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
                                             >
@@ -630,7 +630,7 @@ const TeamDetails: React.FC = () => {
                                             placeholder="Paste ID..."
                                             className="flex-grow bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 outline-none transition text-sm font-mono"
                                         />
-                                        <button 
+                                        <button type="button" 
                                             onClick={handleInvite}
                                             disabled={inviting || !inviteUserId.trim()}
                                             className="bg-brand-600 hover:bg-brand-500 disabled:bg-surface text-white px-4 py-3 rounded-xl font-black uppercase tracking-widest text-xs transition shrink-0"
@@ -809,13 +809,13 @@ const TeamDetails: React.FC = () => {
                     </div>
 
                     <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-800">
-                        <button 
+                        <button type="button" 
                             onClick={() => setIsEditing(false)}
                             className="px-6 py-3 rounded-xl font-bold text-gray-400 hover:text-white transition"
                         >
                             Cancel
                         </button>
-                        <button 
+                        <button type="button" 
                             onClick={handleSaveTeam}
                             disabled={saving || !editName.trim()}
                             className="bg-brand-600 hover:bg-brand-500 text-white px-8 py-3 rounded-xl font-black uppercase tracking-widest transition shadow-lg"
@@ -831,13 +831,13 @@ const TeamDetails: React.FC = () => {
                 <div className="p-2">
                     <p className="text-gray-400 mb-8 leading-relaxed">{confirmModal.message}</p>
                     <div className="flex justify-end gap-3">
-                        <button 
+                        <button type="button" 
                             onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
                             className="px-6 py-3 rounded-xl font-bold text-gray-400 hover:text-white transition"
                         >
                             Cancel
                         </button>
-                        <button 
+                        <button type="button" 
                             onClick={confirmModal.onConfirm}
                             className={`${confirmModal.isDestructive ? 'bg-red-600 hover:bg-red-500' : 'bg-brand-600 hover:bg-brand-500'} text-white px-8 py-3 rounded-xl font-black uppercase tracking-widest transition shadow-lg`}
                         >

@@ -81,7 +81,7 @@ export const ParticipantsTab: React.FC<TournamentAdminTabProps> = (props) => {
                 </div>
                 <button
                     onClick={handleBulkCheckIn}
-                    className="bg-green-600 hover:bg-green-500 text-white px-4 py-2.5 min-h-[44px] rounded-lg text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all"
+                    className="bg-green-600 hover:bg-green-500 text-white px-4 py-2.5 min-h-[44px] rounded-lg text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-colors"
                 >
                     <CheckCircle2 className="w-4 h-4 shrink-0" /> Check In All
                 </button>
@@ -125,20 +125,20 @@ export const ParticipantsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                 </div>
                                 <div className="flex gap-2 pt-1">
                                     {p.status !== 'approved' && (
-                                        <button onClick={() => handleApprove(p.id)}
-                                            className="flex-1 py-2.5 border border-green-500/20 text-green-500 hover:bg-green-500/10 rounded-lg transition-all text-xs font-bold uppercase tracking-widest touch-target flex items-center justify-center gap-1.5">
+                                        <button type="button" onClick={() => handleApprove(p.id)}
+                                            className="flex-1 py-2.5 border border-green-500/20 text-green-500 hover:bg-green-500/10 rounded-lg transition-colors text-xs font-bold uppercase tracking-widest touch-target flex items-center justify-center gap-1.5">
                                             <CheckCircle2 className="w-4 h-4" /> Approve
                                         </button>
                                     )}
                                     {p.status !== 'rejected' && (
-                                        <button onClick={() => handleReject(p.id)}
-                                            className="flex-1 py-2.5 border border-red-500/20 text-red-500 hover:bg-red-500/10 rounded-lg transition-all text-xs font-bold uppercase tracking-widest touch-target flex items-center justify-center gap-1.5">
+                                        <button type="button" onClick={() => handleReject(p.id)}
+                                            className="flex-1 py-2.5 border border-red-500/20 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors text-xs font-bold uppercase tracking-widest touch-target flex items-center justify-center gap-1.5">
                                             <XCircle className="w-4 h-4" /> Reject
                                         </button>
                                     )}
                                     {p.status === 'approved' && (
-                                        <button onClick={() => handleCheckIn(p.id)}
-                                            className={`flex-1 py-2.5 border rounded-lg transition-all text-xs font-bold uppercase tracking-widest touch-target flex items-center justify-center gap-1.5 ${
+                                        <button type="button" onClick={() => handleCheckIn(p.id)}
+                                            className={`flex-1 py-2.5 border rounded-lg transition-colors text-xs font-bold uppercase tracking-widest touch-target flex items-center justify-center gap-1.5 ${
                                                 p.checkedIn
                                                     ? 'border-green-500/30 bg-green-500/10 text-green-500'
                                                     : 'border-blue-500/20 text-blue-500 hover:bg-blue-500/10'
@@ -198,22 +198,22 @@ export const ParticipantsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                         <td className="py-4 text-right">
                                             <div className="flex justify-end gap-2">
                                                 {p.status !== 'approved' && (
-                                                    <button onClick={() => handleApprove(p.id)}
-                                                        className="p-2 border border-green-500/20 text-green-500 hover:bg-green-500/10 rounded-lg transition-all touch-target"
+                                                    <button type="button" onClick={() => handleApprove(p.id)}
+                                                        className="p-2 border border-green-500/20 text-green-500 hover:bg-green-500/10 rounded-lg transition-colors touch-target"
                                                         title="Approve">
                                                         <CheckCircle2 className="w-4 h-4" />
                                                     </button>
                                                 )}
                                                 {p.status !== 'rejected' && (
-                                                    <button onClick={() => handleReject(p.id)}
-                                                        className="p-2 border border-red-500/20 text-red-500 hover:bg-red-500/10 rounded-lg transition-all touch-target"
+                                                    <button type="button" onClick={() => handleReject(p.id)}
+                                                        className="p-2 border border-red-500/20 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors touch-target"
                                                         title="Reject">
                                                         <XCircle className="w-4 h-4" />
                                                     </button>
                                                 )}
                                                 {p.status === 'approved' && (
-                                                    <button onClick={() => handleCheckIn(p.id)}
-                                                        className={`p-2 border rounded-lg transition-all touch-target ${
+                                                    <button type="button" onClick={() => handleCheckIn(p.id)}
+                                                        className={`p-2 border rounded-lg transition-colors touch-target ${
                                                             p.checkedIn
                                                                 ? 'border-green-500/30 bg-green-500/10 text-green-500'
                                                                 : 'border-blue-500/20 text-blue-500 hover:bg-blue-500/10'

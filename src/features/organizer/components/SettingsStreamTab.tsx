@@ -145,7 +145,7 @@ export const SettingsStreamTab: React.FC<SettingsStreamTabProps> = ({
                 value={orgName}
                 onChange={(e) => setOrgName(e.target.value)}
                 placeholder="e.g. Free Fire Champions Esports"
-                className="w-full bg-black border border-slate-800 rounded-lg p-3 text-sm text-white placeholder-gray-600 outline-none focus:border-brand-500 transition-colors"
+                className="w-full bg-black border border-slate-800 rounded-lg p-3 text-sm text-white placeholder-gray-600 focus-visible:outline-none focus:border-brand-500 transition-colors"
                 required
               />
             </div>
@@ -160,7 +160,7 @@ export const SettingsStreamTab: React.FC<SettingsStreamTabProps> = ({
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
                 placeholder="Brief summary of your esports organization, motto, or tournament rules..."
-                className="w-full bg-black border border-slate-800 rounded-lg p-3 text-sm text-white placeholder-gray-600 outline-none focus:border-brand-500 transition-colors resize-none"
+                className="w-full bg-black border border-slate-800 rounded-lg p-3 text-sm text-white placeholder-gray-600 focus-visible:outline-none focus:border-brand-500 transition-colors resize-none"
               />
             </div>
 
@@ -174,7 +174,7 @@ export const SettingsStreamTab: React.FC<SettingsStreamTabProps> = ({
                 value={whatsapp}
                 onChange={(e) => setWhatsapp(e.target.value)}
                 placeholder="e.g. +977 9800000000 or https://chat.whatsapp.com/..."
-                className="w-full bg-black border border-slate-800 rounded-lg p-3 text-sm text-white placeholder-gray-600 outline-none focus:border-brand-500 transition-colors"
+                className="w-full bg-black border border-slate-800 rounded-lg p-3 text-sm text-white placeholder-gray-600 focus-visible:outline-none focus:border-brand-500 transition-colors"
               />
             </div>
 
@@ -188,7 +188,7 @@ export const SettingsStreamTab: React.FC<SettingsStreamTabProps> = ({
                 value={contactInfo}
                 onChange={(e) => setContactInfo(e.target.value)}
                 placeholder="e.g. contact@esportsorg.com"
-                className="w-full bg-black border border-slate-800 rounded-lg p-3 text-sm text-white placeholder-gray-600 outline-none focus:border-brand-500 transition-colors"
+                className="w-full bg-black border border-slate-800 rounded-lg p-3 text-sm text-white placeholder-gray-600 focus-visible:outline-none focus:border-brand-500 transition-colors"
               />
             </div>
 
@@ -202,7 +202,7 @@ export const SettingsStreamTab: React.FC<SettingsStreamTabProps> = ({
                 value={discord}
                 onChange={(e) => setDiscord(e.target.value)}
                 placeholder="https://discord.com/api/webhooks/..."
-                className="w-full bg-black border border-slate-800 rounded-lg p-3 text-sm font-mono text-white placeholder-gray-600 outline-none focus:border-brand-500 transition-colors"
+                className="w-full bg-black border border-slate-800 rounded-lg p-3 text-sm font-mono text-white placeholder-gray-600 focus-visible:outline-none focus:border-brand-500 transition-colors"
               />
             </div>
 
@@ -241,7 +241,7 @@ export const SettingsStreamTab: React.FC<SettingsStreamTabProps> = ({
                 value={youtubeUrl}
                 onChange={(e) => setYoutubeUrl(e.target.value)}
                 placeholder="https://youtube.com/watch?v=..."
-                className="w-full bg-black border border-slate-800 rounded-lg p-3 text-sm text-white placeholder-gray-600 outline-none focus:border-brand-500 transition-colors"
+                className="w-full bg-black border border-slate-800 rounded-lg p-3 text-sm text-white placeholder-gray-600 focus-visible:outline-none focus:border-brand-500 transition-colors"
               />
             </div>
 
@@ -255,7 +255,7 @@ export const SettingsStreamTab: React.FC<SettingsStreamTabProps> = ({
                 value={twitchUrl}
                 onChange={(e) => setTwitchUrl(e.target.value)}
                 placeholder="https://twitch.tv/..."
-                className="w-full bg-black border border-slate-800 rounded-lg p-3 text-sm text-white placeholder-gray-600 outline-none focus:border-brand-500 transition-colors"
+                className="w-full bg-black border border-slate-800 rounded-lg p-3 text-sm text-white placeholder-gray-600 focus-visible:outline-none focus:border-brand-500 transition-colors"
               />
             </div>
 
@@ -308,7 +308,7 @@ export const SettingsStreamTab: React.FC<SettingsStreamTabProps> = ({
                   value={refereeName}
                   onChange={(e) => setRefereeName(e.target.value)}
                   placeholder="e.g. Ref_Alex or FreeFire_Admin"
-                  className="w-full bg-black border border-slate-800 rounded p-2 text-xs text-white placeholder-gray-600 outline-none focus:border-brand-500"
+                  className="w-full bg-black border border-slate-800 rounded p-2 text-xs text-white placeholder-gray-600 focus-visible:outline-none focus:border-brand-500"
                 />
               </div>
               <div className="flex items-center justify-between sm:justify-end gap-3 pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-800">
@@ -318,7 +318,7 @@ export const SettingsStreamTab: React.FC<SettingsStreamTabProps> = ({
                   role="switch"
                   aria-checked={refereeEnabled}
                   onClick={() => setRefereeEnabled(!refereeEnabled)}
-                  className={`relative inline-flex h-6 w-11 min-h-[44px] min-w-[44px] items-center justify-start flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                  className={`relative inline-flex h-6 w-11 min-h-[44px] min-w-[44px] items-center justify-start flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:focus-visible:outline-none ${
                     refereeEnabled ? 'bg-brand-500' : 'bg-surface'
                   }`}
                 >
@@ -342,7 +342,7 @@ export const SettingsStreamTab: React.FC<SettingsStreamTabProps> = ({
                   value={casterName}
                   onChange={(e) => setCasterName(e.target.value)}
                   placeholder="e.g. Caster_Sam or FF_Shoutcaster"
-                  className="w-full bg-black border border-slate-800 rounded p-2 text-xs text-white placeholder-gray-600 outline-none focus:border-brand-500"
+                  className="w-full bg-black border border-slate-800 rounded p-2 text-xs text-white placeholder-gray-600 focus-visible:outline-none focus:border-brand-500"
                 />
               </div>
               <div className="flex items-center justify-between sm:justify-end gap-3 pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-800">
@@ -352,7 +352,7 @@ export const SettingsStreamTab: React.FC<SettingsStreamTabProps> = ({
                   role="switch"
                   aria-checked={casterEnabled}
                   onClick={() => setCasterEnabled(!casterEnabled)}
-                  className={`relative inline-flex h-6 w-11 min-h-[44px] min-w-[44px] items-center justify-start flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                  className={`relative inline-flex h-6 w-11 min-h-[44px] min-w-[44px] items-center justify-start flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:focus-visible:outline-none ${
                     casterEnabled ? 'bg-brand-500' : 'bg-surface'
                   }`}
                 >

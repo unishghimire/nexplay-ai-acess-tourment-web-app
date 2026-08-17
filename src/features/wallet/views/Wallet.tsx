@@ -249,30 +249,30 @@ const Wallet: React.FC = () => {
 
                 {/* Quick Actions Stack */}
                 <div className="col-span-1 flex flex-col gap-4">
-                    <button 
+                    <button type="button" 
                         onClick={() => {
                             setActiveModal('deposit');
                         }}
-                        className="flex-1 bg-brand-500 hover:bg-brand-400 text-white p-10 rounded-3xl font-black uppercase tracking-widest text-sm transition-all shadow-lg shadow-brand-500/20 flex flex-col items-center justify-center gap-4 hover:-translate-y-1"
+                        className="flex-1 bg-brand-500 hover:bg-brand-400 text-white p-10 rounded-3xl font-black uppercase tracking-widest text-sm transition-colors shadow-lg shadow-brand-500/20 flex flex-col items-center justify-center gap-4 hover:-translate-y-1"
                     >
                         <ArrowDownRight className="w-10 h-10" />
                         Add Money
                     </button>
                     <div className="flex-1 flex gap-4">
-                        <button 
+                        <button type="button" 
                             onClick={() => {
                                 setActiveModal('withdraw');
                             }}
-                            className="flex-1 bg-card hover:bg-surface text-white p-5 sm:p-8 rounded-2xl sm:rounded-3xl font-black uppercase tracking-widest text-xs transition-all border border-gray-800 flex flex-col items-center justify-center gap-3 hover:-translate-y-1"
+                            className="flex-1 bg-card hover:bg-surface text-white p-5 sm:p-8 rounded-2xl sm:rounded-3xl font-black uppercase tracking-widest text-xs transition-colors border border-gray-800 flex flex-col items-center justify-center gap-3 hover:-translate-y-1"
                         >
                             <ArrowUpRight className="w-8 h-8 text-red-400" />
                             Withdraw
                         </button>
-                        <button 
+                        <button type="button" 
                             onClick={() => {
                                 setIsPromoModalOpen(true);
                             }}
-                            className="flex-1 bg-card hover:bg-surface text-white p-5 sm:p-8 rounded-2xl sm:rounded-3xl font-black uppercase tracking-widest text-xs transition-all border border-gray-800 flex flex-col items-center justify-center gap-3 hover:-translate-y-1"
+                            className="flex-1 bg-card hover:bg-surface text-white p-5 sm:p-8 rounded-2xl sm:rounded-3xl font-black uppercase tracking-widest text-xs transition-colors border border-gray-800 flex flex-col items-center justify-center gap-3 hover:-translate-y-1"
                         >
                             <Gift className="w-8 h-8 text-brand-400" />
                             Redeem
@@ -317,7 +317,7 @@ const Wallet: React.FC = () => {
                 <div className="xl:col-span-2 bg-card/50 rounded-3xl border border-gray-800 overflow-hidden">
                     <div className="p-8 border-b border-gray-800 flex justify-between items-center">
                         <h3 className="text-sm font-black text-white uppercase tracking-widest">Transaction Ledger</h3>
-                        <button 
+                        <button type="button" 
                             onClick={handleExportStatement}
                             className="text-xs font-black uppercase text-gray-400 hover:text-white bg-black hover:bg-card px-5 py-2.5 min-h-[44px] rounded-2xl border border-gray-800 transition flex items-center gap-2"
                         >
@@ -329,7 +329,7 @@ const Wallet: React.FC = () => {
                         {fetchError && (
                             <div className="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-2xl flex items-center justify-between gap-4">
                                 <p className="text-red-400 text-sm font-bold">{fetchError}</p>
-                                <button onClick={() => window.location.reload()} className="text-xs font-black uppercase tracking-widest text-red-400 hover:text-red-300 border border-red-500/30 rounded-lg px-3 py-2 min-h-[44px]">Retry</button>
+                                <button type="button" onClick={() => window.location.reload()} className="text-xs font-black uppercase tracking-widest text-red-400 hover:text-red-300 border border-red-500/30 rounded-lg px-3 py-2 min-h-[44px]">Retry</button>
                             </div>
                         )}
                         {loading && transactions.length === 0 ? (
@@ -383,7 +383,7 @@ const Wallet: React.FC = () => {
                                                 </div>
                                             </div>
                                             {(tx.status === 'pending' || tx.status === 'rejected') && (
-                                                <button 
+                                                <button type="button" 
                                                     onClick={() => {
                                                         setSelectedTxForDispute(tx);
                                                         setDisputeModalOpen(true);
@@ -399,7 +399,7 @@ const Wallet: React.FC = () => {
                                 
                                 {hasMore && (
                                     <div className="pt-4 text-center">
-                                        <button 
+                                        <button type="button" 
                                             onClick={() => fetchTransactions(true)}
                                             disabled={loadingMore}
                                             className="text-xs font-black uppercase text-gray-400 hover:text-white bg-black hover:bg-card py-4 px-8 rounded-2xl transition border border-gray-800 flex items-center gap-2 mx-auto disabled:opacity-50"
@@ -446,7 +446,7 @@ const Wallet: React.FC = () => {
                                                         {/* Bar */}
                                                         <div
                                                             style={{ height: `${heightPct}%` }}
-                                                            className={`w-full max-w-[18px] rounded-t-sm transition-all duration-300 ${
+                                                            className={`w-full max-w-[18px] rounded-t-sm transition-colors duration-300 ${
                                                                 isIncoming ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-blue-500 hover:bg-blue-400'
                                                             }`}
                                                         />
@@ -532,10 +532,10 @@ const Wallet: React.FC = () => {
                                     placeholder="NEXPLAY-V1"
                                 />
                             </div>
-                            <button 
+                            <button type="button" 
                                 onClick={handleRedeemPromo}
                                 disabled={isRedeeming || !promoCode.trim()}
-                                className="w-full bg-brand-600 hover:bg-brand-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-5 rounded-2xl font-black uppercase tracking-widest text-sm transition-all shadow-xl shadow-brand-500/25 flex items-center justify-center gap-2"
+                                className="w-full bg-brand-600 hover:bg-brand-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-5 rounded-2xl font-black uppercase tracking-widest text-sm transition-colors shadow-xl shadow-brand-500/25 flex items-center justify-center gap-2"
                             >
                                 {isRedeeming ? 'Validating...' : 'Claim Reward'} <ChevronRight className="w-4 h-4" />
                             </button>
@@ -580,10 +580,10 @@ const Wallet: React.FC = () => {
                                     placeholder="I initiated this withdrawal 3 days ago but haven't received it in my account yet..."
                                 />
                             </div>
-                            <button 
+                            <button type="button" 
                                 onClick={handleReportDispute}
                                 disabled={isSubmittingDispute || !disputeReason.trim()}
-                                className="w-full bg-red-600 hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-5 rounded-2xl font-black uppercase tracking-widest text-sm transition-all shadow-xl shadow-red-500/25 flex items-center justify-center gap-2"
+                                className="w-full bg-red-600 hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-5 rounded-2xl font-black uppercase tracking-widest text-sm transition-colors shadow-xl shadow-red-500/25 flex items-center justify-center gap-2"
                             >
                                 {isSubmittingDispute ? 'Opening Ticket...' : 'Submit Dispute'} <ChevronRight className="w-4 h-4" />
                             </button>

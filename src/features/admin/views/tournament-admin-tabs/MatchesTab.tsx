@@ -38,7 +38,7 @@ export const MatchesTab: React.FC<TournamentAdminTabProps> = (props) => {
                                         const team1 = group.teams.find(t => t.id === match.team1Id);
                                         const team2 = group.teams.find(t => t.id === match.team2Id);
                                         return (
-                                            <div key={match.id} className="bg-surface border border-gray-800 rounded-xl p-3 sm:p-4 shadow-lg hover:border-brand-500/20 transition-all flex flex-col justify-between">
+                                            <div key={match.id} className="bg-surface border border-gray-800 rounded-xl p-3 sm:p-4 shadow-lg hover:border-brand-500/20 transition-colors flex flex-col justify-between">
                                                 <div className="flex justify-between items-center mb-4">
                                                     <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">R{match.round}</span>
                                                     {match.map && (
@@ -64,7 +64,7 @@ export const MatchesTab: React.FC<TournamentAdminTabProps> = (props) => {
                                                             setMatchScore({ score1: match.score1, score2: match.score2, status: match.status, map: match.map || '' });
                                                             setIsUpdateScoreModalOpen(true);
                                                         }}
-                                                        className="bg-dark hover:bg-surface text-gray-400 py-2.5 min-h-[44px] rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border border-gray-800"
+                                                        className="bg-dark hover:bg-surface text-gray-400 py-2.5 min-h-[44px] rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors border border-gray-800"
                                                     >
                                                         Score
                                                     </button>
@@ -77,7 +77,7 @@ export const MatchesTab: React.FC<TournamentAdminTabProps> = (props) => {
                                                                 setIsResultUploaderOpen(true);
                                                             }
                                                         }}
-                                                        className="bg-brand-600/10 hover:bg-brand-600 text-brand-500 hover:text-white py-2.5 min-h-[44px] rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border border-brand-500/20"
+                                                        className="bg-brand-600/10 hover:bg-brand-600 text-brand-500 hover:text-white py-2.5 min-h-[44px] rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors border border-brand-500/20"
                                                     >
                                                         Result
                                                     </button>
@@ -111,7 +111,7 @@ export const MatchesTab: React.FC<TournamentAdminTabProps> = (props) => {
                                     type="number"
                                     value={matchScore.score1}
                                     onChange={(e) => setMatchScore({...matchScore, score1: parseInt(e.target.value) || 0})}
-                                    className="w-full bg-surface border border-gray-700 text-white text-center text-2xl font-black rounded-lg p-2 focus:border-brand-500 outline-none transition"
+                                    className="w-full bg-surface border border-gray-700 text-white text-center text-2xl font-black rounded-lg p-2 focus:border-brand-500 focus-visible:outline-none transition"
                                 />
                             </div>
                             <div className="bg-dark p-4 rounded-xl border border-gray-800 text-center">
@@ -122,7 +122,7 @@ export const MatchesTab: React.FC<TournamentAdminTabProps> = (props) => {
                                     type="number"
                                     value={matchScore.score2}
                                     onChange={(e) => setMatchScore({...matchScore, score2: parseInt(e.target.value) || 0})}
-                                    className="w-full bg-surface border border-gray-700 text-white text-center text-2xl font-black rounded-lg p-2 focus:border-brand-500 outline-none transition"
+                                    className="w-full bg-surface border border-gray-700 text-white text-center text-2xl font-black rounded-lg p-2 focus:border-brand-500 focus-visible:outline-none transition"
                                 />
                             </div>
                         </div>
@@ -134,7 +134,7 @@ export const MatchesTab: React.FC<TournamentAdminTabProps> = (props) => {
                                 value={matchScore.map || ''}
                                 onChange={(e) => setMatchScore({...matchScore, map: e.target.value})}
                                 placeholder="e.g., Erangel, Miramar"
-                                className="w-full bg-dark border border-gray-800 text-white rounded-xl p-3 focus:border-brand-500 outline-none transition"
+                                className="w-full bg-dark border border-gray-800 text-white rounded-xl p-3 focus:border-brand-500 focus-visible:outline-none transition"
                             />
                         </div>
 
@@ -143,7 +143,7 @@ export const MatchesTab: React.FC<TournamentAdminTabProps> = (props) => {
                             <select
                                 value={matchScore.status}
                                 onChange={(e) => setMatchScore({...matchScore, status: e.target.value as any})}
-                                className="w-full bg-dark border border-gray-800 text-white rounded-xl p-3 focus:border-brand-500 outline-none transition"
+                                className="w-full bg-dark border border-gray-800 text-white rounded-xl p-3 focus:border-brand-500 focus-visible:outline-none transition"
                             >
                                 <option value="scheduled">Scheduled</option>
                                 <option value="live">Live</option>
@@ -202,7 +202,7 @@ export const MatchesTab: React.FC<TournamentAdminTabProps> = (props) => {
                                 <select
                                     value={newMatchData.team1Id}
                                     onChange={(e) => setNewMatchData({...newMatchData, team1Id: e.target.value})}
-                                    className="w-full bg-dark border border-gray-800 text-white rounded-xl p-3 focus:border-brand-500 outline-none transition"
+                                    className="w-full bg-dark border border-gray-800 text-white rounded-xl p-3 focus:border-brand-500 focus-visible:outline-none transition"
                                 >
                                     <option value="">Select Team</option>
                                     <option value="TBD">TBD</option>
@@ -216,7 +216,7 @@ export const MatchesTab: React.FC<TournamentAdminTabProps> = (props) => {
                                 <select
                                     value={newMatchData.team2Id}
                                     onChange={(e) => setNewMatchData({...newMatchData, team2Id: e.target.value})}
-                                    className="w-full bg-dark border border-gray-800 text-white rounded-xl p-3 focus:border-brand-500 outline-none transition"
+                                    className="w-full bg-dark border border-gray-800 text-white rounded-xl p-3 focus:border-brand-500 focus-visible:outline-none transition"
                                 >
                                     <option value="">Select Team</option>
                                     <option value="TBD">TBD</option>
@@ -234,7 +234,7 @@ export const MatchesTab: React.FC<TournamentAdminTabProps> = (props) => {
                                     type="number"
                                     value={newMatchData.round}
                                     onChange={(e) => setNewMatchData({...newMatchData, round: parseInt(e.target.value) || 1})}
-                                    className="w-full bg-dark border border-gray-800 text-white rounded-xl p-3 focus:border-brand-500 outline-none transition"
+                                    className="w-full bg-dark border border-gray-800 text-white rounded-xl p-3 focus:border-brand-500 focus-visible:outline-none transition"
                                 />
                             </div>
                             <div>
@@ -244,7 +244,7 @@ export const MatchesTab: React.FC<TournamentAdminTabProps> = (props) => {
                                     value={newMatchData.map}
                                     onChange={(e) => setNewMatchData({...newMatchData, map: e.target.value})}
                                     placeholder="e.g., Erangel"
-                                    className="w-full bg-dark border border-gray-800 text-white rounded-xl p-3 focus:border-brand-500 outline-none transition"
+                                    className="w-full bg-dark border border-gray-800 text-white rounded-xl p-3 focus:border-brand-500 focus-visible:outline-none transition"
                                 />
                             </div>
                         </div>

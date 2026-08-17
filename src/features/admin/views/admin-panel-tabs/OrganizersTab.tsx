@@ -28,7 +28,7 @@ export const OrganizersTab: React.FC<AdminPanelTabProps> = (props) => {
                                                 <p className="text-[10px] text-slate-400 uppercase font-bold">{org.orgName || 'No Org Name'}</p>
                                                 <span className="text-[10px] bg-brand-600/10 text-brand-400 px-1.5 py-0.5 rounded border border-brand-500/20 uppercase font-black">{org.role}</span>
                                             </div>
-                                            <button
+                                            <button type="button"
                                                 onClick={() => togglePowerOrganizer(org)}
                                                 className={`mt-1 flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded ${org.isPowerOrganizer ? 'bg-green-600/20 text-green-500' : 'bg-surface/20 text-slate-400'}`}
                                             >
@@ -38,7 +38,7 @@ export const OrganizersTab: React.FC<AdminPanelTabProps> = (props) => {
                                         </div>
                                     </div>
                                     <div className="flex gap-2">
-                                        <button 
+                                        <button type="button" 
                                             onClick={() => {
                                                 setEditingOrg(org);
                                                 setOrgEmail(org.email || '');
@@ -48,13 +48,13 @@ export const OrganizersTab: React.FC<AdminPanelTabProps> = (props) => {
                                                 setOrgNameEdit(org.orgName || '');
                                                 setIsOrgEditModalOpen(true);
                                             }}
-                                            className="p-2 bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white rounded-xl transition-all border border-blue-500/30"
+                                            className="p-2 bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white rounded-xl transition-colors border border-blue-500/30"
                                         >
                                             <Edit className="w-4 h-4" />
                                         </button>
-                                        <button 
+                                        <button type="button" 
                                             onClick={() => handleSuspendOrg(org.uid, !org.isBanned)}
-                                            className={`p-2 rounded-xl transition-all border ${
+                                            className={`p-2 rounded-xl transition-colors border ${
                                                 org.isBanned 
                                                     ? 'bg-green-600/20 hover:bg-green-600 text-green-400 hover:text-white border-green-500/30' 
                                                     : 'bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white border-red-500/30'
@@ -97,28 +97,28 @@ export const OrganizersTab: React.FC<AdminPanelTabProps> = (props) => {
                                 <div className="space-y-4">
                                     <div>
                                         <label htmlFor="org-name" className="text-xs text-slate-400 uppercase font-bold mb-1 block">Organization Name</label>
-                                        <input type="text" value={orgNameEdit} onChange={e => setOrgNameEdit(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" />
+                                        <input type="text" value={orgNameEdit} onChange={e => setOrgNameEdit(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 focus-visible:outline-none" />
                                     </div>
                                     <div>
                                         <label htmlFor="org-email" className="text-xs text-slate-400 uppercase font-bold mb-1 block">Email</label>
-                                        <input type="email" value={orgEmail} onChange={e => setOrgEmail(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" />
+                                        <input type="email" value={orgEmail} onChange={e => setOrgEmail(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 focus-visible:outline-none" />
                                     </div>
                                     <div>
                                         <label htmlFor="org-whatsapp" className="text-xs text-slate-400 uppercase font-bold mb-1 block">WhatsApp</label>
-                                        <input type="text" value={orgWhatsapp} onChange={e => setOrgWhatsapp(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" />
+                                        <input type="text" value={orgWhatsapp} onChange={e => setOrgWhatsapp(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 focus-visible:outline-none" />
                                     </div>
                                     <div>
                                         <label htmlFor="org-discord" className="text-xs text-slate-400 uppercase font-bold mb-1 block">Discord</label>
-                                        <input type="text" value={orgDiscord} onChange={e => setOrgDiscord(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" />
+                                        <input type="text" value={orgDiscord} onChange={e => setOrgDiscord(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 focus-visible:outline-none" />
                                     </div>
                                     <div>
                                         <label htmlFor="org-youtube" className="text-xs text-slate-400 uppercase font-bold mb-1 block">YouTube</label>
-                                        <input type="text" value={orgYoutube} onChange={e => setOrgYoutube(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" />
+                                        <input type="text" value={orgYoutube} onChange={e => setOrgYoutube(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 focus-visible:outline-none" />
                                     </div>
                                 </div>
                                 <div className="flex gap-4 pt-4">
-                                    <button onClick={() => setIsOrgEditModalOpen(false)} className="flex-1 bg-surface hover:bg-surface text-white py-3 rounded-xl font-bold transition">Cancel</button>
-                                    <button onClick={handleSaveOrgDetails} className="flex-1 bg-brand-600 hover:bg-brand-500 text-white py-3 rounded-xl font-bold transition">Save Changes</button>
+                                    <button type="button" onClick={() => setIsOrgEditModalOpen(false)} className="flex-1 bg-surface hover:bg-surface text-white py-3 rounded-xl font-bold transition">Cancel</button>
+                                    <button type="button" onClick={handleSaveOrgDetails} className="flex-1 bg-brand-600 hover:bg-brand-500 text-white py-3 rounded-xl font-bold transition">Save Changes</button>
                                 </div>
                             </div>
                         </div>

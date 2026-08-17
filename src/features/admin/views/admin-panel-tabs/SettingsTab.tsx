@@ -25,7 +25,7 @@ export const SettingsTab: React.FC<AdminPanelTabProps> = (props) => {
                                         type="number" 
                                         value={minWithdrawal}
                                         onChange={e => setMinWithdrawal(e.target.value)}
-                                        className="w-full bg-dark border border-gray-700 rounded-lg p-3 pl-10 text-white focus:border-brand-500 outline-none"
+                                        className="w-full bg-dark border border-gray-700 rounded-lg p-3 pl-10 text-white focus:border-brand-500 focus-visible:outline-none"
                                     />
                                 </div>
                             </div>
@@ -40,7 +40,7 @@ export const SettingsTab: React.FC<AdminPanelTabProps> = (props) => {
                                         type="email" 
                                         value={supportEmail}
                                         onChange={e => setSupportEmail(e.target.value)}
-                                        className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none"
+                                        className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 focus-visible:outline-none"
                                     />
                                 </div>
                                 <div>
@@ -49,7 +49,7 @@ export const SettingsTab: React.FC<AdminPanelTabProps> = (props) => {
                                         type="text" 
                                         value={supportPhone}
                                         onChange={e => setSupportPhone(e.target.value)}
-                                        className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none"
+                                        className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 focus-visible:outline-none"
                                     />
                                 </div>
                             </div>
@@ -65,7 +65,7 @@ export const SettingsTab: React.FC<AdminPanelTabProps> = (props) => {
                                     </div>
                                     <label className="relative inline-flex items-center cursor-pointer">
                                         <input type="checkbox" checked={maintenanceMode} onChange={e => setMaintenanceMode(e.target.checked)} className="sr-only peer" />
-                                        <div className="w-11 h-6 bg-surface peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
+                                        <div className="w-11 h-6 bg-surface peer-focus:focus-visible:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-colors peer-checked:bg-red-600"></div>
                                     </label>
                                 </div>
                                 <p className="text-[10px] text-gray-400 font-bold uppercase">When enabled, the entire website will be disabled for normal users. Only Admins can access the site.</p>
@@ -80,13 +80,13 @@ export const SettingsTab: React.FC<AdminPanelTabProps> = (props) => {
                                     </div>
                                     <label className="relative inline-flex items-center cursor-pointer">
                                         <input type="checkbox" checked={isNoticeActive} onChange={e => setIsNoticeActive(e.target.checked)} className="sr-only peer" />
-                                        <div className="w-11 h-6 bg-surface peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-600"></div>
+                                        <div className="w-11 h-6 bg-surface peer-focus:focus-visible:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-colors peer-checked:bg-brand-600"></div>
                                     </label>
                                 </div>
                                 <textarea 
                                     value={notice}
                                     onChange={e => setNotice(e.target.value)}
-                                    className="w-full bg-surface border border-gray-700 rounded-lg p-4 text-white focus:border-brand-500 outline-none h-32"
+                                    className="w-full bg-surface border border-gray-700 rounded-lg p-4 text-white focus:border-brand-500 focus-visible:outline-none h-32"
                                     placeholder="Enter notice message here... (e.g. Scheduled maintenance at 10 PM)"
                                 />
                             </div>
@@ -100,7 +100,7 @@ export const SettingsTab: React.FC<AdminPanelTabProps> = (props) => {
                                     </div>
                                     <label className="relative inline-flex items-center cursor-pointer">
                                         <input type="checkbox" checked={siteSettings?.isOrgFormOpen || false} onChange={toggleOrgForm} className="sr-only peer" />
-                                        <div className="w-11 h-6 bg-surface peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-600"></div>
+                                        <div className="w-11 h-6 bg-surface peer-focus:focus-visible:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-colors peer-checked:bg-brand-600"></div>
                                     </label>
                                 </div>
                                 <p className="text-[10px] text-gray-500 uppercase font-bold">Toggle whether users can apply to become an organization from the contact page.</p>
@@ -110,7 +110,7 @@ export const SettingsTab: React.FC<AdminPanelTabProps> = (props) => {
                                     <textarea 
                                         value={orgFormDescription}
                                         onChange={e => setOrgFormDescription(e.target.value)}
-                                        className="w-full bg-surface border border-gray-700 rounded-lg p-4 text-white focus:border-brand-500 outline-none h-32 text-sm"
+                                        className="w-full bg-surface border border-gray-700 rounded-lg p-4 text-white focus:border-brand-500 focus-visible:outline-none h-32 text-sm"
                                         placeholder="Explain the requirements for becoming an organizer..."
                                     />
                                 </div>
@@ -119,7 +119,7 @@ export const SettingsTab: React.FC<AdminPanelTabProps> = (props) => {
                     </div>
 
                     <div className="pt-6 border-t border-gray-800 flex justify-end">
-                        <button 
+                        <button type="button" 
                             onClick={handleSaveSettings}
                             className="bg-brand-600 hover:bg-brand-500 text-white px-10 py-3 rounded-xl font-bold transition shadow-lg shadow-brand-600/20 uppercase tracking-widest"
                         >

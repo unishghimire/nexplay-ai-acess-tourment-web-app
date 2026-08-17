@@ -9,7 +9,7 @@ export const DashboardTab: React.FC<AdminPanelTabProps> = (props) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
                     <div className="col-span-full grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-2">
                         <div className="relative overflow-hidden bg-gradient-to-br from-blue-900/40 to-blue-900/10 p-4 sm:p-6 rounded-2xl border border-blue-500/20 flex items-center gap-3 sm:gap-5 group">
-                            <div className="absolute -right-6 -top-6 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-all"></div>
+                            <div className="absolute -right-6 -top-6 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-colors"></div>
                             <div className="w-14 h-14 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center text-xl border border-blue-500/30 shadow-lg shadow-blue-500/20">
                                 <Users className="w-7 h-7" />
                             </div>
@@ -19,7 +19,7 @@ export const DashboardTab: React.FC<AdminPanelTabProps> = (props) => {
                             </div>
                         </div>
                         <div className="relative overflow-hidden bg-gradient-to-br from-green-900/40 to-green-900/10 p-4 sm:p-6 rounded-2xl border border-green-500/20 flex items-center gap-3 sm:gap-5 group">
-                            <div className="absolute -right-6 -top-6 w-24 h-24 bg-green-500/10 rounded-full blur-2xl group-hover:bg-green-500/20 transition-all"></div>
+                            <div className="absolute -right-6 -top-6 w-24 h-24 bg-green-500/10 rounded-full blur-2xl group-hover:bg-green-500/20 transition-colors"></div>
                             <div className="w-14 h-14 rounded-2xl bg-green-500/20 text-green-400 flex items-center justify-center text-xl border border-green-500/30 shadow-lg shadow-green-500/20">
                                 <ArrowDown className="w-7 h-7" />
                             </div>
@@ -29,7 +29,7 @@ export const DashboardTab: React.FC<AdminPanelTabProps> = (props) => {
                             </div>
                         </div>
                         <div className="relative overflow-hidden bg-gradient-to-br from-red-900/40 to-red-900/10 p-4 sm:p-6 rounded-2xl border border-red-500/20 flex items-center gap-3 sm:gap-5 group">
-                            <div className="absolute -right-6 -top-6 w-24 h-24 bg-red-500/10 rounded-full blur-2xl group-hover:bg-red-500/20 transition-all"></div>
+                            <div className="absolute -right-6 -top-6 w-24 h-24 bg-red-500/10 rounded-full blur-2xl group-hover:bg-red-500/20 transition-colors"></div>
                             <div className="w-14 h-14 rounded-2xl bg-red-500/20 text-red-400 flex items-center justify-center text-xl border border-red-500/30 shadow-lg shadow-red-500/20">
                                 <ArrowUp className="w-7 h-7" />
                             </div>
@@ -39,7 +39,7 @@ export const DashboardTab: React.FC<AdminPanelTabProps> = (props) => {
                             </div>
                         </div>
                         <div className="relative overflow-hidden bg-gradient-to-br from-purple-900/40 to-purple-900/10 p-4 sm:p-6 rounded-2xl border border-purple-500/20 flex items-center gap-3 sm:gap-5 group">
-                            <div className="absolute -right-6 -top-6 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl group-hover:bg-purple-500/20 transition-all"></div>
+                            <div className="absolute -right-6 -top-6 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl group-hover:bg-purple-500/20 transition-colors"></div>
                             <div className="w-14 h-14 rounded-2xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-xl border border-purple-500/30 shadow-lg shadow-purple-500/20">
                                 <Users className="w-7 h-7" />
                             </div>
@@ -63,7 +63,7 @@ export const DashboardTab: React.FC<AdminPanelTabProps> = (props) => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[350px] sm:max-h-[450px] overflow-y-auto custom-scrollbar content-start pr-2">
                                 {pendingTransactions.length > 0 ? (
                                     pendingTransactions.map(t => (
-                                        <div key={t.id} className="bg-dark/50 hover:bg-dark p-5 rounded-2xl border border-slate-800 hover:border-slate-700 transition-all shadow-md group">
+                                        <div key={t.id} className="bg-dark/50 hover:bg-dark p-5 rounded-2xl border border-slate-800 hover:border-slate-700 transition-colors shadow-md group">
                                             <div className="flex justify-between items-start mb-4 border-b border-slate-800 pb-3">
                                                 <div>
                                                     <div className="flex items-center gap-2 mb-1">
@@ -80,10 +80,10 @@ export const DashboardTab: React.FC<AdminPanelTabProps> = (props) => {
                                                 <span className="text-brand-300 select-all">{t.refId}</span>
                                             </div>
                                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                                <button onClick={() => handleApproveTx(t)} className="bg-green-600/20 hover:bg-green-600 text-green-400 hover:text-white border border-green-500/30 hover:border-green-500 py-2.5 min-h-[44px] rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-all">
+                                                <button type="button" onClick={() => handleApproveTx(t)} className="bg-green-600/20 hover:bg-green-600 text-green-400 hover:text-white border border-green-500/30 hover:border-green-500 py-2.5 min-h-[44px] rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-colors">
                                                     <Check className="w-4 h-4" /> Approve
                                                 </button>
-                                                <button onClick={() => {
+                                                <button type="button" onClick={() => {
                                                     setConfirmModal({
                                                         isOpen: true,
                                                         title: 'Reject Transaction',
@@ -94,10 +94,10 @@ export const DashboardTab: React.FC<AdminPanelTabProps> = (props) => {
                                                             closeConfirmModal();
                                                         }
                                                     });
-                                                }} className="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/30 hover:border-red-500 py-2.5 min-h-[44px] rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-all">
+                                                }} className="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/30 hover:border-red-500 py-2.5 min-h-[44px] rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-colors">
                                                     <X className="w-4 h-4" /> Reject
                                                 </button>
-                                                <button onClick={() => setSelectedTx(t)} className="bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30 hover:border-blue-500 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-all">
+                                                <button type="button" onClick={() => setSelectedTx(t)} className="bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30 hover:border-blue-500 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1 transition-colors">
                                                     <Eye className="w-4 h-4" /> Review
                                                 </button>
                                             </div>
@@ -149,7 +149,7 @@ export const DashboardTab: React.FC<AdminPanelTabProps> = (props) => {
                         <div className="bg-card p-4 rounded-xl border border-slate-800">
                             <div className="flex justify-between items-center mb-4 border-b border-slate-700 pb-2">
                                 <h2 className="font-bold text-white">Promotion Slider</h2>
-                                <button 
+                                <button type="button" 
                                     onClick={() => {
                                         setEditingSlide(null);
                                         setSlideTitle('');
@@ -172,7 +172,7 @@ export const DashboardTab: React.FC<AdminPanelTabProps> = (props) => {
                                                 <span className="text-white text-sm truncate flex-1 min-w-0">{s.title}</span>
                                             </div>
                                             <div className="flex gap-2">
-                                                <button onClick={() => {
+                                                <button type="button" onClick={() => {
                                                     setEditingSlide(s);
                                                     setSlideTitle(s.title);
                                                     setSlideDescription(s.description || '');
@@ -182,7 +182,7 @@ export const DashboardTab: React.FC<AdminPanelTabProps> = (props) => {
                                                     setSlideIsActive(s.isActive);
                                                     setIsSlideModalOpen(true);
                                                 }} className="text-blue-400 hover:text-white"><Edit className="w-4 h-4" /></button>
-                                                <button aria-label="Delete promotion slide" onClick={() => handleDeleteSlide(s.id)} className="text-red-400 hover:text-white p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-all"><Trash className="w-4 h-4" /></button>
+                                                <button type="button" aria-label="Delete promotion slide" onClick={() => handleDeleteSlide(s.id)} className="text-red-400 hover:text-white p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-colors"><Trash className="w-4 h-4" /></button>
                                             </div>
                                         </div>
                                     ))
@@ -202,11 +202,11 @@ export const DashboardTab: React.FC<AdminPanelTabProps> = (props) => {
                                 <div className="space-y-4">
                                     <div>
                                         <label htmlFor="slide-title" className="text-xs text-slate-400 uppercase font-bold mb-1 block">Title</label>
-                                        <input id="slide-title" type="text" value={slideTitle} onChange={e => setSlideTitle(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" />
+                                        <input id="slide-title" type="text" value={slideTitle} onChange={e => setSlideTitle(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 focus-visible:outline-none" />
                                     </div>
                                     <div>
                                         <label htmlFor="slide-desc" className="text-xs text-slate-400 uppercase font-bold mb-1 block">Description</label>
-                                        <textarea id="slide-desc" value={slideDescription} onChange={e => setSlideDescription(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none h-20 resize-none" placeholder="Short description for the slide..." />
+                                        <textarea id="slide-desc" value={slideDescription} onChange={e => setSlideDescription(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 focus-visible:outline-none h-20 resize-none" placeholder="Short description for the slide..." />
                                     </div>
                                     <div>
                                         <label className="text-xs text-slate-400 uppercase font-bold mb-1 block">Image (Paste, Drop or Click to Select)</label>
@@ -215,7 +215,7 @@ export const DashboardTab: React.FC<AdminPanelTabProps> = (props) => {
                                             onDrop={handleDropSlide}
                                             onDragOver={handleDragOverSlide}
                                             onClick={() => document.getElementById('slide-image-file-input')?.click()}
-                                            className={`relative w-full aspect-video rounded-xl border-2 border-dashed transition-all flex items-center justify-center overflow-hidden group cursor-pointer ${uploading ? 'border-brand-500 bg-brand-500/10' : 'border-slate-700 hover:border-brand-500 bg-dark'}`}
+                                            className={`relative w-full aspect-video rounded-xl border-2 border-dashed transition-colors flex items-center justify-center overflow-hidden group cursor-pointer ${uploading ? 'border-brand-500 bg-brand-500/10' : 'border-slate-700 hover:border-brand-500 bg-dark'}`}
                                         >
                                             {uploading ? (
                                                 <div className="flex flex-col items-center gap-2">
@@ -248,16 +248,16 @@ export const DashboardTab: React.FC<AdminPanelTabProps> = (props) => {
                                             }}
                                         />
                                         <div className="mt-2">
-                                            <input type="text" value={slideImage} onChange={e => setSlideImage(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none text-xs" placeholder="Or paste URL..." />
+                                            <input type="text" value={slideImage} onChange={e => setSlideImage(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 focus-visible:outline-none text-xs" placeholder="Or paste URL..." />
                                         </div>
                                     </div>
                                     <div>
                                         <label htmlFor="slide-link" className="text-xs text-slate-400 uppercase font-bold mb-1 block">Link</label>
-                                        <input id="slide-link" type="text" value={slideLink} onChange={e => setSlideLink(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" placeholder="/tournaments or https://..." />
+                                        <input id="slide-link" type="text" value={slideLink} onChange={e => setSlideLink(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 focus-visible:outline-none" placeholder="/tournaments or https://..." />
                                     </div>
                                     <div>
                                         <label htmlFor="slide-btn-text" className="text-xs text-slate-400 uppercase font-bold mb-1 block">Button Text</label>
-                                        <input type="text" value={slideBtnText} onChange={e => setSlideBtnText(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" />
+                                        <input type="text" value={slideBtnText} onChange={e => setSlideBtnText(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 focus-visible:outline-none" />
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <input 
@@ -271,8 +271,8 @@ export const DashboardTab: React.FC<AdminPanelTabProps> = (props) => {
                                     </div>
                                 </div>
                                 <div className="flex gap-3 pt-4">
-                                    <button onClick={() => setIsSlideModalOpen(false)} className="flex-1 bg-surface py-3 rounded-xl font-bold">Cancel</button>
-                                    <button onClick={handleSaveSlide} className="flex-1 bg-brand-600 py-3 rounded-xl font-bold">Save</button>
+                                    <button type="button" onClick={() => setIsSlideModalOpen(false)} className="flex-1 bg-surface py-3 rounded-xl font-bold">Cancel</button>
+                                    <button type="button" onClick={handleSaveSlide} className="flex-1 bg-brand-600 py-3 rounded-xl font-bold">Save</button>
                                 </div>
                             </div>
                         </div>

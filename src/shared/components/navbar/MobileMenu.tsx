@@ -29,7 +29,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, navLinks, seco
     };
 
     return (
-        <div className={`lg:hidden absolute top-[100%] left-0 w-full transition-all duration-300 ease-in-out bg-dark/95 backdrop-blur-xl border-t border-gray-800 ${isOpen ? 'max-h-[calc(100vh-4rem)] sm:max-h-[calc(100vh-5rem)] opacity-100 overflow-y-auto' : 'max-h-0 opacity-0 pointer-events-none border-t-0 overflow-hidden'}`}>
+        <div className={`lg:hidden absolute top-[100%] left-0 w-full transition-colors duration-300 ease-in-out bg-dark/95 backdrop-blur-xl border-t border-gray-800 ${isOpen ? 'max-h-[calc(100dvh-4rem)] sm:max-h-[calc(100dvh-5rem)] opacity-100 overflow-y-auto' : 'max-h-0 opacity-0 pointer-events-none border-t-0 overflow-hidden'}`}>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 space-y-2" inert={!isOpen}>
                 {user && (
                     <div className="flex sm:hidden items-center p-4 gap-4 mb-4 bg-surface/20 rounded-xl border border-gray-800/50">
@@ -88,13 +88,13 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, navLinks, seco
                         <Link to="/wallet" onClick={onClose} className="block sm:hidden px-4 py-3 rounded-xl text-sm font-bold text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
                             My Wallet
                         </Link>
-                        <button onClick={handleLogout} className="block w-full text-left px-4 py-3 rounded-xl text-sm font-bold text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors mt-2">
+                        <button type="button" onClick={handleLogout} className="block w-full text-left px-4 py-3 rounded-xl text-sm font-bold text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors mt-2">
                             Sign Out
                         </button>
                     </div>
                 ) : (
                     <div className="pt-4 mt-4 border-t border-gray-800 sm:hidden">
-                        <Link to="/login" onClick={onClose} className="flex items-center justify-center w-full bg-brand-500 hover:bg-brand-600 text-white px-6 py-3 rounded-full font-black tracking-widest text-sm transition-all shadow-lg hover:shadow-brand-500/25">
+                        <Link to="/login" onClick={onClose} className="flex items-center justify-center w-full bg-brand-500 hover:bg-brand-600 text-white px-6 py-3 rounded-full font-black tracking-widest text-sm transition-colors shadow-lg hover:shadow-brand-500/25">
                             LOGIN / SIGN UP
                         </Link>
                     </div>

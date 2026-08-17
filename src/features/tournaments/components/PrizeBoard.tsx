@@ -70,7 +70,7 @@ export default function PrizeBoard({ prizes, currency = 'NPR', totalPrizePool }:
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
-                        className={`flex items-center justify-between p-4 rounded-xl border transition-all duration-300 hover:scale-[1.01] ${getRankStyle(prize.rank)}`}
+                        className={`flex items-center justify-between p-4 rounded-xl border transition-colors duration-300 hover:scale-[1.01] ${getRankStyle(prize.rank)}`}
                     >
                         <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                             <div className="flex items-center justify-center w-10 h-10 rounded-full bg-dark-900/50 border border-dark-600/50">

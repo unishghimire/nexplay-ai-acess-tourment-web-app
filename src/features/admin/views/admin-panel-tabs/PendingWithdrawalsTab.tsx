@@ -18,7 +18,7 @@ export const PendingWithdrawalsTab: React.FC<AdminPanelTabProps> = (props) => {
                                 </span>
                             </div>
                             {allTransactions.filter(t => t.type === 'withdrawal' && t.status === 'pending').length > 0 && (
-                                <button 
+                                <button type="button" 
                                     onClick={() => {
                                         setConfirmModal({
                                             isOpen: true,
@@ -47,7 +47,7 @@ export const PendingWithdrawalsTab: React.FC<AdminPanelTabProps> = (props) => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[600px] overflow-y-auto custom-scrollbar content-start pr-2">
                             {allTransactions.filter(t => t.type === 'withdrawal' && t.status === 'pending').length > 0 ? (
                                 allTransactions.filter(t => t.type === 'withdrawal' && t.status === 'pending').map(t => (
-                                    <div key={t.id} className="bg-dark/50 hover:bg-dark p-5 rounded-2xl border border-slate-800 hover:border-slate-700 transition-all shadow-md group">
+                                    <div key={t.id} className="bg-dark/50 hover:bg-dark p-5 rounded-2xl border border-slate-800 hover:border-slate-700 transition-colors shadow-md group">
                                         <div className="flex justify-between items-start mb-4 border-b border-slate-800 pb-3">
                                             <div>
                                                 <div className="flex items-center gap-2 mb-1">
@@ -72,10 +72,10 @@ export const PendingWithdrawalsTab: React.FC<AdminPanelTabProps> = (props) => {
                                             )}
                                         </div>
                                         <div className="grid grid-cols-2 gap-3">
-                                            <button onClick={async () => { setProcessingId(t.id); try { await handleApproveTx(t); } finally { setProcessingId(null); } }} disabled={processingId === t.id} className="bg-green-600/20 hover:bg-green-600 text-green-400 hover:text-white border border-green-500/30 hover:border-green-500 py-2.5 min-h-[44px] rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all">
+                                            <button type="button" onClick={async () => { setProcessingId(t.id); try { await handleApproveTx(t); } finally { setProcessingId(null); } }} disabled={processingId === t.id} className="bg-green-600/20 hover:bg-green-600 text-green-400 hover:text-white border border-green-500/30 hover:border-green-500 py-2.5 min-h-[44px] rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors">
                                                 <Check className="w-4 h-4" /> Approve
                                             </button>
-                                            <button onClick={() => setSelectedTx(t)} className="bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30 hover:border-blue-500 py-2.5 min-h-[44px] rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all">
+                                            <button type="button" onClick={() => setSelectedTx(t)} className="bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30 hover:border-blue-500 py-2.5 min-h-[44px] rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors">
                                                 <Eye className="w-4 h-4" /> Review
                                             </button>
                                         </div>

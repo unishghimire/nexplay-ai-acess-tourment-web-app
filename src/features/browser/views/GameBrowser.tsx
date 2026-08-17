@@ -86,7 +86,7 @@ export default function GameBrowser() {
                             placeholder="Search games..." 
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-black border border-gray-800 rounded-2xl py-3 pl-12 pr-4 text-white focus:border-brand-500 outline-none transition-all font-bold"
+                            className="w-full bg-black border border-gray-800 rounded-2xl py-3 pl-12 pr-4 text-white focus:border-brand-500 focus-visible:outline-none transition-colors font-bold"
                         />
                     </div>
                     <div className="relative sm:w-48">
@@ -95,7 +95,7 @@ export default function GameBrowser() {
                             aria-label="Filter games by mode"
                             value={selectedMode}
                             onChange={(e) => setSelectedMode(e.target.value)}
-                            className="w-full bg-black border border-gray-800 rounded-2xl py-3 pl-12 pr-4 text-white focus:border-brand-500 outline-none transition-all appearance-none cursor-pointer font-bold"
+                            className="w-full bg-black border border-gray-800 rounded-2xl py-3 pl-12 pr-4 text-white focus:border-brand-500 focus-visible:outline-none transition-colors appearance-none cursor-pointer font-bold"
                         >
                             <option value="all">All Modes</option>
                             {allModes.map(mode => (

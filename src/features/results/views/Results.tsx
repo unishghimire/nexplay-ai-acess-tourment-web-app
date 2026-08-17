@@ -99,7 +99,7 @@ const Results: React.FC = () => {
             <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
                 <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-2xl max-w-md text-center">
                     <p className="text-red-400 text-sm font-bold mb-4">{fetchError}</p>
-                    <button onClick={() => window.location.reload()} className="text-xs font-black uppercase tracking-widest text-red-400 hover:text-red-300 border border-red-500/30 rounded-lg px-4 py-2.5">Retry</button>
+                    <button type="button" onClick={() => window.location.reload()} className="text-xs font-black uppercase tracking-widest text-red-400 hover:text-red-300 border border-red-500/30 rounded-lg px-4 py-2.5">Retry</button>
                 </div>
             </div>
         </>
@@ -189,7 +189,7 @@ const Results: React.FC = () => {
                     placeholder="Search by tournament name or game..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full bg-surface border border-gray-800 rounded-2xl py-4 pl-12 pr-6 text-white focus:border-brand-500 outline-none transition-all shadow-xl font-bold"
+                    className="w-full bg-surface border border-gray-800 rounded-2xl py-4 pl-12 pr-6 text-white focus:border-brand-500 outline-none transition-colors shadow-xl font-bold"
                 />
             </div>
 
@@ -199,7 +199,7 @@ const Results: React.FC = () => {
                         <Link
                             key={t.id} 
                             to={`/tournaments/${t.id}`}
-                            className="bg-surface rounded-3xl border border-gray-800 hover:border-brand-500/30 transition-all cursor-pointer group overflow-hidden block"
+                            className="bg-surface rounded-3xl border border-gray-800 hover:border-brand-500/30 transition-colors cursor-pointer group overflow-hidden block"
                         >
                             <div className="flex flex-col sm:flex-row h-full">
                                 <div className="sm:w-48 h-48 sm:h-auto shrink-0 bg-dark overflow-hidden relative">
@@ -262,7 +262,7 @@ const Results: React.FC = () => {
                                         <div className="flex items-center gap-2 text-[10px] text-gray-500 font-black uppercase tracking-widest">
                                             <Calendar className="w-4 h-4" /> {formatDate(t.startTime)}
                                         </div>
-                                        <button className="text-brand-500 group-hover:text-white transition-colors flex items-center gap-2 text-xs font-black uppercase tracking-widest">
+                                        <button type="button" className="text-brand-500 group-hover:text-white transition-colors flex items-center gap-2 text-xs font-black uppercase tracking-widest">
                                             Details <ChevronRight className="w-4 h-4" />
                                         </button>
                                     </div>

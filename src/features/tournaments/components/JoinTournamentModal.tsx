@@ -164,14 +164,14 @@ const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
                 )}
 
                 <div className="pt-4 flex flex-col sm:flex-row gap-3">
-                    <button 
+                    <button type="button" 
                         onClick={onClose} 
                         disabled={loading}
                         className="flex-1 bg-surface hover:bg-surface text-white py-3 rounded-xl font-bold transition uppercase text-sm disabled:opacity-50"
                     >
                         Cancel
                     </button>
-                    <button 
+                    <button type="button" 
                         onClick={handleSubmit} 
                         disabled={loading}
                         className="flex-1 bg-brand-600 hover:bg-brand-500 text-white py-3 rounded-xl font-bold transition uppercase text-sm disabled:opacity-50 flex items-center justify-center gap-2"

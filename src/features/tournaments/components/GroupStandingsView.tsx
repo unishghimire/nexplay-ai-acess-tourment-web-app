@@ -334,7 +334,7 @@ export default function GroupStandingsView({ tournament, participants }: GroupSt
                                     <div className="text-[9px] text-gray-500 uppercase font-black tracking-widest mb-1">Room ID</div>
                                     <div className="text-white font-mono font-black text-xl">{groupRoomId}</div>
                                 </div>
-                                <button onClick={() => copy(groupRoomId!, 'roomId')} aria-label="Copy Room ID" className="p-2 hover:bg-white/10 rounded-xl transition">
+                                <button type="button" onClick={() => copy(groupRoomId!, 'roomId')} aria-label="Copy Room ID" className="p-2 hover:bg-white/10 rounded-xl transition">
                                     {copied === 'roomId' ? <CheckCircle2 className="w-5 h-5 text-green-400" /> : <Copy className="w-5 h-5 text-gray-500" />}
                                 </button>
                             </div>
@@ -348,10 +348,10 @@ export default function GroupStandingsView({ tournament, participants }: GroupSt
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-1">
-                                    <button onClick={() => setShowPass(p => !p)} aria-label={showPass ? 'Hide password' : 'Show password'} className="p-2 hover:bg-white/10 rounded-xl transition">
+                                    <button type="button" onClick={() => setShowPass(p => !p)} aria-label={showPass ? 'Hide password' : 'Show password'} className="p-2 hover:bg-white/10 rounded-xl transition">
                                         {showPass ? <EyeOff className="w-5 h-5 text-gray-500" /> : <Eye className="w-5 h-5 text-gray-500" />}
                                     </button>
-                                    <button onClick={() => copy(groupRoomPass!, 'roomPass')} aria-label="Copy Password" className="p-2 hover:bg-white/10 rounded-xl transition">
+                                    <button type="button" onClick={() => copy(groupRoomPass!, 'roomPass')} aria-label="Copy Password" className="p-2 hover:bg-white/10 rounded-xl transition">
                                         {copied === 'roomPass' ? <CheckCircle2 className="w-5 h-5 text-green-400" /> : <Copy className="w-5 h-5 text-gray-500" />}
                                     </button>
                                 </div>

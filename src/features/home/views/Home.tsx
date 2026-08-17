@@ -216,7 +216,7 @@ const Home: React.FC = () => {
                 </div>
                 <button
                     onClick={() => handleCtaClick('/wallet', 'InstantPayouts')}
-                    className="flex items-center gap-2 bg-brand-500/10 hover:bg-brand-500/20 px-5 py-3 rounded-xl border border-brand-500/40 text-xs sm:text-sm text-brand-400 font-black uppercase tracking-widest transition-all shrink-0 cursor-pointer"
+                    className="flex items-center gap-2 bg-brand-500/10 hover:bg-brand-500/20 px-5 py-3 rounded-xl border border-brand-500/40 text-xs sm:text-sm text-brand-400 font-black uppercase tracking-widest transition-colors shrink-0 cursor-pointer"
                 >
                     <Wallet className="w-4 h-4 sm:w-5 sm:h-5" /> Instant Payouts
                 </button>
@@ -233,28 +233,28 @@ const Home: React.FC = () => {
 
             {/* Value Highlights (Conversion Funnel Indicators) */}
             <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-                <div className="bg-card/50 p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-brand-500/50 transition-all duration-300 hover:-translate-y-1 group">
+                <div className="bg-card/50 p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-brand-500/50 transition-colors duration-300 hover:-translate-y-1 group">
                     <div className="bg-brand-500/10 p-3 sm:p-4 rounded-xl sm:rounded-2xl text-brand-500 mb-4 sm:mb-6 inline-block group-hover:scale-110 transition-transform">
                         <Trophy className="w-6 h-6 sm:w-8 sm:h-8" />
                     </div>
                     <h4 className="text-white font-black uppercase text-sm sm:text-base md:text-lg mb-1 sm:mb-2">Tournaments</h4>
                     <p className="text-xs sm:text-sm text-gray-500">Compete in verified, admin-refereed ladders.</p>
                 </div>
-                <div className="bg-card/50 p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-emerald-500/50 transition-all duration-300 hover:-translate-y-1 group">
+                <div className="bg-card/50 p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-emerald-500/50 transition-colors duration-300 hover:-translate-y-1 group">
                     <div className="bg-emerald-500/10 p-3 sm:p-4 rounded-xl sm:rounded-2xl text-emerald-500 mb-4 sm:mb-6 inline-block group-hover:scale-110 transition-transform">
                         <Flame className="w-6 h-6 sm:w-8 sm:h-8" />
                     </div>
                     <h4 className="text-white font-black uppercase text-sm sm:text-base md:text-lg mb-1 sm:mb-2">Daily Scrims</h4>
                     <p className="text-xs sm:text-sm text-gray-500">Train with top competitive squads daily.</p>
                 </div>
-                <div className="bg-card/50 p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-yellow-500/50 transition-all duration-300 hover:-translate-y-1 group">
+                <div className="bg-card/50 p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-yellow-500/50 transition-colors duration-300 hover:-translate-y-1 group">
                     <div className="bg-yellow-500/10 p-3 sm:p-4 rounded-xl sm:rounded-2xl text-yellow-500 mb-4 sm:mb-6 inline-block group-hover:scale-110 transition-transform">
                         <Wallet className="w-6 h-6 sm:w-8 sm:h-8" />
                     </div>
                     <h4 className="text-white font-black uppercase text-sm sm:text-base md:text-lg mb-1 sm:mb-2">Secure Wallet</h4>
                     <p className="text-xs sm:text-sm text-gray-500">Double-guarded entry escrows and fast logs.</p>
                 </div>
-                <div className="bg-card/50 p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-purple-500/50 transition-all duration-300 hover:-translate-y-1 group">
+                <div className="bg-card/50 p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-purple-500/50 transition-colors duration-300 hover:-translate-y-1 group">
                     <div className="bg-purple-500/10 p-3 sm:p-4 rounded-xl sm:rounded-2xl text-purple-500 mb-4 sm:mb-6 inline-block group-hover:scale-110 transition-transform">
                         <Users className="w-6 h-6 sm:w-8 sm:h-8" />
                     </div>
@@ -273,9 +273,9 @@ const Home: React.FC = () => {
                         </h2>
                         <p className="text-gray-500 text-xs md:text-sm font-medium hidden sm:block">Join the most prestigious battles on Nexplay</p>
                     </div>
-                    <button 
+                    <button type="button" 
                         onClick={() => handleCtaClick('/tournaments', 'ViewAllFeatured')} 
-                        className="bg-surface/50 hover:bg-surface text-white min-h-[44px] px-3 py-2 sm:px-4 sm:py-2.5 md:px-6 md:py-3 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all flex items-center gap-1 sm:gap-2 border border-gray-700 shrink-0"
+                        className="bg-surface/50 hover:bg-surface text-white min-h-[44px] px-3 py-2 sm:px-4 sm:py-2.5 md:px-6 md:py-3 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-colors flex items-center gap-1 sm:gap-2 border border-gray-700 shrink-0"
                         aria-label="View all scheduled tournaments"
                     >
                         View All <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -304,9 +304,9 @@ const Home: React.FC = () => {
                         </h2>
                         <p className="text-gray-500 text-xs md:text-sm font-medium hidden sm:block">Explore tournaments across your favorite titles</p>
                     </div>
-                    <button 
+                    <button type="button" 
                         onClick={() => handleCtaClick('/games', 'ViewAllGames')} 
-                        className="bg-surface/50 hover:bg-surface text-white min-h-[44px] px-3 py-2 sm:px-4 sm:py-2.5 md:px-6 md:py-3 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all flex items-center gap-1 sm:gap-2 border border-gray-700 shrink-0"
+                        className="bg-surface/50 hover:bg-surface text-white min-h-[44px] px-3 py-2 sm:px-4 sm:py-2.5 md:px-6 md:py-3 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-colors flex items-center gap-1 sm:gap-2 border border-gray-700 shrink-0"
                         aria-label="Explore tournament categories by game"
                     >
                         Explore <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -334,9 +334,9 @@ const Home: React.FC = () => {
                             </h2>
                             <p className="text-gray-500 text-xs md:text-sm font-medium hidden sm:block">Recently concluded battles and their champions</p>
                         </div>
-                        <button 
+                        <button type="button" 
                             onClick={() => handleCtaClick('/results', 'ViewAllResults')} 
-                            className="bg-surface/50 hover:bg-surface text-white min-h-[44px] px-3 py-2 sm:px-4 sm:py-2.5 md:px-6 md:py-3 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all flex items-center gap-1 sm:gap-2 border border-gray-700 shrink-0"
+                            className="bg-surface/50 hover:bg-surface text-white min-h-[44px] px-3 py-2 sm:px-4 sm:py-2.5 md:px-6 md:py-3 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-colors flex items-center gap-1 sm:gap-2 border border-gray-700 shrink-0"
                             aria-label="View all historic results"
                         >
                             View All <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -347,7 +347,7 @@ const Home: React.FC = () => {
                             <div 
                                 key={t.id || `result-${idx}`} 
                                 onClick={() => handleCtaClick(`/tournaments/${t.id}`, `ConcludedTournament_${t.id}`)}
-                                className="bg-surface p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-brand-500/30 transition-all cursor-pointer group"
+                                className="bg-surface p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-brand-500/30 transition-colors cursor-pointer group"
                             >
                                 <div className="flex flex-wrap gap-4 sm:gap-6 min-w-0">
                                     <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-xl sm:rounded-2xl bg-dark overflow-hidden shrink-0 border border-gray-800">
@@ -387,32 +387,32 @@ const Home: React.FC = () => {
             <section className="mb-8 sm:mb-12">
                 <h2 className="text-white font-black text-lg sm:text-xl uppercase tracking-tight mb-3 sm:mb-4">Explore NexPlay</h2>
                 <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 md:gap-4">
-                    <Link to="/tournaments" className="bg-card rounded-xl sm:rounded-2xl border border-gray-800 p-3 sm:p-4 hover:border-brand-500/50 touch-target transition-all group">
+                    <Link to="/tournaments" className="bg-card rounded-xl sm:rounded-2xl border border-gray-800 p-3 sm:p-4 hover:border-brand-500/50 touch-target transition-colors group">
                         <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-brand-500 mb-1.5 sm:mb-2 group-hover:scale-110 transition-transform" />
                         <h3 className="text-white font-bold text-xs sm:text-sm">Tournaments</h3>
                         <p className="text-gray-500 text-[10px] sm:text-xs hidden sm:block">Browse & register</p>
                     </Link>
-                    <Link to="/scrims" className="bg-card rounded-xl sm:rounded-2xl border border-gray-800 p-3 sm:p-4 hover:border-brand-500/50 touch-target transition-all group">
+                    <Link to="/scrims" className="bg-card rounded-xl sm:rounded-2xl border border-gray-800 p-3 sm:p-4 hover:border-brand-500/50 touch-target transition-colors group">
                         <Gamepad2 className="w-5 h-5 sm:w-6 sm:h-6 text-brand-500 mb-1.5 sm:mb-2 group-hover:scale-110 transition-transform" />
                         <h3 className="text-white font-bold text-xs sm:text-sm">Scrims</h3>
                         <p className="text-gray-500 text-[10px] sm:text-xs hidden sm:block">Practice matches</p>
                     </Link>
-                    <Link to="/games" className="bg-card rounded-xl sm:rounded-2xl border border-gray-800 p-3 sm:p-4 hover:border-brand-500/50 touch-target transition-all group">
+                    <Link to="/games" className="bg-card rounded-xl sm:rounded-2xl border border-gray-800 p-3 sm:p-4 hover:border-brand-500/50 touch-target transition-colors group">
                         <Gamepad2 className="w-5 h-5 sm:w-6 sm:h-6 text-brand-500 mb-1.5 sm:mb-2 group-hover:scale-110 transition-transform" />
                         <h3 className="text-white font-bold text-xs sm:text-sm">Games</h3>
                         <p className="text-gray-500 text-[10px] sm:text-xs hidden sm:block">Browse by game</p>
                     </Link>
-                    <Link to="/organizations" className="bg-card rounded-xl sm:rounded-2xl border border-gray-800 p-3 sm:p-4 hover:border-brand-500/50 touch-target transition-all group">
+                    <Link to="/organizations" className="bg-card rounded-xl sm:rounded-2xl border border-gray-800 p-3 sm:p-4 hover:border-brand-500/50 touch-target transition-colors group">
                         <Building2 className="w-5 h-5 sm:w-6 sm:h-6 text-brand-500 mb-1.5 sm:mb-2 group-hover:scale-110 transition-transform" />
                         <h3 className="text-white font-bold text-xs sm:text-sm">Organizations</h3>
                         <p className="text-gray-500 text-[10px] sm:text-xs hidden sm:block">Esports orgs</p>
                     </Link>
-                    <Link to="/news" className="bg-card rounded-xl sm:rounded-2xl border border-gray-800 p-3 sm:p-4 hover:border-brand-500/50 touch-target transition-all group">
+                    <Link to="/news" className="bg-card rounded-xl sm:rounded-2xl border border-gray-800 p-3 sm:p-4 hover:border-brand-500/50 touch-target transition-colors group">
                         <Newspaper className="w-5 h-5 sm:w-6 sm:h-6 text-brand-500 mb-1.5 sm:mb-2 group-hover:scale-110 transition-transform" />
                         <h3 className="text-white font-bold text-xs sm:text-sm">News</h3>
                         <p className="text-gray-500 text-[10px] sm:text-xs hidden sm:block">Latest updates</p>
                     </Link>
-                    <Link to="/leaderboard" className="bg-card rounded-xl sm:rounded-2xl border border-gray-800 p-3 sm:p-4 hover:border-brand-500/50 touch-target transition-all group">
+                    <Link to="/leaderboard" className="bg-card rounded-xl sm:rounded-2xl border border-gray-800 p-3 sm:p-4 hover:border-brand-500/50 touch-target transition-colors group">
                         <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 text-brand-500 mb-1.5 sm:mb-2 group-hover:scale-110 transition-transform" />
                         <h3 className="text-white font-bold text-xs sm:text-sm">Leaderboard</h3>
                         <p className="text-gray-500 text-[10px] sm:text-xs hidden sm:block">Top rankings</p>

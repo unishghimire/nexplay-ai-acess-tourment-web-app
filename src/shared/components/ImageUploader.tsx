@@ -212,7 +212,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       ) : null}
 
       <div
-        className={`relative flex items-center justify-center border-2 border-dashed transition-all duration-200 cursor-pointer group bg-slate-900/50
+        className={`relative flex items-center justify-center border-2 border-dashed transition-colors duration-200 cursor-pointer group bg-slate-900/50
           ${getAspectClass()}
           ${dragActive ? "border-brand-500 bg-brand-500/10 scale-[0.99]" : "border-slate-800 hover:border-slate-700 hover:bg-slate-800/40"}
           ${error ? "border-rose-500/80 bg-rose-500/5" : ""}
@@ -279,7 +279,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center p-6 text-center select-none pointer-events-none">
-            <div className="w-12 h-12 rounded-xl bg-slate-800/80 flex items-center justify-center mb-3 group-hover:bg-slate-700/80 group-hover:scale-110 transition-all duration-200 shadow-md">
+            <div className="w-12 h-12 rounded-xl bg-slate-800/80 flex items-center justify-center mb-3 group-hover:bg-slate-700/80 group-hover:scale-110 transition-colors duration-200 shadow-md">
               <Upload className="w-6 h-6 text-slate-400 group-hover:text-brand-500 transition-colors" aria-hidden="true" />
             </div>
             <p className="text-sm font-semibold text-slate-200 mb-1">

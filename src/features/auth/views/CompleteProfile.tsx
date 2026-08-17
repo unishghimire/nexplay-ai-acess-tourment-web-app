@@ -136,7 +136,7 @@ const CompleteProfile: React.FC = () => {
                                     key={idx}
                                     type="button"
                                     onClick={() => setSelectedAvatar(url)}
-                                    className={`relative rounded-xl overflow-hidden border-2 transition-all aspect-square bg-dark ${
+                                    className={`relative rounded-xl overflow-hidden border-2 transition-colors aspect-square bg-dark ${
                                         selectedAvatar === url ? 'border-brand-500 scale-105 shadow-[0_0_15px_rgba(255,0,85,0.5)]' : 'border-gray-800 hover:border-gray-600'
                                     }`}
                                 >
@@ -161,7 +161,7 @@ const CompleteProfile: React.FC = () => {
                             value={inGameId} 
                             onChange={(e) => setInGameId(e.target.value)}
                             placeholder="e.g. 512345678" 
-                            className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 outline-none transition font-bold"
+                            className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 focus-visible:outline-none transition font-bold"
                         />
                     </div>
 
@@ -175,7 +175,7 @@ const CompleteProfile: React.FC = () => {
                             value={inGameName} 
                             onChange={(e) => setInGameName(e.target.value)}
                             placeholder="Your In-Game Alias" 
-                            className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 outline-none transition font-bold"
+                            className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 focus-visible:outline-none transition font-bold"
                         />
                     </div>
 

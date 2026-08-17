@@ -19,10 +19,10 @@ export const BracketsTab: React.FC<TournamentAdminTabProps> = (props) => {
                         >
                             <div className="flex justify-between items-center border-b border-gray-800 pb-4">
                                 <h2 className="text-lg font-black uppercase tracking-widest text-white">Knockout Brackets</h2>
-                                <button 
+                                <button type="button" 
                                     onClick={handleGenerateBracket}
                                     disabled={tournament.bracketMatches && tournament.bracketMatches.length > 0}
-                                    className="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     Generate Bracket
                                 </button>
@@ -58,13 +58,13 @@ export const BracketsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                                                         <span className="text-lg font-black text-brand-500">{match.score2}</span>
                                                                     </div>
                                                                 </div>
-                                                                <button 
+                                                                <button type="button" 
                                                                     onClick={() => {
                                                                         setSelectedMatch({ groupId: 'bracket', match });
                                                                         setMatchScore({ score1: match.score1, score2: match.score2, status: match.status, map: match.map || '' });
                                                                         setIsUpdateScoreModalOpen(true);
                                                                     }}
-                                                                    className="w-full mt-3 bg-dark hover:bg-surface text-gray-400 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border border-gray-800"
+                                                                    className="w-full mt-3 bg-dark hover:bg-surface text-gray-400 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors border border-gray-800"
                                                                 >
                                                                     Update
                                                                 </button>

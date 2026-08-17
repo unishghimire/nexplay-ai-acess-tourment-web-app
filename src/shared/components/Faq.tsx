@@ -41,7 +41,7 @@ export const Faq: React.FC<FaqProps> = ({ items, title = 'Frequently Asked Quest
                     {items.map((item, index) => (
                         <details
                             key={index}
-                            className="group bg-surface border border-gray-800 rounded-2xl p-5 hover:border-brand-500/30 transition-all cursor-pointer"
+                            className="group bg-surface border border-gray-800 rounded-2xl p-5 hover:border-brand-500/30 transition-colors cursor-pointer"
                         >
                             <summary className="font-bold text-white text-base md:text-lg list-none flex justify-between items-center gap-4 select-none">
                                 <span>{item.question}</span>

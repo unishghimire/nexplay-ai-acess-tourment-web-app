@@ -204,7 +204,7 @@ const PublicProfile: React.FC = () => {
                     <ChevronRight className="w-3 h-3" />
                     <span className="text-white">Player Profile</span>
                 </div>
-                <button 
+                <button type="button" 
                     onClick={() => navigate(-1)}
                     className="flex items-center gap-2 text-gray-400 hover:text-white font-bold text-xs uppercase tracking-widest transition"
                 >
@@ -256,7 +256,7 @@ const PublicProfile: React.FC = () => {
                                         <span className="text-xs font-black uppercase tracking-widest bg-surface text-gray-400 px-3 py-1 rounded-full border border-gray-700">
                                             {profile.role}
                                         </span>
-                                        <button onClick={handleCopyId} className="text-xs font-mono text-gray-500 hover:text-white transition bg-dark px-3 py-1 rounded-full border border-gray-800 flex items-center gap-2">
+                                        <button type="button" onClick={handleCopyId} className="text-xs font-mono text-gray-500 hover:text-white transition bg-dark px-3 py-1 rounded-full border border-gray-800 flex items-center gap-2">
                                             ID: {id?.slice(0, 8)}... {copiedId ? <CheckCircle2 className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
                                         </button>
                                     </div>
@@ -269,7 +269,7 @@ const PublicProfile: React.FC = () => {
 
                                 <div className="flex items-center gap-3">
                                     {user && user.uid !== id && (
-                                        <button 
+                                        <button type="button" 
                                             onClick={handleToggleFollow}
                                             disabled={followLoading}
                                             className={`px-8 py-3 rounded-2xl font-black uppercase tracking-widest text-xs transition shadow-xl flex items-center gap-2 ${
@@ -281,7 +281,7 @@ const PublicProfile: React.FC = () => {
                                             {isFollowing ? <><UserMinus className="w-4 h-4" /> Unfollow</> : <><UserPlus className="w-4 h-4" /> Follow</>}
                                         </button>
                                     )}
-                                    <button className="p-3 bg-surface hover:bg-surface text-white rounded-2xl transition border border-gray-700">
+                                    <button type="button" className="p-3 bg-surface hover:bg-surface text-white rounded-2xl transition border border-gray-700">
                                         <Share2 className="w-5 h-5" />
                                     </button>
                                 </div>

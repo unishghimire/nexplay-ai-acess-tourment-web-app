@@ -224,7 +224,7 @@ export default function PrizeDistributionInput({
             <button
                 type="button"
                 onClick={handleAddPrize}
-                className="w-full flex items-center justify-center gap-2 py-2 border border-dashed border-dark-600 rounded-lg text-sm text-gray-400 hover:text-white hover:border-dark-500 hover:bg-dark-700/50 transition-all"
+                className="w-full flex items-center justify-center gap-2 py-2 border border-dashed border-dark-600 rounded-lg text-sm text-gray-400 hover:text-white hover:border-dark-500 hover:bg-dark-700/50 transition-colors"
             >
                 <Plus size={16} />
                 Add Prize

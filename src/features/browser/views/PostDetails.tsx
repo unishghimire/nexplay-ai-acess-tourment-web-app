@@ -131,7 +131,7 @@ const PostDetails: React.FC = () => {
                         </Link>
 
                         {isOwner && (
-                            <button 
+                            <button type="button" 
                                 onClick={() => setShowDeleteConfirm(true)}
                                 className="bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white px-3 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition flex items-center gap-2 border border-red-500/20"
                             >

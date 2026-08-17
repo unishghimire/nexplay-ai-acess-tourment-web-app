@@ -64,7 +64,7 @@ export const OrgEarningsTab: React.FC<AdminPanelTabProps> = (props) => {
                                             </td>
                                             <td className="p-4 text-right">
                                                 {earning.status === 'pending' && (
-                                                    <button
+                                                    <button type="button"
                                                         onClick={async () => { setReleasingId(earning.id); try { await handleReleaseEarnings(earning); } finally { setReleasingId(null); } }}
                                                         disabled={releasingId === earning.id}
                                                         className="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition disabled:opacity-50 disabled:cursor-not-allowed"

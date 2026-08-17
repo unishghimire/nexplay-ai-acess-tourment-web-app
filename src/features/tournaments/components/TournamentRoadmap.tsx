@@ -84,7 +84,7 @@ export function TournamentRoadmap({ tournament, compact = false }: Props) {
                 <h3 className="text-sm font-bold text-white uppercase tracking-wider">Roadmap</h3>
                 <div className="flex items-center gap-2">
                     <div className="w-24 h-1.5 bg-gray-800 rounded-full overflow-hidden">
-                        <div className="h-full bg-brand-500 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
+                        <div className="h-full bg-brand-500 rounded-full transition-colors duration-500" style={{ width: `${progress}%` }} />
                     </div>
                     <span className="text-xs font-bold text-gray-400">{progress}%</span>
                 </div>
@@ -99,7 +99,7 @@ export function TournamentRoadmap({ tournament, compact = false }: Props) {
                     return (
                         <div key={i} className="flex items-center sm:flex-1">
                             {/* Stage pill */}
-                            <div className={`flex-1 rounded-lg border ${style.ring} ${style.bg} px-3 py-2.5 transition-all`}>
+                            <div className={`flex-1 rounded-lg border ${style.ring} ${style.bg} px-3 py-2.5 transition-colors`}>
                                 <div className="flex items-center gap-2">
                                     <span className={`w-2 h-2 rounded-full shrink-0 ${style.dot}`} />
                                     <div className="min-w-0">

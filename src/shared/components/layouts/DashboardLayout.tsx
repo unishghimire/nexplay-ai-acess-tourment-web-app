@@ -37,7 +37,7 @@ export default function DashboardLayout({ children, title, description, backUrl 
             <main className="flex-1 flex flex-col min-w-0 bg-black overflow-y-auto custom-scrollbar">
                 <header className="px-4 sm:px-6 py-5 md:px-10 md:py-8 border-b border-gray-800 bg-black/80 sticky top-0 backdrop-blur-md z-10">
                     {backUrl && (
-                        <button onClick={() => navigate(backUrl)} className="text-brand-500 text-xs font-black uppercase tracking-widest flex items-center gap-2 hover:text-brand-400 mb-4 transition-colors touch-target">
+                        <button type="button" onClick={() => navigate(backUrl)} className="text-brand-500 text-xs font-black uppercase tracking-widest flex items-center gap-2 hover:text-brand-400 mb-4 transition-colors touch-target">
                             <ChevronLeft className="w-4 h-4" /> Back
                         </button>
                     )}

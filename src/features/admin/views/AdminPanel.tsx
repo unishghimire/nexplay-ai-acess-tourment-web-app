@@ -21,7 +21,7 @@ const AdminPanel: React.FC = () => {
     return (
         <div className="animate-fade-in max-w-7xl mx-auto flex flex-col md:flex-row gap-6 relative">
             {/* Mobile Sidebar Toggle */}
-            <button 
+            <button type="button" 
                 aria-label="Toggle admin navigation menu"
                 aria-expanded={isSidebarOpen}
                 className="md:hidden flex items-center justify-between bg-card p-4 rounded-2xl border border-gray-800 w-full min-h-[44px]"
@@ -36,9 +36,9 @@ const AdminPanel: React.FC = () => {
                 <div>
                     <div className="text-xs font-black text-gray-500 uppercase tracking-[0.2em] mb-6 px-3">Main</div>
                     <div className="space-y-2">
-                        <button 
+                        <button type="button" 
                             onClick={() => { setActiveTab('tab-dashboard'); setIsSidebarOpen(false); }} 
-                            className={`w-full text-left px-5 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all flex items-center gap-4 ${
+                            className={`w-full text-left px-5 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-colors flex items-center gap-4 ${
                                 activeTab === 'tab-dashboard' 
                                     ? 'bg-brand-500 text-white shadow-xl shadow-brand-500/20' 
                                     : 'text-gray-400 hover:bg-surface/50 hover:text-white'
@@ -47,9 +47,9 @@ const AdminPanel: React.FC = () => {
                             <Layout className={`w-5 h-5 ${activeTab === 'tab-dashboard' ? 'text-white' : 'text-gray-500'}`} />
                             Dashboard
                         </button>
-                        <button 
+                        <button type="button" 
                             onClick={() => { setActiveTab('tab-users'); setIsSidebarOpen(false); }} 
-                            className={`w-full text-left px-5 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all flex items-center gap-4 ${
+                            className={`w-full text-left px-5 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-colors flex items-center gap-4 ${
                                 activeTab === 'tab-users' 
                                     ? 'bg-brand-500 text-white shadow-xl shadow-brand-500/20' 
                                     : 'text-gray-400 hover:bg-surface/50 hover:text-white'
@@ -72,10 +72,10 @@ const AdminPanel: React.FC = () => {
                             const Icon = tab.icon;
                             const isActive = activeTab === `tab-${tab.id}`;
                             return (
-                                <button 
+                                <button type="button" 
                                     key={tab.id}
                                     onClick={() => { setActiveTab(`tab-${tab.id}`); setIsSidebarOpen(false); }} 
-                                    className={`w-full text-left px-5 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all flex items-center justify-between ${
+                                    className={`w-full text-left px-5 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-colors flex items-center justify-between ${
                                         isActive 
                                             ? 'bg-brand-500 text-white shadow-xl shadow-brand-500/20' 
                                             : 'text-gray-400 hover:bg-surface/50 hover:text-white'
@@ -108,10 +108,10 @@ const AdminPanel: React.FC = () => {
                             const Icon = tab.icon;
                             const isActive = activeTab === `tab-${tab.id}`;
                             return (
-                                <button 
+                                <button type="button" 
                                     key={tab.id}
                                     onClick={() => { setActiveTab(`tab-${tab.id}`); setIsSidebarOpen(false); }} 
-                                    className={`w-full text-left px-5 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all flex items-center justify-between ${
+                                    className={`w-full text-left px-5 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-colors flex items-center justify-between ${
                                         isActive 
                                             ? 'bg-brand-500 text-white shadow-xl shadow-brand-500/20' 
                                             : 'text-gray-400 hover:bg-surface/50 hover:text-white'
@@ -147,10 +147,10 @@ const AdminPanel: React.FC = () => {
                             const Icon = tab.icon;
                             const isActive = activeTab === `tab-${tab.id}`;
                             return (
-                                <button 
+                                <button type="button" 
                                     key={tab.id}
                                     onClick={() => { setActiveTab(`tab-${tab.id}`); setIsSidebarOpen(false); }} 
-                                    className={`w-full text-left px-5 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all flex items-center gap-4 ${
+                                    className={`w-full text-left px-5 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-colors flex items-center gap-4 ${
                                         isActive 
                                             ? 'bg-brand-500 text-white shadow-xl shadow-brand-500/20' 
                                             : 'text-gray-400 hover:bg-surface/50 hover:text-white'
@@ -167,9 +167,9 @@ const AdminPanel: React.FC = () => {
                 <div>
                     <div className="text-xs font-black text-gray-500 uppercase tracking-[0.2em] mb-6 px-3">System</div>
                     <div className="space-y-2">
-                        <button 
+                        <button type="button" 
                             onClick={() => { setActiveTab('tab-discord'); setIsSidebarOpen(false); }} 
-                            className={`w-full text-left px-5 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all flex items-center gap-4 ${
+                            className={`w-full text-left px-5 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-colors flex items-center gap-4 ${
                                 activeTab === 'tab-discord' 
                                     ? 'bg-[#5865F2] text-white shadow-xl shadow-[#5865F2]/20' 
                                     : 'text-gray-400 hover:bg-surface/50 hover:text-white'
@@ -178,9 +178,9 @@ const AdminPanel: React.FC = () => {
                             <Megaphone className={`w-5 h-5 ${activeTab === 'tab-discord' ? 'text-white' : 'text-gray-500'}`} />
                             Discord
                         </button>
-                        <button 
+                        <button type="button" 
                             onClick={() => { setActiveTab('tab-settings'); setIsSidebarOpen(false); }} 
-                            className={`w-full text-left px-5 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all flex items-center gap-4 ${
+                            className={`w-full text-left px-5 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-colors flex items-center gap-4 ${
                                 activeTab === 'tab-settings' 
                                     ? 'bg-brand-500 text-white shadow-xl shadow-brand-500/20' 
                                     : 'text-gray-400 hover:bg-surface/50 hover:text-white'
@@ -260,7 +260,7 @@ const AdminPanel: React.FC = () => {
                     <div className="bg-card w-full max-w-md rounded-2xl border border-gray-800 p-6 space-y-6 shadow-2xl overflow-y-auto max-h-[90vh] custom-scrollbar">
                         <div className="flex justify-between items-center border-b border-gray-800 pb-4">
                             <h3 className="text-xl font-bold text-white uppercase tracking-widest">Manage User</h3>
-                            <button aria-label="Close user modal" onClick={() => setSelectedUser(null)} className="text-gray-500 hover:text-white bg-dark min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full transition"><X className="w-5 h-5" /></button>
+                            <button type="button" aria-label="Close user modal" onClick={() => setSelectedUser(null)} className="text-gray-500 hover:text-white bg-dark min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full transition"><X className="w-5 h-5" /></button>
                         </div>
 
                         <div className="bg-dark p-4 rounded-xl border border-gray-800">
@@ -272,13 +272,13 @@ const AdminPanel: React.FC = () => {
                         <div className="space-y-4">
                             <label htmlFor="adjust-balance" className="text-xs text-gray-500 uppercase font-bold block">Adjust Balance</label>
                             <div className="flex gap-2">
-                                <button 
+                                <button type="button" 
                                     onClick={() => setAdjustmentType('add')}
                                     className={`flex-1 py-2 rounded-lg font-bold text-xs uppercase border ${adjustmentType === 'add' ? 'bg-green-600 border-green-500 text-white' : 'bg-dark border-gray-700 text-gray-500'}`}
                                 >
                                     Add
                                 </button>
-                                <button 
+                                <button type="button" 
                                     onClick={() => setAdjustmentType('subtract')}
                                     className={`flex-1 py-2 rounded-lg font-bold text-xs uppercase border ${adjustmentType === 'subtract' ? 'bg-red-600 border-red-500 text-white' : 'bg-dark border-gray-700 text-gray-500'}`}
                                 >
@@ -290,9 +290,9 @@ const AdminPanel: React.FC = () => {
                                 value={adjustmentAmount}
                                 onChange={(e) => setAdjustmentAmount(e.target.value)}
                                 placeholder="Enter amount..."
-                                className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none"
+                                className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 focus-visible:outline-none"
                             />
-                            <button onClick={handleAdjustBalance} className="w-full bg-brand-600 hover:bg-brand-500 text-white py-3 rounded-xl font-bold transition uppercase text-sm">
+                            <button type="button" onClick={handleAdjustBalance} className="w-full bg-brand-600 hover:bg-brand-500 text-white py-3 rounded-xl font-bold transition uppercase text-sm">
                                 Confirm Adjustment
                             </button>
                         </div>
@@ -301,10 +301,10 @@ const AdminPanel: React.FC = () => {
                             <label htmlFor="update-role" className="text-xs text-gray-500 uppercase font-bold block">Update Role</label>
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                 {(['player', 'organizer', 'admin'] as const).map(role => (
-                                    <button 
+                                    <button type="button" 
                                         key={role}
                                         onClick={() => handleUpdateUserRole(selectedUser.uid, role)}
-                                        className={`py-2 rounded-lg font-bold text-xs uppercase border transition-all ${selectedUser.role === role ? 'bg-brand-600 border-brand-500 text-white' : 'bg-dark border-gray-700 text-gray-500 hover:border-gray-600'}`}
+                                        className={`py-2 rounded-lg font-bold text-xs uppercase border transition-colors ${selectedUser.role === role ? 'bg-brand-600 border-brand-500 text-white' : 'bg-dark border-gray-700 text-gray-500 hover:border-gray-600'}`}
                                     >
                                         {role}
                                     </button>

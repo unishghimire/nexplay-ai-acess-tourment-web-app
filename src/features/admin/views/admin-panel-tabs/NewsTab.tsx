@@ -100,7 +100,7 @@ const NewsTab: React.FC<AdminPanelTabProps> = ({ showToast }) => {
                 <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tighter flex items-center gap-3">
                     <Newspaper className="w-6 h-6 text-brand-500" /> News Management
                 </h2>
-                <button
+                <button type="button"
                     onClick={() => setShowCreate(true)}
                     className="bg-brand-500 hover:bg-brand-400 text-white px-5 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition flex items-center gap-2"
                 >
@@ -132,7 +132,7 @@ const NewsTab: React.FC<AdminPanelTabProps> = ({ showToast }) => {
                                     {post.orgName} • {formatDate(post.createdAt)}
                                 </div>
                             </div>
-                            <button
+                            <button type="button"
                                 onClick={() => setDeleteTarget(post)}
                                 className="bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white p-2.5 rounded-lg transition shrink-0"
                                 aria-label="Delete post"
@@ -153,7 +153,7 @@ const NewsTab: React.FC<AdminPanelTabProps> = ({ showToast }) => {
                             type="text"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
-                            className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-500 transition font-bold"
+                            className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:focus-visible:outline-none focus:border-brand-500 transition font-bold"
                             placeholder="News Headline"
                             required
                         />
@@ -163,7 +163,7 @@ const NewsTab: React.FC<AdminPanelTabProps> = ({ showToast }) => {
                         <textarea
                             value={content}
                             onChange={(e) => setContent(e.target.value)}
-                            className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-500 transition h-32 resize-none text-sm"
+                            className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:focus-visible:outline-none focus:border-brand-500 transition h-32 resize-none text-sm"
                             placeholder="Write your news article here..."
                             required
                         />
@@ -175,7 +175,7 @@ const NewsTab: React.FC<AdminPanelTabProps> = ({ showToast }) => {
                             onDrop={handleDrop}
                             onDragOver={handleDragOver}
                             onClick={() => document.getElementById('news-image-input')?.click()}
-                            className={`relative w-full aspect-video rounded-2xl border-2 border-dashed transition-all flex flex-col items-center justify-center overflow-hidden group cursor-pointer mb-3 ${isUploading ? 'border-brand-500 bg-brand-500/10' : 'border-gray-700 hover:border-brand-500 bg-dark'}`}
+                            className={`relative w-full aspect-video rounded-2xl border-2 border-dashed transition-colors flex flex-col items-center justify-center overflow-hidden group cursor-pointer mb-3 ${isUploading ? 'border-brand-500 bg-brand-500/10' : 'border-gray-700 hover:border-brand-500 bg-dark'}`}
                         >
                             {isUploading ? (
                                 <div className="flex flex-col items-center gap-2">
@@ -202,7 +202,7 @@ const NewsTab: React.FC<AdminPanelTabProps> = ({ showToast }) => {
                             type="url"
                             value={imageUrl}
                             onChange={(e) => setImageUrl(e.target.value)}
-                            className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-brand-500 transition font-mono text-xs"
+                            className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:focus-visible:outline-none focus:border-brand-500 transition font-mono text-xs"
                             placeholder="Or paste direct image URL here..."
                         />
                     </div>

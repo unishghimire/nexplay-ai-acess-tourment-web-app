@@ -234,7 +234,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
           <h2 className="text-xl font-black text-white uppercase tracking-widest flex items-center gap-2">
             <CreditCard className="w-5 h-5 text-brand-500" /> {activeTab === 'deposit' ? 'Deposit Funds' : 'Withdraw Funds'}
           </h2>
-          <button onClick={onClose} className="p-2.5 hover:bg-surface rounded-full transition text-gray-400 hover:text-white">
+          <button type="button" onClick={onClose} className="p-2.5 hover:bg-surface rounded-full transition text-gray-400 hover:text-white">
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -251,7 +251,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
                 <div className="grid grid-cols-1 gap-3">
                   <h3 className="text-xs text-gray-400 uppercase font-bold mb-2">Select Payment Category</h3>
                   {paymentCategories.map(cat => (
-                    <button 
+                    <button type="button" 
                       key={cat.id} 
                       onClick={() => setSelectedCategory(cat)}
                       className="flex items-center justify-between p-4 bg-card rounded-xl border border-gray-800 hover:border-brand-500 transition group"
@@ -266,13 +266,13 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
                 </div>
               ) : !selectedMethod ? (
                 <div className="space-y-6 animate-fade-in">
-                  <button onClick={() => setSelectedCategory(null)} className="text-brand-400 text-[10px] font-black uppercase tracking-widest flex items-center gap-1 hover:underline">
+                  <button type="button" onClick={() => setSelectedCategory(null)} className="text-brand-400 text-[10px] font-black uppercase tracking-widest flex items-center gap-1 hover:underline">
                     <X className="w-3 h-3" /> Back to Categories
                   </button>
                   <h3 className="text-xs text-gray-400 uppercase font-bold mb-2">Select {selectedCategory.name} Method</h3>
                   <div className="grid grid-cols-1 gap-3">
                     {paymentMethods.filter(pm => pm.categoryId === selectedCategory.id).map(pm => (
-                      <button 
+                      <button type="button" 
                         key={pm.id} 
                         onClick={() => setSelectedMethod(pm)}
                         className="flex items-center justify-between p-4 bg-card rounded-xl border border-gray-800 hover:border-brand-500 transition group"
@@ -296,7 +296,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
                 </div>
               ) : (
                 <div className="space-y-6 animate-fade-in">
-                  <button onClick={() => setSelectedMethod(null)} className="text-brand-400 text-[10px] font-black uppercase tracking-widest flex items-center gap-1 hover:underline">
+                  <button type="button" onClick={() => setSelectedMethod(null)} className="text-brand-400 text-[10px] font-black uppercase tracking-widest flex items-center gap-1 hover:underline">
                     <X className="w-3 h-3" /> Change Method
                   </button>
                   <div className="flex flex-col items-center gap-4">
@@ -340,7 +340,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
                       {proofPreview ? (
                         <div className="relative">
                           <img src={proofPreview} alt="Payment screenshot" className="w-full max-h-48 object-contain rounded-xl border border-gray-700" loading="lazy" />
-                          <button 
+                          <button type="button" 
                             onClick={() => { setProofPreview(''); setProofUrl(''); }}
                             className="absolute top-2 right-2 bg-black/80 rounded-full p-1 text-white hover:bg-red-500 transition"
                           >
@@ -399,7 +399,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
                       />
                     </div>
 
-                    <button 
+                    <button type="button" 
                       onClick={handleDepositSubmit}
                       disabled={isSubmitting || isUploading || !proofUrl}
                       className="w-full bg-brand-600 hover:bg-brand-500 text-white py-4 rounded-xl font-black uppercase tracking-widest transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
@@ -447,7 +447,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
                   <AlertTriangle className="w-4 h-4 text-yellow-500 shrink-0" />
                   <p className="text-[10px] text-yellow-200 uppercase font-black leading-tight">Processed within 24-48 hours. Ensure details are correct.</p>
                 </div>
-                <button 
+                <button type="button" 
                   onClick={handleWithdrawSubmit}
                   disabled={isSubmitting}
                   className="w-full bg-brand-600 hover:bg-brand-500 text-white py-4 rounded-xl font-black uppercase tracking-widest transition shadow-lg disabled:opacity-50"

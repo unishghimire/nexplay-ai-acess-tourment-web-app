@@ -11,7 +11,7 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                     <div className="space-y-6">
                         <div className="flex justify-between items-center">
                             <h2 className="text-xl font-bold text-white uppercase tracking-wider">Payment Categories</h2>
-                            <button 
+                            <button type="button" 
                                 onClick={() => {
                                     setEditingCategory(null);
                                     setCategoryName('');
@@ -41,14 +41,14 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                             </div>
                                         </div>
                                         <div className="flex gap-2">
-                                            <button onClick={() => {
+                                            <button type="button" onClick={() => {
                                                 setEditingCategory(cat);
                                                 setCategoryName(cat.name);
                                                 setCategoryDescription(cat.description);
                                                 setCategoryActive(cat.isActive);
                                                 setIsCategoryModalOpen(true);
                                             }} className="text-blue-400 hover:text-white"><Edit className="w-4 h-4" /></button>
-                                            <button aria-label="Delete category" onClick={() => handleDeleteCategory(cat.id)} className="text-red-400 hover:text-white p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-all"><Trash className="w-4 h-4" /></button>
+                                            <button type="button" aria-label="Delete category" onClick={() => handleDeleteCategory(cat.id)} className="text-red-400 hover:text-white p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg transition-colors"><Trash className="w-4 h-4" /></button>
                                         </div>
                                     </div>
                                     <div className="text-[10px] text-slate-400 bg-dark p-2 rounded border border-slate-700 h-16 overflow-y-auto">
@@ -63,7 +63,7 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                     <div className="space-y-6">
                         <div className="flex justify-between items-center">
                             <h2 className="text-xl font-bold text-white uppercase tracking-wider">Payment Methods (QR Codes)</h2>
-                            <button 
+                            <button type="button" 
                                 onClick={() => {
                                     setEditingPayment(null);
                                     setPaymentName('');
@@ -97,7 +97,7 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                             </div>
                                         </div>
                                         <div className="flex flex-col gap-2">
-                                            <button onClick={() => {
+                                            <button type="button" onClick={() => {
                                                 setEditingPayment(pm);
                                                 setPaymentName(pm.name);
                                                 setPaymentCategoryId(pm.categoryId || '');
@@ -107,7 +107,7 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                                 setPaymentActive(pm.isActive);
                                                 setIsPaymentModalOpen(true);
                                             }} className="text-blue-400 hover:text-white"><Edit className="w-4 h-4" /></button>
-                                            <button onClick={() => handleDeletePayment(pm.id)} className="text-red-400 hover:text-white"><Trash className="w-4 h-4" /></button>
+                                            <button type="button" onClick={() => handleDeletePayment(pm.id)} className="text-red-400 hover:text-white"><Trash className="w-4 h-4" /></button>
                                         </div>
                                     </div>
                                     <div className="text-[10px] text-slate-400 bg-dark p-2 rounded border border-slate-700 h-16 overflow-y-auto">
@@ -132,7 +132,7 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                             type="text" 
                                             value={categoryName}
                                             onChange={(e) => setCategoryName(e.target.value)}
-                                            className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none transition"
+                                            className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 focus-visible:outline-none transition"
                                             placeholder="e.g. E-Wallet, Bank Transfer"
                                         />
                                     </div>
@@ -141,7 +141,7 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                         <textarea 
                                             value={categoryDescription}
                                             onChange={(e) => setCategoryDescription(e.target.value)}
-                                            className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none transition h-24 resize-none"
+                                            className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 focus-visible:outline-none transition h-24 resize-none"
                                             placeholder="Description of this category..."
                                         />
                                     </div>
@@ -158,13 +158,13 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                 </div>
 
                                 <div className="flex gap-4 pt-4 border-t border-slate-800">
-                                    <button 
+                                    <button type="button" 
                                         onClick={() => setIsCategoryModalOpen(false)}
                                         className="flex-1 bg-surface hover:bg-surface text-white py-3 rounded-xl font-bold transition"
                                     >
                                         Cancel
                                     </button>
-                                    <button 
+                                    <button type="button" 
                                         onClick={handleSaveCategory}
                                         className="flex-1 bg-brand-600 hover:bg-brand-500 text-white py-3 rounded-xl font-bold transition"
                                     >
@@ -188,7 +188,7 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                         <select 
                                             value={paymentCategoryId}
                                             onChange={(e) => setPaymentCategoryId(e.target.value)}
-                                            className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none transition"
+                                            className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 focus-visible:outline-none transition"
                                         >
                                             <option value="">Select a category</option>
                                             {paymentCategories.length === 0 ? (
@@ -206,7 +206,7 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                             type="text" 
                                             value={paymentName}
                                             onChange={(e) => setPaymentName(e.target.value)}
-                                            className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none transition"
+                                            className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 focus-visible:outline-none transition"
                                             placeholder="e.g. eSewa (Personal)"
                                         />
                                     </div>
@@ -217,7 +217,7 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                             onDrop={handleDropPayment}
                                             onDragOver={handleDragOverPayment}
                                             onClick={() => document.getElementById('payment-qr-file-input')?.click()}
-                                            className={`relative w-48 h-48 mx-auto rounded-xl border-2 border-dashed transition-all flex items-center justify-center overflow-hidden group cursor-pointer ${uploading ? 'border-brand-500 bg-brand-500/10' : 'border-slate-700 hover:border-brand-500 bg-dark'}`}
+                                            className={`relative w-48 h-48 mx-auto rounded-xl border-2 border-dashed transition-colors flex items-center justify-center overflow-hidden group cursor-pointer ${uploading ? 'border-brand-500 bg-brand-500/10' : 'border-slate-700 hover:border-brand-500 bg-dark'}`}
                                         >
                                             {uploading ? (
                                                 <div className="flex flex-col items-center gap-2">
@@ -254,7 +254,7 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                                 type="text" 
                                                 value={paymentQr}
                                                 onChange={(e) => setPaymentQr(e.target.value)}
-                                                className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none text-sm transition"
+                                                className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 focus-visible:outline-none text-sm transition"
                                                 placeholder="Or paste QR URL..."
                                             />
                                         </div>
@@ -264,7 +264,7 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                         <textarea 
                                             value={paymentInstructions}
                                             onChange={(e) => setPaymentInstructions(e.target.value)}
-                                            className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none h-24 transition"
+                                            className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 focus-visible:outline-none h-24 transition"
                                             placeholder="Account Name: John Doe&#10;Number: 98XXXXXXXX"
                                         />
                                     </div>
@@ -281,13 +281,13 @@ export const PaymentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                 </div>
 
                                 <div className="flex gap-4 pt-2">
-                                    <button 
+                                    <button type="button" 
                                         onClick={() => setIsPaymentModalOpen(false)}
                                         className="flex-1 bg-surface hover:bg-surface text-white py-3 rounded-xl font-bold transition"
                                     >
                                         Cancel
                                     </button>
-                                    <button 
+                                    <button type="button" 
                                         onClick={handleSavePayment}
                                         className="flex-1 bg-brand-600 hover:bg-brand-500 text-white py-3 rounded-xl font-bold transition"
                                     >

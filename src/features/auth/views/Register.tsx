@@ -278,7 +278,7 @@ const Register: React.FC = () => {
             canonicalPath="/register"
             noindex
         />
-        <div className="min-h-screen flex items-center justify-center p-4 md:p-8 bg-black">
+        <div className="min-h-[100dvh] flex items-center justify-center p-4 md:p-8 bg-black">
             <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -307,7 +307,7 @@ const Register: React.FC = () => {
                                     required
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
-                                    className="block w-full pl-14 pr-6 py-4 bg-black border border-gray-800 rounded-2xl text-white placeholder-gray-700 focus:outline-none focus:border-brand-500 transition font-bold"
+                                    className="block w-full pl-14 pr-6 py-4 bg-black border border-gray-800 rounded-2xl text-white placeholder-gray-700 focus:focus-visible:outline-none focus:border-brand-500 transition font-bold"
                                     placeholder="Choose a username"
                                 />
                             </div>
@@ -326,7 +326,7 @@ const Register: React.FC = () => {
                                     required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="block w-full pl-14 pr-6 py-4 bg-black border border-gray-800 rounded-2xl text-white placeholder-gray-700 focus:outline-none focus:border-brand-500 transition font-bold"
+                                    className="block w-full pl-14 pr-6 py-4 bg-black border border-gray-800 rounded-2xl text-white placeholder-gray-700 focus:focus-visible:outline-none focus:border-brand-500 transition font-bold"
                                     placeholder="Enter your email"
                                 />
                             </div>
@@ -344,7 +344,7 @@ const Register: React.FC = () => {
                                     required
                                     value={inGameId}
                                     onChange={(e) => setInGameId(e.target.value)}
-                                    className="block w-full pl-14 pr-6 py-4 bg-black border border-gray-800 rounded-2xl text-white placeholder-gray-700 focus:outline-none focus:border-brand-500 transition font-bold"
+                                    className="block w-full pl-14 pr-6 py-4 bg-black border border-gray-800 rounded-2xl text-white placeholder-gray-700 focus:focus-visible:outline-none focus:border-brand-500 transition font-bold"
                                     placeholder="Enter your in-game ID"
                                 />
                             </div>
@@ -362,7 +362,7 @@ const Register: React.FC = () => {
                                     required
                                     value={inGameName}
                                     onChange={(e) => setInGameName(e.target.value)}
-                                    className="block w-full pl-14 pr-6 py-4 bg-black border border-gray-800 rounded-2xl text-white placeholder-gray-700 focus:outline-none focus:border-brand-500 transition font-bold"
+                                    className="block w-full pl-14 pr-6 py-4 bg-black border border-gray-800 rounded-2xl text-white placeholder-gray-700 focus:focus-visible:outline-none focus:border-brand-500 transition font-bold"
                                     placeholder="Enter your in-game name"
                                 />
                             </div>
@@ -381,7 +381,7 @@ const Register: React.FC = () => {
                                     required
                                     value={phone}
                                     onChange={(e) => setPhone(e.target.value)}
-                                    className="block w-full pl-14 pr-6 py-4 bg-black border border-gray-800 rounded-2xl text-white placeholder-gray-700 focus:outline-none focus:border-brand-500 transition font-bold"
+                                    className="block w-full pl-14 pr-6 py-4 bg-black border border-gray-800 rounded-2xl text-white placeholder-gray-700 focus:focus-visible:outline-none focus:border-brand-500 transition font-bold"
                                     placeholder="Enter your phone number"
                                 />
                             </div>
@@ -400,7 +400,7 @@ const Register: React.FC = () => {
                                     required
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="block w-full pl-14 pr-14 py-4 bg-black border border-gray-800 rounded-2xl text-white placeholder-gray-700 focus:outline-none focus:border-brand-500 transition font-bold"
+                                    className="block w-full pl-14 pr-14 py-4 bg-black border border-gray-800 rounded-2xl text-white placeholder-gray-700 focus:focus-visible:outline-none focus:border-brand-500 transition font-bold"
                                     placeholder="••••••••"
                                 />
                                 <button
@@ -457,7 +457,7 @@ const Register: React.FC = () => {
                                     required
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
-                                    className="block w-full pl-14 pr-6 py-4 bg-black border border-gray-800 rounded-2xl text-white placeholder-gray-700 focus:outline-none focus:border-brand-500 transition font-bold"
+                                    className="block w-full pl-14 pr-6 py-4 bg-black border border-gray-800 rounded-2xl text-white placeholder-gray-700 focus:focus-visible:outline-none focus:border-brand-500 transition font-bold"
                                     placeholder="••••••••"
                                 />
                             </div>
@@ -516,7 +516,7 @@ const Register: React.FC = () => {
                         <button
                             type="submit"
                             disabled={isLoading || isGoogleLoading || !!user}
-                            className="w-full flex items-center justify-center py-5 px-6 rounded-2xl text-sm font-black text-white bg-brand-500 hover:bg-brand-400 focus:outline-none transition disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-widest shadow-lg shadow-brand-500/20"
+                            className="w-full flex items-center justify-center py-5 px-6 rounded-2xl text-sm font-black text-white bg-brand-500 hover:bg-brand-400 focus:focus-visible:outline-none transition disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-widest shadow-lg shadow-brand-500/20"
                         >
                             {isLoading ? (
                                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -539,7 +539,7 @@ const Register: React.FC = () => {
                             type="button"
                             onClick={handleGoogleSignIn}
                             disabled={isLoading || isGoogleLoading || !!user}
-                            className="w-full flex items-center justify-center py-5 px-6 border border-gray-800 rounded-2xl bg-black text-sm font-black text-white hover:bg-card focus:outline-none transition disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-widest"
+                            className="w-full flex items-center justify-center py-5 px-6 border border-gray-800 rounded-2xl bg-black text-sm font-black text-white hover:bg-card focus:focus-visible:outline-none transition disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-widest"
                         >
                             {isGoogleLoading ? (
                                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>

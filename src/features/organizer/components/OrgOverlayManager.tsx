@@ -74,10 +74,10 @@ export const OrgOverlayManager: React.FC<OrgOverlayManagerProps> = ({
               Permanently delete <span className="text-white font-bold">"{deleteTarget}"</span>? All match data, registrations, and brackets will be removed.
             </p>
             <div className="flex gap-3">
-              <button onClick={onClose} className="flex-1 bg-card hover:bg-surface text-white py-3 rounded-lg font-medium text-sm border border-gray-800 transition-colors min-h-[44px]">
+              <button type="button" onClick={onClose} className="flex-1 bg-card hover:bg-surface text-white py-3 rounded-lg font-medium text-sm border border-gray-800 transition-colors min-h-[44px]">
                 Cancel
               </button>
-              <button onClick={onConfirmDelete} className="flex-1 bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg font-medium text-sm transition-colors min-h-[44px]">
+              <button type="button" onClick={onConfirmDelete} className="flex-1 bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg font-medium text-sm transition-colors min-h-[44px]">
                 Delete
               </button>
             </div>
@@ -99,14 +99,14 @@ export const OrgOverlayManager: React.FC<OrgOverlayManagerProps> = ({
                 onChange={e => setWarningReason?.(e.target.value)}
                 rows={3}
                 placeholder="e.g. Failed to submit match screenshot within 15-minute grace period."
-                className="w-full bg-black border border-gray-800 rounded-lg p-3 text-sm text-white outline-none focus:border-brand-500"
+                className="w-full bg-black border border-gray-800 rounded-lg p-3 text-sm text-white focus-visible:outline-none focus:border-brand-500"
               />
             </div>
             <div className="flex gap-3 pt-2">
-              <button onClick={onClose} className="flex-1 bg-card hover:bg-surface text-white py-3 rounded-lg font-medium text-sm border border-gray-800 transition-colors min-h-[44px]">
+              <button type="button" onClick={onClose} className="flex-1 bg-card hover:bg-surface text-white py-3 rounded-lg font-medium text-sm border border-gray-800 transition-colors min-h-[44px]">
                 Cancel
               </button>
-              <button onClick={onIssueWarning} className="flex-1 bg-amber-600 hover:bg-amber-500 text-white py-3 rounded-lg font-medium text-sm transition-colors min-h-[44px]">
+              <button type="button" onClick={onIssueWarning} className="flex-1 bg-amber-600 hover:bg-amber-500 text-white py-3 rounded-lg font-medium text-sm transition-colors min-h-[44px]">
                 Issue Warning
               </button>
             </div>
@@ -129,7 +129,7 @@ export const OrgOverlayManager: React.FC<OrgOverlayManagerProps> = ({
                   value={roomId}
                   onChange={e => setRoomId?.(e.target.value)}
                   placeholder="e.g. 5240212"
-                  className="w-full bg-black border border-gray-800 rounded-lg p-3 text-sm text-white outline-none focus:border-brand-500"
+                  className="w-full bg-black border border-gray-800 rounded-lg p-3 text-sm text-white focus-visible:outline-none focus:border-brand-500"
                 />
               </div>
               <div>
@@ -139,7 +139,7 @@ export const OrgOverlayManager: React.FC<OrgOverlayManagerProps> = ({
                   value={roomPass}
                   onChange={e => setRoomPass?.(e.target.value)}
                   placeholder="e.g. ffpro2026"
-                  className="w-full bg-black border border-gray-800 rounded-lg p-3 text-sm text-white outline-none focus:border-brand-500"
+                  className="w-full bg-black border border-gray-800 rounded-lg p-3 text-sm text-white focus-visible:outline-none focus:border-brand-500"
                 />
               </div>
               <div>
@@ -149,7 +149,7 @@ export const OrgOverlayManager: React.FC<OrgOverlayManagerProps> = ({
                   value={streamUrl}
                   onChange={e => setStreamUrl?.(e.target.value)}
                   placeholder="https://youtube.com/live/..."
-                  className="w-full bg-black border border-gray-800 rounded-lg p-3 text-sm text-white outline-none focus:border-brand-500"
+                  className="w-full bg-black border border-gray-800 rounded-lg p-3 text-sm text-white focus-visible:outline-none focus:border-brand-500"
                 />
               </div>
             </div>
@@ -215,7 +215,7 @@ export const OrgOverlayManager: React.FC<OrgOverlayManagerProps> = ({
                 <button
                   key={slot.slotNumber}
                   onClick={() => onToggleSlot?.(slot.slotNumber)}
-                  className={`p-3 rounded-lg border text-xs font-medium transition-all min-h-[44px] ${
+                  className={`p-3 rounded-lg border text-xs font-medium transition-colors min-h-[44px] ${
                     slot.status === 'filled'
                       ? 'bg-green-500/10 border-green-500/30 text-green-400 hover:bg-green-500/20'
                       : 'bg-card border-gray-800 text-gray-500 hover:border-gray-600 hover:text-gray-300'

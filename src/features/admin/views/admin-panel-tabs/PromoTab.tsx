@@ -9,7 +9,7 @@ export const PromoTab: React.FC<AdminPanelTabProps> = (props) => {
                 <div className="space-y-6">
                     <div className="flex justify-between items-center">
                         <h2 className="text-xl font-bold text-white uppercase tracking-wider">Promo Codes</h2>
-                        <button 
+                        <button type="button" 
                             onClick={() => {
                                 setEditingPromo(null);
                                 setPromoCode('');
@@ -33,7 +33,7 @@ export const PromoTab: React.FC<AdminPanelTabProps> = (props) => {
                                         <div className="text-xs text-slate-400 font-bold uppercase">{p.isActive ? 'Active' : 'Inactive'}</div>
                                     </div>
                                     <div className="flex gap-2">
-                                        <button onClick={() => {
+                                        <button type="button" onClick={() => {
                                             setEditingPromo(p);
                                             setPromoCode(p.code);
                                             setPromoAmount(p.amount.toString());
@@ -41,7 +41,7 @@ export const PromoTab: React.FC<AdminPanelTabProps> = (props) => {
                                             setPromoActive(p.isActive);
                                             setIsPromoModalOpen(true);
                                         }} className="text-blue-400 hover:text-white"><Edit className="w-4 h-4" /></button>
-                                        <button onClick={() => handleDeletePromo(p.id)} className="text-red-400 hover:text-white"><Trash className="w-4 h-4" /></button>
+                                        <button type="button" onClick={() => handleDeletePromo(p.id)} className="text-red-400 hover:text-white"><Trash className="w-4 h-4" /></button>
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
@@ -67,15 +67,15 @@ export const PromoTab: React.FC<AdminPanelTabProps> = (props) => {
                                 <div className="space-y-4">
                                     <div>
                                         <label htmlFor="promo-code" className="text-xs text-slate-400 uppercase font-bold mb-1 block">Code</label>
-                                        <input type="text" value={promoCode} onChange={e => setPromoCode(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none uppercase" placeholder="WELCOME50" />
+                                        <input type="text" value={promoCode} onChange={e => setPromoCode(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 focus-visible:outline-none uppercase" placeholder="WELCOME50" />
                                     </div>
                                     <div>
                                         <label htmlFor="promo-amount" className="text-xs text-slate-400 uppercase font-bold mb-1 block">Amount</label>
-                                        <input type="number" value={promoAmount} onChange={e => setPromoAmount(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" />
+                                        <input type="number" value={promoAmount} onChange={e => setPromoAmount(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 focus-visible:outline-none" />
                                     </div>
                                     <div>
                                         <label htmlFor="promo-max-uses" className="text-xs text-slate-400 uppercase font-bold mb-1 block">Max Uses</label>
-                                        <input type="number" value={promoMaxUses} onChange={e => setPromoMaxUses(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none" />
+                                        <input type="number" value={promoMaxUses} onChange={e => setPromoMaxUses(e.target.value)} className="w-full bg-dark border border-slate-700 rounded-lg p-3 text-white focus:border-brand-500 focus-visible:outline-none" />
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <input type="checkbox" id="promoActive" checked={promoActive} onChange={e => setPromoActive(e.target.checked)} className="w-4 h-4 accent-brand-500" />
@@ -83,8 +83,8 @@ export const PromoTab: React.FC<AdminPanelTabProps> = (props) => {
                                     </div>
                                 </div>
                                 <div className="flex gap-3 pt-4">
-                                    <button onClick={() => setIsPromoModalOpen(false)} className="flex-1 bg-surface py-3 rounded-xl font-bold">Cancel</button>
-                                    <button onClick={handleSavePromo} className="flex-1 bg-brand-600 py-3 rounded-xl font-bold">Save</button>
+                                    <button type="button" onClick={() => setIsPromoModalOpen(false)} className="flex-1 bg-surface py-3 rounded-xl font-bold">Cancel</button>
+                                    <button type="button" onClick={handleSavePromo} className="flex-1 bg-brand-600 py-3 rounded-xl font-bold">Save</button>
                                 </div>
                             </div>
                         </div>

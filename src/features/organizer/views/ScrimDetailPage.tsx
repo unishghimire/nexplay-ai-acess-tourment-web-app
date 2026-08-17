@@ -231,7 +231,7 @@ export default function ScrimDetailPage() {
   // --- Render ---
   if (loading) {
     return (
-      <div className="min-h-screen pt-24 pb-16 flex flex-col items-center justify-center">
+      <div className="min-h-[100dvh] pt-24 pb-16 flex flex-col items-center justify-center">
         <div className="w-10 h-10 border-2 border-brand-500 border-t-transparent rounded-full animate-spin mb-4" />
         <p className="text-xs text-gray-500 uppercase tracking-widest">Loading Scrim...</p>
       </div>
@@ -240,12 +240,12 @@ export default function ScrimDetailPage() {
 
   if (loadError) {
     return (
-      <div role="alert" className="min-h-screen pt-24 pb-16 flex flex-col items-center justify-center text-center px-4">
+      <div role="alert" className="min-h-[100dvh] pt-24 pb-16 flex flex-col items-center justify-center text-center px-4">
         <Gamepad2 className="w-16 h-16 text-red-400 mb-4" />
         <p className="text-gray-300">{loadError}</p>
         <div className="mt-4 flex gap-3">
-          <button onClick={() => setRetryKey(key => key + 1)} className="min-h-[44px] bg-brand-500 hover:bg-brand-400 text-white rounded-lg px-5 py-2 text-sm font-medium transition-colors">Try Again</button>
-          <button onClick={() => navigate('/organizer?tab=scrims')} className="min-h-[44px] text-brand-400 hover:text-brand-300 px-5 py-2 text-sm">Back to Scrims</button>
+          <button type="button" onClick={() => setRetryKey(key => key + 1)} className="min-h-[44px] bg-brand-500 hover:bg-brand-400 text-white rounded-lg px-5 py-2 text-sm font-medium transition-colors">Try Again</button>
+          <button type="button" onClick={() => navigate('/organizer?tab=scrims')} className="min-h-[44px] text-brand-400 hover:text-brand-300 px-5 py-2 text-sm">Back to Scrims</button>
         </div>
       </div>
     );
@@ -253,10 +253,10 @@ export default function ScrimDetailPage() {
 
   if (!scrim) {
     return (
-      <div className="min-h-screen pt-24 pb-16 flex flex-col items-center justify-center">
+      <div className="min-h-[100dvh] pt-24 pb-16 flex flex-col items-center justify-center">
         <Gamepad2 className="w-16 h-16 text-gray-700 mb-4" />
         <p className="text-gray-400">Scrim not found.</p>
-        <button onClick={() => navigate('/organizer?tab=scrims')} className="mt-4 text-brand-500 text-sm hover:text-brand-400">← Back to Scrims</button>
+        <button type="button" onClick={() => navigate('/organizer?tab=scrims')} className="mt-4 text-brand-500 text-sm hover:text-brand-400">← Back to Scrims</button>
       </div>
     );
   }
@@ -267,11 +267,11 @@ export default function ScrimDetailPage() {
   const fillPercent = totalCount > 0 ? (filledCount / totalCount) * 100 : 0;
 
   return (
-    <div className="min-h-screen pt-20 sm:pt-24 pb-16 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-6">
+    <div className="min-h-[100dvh] pt-20 sm:pt-24 pb-16 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate('/organizer?tab=scrims')} className="text-gray-400 hover:text-white">
+          <button type="button" onClick={() => navigate('/organizer?tab=scrims')} className="text-gray-400 hover:text-white">
             <ChevronLeft className="w-6 h-6" />
           </button>
           <div>
@@ -284,15 +284,15 @@ export default function ScrimDetailPage() {
         <div className="flex items-center gap-2">
           {isEditing ? (
             <>
-              <button onClick={() => setIsEditing(false)} className="px-4 py-2 rounded-lg bg-surface text-gray-300 text-sm hover:bg-surface flex items-center gap-2 min-h-[44px]">
+              <button type="button" onClick={() => setIsEditing(false)} className="px-4 py-2 rounded-lg bg-surface text-gray-300 text-sm hover:bg-surface flex items-center gap-2 min-h-[44px]">
                 <X className="w-4 h-4" /> Cancel
               </button>
-              <button onClick={handleSaveEdit} className="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm hover:bg-brand-400 flex items-center gap-2 min-h-[44px]">
+              <button type="button" onClick={handleSaveEdit} className="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm hover:bg-brand-400 flex items-center gap-2 min-h-[44px]">
                 <Save className="w-4 h-4" /> Save
               </button>
             </>
           ) : (
-            <button onClick={() => {
+            <button type="button" onClick={() => {
               const startDate = toDateSafe(scrim.startTime);
               const startFormatted = startDate ? new Date(startDate.getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) : '';
               setEditForm({
@@ -323,17 +323,17 @@ export default function ScrimDetailPage() {
         </span>
         {/* Status toggle buttons */}
         {scrim.status === 'open' && (
-          <button onClick={() => handleStatusChange('live')} className="px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-medium hover:bg-emerald-500/20 flex items-center gap-1.5">
+          <button type="button" onClick={() => handleStatusChange('live')} className="px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-medium hover:bg-emerald-500/20 flex items-center gap-1.5">
             <Play className="w-3.5 h-3.5" /> Go Live
           </button>
         )}
         {scrim.status === 'live' && (
-          <button onClick={() => handleStatusChange('completed')} className="px-3 py-1.5 rounded-lg bg-surface text-gray-300 border border-gray-700 text-xs font-medium hover:bg-surface flex items-center gap-1.5">
+          <button type="button" onClick={() => handleStatusChange('completed')} className="px-3 py-1.5 rounded-lg bg-surface text-gray-300 border border-gray-700 text-xs font-medium hover:bg-surface flex items-center gap-1.5">
             <CheckCircle2 className="w-3.5 h-3.5" /> Finalize
           </button>
         )}
         {scrim.status === 'completed' && (
-          <button onClick={() => handleStatusChange('open')} className="px-3 py-1.5 rounded-lg bg-surface text-gray-300 border border-gray-700 text-xs font-medium hover:bg-surface flex items-center gap-1.5">
+          <button type="button" onClick={() => handleStatusChange('open')} className="px-3 py-1.5 rounded-lg bg-surface text-gray-300 border border-gray-700 text-xs font-medium hover:bg-surface flex items-center gap-1.5">
             <RotateCcw className="w-3.5 h-3.5" /> Reopen
           </button>
         )}
@@ -426,7 +426,7 @@ export default function ScrimDetailPage() {
                 <label className="block text-xs text-gray-500 uppercase tracking-wider mb-1.5">Room ID</label>
                 <div className="flex gap-2">
                   <input value={roomId} onChange={e => setRoomId(e.target.value)} placeholder="5240212" className="flex-1 bg-black border border-gray-800 rounded-lg p-2.5 text-sm text-white font-mono outline-none focus:border-brand-500" />
-                  <button onClick={() => copyToClipboard(roomId, 'roomid')} className="px-3 rounded-lg bg-surface hover:bg-surface text-gray-400">
+                  <button type="button" onClick={() => copyToClipboard(roomId, 'roomid')} className="px-3 rounded-lg bg-surface hover:bg-surface text-gray-400">
                     {copied === 'roomid' ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
                   </button>
                 </div>
@@ -435,7 +435,7 @@ export default function ScrimDetailPage() {
                 <label className="block text-xs text-gray-500 uppercase tracking-wider mb-1.5">Room Password</label>
                 <div className="flex gap-2">
                   <input value={roomPass} onChange={e => setRoomPass(e.target.value)} placeholder="ffpro2026" className="flex-1 bg-black border border-gray-800 rounded-lg p-2.5 text-sm text-white font-mono outline-none focus:border-brand-500" />
-                  <button onClick={() => copyToClipboard(roomPass, 'roompass')} className="px-3 rounded-lg bg-surface hover:bg-surface text-gray-400">
+                  <button type="button" onClick={() => copyToClipboard(roomPass, 'roompass')} className="px-3 rounded-lg bg-surface hover:bg-surface text-gray-400">
                     {copied === 'roompass' ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
                   </button>
                 </div>
@@ -444,7 +444,7 @@ export default function ScrimDetailPage() {
                 <label className="block text-xs text-gray-500 uppercase tracking-wider mb-1.5">Stream Link (Optional)</label>
                 <input value={streamUrl} onChange={e => setStreamUrl(e.target.value)} placeholder="https://youtube.com/live/..." className="w-full bg-black border border-gray-800 rounded-lg p-2.5 text-sm text-white outline-none focus:border-brand-500" />
               </div>
-              <button onClick={handleBroadcast} className="w-full bg-brand-500 hover:bg-brand-400 text-white py-2.5 rounded-lg font-medium text-sm flex items-center justify-center gap-2 min-h-[44px]">
+              <button type="button" onClick={handleBroadcast} className="w-full bg-brand-500 hover:bg-brand-400 text-white py-2.5 rounded-lg font-medium text-sm flex items-center justify-center gap-2 min-h-[44px]">
                 <Radio className="w-4 h-4" /> Broadcast to Players
               </button>
             </div>
@@ -462,7 +462,7 @@ export default function ScrimDetailPage() {
 
           {/* Progress bar */}
           <div className="w-full h-2 bg-surface rounded-full mb-4 overflow-hidden">
-            <div className="h-full bg-brand-500 rounded-full transition-all" style={{ width: `${fillPercent}%` }} />
+            <div className="h-full bg-brand-500 rounded-full transition-colors" style={{ width: `${fillPercent}%` }} />
           </div>
 
           <p className="text-xs text-gray-500 mb-3">Click any slot to toggle reservation.</p>
@@ -473,7 +473,7 @@ export default function ScrimDetailPage() {
               <button
                 key={slot.slotNumber}
                 onClick={() => handleToggleSlot(slot.slotNumber)}
-                className={`p-3 rounded-lg border text-xs font-medium transition-all min-h-[60px] flex flex-col items-center justify-center ${
+                className={`p-3 rounded-lg border text-xs font-medium transition-colors min-h-[60px] flex flex-col items-center justify-center ${
                   slot.status === 'filled'
                     ? 'bg-green-500/10 border-green-500/30 text-green-400 hover:bg-green-500/20'
                     : 'bg-card border-gray-800 border-dashed text-gray-500 hover:border-gray-600 hover:text-gray-300'

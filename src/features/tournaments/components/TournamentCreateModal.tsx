@@ -468,7 +468,7 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
                       <button
                         key={url}
                         onClick={() => setFormData({...formData, bannerUrl: url})}
-                        className={`relative aspect-[3/1] rounded overflow-hidden border-2 transition-all ${formData.bannerUrl === url ? 'border-brand-500' : 'border-transparent hover:border-gray-600'}`}
+                        className={`relative aspect-[3/1] rounded overflow-hidden border-2 transition-colors ${formData.bannerUrl === url ? 'border-brand-500' : 'border-transparent hover:border-gray-600'}`}
                       >
                         <img src={url || undefined} alt={`Preset ${idx + 1}`} className="w-full h-full object-cover" loading="lazy" />
                       </button>
@@ -584,15 +584,15 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Registration Control</label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <button 
+                <button type="button" 
                   onClick={() => setFormData({...formData, registrationType: 'auto'})}
-                  className={`py-3 rounded-xl border font-black uppercase tracking-widest text-[10px] transition-all ${formData.registrationType === 'auto' ? 'bg-brand-600 border-brand-500 text-white' : 'bg-dark border-gray-800 text-gray-500 hover:border-gray-700'}`}
+                  className={`py-3 rounded-xl border font-black uppercase tracking-widest text-[10px] transition-colors ${formData.registrationType === 'auto' ? 'bg-brand-600 border-brand-500 text-white' : 'bg-dark border-gray-800 text-gray-500 hover:border-gray-700'}`}
                 >
                   Auto-Approve
                 </button>
-                <button 
+                <button type="button" 
                   onClick={() => setFormData({...formData, registrationType: 'manual'})}
-                  className={`py-3 rounded-xl border font-black uppercase tracking-widest text-[10px] transition-all ${formData.registrationType === 'manual' ? 'bg-brand-600 border-brand-500 text-white' : 'bg-dark border-gray-800 text-gray-500 hover:border-gray-700'}`}
+                  className={`py-3 rounded-xl border font-black uppercase tracking-widest text-[10px] transition-colors ${formData.registrationType === 'manual' ? 'bg-brand-600 border-brand-500 text-white' : 'bg-dark border-gray-800 text-gray-500 hover:border-gray-700'}`}
                 >
                   Manual Review
                 </button>
@@ -790,7 +790,7 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
           {/* Progress Line */}
           <div className="absolute top-5 left-0 w-full h-0.5 bg-surface -z-10" />
           <div 
-            className="absolute top-5 left-0 h-0.5 bg-brand-500 transition-all duration-300 -z-10" 
+            className="absolute top-5 left-0 h-0.5 bg-brand-500 transition-colors duration-300 -z-10" 
             style={{ width: `${((currentStep - 1) / (STEPS.length - 1)) * 100}%` }}
           />
 
@@ -802,7 +802,7 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
             return (
               <div key={step.id} className="flex flex-col items-center group">
                 <div className={`
-                  w-11 h-11 rounded-full flex items-center justify-center transition-all duration-500
+                  w-11 h-11 rounded-full flex items-center justify-center transition-colors duration-500
                   ${isActive ? 'bg-brand-600 text-white shadow-[0_0_20px_rgba(var(--brand-primary-rgb),0.5)]' : 'bg-surface text-gray-500'}
                   ${isCurrent ? 'ring-4 ring-brand-500/20 scale-110' : ''}
                 `}>

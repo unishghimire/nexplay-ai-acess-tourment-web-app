@@ -21,7 +21,7 @@ export default function NotFound() {
             <p className="text-gray-400 max-w-md mb-8">
                 The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
             </p>
-            <Link to="/" className="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-500 text-white px-8 py-3 rounded-xl font-bold uppercase tracking-wider transition-all hover:scale-105 active:scale-95">
+            <Link to="/" className="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-500 text-white px-8 py-3 rounded-xl font-bold uppercase tracking-wider transition-colors hover:scale-105 active:scale-95">
                 <Home className="w-5 h-5" /> Back to Home
             </Link>
         </div>

@@ -302,12 +302,12 @@ export const ResultUploader: React.FC<ResultUploaderProps> = ({ isOpen, onClose,
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Match Screenshot (Proof)</label>
                     <div
                         onClick={() => document.getElementById('result-screenshot')?.click()}
-                        className="relative h-48 rounded-3xl border-2 border-dashed border-slate-800 hover:border-brand-500 transition-all cursor-pointer overflow-hidden flex flex-col items-center justify-center bg-dark group"
+                        className="relative h-48 rounded-3xl border-2 border-dashed border-slate-800 hover:border-brand-500 transition-colors cursor-pointer overflow-hidden flex flex-col items-center justify-center bg-dark group"
                     >
                         {previewUrl ? (
                             <>
                                 <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" loading="lazy" />
-                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center">
+                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-colors flex items-center justify-center">
                                     <Camera className="w-8 h-8 text-white" />
                                 </div>
                             </>

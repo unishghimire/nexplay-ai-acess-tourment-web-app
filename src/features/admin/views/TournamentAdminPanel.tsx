@@ -16,7 +16,7 @@ export default function TournamentAdminPanel() {
 
     if (loading) {
         return (
-            <div className="min-h-screen pt-24 pb-12 flex items-center justify-center">
+            <div className="min-h-[100dvh] pt-24 pb-12 flex items-center justify-center">
                 <div className="w-12 h-12 border-4 border-brand-500/30 border-t-brand-500 rounded-full animate-spin"></div>
             </div>
         );
@@ -29,14 +29,14 @@ export default function TournamentAdminPanel() {
     };
 
     return (
-        <div className="min-h-screen pt-20 sm:pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="min-h-[100dvh] pt-20 sm:pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
             {/* Header */}
             <div className="flex flex-col gap-4 mb-6 sm:mb-8">
                 {/* Top row: back button + title */}
                 <div className="flex items-center gap-3 sm:gap-6">
-                    <button 
+                    <button type="button" 
                         onClick={() => navigate(`/tournaments/${tournament.id}`)}
-                        className="p-2.5 sm:p-3 bg-dark border border-gray-800 rounded-full text-gray-400 hover:text-white hover:border-brand-500 transition-all hover:bg-card shrink-0 touch-target"
+                        className="p-2.5 sm:p-3 bg-dark border border-gray-800 rounded-full text-gray-400 hover:text-white hover:border-brand-500 transition-colors hover:bg-card shrink-0 touch-target"
                         aria-label="Back to tournament"
                     >
                         <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -52,7 +52,7 @@ export default function TournamentAdminPanel() {
 
                 {/* Bottom row: status badges + export — wraps on mobile */}
                 <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
-                    <button 
+                    <button type="button" 
                         onClick={() => {
                             const headers = "Team Name,Username,In-Game ID,In-Game Name,Status\n";
                             const rows = participants.map(p => 
@@ -68,7 +68,7 @@ export default function TournamentAdminPanel() {
                             document.body.removeChild(link);
                             URL.revokeObjectURL(url);
                         }}
-                        className="bg-dark border border-gray-800 hover:border-brand-500 text-gray-500 hover:text-white p-2.5 sm:p-3 rounded-full transition-all touch-target flex items-center justify-center"
+                        className="bg-dark border border-gray-800 hover:border-brand-500 text-gray-500 hover:text-white p-2.5 sm:p-3 rounded-full transition-colors touch-target flex items-center justify-center"
                         title="Export Participants"
                         aria-label="Export participants"
                     >
@@ -85,7 +85,7 @@ export default function TournamentAdminPanel() {
                         {tournament.stage || 'registration'}
                     </span>
                     {(tournament.matchType === 'scrims' || (tournament as any).isScrim) && (
-                        <button
+                        <button type="button"
                             onClick={() => navigate(`/organizer/scrim/${tournament.id}`)}
                             className="px-3 sm:px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/30 transition-colors flex items-center gap-1.5"
                         >
@@ -106,10 +106,10 @@ export default function TournamentAdminPanel() {
                     { id: 'settings', label: 'Settings', icon: Settings },
                     { id: 'participants', label: 'Registrations', icon: ShieldCheck },
                 ].map(tab => (
-                    <button
+                    <button type="button"
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as any)}
-                        className={`flex items-center gap-2 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 rounded-full text-xs sm:text-xs font-black uppercase tracking-widest whitespace-nowrap transition-all shrink-0 ${
+                        className={`flex items-center gap-2 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 rounded-full text-xs sm:text-xs font-black uppercase tracking-widest whitespace-nowrap transition-colors shrink-0 ${
                             activeTab === tab.id 
                                 ? 'bg-brand-500 text-white shadow-lg shadow-brand-500/20' 
                                 : 'bg-dark/50 border border-gray-800 text-gray-400 hover:text-white hover:border-gray-700'

@@ -126,7 +126,7 @@ const MatchRoomsTab: React.FC<MatchRoomsTabProps> = ({
               return (
                 <div
                   key={room.id || idx}
-                  className="bg-card/80 border border-slate-800 hover:border-gray-700 transition-all rounded-xl p-5 space-y-4"
+                  className="bg-card/80 border border-slate-800 hover:border-gray-700 transition-colors rounded-xl p-5 space-y-4"
                 >
                   {/* Top Bar: Tournament Name, Map, Status */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 pb-3">
@@ -244,7 +244,7 @@ const MatchRoomsTab: React.FC<MatchRoomsTabProps> = ({
             {disputes.map((dispute, idx) => (
               <div
                 key={dispute.id || idx}
-                className="bg-card/80 border border-slate-800 hover:border-gray-700 transition-all rounded-xl p-5 space-y-3"
+                className="bg-card/80 border border-slate-800 hover:border-gray-700 transition-colors rounded-xl p-5 space-y-3"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div className="space-y-1">

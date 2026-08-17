@@ -191,7 +191,7 @@ const ScrimsContent: React.FC = () => {
                             placeholder="Search by title or game..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full bg-black border border-gray-800 rounded-2xl py-4 pl-12 pr-6 text-white focus:border-brand-500 outline-none transition-all shadow-xl font-bold"
+                            className="w-full bg-black border border-gray-800 rounded-2xl py-4 pl-12 pr-6 text-white focus:border-brand-500 outline-none transition-colors shadow-xl font-bold"
                         />
                     </div>
                     <div className="md:col-span-4 relative">
@@ -200,7 +200,7 @@ const ScrimsContent: React.FC = () => {
                             aria-label="Filter scrims by game"
                             value={filterGame}
                             onChange={(e) => setFilterGame(e.target.value)}
-                            className="w-full bg-black border border-gray-800 rounded-2xl py-4 pl-12 pr-6 text-white focus:border-brand-500 outline-none transition-all shadow-xl font-bold appearance-none"
+                            className="w-full bg-black border border-gray-800 rounded-2xl py-4 pl-12 pr-6 text-white focus:border-brand-500 outline-none transition-colors shadow-xl font-bold appearance-none"
                         >
                             <option value="All">All Games</option>
                             <option value="PUBG Mobile">PUBG Mobile</option>
@@ -253,7 +253,7 @@ const ScrimsContent: React.FC = () => {
                                     onClick={() => {
                                         navigate(`/tournaments/${scrim.tournamentId || scrim.id}`);
                                     }}
-                                    className="bg-card/50 rounded-[2rem] border border-gray-800 overflow-hidden cursor-pointer group hover:border-brand-500/50 transition-all hover:bg-card flex flex-col justify-between"
+                                    className="bg-card/50 rounded-[2rem] border border-gray-800 overflow-hidden cursor-pointer group hover:border-brand-500/50 transition-colors hover:bg-card flex flex-col justify-between"
                                 >
                                     <div className="h-48 relative overflow-hidden">
                                         <img 
@@ -294,13 +294,13 @@ const ScrimsContent: React.FC = () => {
                                             <span className="text-xs text-gray-500 font-black tracking-widest uppercase">{currentSlots} / {totalSlots} Joined</span>
                                             <div className="w-24 bg-black rounded-full h-1.5 overflow-hidden">
                                                 <div 
-                                                    className="bg-brand-500 h-full rounded-full transition-all duration-300" 
+                                                    className="bg-brand-500 h-full rounded-full transition-colors duration-300" 
                                                     style={{ width: `${slotPercentage}%` }}
                                                 ></div>
                                             </div>
                                         </div>
 
-                                        <button className="w-full min-h-[44px] bg-brand-500/10 group-hover:bg-brand-500 text-brand-300 group-hover:text-white py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all border border-brand-500/20 group-hover:border-brand-500 cursor-pointer">
+                                        <button type="button" className="w-full min-h-[44px] bg-brand-500/10 group-hover:bg-brand-500 text-brand-300 group-hover:text-white py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-colors border border-brand-500/20 group-hover:border-brand-500 cursor-pointer">
                                             Join Scrim
                                         </button>
                                     </div>
@@ -316,7 +316,7 @@ const ScrimsContent: React.FC = () => {
                             There are no active scrims matching your selection right now. Check back later or clear your filters.
                         </p>
                         <div className="flex justify-center gap-4">
-                            <button 
+                            <button type="button" 
                                 onClick={() => { setFilterGame('All'); setSearchTerm(''); }}
                                 className="min-h-[44px] inline-flex items-center px-6 py-2.5 bg-brand-500 hover:bg-brand-400 text-white rounded-xl font-black uppercase tracking-widest text-xs transition-colors cursor-pointer"
                             >

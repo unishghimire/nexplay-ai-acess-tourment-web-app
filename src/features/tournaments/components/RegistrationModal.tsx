@@ -122,17 +122,17 @@ const RegistrationModal: React.FC<RegistrationModalProps> = ({
                 </div>
 
                 <div className="flex gap-3 pt-2">
-                    <button 
+                    <button type="button" 
                         onClick={onClose}
                         disabled={loading}
-                        className="flex-1 bg-surface hover:bg-surface text-white py-4 rounded-2xl font-black uppercase tracking-widest transition-all disabled:opacity-50"
+                        className="flex-1 bg-surface hover:bg-surface text-white py-4 rounded-2xl font-black uppercase tracking-widest transition-colors disabled:opacity-50"
                     >
                         Cancel
                     </button>
-                    <button 
+                    <button type="button" 
                         onClick={handleSubmit}
                         disabled={loading || profile.balance < tournament.entryFee}
-                        className="flex-1 bg-brand-600 hover:bg-brand-500 text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-brand-600/20 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                        className="flex-1 bg-brand-600 hover:bg-brand-500 text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-brand-600/20 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                     >
                         {loading ? (
                             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>

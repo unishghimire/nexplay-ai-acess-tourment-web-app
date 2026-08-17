@@ -14,10 +14,10 @@
 
 @layer base {
   button, a {
-    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b1120];
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b1120];
   }
   input, textarea, select {
-    @apply focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors;
+    @apply focus-visible:outline-2 focus-visible:outline-brand-500 focus-visible:border-brand-500 focus-visible:ring-1 focus-visible:ring-brand-500 transition-colors;
   }
   /* ponytail: global text overflow safety — prevents long names/IDs from breaking layouts */
   body {
@@ -31,6 +31,7 @@ body {
   background-color: #0b1120;
   color: #e2e8f0;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* ponytail: safety net for horizontal overflow — verify at 320px; root cause fixes preferred */
   overflow-x: hidden;
 }
 

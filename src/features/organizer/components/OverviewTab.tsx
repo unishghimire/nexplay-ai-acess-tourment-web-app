@@ -126,14 +126,14 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* Active Tournaments */}
         <div className="relative overflow-hidden bg-gradient-to-br from-indigo-900/40 to-indigo-900/10 p-4 sm:p-5 rounded-2xl border border-indigo-500/20 group">
-          <div className="absolute -right-4 -top-4 w-20 h-20 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition-all" />
+          <div className="absolute -right-4 -top-4 w-20 h-20 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition-colors" />
           <div className="text-[10px] text-indigo-200/70 uppercase font-bold tracking-wider mb-2">Active Tournaments</div>
           <div className="text-2xl font-black text-white tracking-tight">{kpis?.activeTournaments ?? 0}</div>
         </div>
 
         {/* Live Scrims */}
         <div className="relative overflow-hidden bg-gradient-to-br from-emerald-900/40 to-emerald-900/10 p-4 sm:p-5 rounded-2xl border border-emerald-500/20 group">
-          <div className="absolute -right-4 -top-4 w-20 h-20 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all" />
+          <div className="absolute -right-4 -top-4 w-20 h-20 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-colors" />
           <div className="flex items-center gap-1.5 text-[10px] text-emerald-200/70 uppercase font-bold tracking-wider mb-2">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span>Live Scrims</span>
@@ -143,42 +143,42 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
 
         {/* Total Teams */}
         <div className="relative overflow-hidden bg-gradient-to-br from-blue-900/40 to-blue-900/10 p-4 sm:p-5 rounded-2xl border border-blue-500/20 group">
-          <div className="absolute -right-4 -top-4 w-20 h-20 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-all" />
+          <div className="absolute -right-4 -top-4 w-20 h-20 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-colors" />
           <div className="text-[10px] text-blue-200/70 uppercase font-bold tracking-wider mb-2">Total Teams</div>
           <div className="text-2xl font-black text-white tracking-tight">{kpis?.totalTeams ?? 0}</div>
         </div>
 
         {/* Prize Pool */}
         <div className="relative overflow-hidden bg-gradient-to-br from-amber-900/40 to-amber-900/10 p-4 sm:p-5 rounded-2xl border border-amber-500/20 group">
-          <div className="absolute -right-4 -top-4 w-20 h-20 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-all" />
+          <div className="absolute -right-4 -top-4 w-20 h-20 bg-amber-500/10 rounded-full blur-2xl group-hover:bg-amber-500/20 transition-colors" />
           <div className="text-[10px] text-amber-200/70 uppercase font-bold tracking-wider mb-2">Prize Pool</div>
           <div className="text-2xl font-black text-white tracking-tight">{formatRupees(kpis?.prizePool ?? 0)}</div>
         </div>
 
         {/* Org Wallet */}
         <div className="relative overflow-hidden bg-gradient-to-br from-purple-900/40 to-purple-900/10 p-4 sm:p-5 rounded-2xl border border-purple-500/20 group">
-          <div className="absolute -right-4 -top-4 w-20 h-20 bg-purple-500/10 rounded-full blur-2xl group-hover:bg-purple-500/20 transition-all" />
+          <div className="absolute -right-4 -top-4 w-20 h-20 bg-purple-500/10 rounded-full blur-2xl group-hover:bg-purple-500/20 transition-colors" />
           <div className="text-[10px] text-purple-200/70 uppercase font-bold tracking-wider mb-2">Org Wallet</div>
           <div className="text-2xl font-black text-white tracking-tight">{formatRupees(kpis?.orgWalletBalance ?? 0)}</div>
         </div>
 
         {/* Escrow Balance */}
         <div className="relative overflow-hidden bg-gradient-to-br from-cyan-900/40 to-cyan-900/10 p-4 sm:p-5 rounded-2xl border border-cyan-500/20 group">
-          <div className="absolute -right-4 -top-4 w-20 h-20 bg-cyan-500/10 rounded-full blur-2xl group-hover:bg-cyan-500/20 transition-all" />
+          <div className="absolute -right-4 -top-4 w-20 h-20 bg-cyan-500/10 rounded-full blur-2xl group-hover:bg-cyan-500/20 transition-colors" />
           <div className="text-[10px] text-cyan-200/70 uppercase font-bold tracking-wider mb-2">Escrow Balance</div>
           <div className="text-2xl font-black text-white tracking-tight">{formatRupees(kpis?.escrowBalance ?? 0)}</div>
         </div>
 
         {/* Monthly Revenue */}
         <div className="relative overflow-hidden bg-gradient-to-br from-green-900/40 to-green-900/10 p-4 sm:p-5 rounded-2xl border border-green-500/20 group">
-          <div className="absolute -right-4 -top-4 w-20 h-20 bg-green-500/10 rounded-full blur-2xl group-hover:bg-green-500/20 transition-all" />
+          <div className="absolute -right-4 -top-4 w-20 h-20 bg-green-500/10 rounded-full blur-2xl group-hover:bg-green-500/20 transition-colors" />
           <div className="text-[10px] text-green-200/70 uppercase font-bold tracking-wider mb-2">Monthly Revenue</div>
           <div className="text-2xl font-black text-white tracking-tight">{formatRupees(kpis?.monthlyRevenue ?? 0)}</div>
         </div>
 
         {/* Pending Payouts */}
         <div className="relative overflow-hidden bg-gradient-to-br from-red-900/40 to-red-900/10 p-4 sm:p-5 rounded-2xl border border-red-500/20 group">
-          <div className="absolute -right-4 -top-4 w-20 h-20 bg-red-500/10 rounded-full blur-2xl group-hover:bg-red-500/20 transition-all" />
+          <div className="absolute -right-4 -top-4 w-20 h-20 bg-red-500/10 rounded-full blur-2xl group-hover:bg-red-500/20 transition-colors" />
           <div className="text-[10px] text-red-200/70 uppercase font-bold tracking-wider mb-2">Pending Payouts</div>
           <div className="text-2xl font-black text-white tracking-tight">{formatRupees(kpis?.pendingPayouts ?? 0)}</div>
         </div>

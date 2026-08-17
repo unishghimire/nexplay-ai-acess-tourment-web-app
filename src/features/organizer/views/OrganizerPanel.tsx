@@ -409,7 +409,7 @@ const OrganizerPanel: React.FC = () => {
               <button
                 key={item.id}
                 onClick={() => handleTabChange(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all shrink-0 min-h-[44px] ${
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-colors shrink-0 min-h-[44px] ${
                   activeTab === item.id
                     ? 'bg-brand-500 text-white shadow-xl shadow-brand-500/20'
                     : 'text-gray-400 hover:bg-surface/50 hover:text-white'

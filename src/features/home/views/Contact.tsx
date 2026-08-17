@@ -71,19 +71,19 @@ const Contact: React.FC = () => {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-6">
-                        <div className="bg-dark/50 p-5 rounded-2xl border border-gray-800 hover:border-brand-500/30 transition-all group">
+                        <div className="bg-dark/50 p-5 rounded-2xl border border-gray-800 hover:border-brand-500/30 transition-colors group">
                             <h3 className="text-brand-400 font-black text-[10px] uppercase tracking-widest mb-2">Email Support</h3>
                             <a href="mailto:nexplayorg@gmail.com" className="text-white text-lg hover:text-brand-300 transition flex items-center gap-3 font-bold">
-                                <div className="w-10 h-10 rounded-xl bg-brand-500/10 flex items-center justify-center group-hover:bg-brand-500/20 transition-all">
+                                <div className="w-10 h-10 rounded-xl bg-brand-500/10 flex items-center justify-center group-hover:bg-brand-500/20 transition-colors">
                                     <Mail className="w-5 h-5 text-brand-500" />
                                 </div>
                                 nexplayorg@gmail.com
                             </a>
                         </div>
-                        <div className="bg-dark/50 p-5 rounded-2xl border border-gray-800 hover:border-brand-500/30 transition-all group">
+                        <div className="bg-dark/50 p-5 rounded-2xl border border-gray-800 hover:border-brand-500/30 transition-colors group">
                             <h3 className="text-brand-400 font-black text-[10px] uppercase tracking-widest mb-2">Business Inquiries</h3>
                             <a href="mailto:nex.unishghimire@gmail.com" className="text-white text-lg hover:text-brand-300 transition flex items-center gap-3 font-bold">
-                                <div className="w-10 h-10 rounded-xl bg-brand-500/10 flex items-center justify-center group-hover:bg-brand-500/20 transition-all">
+                                <div className="w-10 h-10 rounded-xl bg-brand-500/10 flex items-center justify-center group-hover:bg-brand-500/20 transition-colors">
                                     <Briefcase className="w-5 h-5 text-brand-500" />
                                 </div>
                                 next.unishghimire@gmail.com
@@ -94,19 +94,19 @@ const Contact: React.FC = () => {
                     <div className="bg-dark/30 p-6 rounded-2xl border border-gray-800 text-center">
                         <h3 className="text-white font-black uppercase tracking-widest text-xs mb-6">Follow Our Community</h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <a href="https://discord.gg/D3M3AqAe5U" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 bg-[#5865F2] hover:bg-[#4752C4] text-white py-3 rounded-xl font-bold transition-all text-xs">
+                            <a href="https://discord.gg/D3M3AqAe5U" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 bg-[#5865F2] hover:bg-[#4752C4] text-white py-3 rounded-xl font-bold transition-colors text-xs">
                                 <MessageCircle className="w-4 h-4" /> Discord
                             </a>
-                            <a href="https://www.facebook.com/nexplayorg" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 bg-[#1877F2] hover:bg-[#166FE5] text-white py-3 rounded-xl font-bold transition-all text-xs">
+                            <a href="https://www.facebook.com/nexplayorg" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 bg-[#1877F2] hover:bg-[#166FE5] text-white py-3 rounded-xl font-bold transition-colors text-xs">
                                 <Facebook className="w-4 h-4" /> Facebook
                             </a>
-                            <a href="https://www.instagram.com/nexplayorg?igsh=MWd6a2hqa2JqbzBxaw==" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 bg-[#E1306C] hover:bg-[#C13584] text-white py-3 rounded-xl font-bold transition-all text-xs">
+                            <a href="https://www.instagram.com/nexplayorg?igsh=MWd6a2hqa2JqbzBxaw==" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 bg-[#E1306C] hover:bg-[#C13584] text-white py-3 rounded-xl font-bold transition-colors text-xs">
                                 <Instagram className="w-4 h-4" /> Instagram
                             </a>
-                            <a href="https://wa.me/+9779767783336" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white py-3 rounded-xl font-bold transition-all text-xs">
+                            <a href="https://wa.me/+9779767783336" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white py-3 rounded-xl font-bold transition-colors text-xs">
                                 <MessageCircle className="w-4 h-4" /> WhatsApp
                             </a>
-                            <a href="https://www.tiktok.com/@nexplayorg" target="_blank" rel="noopener noreferrer" className="col-span-2 flex items-center justify-center gap-2 bg-black hover:bg-card text-white py-3 rounded-xl font-bold transition-all text-xs border border-gray-800">
+                            <a href="https://www.tiktok.com/@nexplayorg" target="_blank" rel="noopener noreferrer" className="col-span-2 flex items-center justify-center gap-2 bg-black hover:bg-card text-white py-3 rounded-xl font-bold transition-colors text-xs border border-gray-800">
                                 <Music2 className="w-4 h-4" /> Follow on TikTok
                             </a>
                         </div>
@@ -117,7 +117,7 @@ const Contact: React.FC = () => {
             {/* Organization Application Section */}
             {settings?.isOrgFormOpen ? (
                 <div className="bg-gradient-to-br from-brand-900/20 to-dark p-5 sm:p-8 rounded-2xl border border-brand-500/20 shadow-2xl relative overflow-hidden group">
-                    <div className="absolute -right-20 -top-20 w-64 h-64 bg-brand-500/5 rounded-full blur-3xl group-hover:bg-brand-500/10 transition-all"></div>
+                    <div className="absolute -right-20 -top-20 w-64 h-64 bg-brand-500/5 rounded-full blur-3xl group-hover:bg-brand-500/10 transition-colors"></div>
                     
                     <div className="relative z-10">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
@@ -127,9 +127,9 @@ const Contact: React.FC = () => {
                                 </h2>
                                 <p className="text-gray-400 text-sm max-w-xl">Host your own tournaments, manage participants, and grow your gaming community with NexPlay's professional tools.</p>
                             </div>
-                            <button 
+                            <button type="button" 
                                 onClick={() => setIsApplying(!isApplying)}
-                                className={`px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-sm transition-all shadow-xl ${
+                                className={`px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-sm transition-colors shadow-xl ${
                                     isApplying 
                                     ? 'bg-surface text-gray-400 hover:text-white' 
                                     : 'bg-brand-600 hover:bg-brand-500 text-white shadow-brand-500/20'
@@ -149,7 +149,7 @@ const Contact: React.FC = () => {
                                             type="text" 
                                             value={formData.name}
                                             onChange={e => setFormData({...formData, name: e.target.value})}
-                                            className="w-full bg-dark border border-gray-800 rounded-xl p-4 text-white focus:border-brand-500 outline-none transition-all"
+                                            className="w-full bg-dark border border-gray-800 rounded-xl p-4 text-white focus:border-brand-500 focus-visible:outline-none transition-colors"
                                             placeholder="Your legal name"
                                         />
                                     </div>
@@ -160,7 +160,7 @@ const Contact: React.FC = () => {
                                             type="text" 
                                             value={formData.orgName}
                                             onChange={e => setFormData({...formData, orgName: e.target.value})}
-                                            className="w-full bg-dark border border-gray-800 rounded-xl p-4 text-white focus:border-brand-500 outline-none transition-all"
+                                            className="w-full bg-dark border border-gray-800 rounded-xl p-4 text-white focus:border-brand-500 focus-visible:outline-none transition-colors"
                                             placeholder="e.g. Elite Gamers Nepal"
                                         />
                                     </div>
@@ -171,7 +171,7 @@ const Contact: React.FC = () => {
                                             type="tel" 
                                             value={formData.whatsapp}
                                             onChange={e => setFormData({...formData, whatsapp: e.target.value})}
-                                            className="w-full bg-dark border border-gray-800 rounded-xl p-4 text-white focus:border-brand-500 outline-none transition-all"
+                                            className="w-full bg-dark border border-gray-800 rounded-xl p-4 text-white focus:border-brand-500 focus-visible:outline-none transition-colors"
                                             placeholder="+977 98XXXXXXXX"
                                         />
                                     </div>
@@ -182,7 +182,7 @@ const Contact: React.FC = () => {
                                             type="email" 
                                             value={formData.email}
                                             onChange={e => setFormData({...formData, email: e.target.value})}
-                                            className="w-full bg-dark border border-gray-800 rounded-xl p-4 text-white focus:border-brand-500 outline-none transition-all"
+                                            className="w-full bg-dark border border-gray-800 rounded-xl p-4 text-white focus:border-brand-500 focus-visible:outline-none transition-colors"
                                             placeholder="org@example.com"
                                         />
                                     </div>
@@ -195,7 +195,7 @@ const Contact: React.FC = () => {
                                             type="url" 
                                             value={formData.proofLink}
                                             onChange={e => setFormData({...formData, proofLink: e.target.value})}
-                                            className="w-full bg-dark border border-gray-800 rounded-xl p-4 text-white focus:border-brand-500 outline-none transition-all"
+                                            className="w-full bg-dark border border-gray-800 rounded-xl p-4 text-white focus:border-brand-500 focus-visible:outline-none transition-colors"
                                             placeholder="Link to screenshots/videos of past tournaments"
                                         />
                                     </div>
@@ -211,7 +211,7 @@ const Contact: React.FC = () => {
                                             <p className="text-xs text-gray-400 leading-relaxed">
                                                 Please download the official partnership contract from the link below, fill it out, and email it to <span className="text-brand-400 font-bold">partnerships.nexplayorg@gmail.com</span> with the subject "ORG APPLICATION - [Your Org Name]".
                                             </p>
-                                            <button onClick={() => window.open("https://discord.com", "_blank")} className="inline-flex items-center gap-2 text-brand-500 hover:text-brand-400 text-[10px] font-black uppercase tracking-widest mt-2">
+                                            <button type="button" onClick={() => window.open("https://discord.com", "_blank")} className="inline-flex items-center gap-2 text-brand-500 hover:text-brand-400 text-[10px] font-black uppercase tracking-widest mt-2">
                                                 Download Contract Template <ExternalLink className="w-3 h-3" />
                                             </button>
                                         </div>
@@ -234,7 +234,7 @@ const Contact: React.FC = () => {
                                 <button 
                                     disabled={submitting}
                                     type="submit" 
-                                    className="w-full bg-brand-600 hover:bg-brand-500 disabled:opacity-50 text-white py-5 rounded-2xl font-black uppercase tracking-widest transition-all shadow-xl shadow-brand-500/20 flex items-center justify-center gap-3"
+                                    className="w-full bg-brand-600 hover:bg-brand-500 disabled:opacity-50 text-white py-5 rounded-2xl font-black uppercase tracking-widest transition-colors shadow-xl shadow-brand-500/20 flex items-center justify-center gap-3"
                                 >
                                     {submitting ? (
                                         <>

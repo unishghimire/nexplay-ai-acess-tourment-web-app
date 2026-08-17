@@ -276,7 +276,7 @@ export const ScrimsHubTab: React.FC<ScrimsHubTabProps> = ({
                   </div>
                   <div className="h-2 bg-surface rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-brand-500 rounded-full transition-all duration-300"
+                      className="h-full bg-brand-500 rounded-full transition-colors duration-300"
                       style={{ width: `${progressPercent}%` }}
                     />
                   </div>
@@ -321,7 +321,7 @@ export const ScrimsHubTab: React.FC<ScrimsHubTabProps> = ({
                       <button
                         key={slot.slotNumber}
                         onClick={() => handleSlotClick(scrim.id, slot.slotNumber)}
-                        className={`p-2 rounded-lg border text-[10px] font-medium transition-all min-h-[44px] ${
+                        className={`p-2 rounded-lg border text-[10px] font-medium transition-colors min-h-[44px] ${
                           slot.status === 'filled'
                             ? 'bg-green-500/10 border-green-500/30 text-green-400'
                             : 'bg-card border-gray-800 text-gray-500 hover:border-gray-600'

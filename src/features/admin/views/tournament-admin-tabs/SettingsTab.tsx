@@ -38,7 +38,7 @@ export const SettingsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                                     const val = parseInt(e.target.value) || 0;
                                                     setTournament({...tournament, pointSystem: { ...tournament.pointSystem!, pointsPerKill: val }});
                                                 }}
-                                                className="w-full bg-dark border border-gray-800 text-white rounded-xl p-3 focus:border-brand-500 outline-none transition font-black"
+                                                className="w-full bg-dark border border-gray-800 text-white rounded-xl p-3 focus:border-brand-500 focus-visible:outline-none transition font-black"
                                             />
                                         </div>
                                         <div>
@@ -50,7 +50,7 @@ export const SettingsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                     <div className="space-y-3">
                                         <label htmlFor="placement-points" className="block text-[10px] font-black text-gray-500 uppercase mb-2 tracking-widest flex justify-between">
                                             Placement Points
-                                            <button 
+                                            <button type="button" 
                                                 onClick={() => {
                                                     const current = tournament!.pointSystem?.placementPoints || [];
                                                     const nextRank = current.length + 1;
@@ -75,14 +75,14 @@ export const SettingsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                                             newList[idx].points = val;
                                                             setTournament({...tournament!, pointSystem: { ...tournament!.pointSystem!, placementPoints: newList }});
                                                         }}
-                                                        className="flex-1 bg-surface border border-gray-800 text-white rounded-lg p-2 text-sm focus:border-brand-500 outline-none font-bold"
+                                                        className="flex-1 bg-surface border border-gray-800 text-white rounded-lg p-2 text-sm focus:border-brand-500 focus-visible:outline-none font-bold"
                                                     />
-                                                    <button 
+                                                    <button type="button" 
                                                         onClick={() => {
                                                             const newList = tournament!.pointSystem?.placementPoints?.filter((_, i) => i !== idx);
                                                             setTournament({...tournament!, pointSystem: { ...tournament!.pointSystem!, placementPoints: newList }});
                                                         }}
-                                                        className="p-2 text-gray-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                                                        className="p-2 text-gray-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-colors"
                                                     >
                                                         <Trash2 className="w-4 h-4" />
                                                     </button>
@@ -129,7 +129,7 @@ export const SettingsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                         </div>
                                     </div>
 
-                                    <button 
+                                    <button type="button" 
                                         onClick={async () => {
                                             if (!tournament) return;
                                             try {
@@ -140,7 +140,7 @@ export const SettingsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                                 showToast('Failed to save point system', 'error');
                                             }
                                         }}
-                                        className="w-full bg-brand-600 hover:bg-brand-500 text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-brand-600/20 transition-all active:scale-95 flex items-center justify-center gap-2"
+                                        className="w-full bg-brand-600 hover:bg-brand-500 text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-brand-600/20 transition-colors active:scale-95 flex items-center justify-center gap-2"
                                     >
                                         <Save className="w-5 h-5" /> Save Configuration
                                     </button>
@@ -155,13 +155,13 @@ export const SettingsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                 
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                                     {(tournament.roadmap || []).map((step, idx) => (
-                                        <div key={idx} className="bg-dark p-4 sm:p-6 rounded-2xl border border-gray-800 space-y-3 sm:space-y-4 group relative shadow-2xl hover:border-brand-500/30 transition-all">
-                                            <button 
+                                        <div key={idx} className="bg-dark p-4 sm:p-6 rounded-2xl border border-gray-800 space-y-3 sm:space-y-4 group relative shadow-2xl hover:border-brand-500/30 transition-colors">
+                                            <button type="button" 
                                                 onClick={() => {
                                                     const newList = (tournament.roadmap || []).filter((_, i) => i !== idx);
                                                     setTournament({...tournament, roadmap: newList});
                                                 }}
-                                                className="absolute -top-2 -right-2 bg-red-600 p-1.5 rounded-full text-white opacity-0 group-hover:opacity-100 transition-all shadow-lg"
+                                                className="absolute -top-2 -right-2 bg-red-600 p-1.5 rounded-full text-white opacity-0 group-hover:opacity-100 transition-colors shadow-lg"
                                             >
                                                 <XCircle className="w-3 h-3" />
                                             </button>
@@ -190,7 +190,7 @@ export const SettingsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                                     setTournament({...tournament, roadmap: newList});
                                                 }}
                                                 placeholder="Stage Name"
-                                                className="w-full bg-surface border border-gray-800 text-white rounded-lg p-2 text-sm font-black outline-none focus:border-brand-500"
+                                                className="w-full bg-surface border border-gray-800 text-white rounded-lg p-2 text-sm font-black focus-visible:outline-none focus:border-brand-500"
                                             />
                                             <div className="flex gap-2">
                                                 <div className="flex-1">
@@ -222,14 +222,14 @@ export const SettingsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                             </div>
                                         </div>
                                     ))}
-                                    <button 
+                                    <button type="button" 
                                         onClick={() => {
                                             const current = tournament.roadmap || [];
                                             const nextRound = current.length + 1;
                                             const newList = [...current, { roundNumber: nextRound, numGroups: 1, qualificationRule: 1, maps: [], status: 'upcoming', stageName: '' } as any];
                                             setTournament({...tournament, roadmap: newList});
                                         }}
-                                        className="h-full min-h-[160px] border-2 border-dashed border-gray-800 hover:border-brand-500/50 rounded-2xl flex flex-col items-center justify-center gap-2 text-gray-600 hover:text-brand-500 transition-all group"
+                                        className="h-full min-h-[160px] border-2 border-dashed border-gray-800 hover:border-brand-500/50 rounded-2xl flex flex-col items-center justify-center gap-2 text-gray-600 hover:text-brand-500 transition-colors group"
                                     >
                                         <Plus className="w-8 h-8 group-hover:scale-110 transition-transform" />
                                         <span className="text-[10px] font-black uppercase tracking-widest">Add Roadmap Stage</span>
@@ -237,7 +237,7 @@ export const SettingsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                 </div>
 
                                 <div className="flex justify-end pt-4">
-                                    <button 
+                                    <button type="button" 
                                         onClick={async () => {
                                             try {
                                                 const tRef = doc(db, 'tournaments', tournament.id);
@@ -247,7 +247,7 @@ export const SettingsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                                 showToast('Failed to save roadmap', 'error');
                                             }
                                         }}
-                                        className="bg-brand-600 hover:bg-brand-500 text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-brand-600/20 transition-all active:scale-95 flex items-center gap-2"
+                                        className="bg-brand-600 hover:bg-brand-500 text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-brand-600/20 transition-colors active:scale-95 flex items-center gap-2"
                                     >
                                         <Save className="w-5 h-5" /> Save Roadmap
                                     </button>

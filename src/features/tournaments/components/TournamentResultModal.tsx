@@ -67,7 +67,7 @@ const TournamentResultModal: React.FC<TournamentResultModalProps> = ({ isOpen, o
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 100, scale: 0.95 }}
                     transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-                    className="relative w-full max-w-5xl max-h-[100vh] sm:max-h-[90vh] bg-[#0f172a] rounded-t-[2rem] sm:rounded-[2rem] border border-gray-800 shadow-2xl overflow-hidden flex flex-col"
+                    className="relative w-full max-w-5xl max-h-[100dvh] sm:max-h-[90vh] bg-[#0f172a] rounded-t-[2rem] sm:rounded-[2rem] border border-gray-800 shadow-2xl overflow-hidden flex flex-col"
                 >
                     {/* Mobile Handle */}
                     <div className="w-full flex justify-center pt-3 pb-1 sm:hidden absolute top-0 left-0 z-30 pointer-events-none">
@@ -94,10 +94,10 @@ const TournamentResultModal: React.FC<TournamentResultModalProps> = ({ isOpen, o
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
-                            <button className="hidden sm:flex items-center gap-2 bg-surface hover:bg-surface text-white px-4 py-2 rounded-xl text-xs font-bold uppercase transition">
+                            <button type="button" className="hidden sm:flex items-center gap-2 bg-surface hover:bg-surface text-white px-4 py-2 rounded-xl text-xs font-bold uppercase transition">
                                 <Share2 className="w-4 h-4" /> Share
                             </button>
-                            <button onClick={onClose} className="p-3 bg-surface hover:bg-surface text-gray-400 hover:text-white rounded-xl transition">
+                            <button type="button" onClick={onClose} className="p-3 bg-surface hover:bg-surface text-gray-400 hover:text-white rounded-xl transition">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
@@ -209,7 +209,7 @@ const TournamentResultModal: React.FC<TournamentResultModalProps> = ({ isOpen, o
                                 <div className="rounded-3xl overflow-hidden border border-gray-800 shadow-2xl relative group cursor-pointer">
                                     <img src={tournament.resultUrl} alt="Match Results" className="w-full h-auto object-cover transform transition duration-500 group-hover:scale-105" loading="lazy" />
                                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
-                                        <button className="bg-white/10 hover:bg-white/20 text-white backdrop-blur-md px-6 py-3 rounded-full font-bold flex items-center gap-2 uppercase tracking-widest text-xs border border-white/20 transition-all">
+                                        <button type="button" className="bg-white/10 hover:bg-white/20 text-white backdrop-blur-md px-6 py-3 rounded-full font-bold flex items-center gap-2 uppercase tracking-widest text-xs border border-white/20 transition-colors">
                                             <Share2 className="w-4 h-4" /> Share Screenshot
                                         </button>
                                     </div>
@@ -221,7 +221,7 @@ const TournamentResultModal: React.FC<TournamentResultModalProps> = ({ isOpen, o
 
                     {/* Action Footer */}
                     <div className="bg-[#0b1120] border-t border-gray-800 p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0">
-                        <button 
+                        <button type="button" 
                             onClick={onClose}
                             className="w-full sm:w-auto px-8 py-3 rounded-xl font-bold uppercase tracking-widest text-xs text-gray-400 bg-card border border-gray-800 hover:bg-surface hover:text-white transition-colors"
                         >
@@ -229,12 +229,12 @@ const TournamentResultModal: React.FC<TournamentResultModalProps> = ({ isOpen, o
                         </button>
                         
                         <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-                            <button 
+                            <button type="button" 
                                 onClick={() => window.print()}
                                 className="w-full sm:w-auto px-6 py-3 rounded-xl font-bold uppercase tracking-widest text-xs text-indigo-400 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 transition-colors flex items-center justify-center gap-2">
                                 <Download className="w-4 h-4" /> Download PDF
                             </button>
-                            <button 
+                            <button type="button" 
                                 onClick={async () => {
                                     try {
                                         await navigator.clipboard.writeText(window.location.href);
@@ -243,7 +243,7 @@ const TournamentResultModal: React.FC<TournamentResultModalProps> = ({ isOpen, o
                                         showToast('Could not copy the result link', 'error');
                                     }
                                 }}
-                                className="w-full sm:w-auto px-8 py-3 rounded-xl font-black uppercase tracking-widest text-xs text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 shadow-xl shadow-indigo-500/20 transition-all flex items-center justify-center gap-2 group">
+                                className="w-full sm:w-auto px-8 py-3 rounded-xl font-black uppercase tracking-widest text-xs text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 shadow-xl shadow-indigo-500/20 transition-colors flex items-center justify-center gap-2 group">
                                 Share Result <ArrowUpRight className="w-4 h-4 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" />
                             </button>
                         </div>

@@ -16,7 +16,7 @@ export const MediaTab: React.FC<AdminPanelTabProps> = (props) => {
                             </h2>
                             <p className="text-xs text-gray-500 mt-1 uppercase font-bold">Securely browse and manage image assets uploaded through ImgBB proxy.</p>
                         </div>
-                        <button
+                        <button type="button"
                             onClick={fetchMedia}
                             disabled={mediaLoading}
                             className="bg-surface hover:bg-surface/80 text-white px-5 py-2 rounded-lg font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition"
@@ -35,7 +35,7 @@ export const MediaTab: React.FC<AdminPanelTabProps> = (props) => {
                                 <select
                                     value={selectedMediaCategory}
                                     onChange={(e) => setSelectedMediaCategory(e.target.value as MediaCategory)}
-                                    className="w-full bg-surface border border-gray-700 rounded-lg p-3 text-white text-xs font-bold uppercase tracking-wider focus:border-brand-500 outline-none"
+                                    className="w-full bg-surface border border-gray-700 rounded-lg p-3 text-white text-xs font-bold uppercase tracking-wider focus:border-brand-500 focus-visible:outline-none"
                                 >
                                     {Object.values(MediaCategory).map((cat: string) => (
                                         <option key={cat} value={cat}>
@@ -65,7 +65,7 @@ export const MediaTab: React.FC<AdminPanelTabProps> = (props) => {
                     {/* Filter and Search controls */}
                     <div className="flex flex-col md:flex-row gap-4 items-center justify-between pb-2 border-b border-gray-800">
                         <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-                            <button
+                            <button type="button"
                                 onClick={() => setMediaFilter("ALL")}
                                 className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors ${
                                     mediaFilter === "ALL"
@@ -80,7 +80,7 @@ export const MediaTab: React.FC<AdminPanelTabProps> = (props) => {
                                 const count = mediaItems.filter(item => item.category === cat).length;
                                 if (count === 0 && cat !== MediaCategory.OTHER) return null;
                                 return (
-                                    <button
+                                    <button type="button"
                                         key={cat}
                                         onClick={() => setMediaFilter(cat)}
                                         className={`px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors ${
@@ -103,7 +103,7 @@ export const MediaTab: React.FC<AdminPanelTabProps> = (props) => {
                                 value={mediaSearch}
                                 onChange={(e) => setMediaSearch(e.target.value)}
                                 placeholder="Search by asset name..."
-                                className="w-full bg-dark/70 border border-gray-700/80 rounded-lg py-2.5 pl-10 pr-4 text-xs text-white focus:border-brand-500 outline-none"
+                                className="w-full bg-dark/70 border border-gray-700/80 rounded-lg py-2.5 pl-10 pr-4 text-xs text-white focus:border-brand-500 focus-visible:outline-none"
                             />
                         </div>
                     </div>
@@ -158,7 +158,7 @@ export const MediaTab: React.FC<AdminPanelTabProps> = (props) => {
                                                     >
                                                         <ExternalLink className="w-4 h-4" />
                                                     </a>
-                                                    <button
+                                                    <button type="button"
                                                         onClick={() => {
                                                             navigator.clipboard.writeText(item.url);
                                                             showToast("Direct link copied to clipboard!", "success");
@@ -181,7 +181,7 @@ export const MediaTab: React.FC<AdminPanelTabProps> = (props) => {
                                                 </div>
                                                 <div className="mt-3 pt-2.5 border-t border-gray-850 flex items-center justify-between text-[10px]">
                                                     <span className="text-gray-600 font-bold uppercase">{getRelativeTime(item.createdAt)}</span>
-                                                    <button
+                                                    <button type="button"
                                                         onClick={() => handleDeleteMedia(item.id, item.url, item.publicId || item.public_id)}
                                                         className="text-rose-500 hover:text-rose-400 flex items-center gap-1 font-bold uppercase"
                                                         title="Delete reference"

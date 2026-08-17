@@ -142,7 +142,7 @@ const DiscordAdminPanel: React.FC<DiscordAdminPanelProps> = ({ allTournaments, s
                     value={selectedTournamentId}
                     onChange={e => setSelectedTournamentId(e.target.value)}
                     aria-label="Select tournament for Discord announcement"
-                    className="w-full bg-black border border-gray-700 rounded-2xl px-5 py-4 text-white text-sm font-bold focus:border-[#5865F2] outline-none transition"
+                    className="w-full bg-black border border-gray-700 rounded-2xl px-5 py-4 text-white text-sm font-bold focus:border-[#5865F2] focus-visible:outline-none transition"
                 >
                     <option value="">— Choose a tournament —</option>
                     {allTournaments.map(t => (
@@ -183,11 +183,11 @@ const DiscordAdminPanel: React.FC<DiscordAdminPanelProps> = ({ allTournaments, s
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                     {announcements.map(a => (
-                        <button
+                        <button type="button"
                             key={a.type}
                             onClick={() => handleSend(a.type)}
                             disabled={sending !== null || !selectedTournament}
-                            className={`flex flex-col items-center gap-2 py-5 px-3 rounded-2xl border font-black text-xs uppercase tracking-widest transition-all disabled:opacity-40 disabled:cursor-not-allowed ${a.color}`}
+                            className={`flex flex-col items-center gap-2 py-5 px-3 rounded-2xl border font-black text-xs uppercase tracking-widest transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${a.color}`}
                         >
                             {sending === a.type ? (
                                 <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />

@@ -418,10 +418,10 @@ export default function TournamentDetails() {
                     )}
                 </div>
 
-                <button 
+                <button type="button" 
                     onClick={handleShare}
                     aria-label="Share Tournament"
-                    className="absolute top-3 right-3 sm:top-8 sm:right-8 p-2.5 sm:p-4 bg-white/5 backdrop-blur-md hover:bg-white/10 text-white rounded-full transition-all border border-white/10 active:scale-95 z-20 shadow-xl"
+                    className="absolute top-3 right-3 sm:top-8 sm:right-8 p-2.5 sm:p-4 bg-white/5 backdrop-blur-md hover:bg-white/10 text-white rounded-full transition-colors border border-white/10 active:scale-95 z-20 shadow-xl"
                 >
                     <Share2 className="w-4 h-4 sm:w-6 sm:h-6" />
                 </button>
@@ -469,7 +469,7 @@ export default function TournamentDetails() {
                             tournament.status === 'completed' ? { id: 'results', label: 'Results', icon: Trophy } : null,
                             (tournament as any).tournamentMode === 'PER_KILL_REWARD' && (tournament as any).killRewards?.length > 0 ? { id: 'killrewards', label: 'Kill Rewards', icon: Target } : null
                         ].filter((tab): tab is {id: string, label: string, icon: any} => tab !== null).map((tab) => (
-                            <button 
+                            <button type="button" 
                                 key={tab.id}
                                 onClick={() => {
                                     if (tab.id === 'results') {
@@ -478,7 +478,7 @@ export default function TournamentDetails() {
                                         setActiveTab(tab.id as any);
                                     }
                                 }}
-                                className={`flex-1 min-w-max flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 rounded-xl sm:rounded-full text-xs sm:text-xs font-black transition-all uppercase tracking-wider whitespace-nowrap ${
+                                className={`flex-1 min-w-max flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 rounded-xl sm:rounded-full text-xs sm:text-xs font-black transition-colors uppercase tracking-wider whitespace-nowrap ${
                                     (activeTab === tab.id && tab.id !== 'results') 
                                     ? 'bg-brand-500 text-white shadow-xl shadow-brand-500/20' 
                                     : 'text-gray-500 hover:text-white hover:bg-surface/50'
@@ -530,7 +530,7 @@ export default function TournamentDetails() {
                                         { label: 'Slots', value: `${getFilledSlotCount(tournament)}/${getSlotCount(tournament)}`, icon: Users, color: 'text-blue-500' },
                                         { label: 'Game Mode', value: tournament.type, icon: Play, color: 'text-red-500' },
                                     ].map((stat, i) => (
-                                        <div key={i} className="bg-card/50 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-gray-700 transition-all hover:bg-surface/50 min-w-0">
+                                        <div key={i} className="bg-card/50 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-gray-700 transition-colors hover:bg-surface/50 min-w-0">
                                             <stat.icon className={`w-5 h-5 sm:w-6 sm:h-6 ${stat.color} mb-2 sm:mb-4`} />
                                             <div className="text-[10px] sm:text-xs text-gray-500 uppercase font-black tracking-widest mb-1 truncate">{stat.label}</div>
                                             <div className="text-white font-black text-sm sm:text-xl truncate">{stat.value}</div>
@@ -559,7 +559,7 @@ export default function TournamentDetails() {
                                                     <div className="text-xs text-gray-500 uppercase font-black tracking-widest mb-1">Room ID</div>
                                                     <div className="flex items-center justify-between">
                                                         <span className="text-lg sm:text-xl font-mono font-bold text-white tracking-wider">{roomCreds?.roomId || 'Waiting...'}</span>
-                                                        <button onClick={() => {
+                                                        <button type="button" onClick={() => {
                                                             navigator.clipboard.writeText(roomCreds?.roomId || '');
                                                             showToast("Copied!", "success");
                                                         }} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
@@ -575,13 +575,13 @@ export default function TournamentDetails() {
                                                             {showPassword ? (roomCreds?.roomPass || 'None') : '••••••••'}
                                                         </span>
                                                         <div className="flex items-center gap-1">
-                                                            <button 
+                                                            <button type="button" 
                                                                 onClick={() => setShowPassword(!showPassword)} 
                                                                 className="p-2 hover:bg-white/10 rounded-xl transition-colors relative z-20"
                                                             >
                                                                 {showPassword ? <EyeOff className="w-5 h-5 text-gray-500" /> : <Eye className="w-5 h-5 text-gray-500" />}
                                                             </button>
-                                                            <button onClick={() => {
+                                                            <button type="button" onClick={() => {
                                                                 navigator.clipboard.writeText(roomCreds?.roomPass || '');
                                                                 showToast("Copied!", "success");
                                                             }} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
@@ -674,7 +674,7 @@ export default function TournamentDetails() {
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                     {filteredParticipants.length > 0 ? filteredParticipants.map((p, i) => (
-                                        <div key={i} className="bg-surface p-4 sm:p-5 rounded-2xl border border-gray-800 flex flex-col justify-between gap-4 group hover:border-brand-500/30 transition-all shadow-lg hover:shadow-brand-500/5 min-w-0">
+                                        <div key={i} className="bg-surface p-4 sm:p-5 rounded-2xl border border-gray-800 flex flex-col justify-between gap-4 group hover:border-brand-500/30 transition-colors shadow-lg hover:shadow-brand-500/5 min-w-0">
                                             <div className="flex items-start gap-3">
                                                 <div className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 bg-brand-600/10 rounded-2xl flex items-center justify-center text-brand-500 font-black border border-brand-500/20 text-sm sm:text-base">
                                                     {i + 1}
@@ -769,7 +769,7 @@ export default function TournamentDetails() {
                     ({relatedTournaments.length > 0 && (
                         <div className="space-y-6 pt-8 border-t border-gray-800/50">
                             <div className="flex justify-between items-center">
-                                <button onClick={() => navigate('/tournaments')} className="text-xs font-black text-brand-500 uppercase tracking-widest hover:text-brand-400 transition-colors flex items-center gap-1">
+                                <button type="button" onClick={() => navigate('/tournaments')} className="text-xs font-black text-brand-500 uppercase tracking-widest hover:text-brand-400 transition-colors flex items-center gap-1">
                                     View All <ChevronRight className="w-4 h-4" />
                                 </button>
                             </div>
@@ -778,7 +778,7 @@ export default function TournamentDetails() {
                                     <div 
                                         key={t.id} 
                                         onClick={() => navigate(`/tournaments/${t.id}`)}
-                                        className="bg-surface rounded-2xl border border-gray-800 overflow-hidden cursor-pointer group hover:border-brand-500/50 transition-all"
+                                        className="bg-surface rounded-2xl border border-gray-800 overflow-hidden cursor-pointer group hover:border-brand-500/50 transition-colors"
                                     >
                                         <div className="h-24 overflow-hidden relative">
                                             <img 
@@ -852,16 +852,16 @@ export default function TournamentDetails() {
                         </div>
 
                         {tournament.status === 'completed' ? (
-                            <button 
+                            <button type="button" 
                                 onClick={() => setIsResultModalOpen(true)}
-                                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-4 sm:py-5 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-widest shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-all active:scale-95 flex items-center justify-center gap-3 group"
+                                className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-4 sm:py-5 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-widest shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-colors active:scale-95 flex items-center justify-center gap-3 group"
                             >
                                 <Trophy className="w-5 h-5 sm:w-6 sm:h-6 group-hover:scale-110 transition-transform" /> View Results
                             </button>
                         ) : !user ? (
-                            <button 
+                            <button type="button" 
                                 onClick={() => navigate('/profile')}
-                                className="w-full bg-surface hover:bg-surface text-white py-4 sm:py-5 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-widest transition-all active:scale-95"
+                                className="w-full bg-surface hover:bg-surface text-white py-4 sm:py-5 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-widest transition-colors active:scale-95"
                             >
                                 Login to Join
                             </button>
@@ -892,24 +892,24 @@ export default function TournamentDetails() {
                                     return null;
                                 })()}
                                 <div className="grid grid-cols-2 gap-2">
-                                    <button 
+                                    <button type="button" 
                                         onClick={() => setActiveTab('overview')}
-                                        className="bg-dark hover:bg-surface text-gray-400 py-3 rounded-xl text-xs font-black uppercase tracking-widest border border-gray-800 transition-all"
+                                        className="bg-dark hover:bg-surface text-gray-400 py-3 rounded-xl text-xs font-black uppercase tracking-widest border border-gray-800 transition-colors"
                                     >
                                         Room Access
                                     </button>
-                                    <button 
+                                    <button type="button" 
                                         onClick={() => window.open('https://discord.gg', '_blank')}
-                                        className="bg-brand-600/10 hover:bg-brand-600/20 text-brand-500 py-3 rounded-xl text-xs font-black uppercase tracking-widest border border-brand-500/20 transition-all"
+                                        className="bg-brand-600/10 hover:bg-brand-600/20 text-brand-500 py-3 rounded-xl text-xs font-black uppercase tracking-widest border border-brand-500/20 transition-colors"
                                     >
                                         Join Discord
                                     </button>
                                 </div>
                                 {tournament.status === 'upcoming' && (
                                     <div className="space-y-3">
-                                        <button 
+                                        <button type="button" 
                                             onClick={handleLeaveTournament}
-                                            className="w-full bg-red-600/10 hover:bg-red-600/20 text-red-500 py-4 rounded-xl text-xs font-black uppercase tracking-widest border border-red-500/20 transition-all"
+                                            className="w-full bg-red-600/10 hover:bg-red-600/20 text-red-500 py-4 rounded-xl text-xs font-black uppercase tracking-widest border border-red-500/20 transition-colors"
                                         >
                                             Leave Tournament
                                         </button>
@@ -917,17 +917,17 @@ export default function TournamentDetails() {
                                 )}
                             </div>
                         ) : getFilledSlotCount(tournament) >= getSlotCount(tournament) ? (
-                            <button disabled className="w-full bg-red-900/20 text-red-500 border border-red-900/50 py-4 sm:py-5 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-widest cursor-not-allowed">
+                            <button type="button" disabled className="w-full bg-red-900/20 text-red-500 border border-red-900/50 py-4 sm:py-5 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-widest cursor-not-allowed">
                                 Tournament Full
                             </button>
                         ) : tournament.status !== 'upcoming' ? (
-                            <button disabled className="w-full bg-card text-gray-600 py-4 sm:py-5 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-widest cursor-not-allowed border border-gray-800">
+                            <button type="button" disabled className="w-full bg-card text-gray-600 py-4 sm:py-5 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-widest cursor-not-allowed border border-gray-800">
                                 Registration Closed
                             </button>
                         ) : (
-                            <button 
+                            <button type="button" 
                                 onClick={handleJoinClick}
-                                className="w-full bg-brand-600 hover:bg-brand-500 text-white py-4 sm:py-5 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-widest shadow-xl shadow-brand-600/20 transition-all active:scale-95 flex items-center justify-center gap-3 group"
+                                className="w-full bg-brand-600 hover:bg-brand-500 text-white py-4 sm:py-5 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-widest shadow-xl shadow-brand-600/20 transition-colors active:scale-95 flex items-center justify-center gap-3 group"
                             >
                                 Join Tournament <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                             </button>

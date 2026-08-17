@@ -45,7 +45,7 @@ const TransactionHistoryTab: React.FC<TransactionHistoryTabProps> = ({
                     <select 
                         value={txFilterType} 
                         onChange={e => setTxFilterType(e.target.value as any)}
-                        className="bg-dark border border-slate-700 rounded-lg p-2 text-white text-xs focus:border-brand-500 outline-none"
+                        className="bg-dark border border-slate-700 rounded-lg p-2 text-white text-xs focus:border-brand-500 focus-visible:outline-none"
                     >
                         <option value="all">All Types</option>
                         <option value="deposit">Deposit</option>
@@ -57,7 +57,7 @@ const TransactionHistoryTab: React.FC<TransactionHistoryTabProps> = ({
                     <select 
                         value={txFilterStatus} 
                         onChange={e => setTxFilterStatus(e.target.value as any)}
-                        className="bg-dark border border-slate-700 rounded-lg p-2 text-white text-xs focus:border-brand-500 outline-none"
+                        className="bg-dark border border-slate-700 rounded-lg p-2 text-white text-xs focus:border-brand-500 focus-visible:outline-none"
                     >
                         <option value="all">All Status</option>
                         <option value="pending">Pending</option>
@@ -68,7 +68,7 @@ const TransactionHistoryTab: React.FC<TransactionHistoryTabProps> = ({
                     <select 
                         value={txFilterTournament} 
                         onChange={e => setTxFilterTournament(e.target.value)}
-                        className="bg-dark border border-slate-700 rounded-lg p-2 text-white text-xs focus:border-brand-500 outline-none w-40"
+                        className="bg-dark border border-slate-700 rounded-lg p-2 text-white text-xs focus:border-brand-500 focus-visible:outline-none w-40"
                     >
                         <option value="all">All Tournaments</option>
                         {allTournaments.map(t => (
@@ -82,7 +82,7 @@ const TransactionHistoryTab: React.FC<TransactionHistoryTabProps> = ({
                             placeholder="Search User..." 
                             value={txSearchUser}
                             onChange={e => setTxSearchUser(e.target.value)}
-                            className="bg-dark border border-slate-700 rounded-lg p-2 pl-8 text-white text-xs focus:border-brand-500 outline-none w-40"
+                            className="bg-dark border border-slate-700 rounded-lg p-2 pl-8 text-white text-xs focus:border-brand-500 focus-visible:outline-none w-40"
                         />
                     </div>
                 </div>
@@ -155,9 +155,9 @@ const TransactionHistoryTab: React.FC<TransactionHistoryTabProps> = ({
                                     {t.refId || 'N/A'}
                                 </td>
                                 <td className="py-3 px-4 text-right">
-                                    <button 
+                                    <button type="button" 
                                         onClick={(e) => { e.stopPropagation(); setSelectedTx(t); }}
-                                        className="bg-brand-500/10 hover:bg-brand-500 text-brand-400 hover:text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border border-brand-500/20 flex items-center gap-1 ml-auto"
+                                        className="bg-brand-500/10 hover:bg-brand-500 text-brand-400 hover:text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors border border-brand-500/20 flex items-center gap-1 ml-auto"
                                     >
                                         <Eye className="w-3 h-3" /> View
                                     </button>

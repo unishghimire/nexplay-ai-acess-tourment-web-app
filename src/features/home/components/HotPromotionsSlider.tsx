@@ -29,7 +29,7 @@ const Dot = ({ active, onClick, ariaLabel }: { active: boolean; onClick: () => v
         aria-label={ariaLabel}
         className="p-2.5 touch-target flex items-center justify-center"
     >
-        <span className={`transition-all duration-300 rounded-full ${active ? 'w-6 h-1.5 bg-brand-500' : 'w-1.5 h-1.5 bg-white/30'}`} />
+        <span className={`transition-colors duration-300 rounded-full ${active ? 'w-6 h-1.5 bg-brand-500' : 'w-1.5 h-1.5 bg-white/30'}`} />
     </button>
 );
 
@@ -150,7 +150,7 @@ const HotPromotionsSlider: React.FC<HotPromotionsSliderProps> = ({ slides, varia
                             >
                                 <Link 
                                     to={currentSlide.link}
-                                    className="bg-brand-600 hover:bg-brand-500 text-white px-6 md:px-10 py-3 md:py-4 rounded-xl font-black uppercase tracking-widest transition-all hover:scale-105 shadow-xl shadow-brand-600/20 flex items-center gap-2 text-xs md:text-sm touch-target"
+                                    className="bg-brand-600 hover:bg-brand-500 text-white px-6 md:px-10 py-3 md:py-4 rounded-xl font-black uppercase tracking-widest transition-colors hover:scale-105 shadow-xl shadow-brand-600/20 flex items-center gap-2 text-xs md:text-sm touch-target"
                                 >
                                     {currentSlide.buttonText || 'Explore'} <ExternalLink className="w-4 h-4" />
                                 </Link>
@@ -162,17 +162,17 @@ const HotPromotionsSlider: React.FC<HotPromotionsSliderProps> = ({ slides, varia
                 {/* Navigation Arrows — visible on all devices */}
                 {slides.length > 1 && (
                     <>
-                        <button 
+                        <button type="button" 
                             onClick={prevSlide} 
                             aria-label="Previous slide"
-                            className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center bg-black/40 hover:bg-brand-600 text-white rounded-full backdrop-blur-md transition-all duration-300 border border-white/10"
+                            className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center bg-black/40 hover:bg-brand-600 text-white rounded-full backdrop-blur-md transition-colors duration-300 border border-white/10"
                         >
                             <ChevronLeft className="w-5 h-5" />
                         </button>
-                        <button 
+                        <button type="button" 
                             onClick={nextSlide} 
                             aria-label="Next slide"
-                            className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center bg-black/40 hover:bg-brand-600 text-white rounded-full backdrop-blur-md transition-all duration-300 border border-white/10"
+                            className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center bg-black/40 hover:bg-brand-600 text-white rounded-full backdrop-blur-md transition-colors duration-300 border border-white/10"
                         >
                             <ChevronRight className="w-5 h-5" />
                         </button>
@@ -278,7 +278,7 @@ const HotPromotionsSlider: React.FC<HotPromotionsSliderProps> = ({ slides, varia
                                     <Link 
                                         to={slide.status === 'COMPLETED' ? `${slide.link}?tab=results` : slide.link}
                                         aria-label={slide.status === 'COMPLETED' ? 'View Results' : 'Join Now'}
-                                        className={`px-4 py-3 rounded-lg text-xs font-black uppercase tracking-widest transition-all touch-target text-center inline-flex items-center justify-center ${
+                                        className={`px-4 py-3 rounded-lg text-xs font-black uppercase tracking-widest transition-colors touch-target text-center inline-flex items-center justify-center ${
                                             slide.status === 'COMPLETED' 
                                             ? 'bg-surface hover:bg-surface text-white' 
                                             : 'bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white shadow-lg shadow-brand-500/25'
@@ -308,14 +308,14 @@ const HotPromotionsSlider: React.FC<HotPromotionsSliderProps> = ({ slides, varia
                 </div>
 
                 {/* Navigation Arrows — visible on all devices */}
-                <button 
+                <button type="button" 
                     onClick={prevSlide}
                     aria-label="Previous slide"
                     className="absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center rounded-full bg-black/60 hover:bg-brand-600 text-white transition-colors z-20"
                 >
                     <ChevronLeft className="w-5 h-5" />
                 </button>
-                <button 
+                <button type="button" 
                     onClick={nextSlide}
                     aria-label="Next slide"
                     className="absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center rounded-full bg-black/60 hover:bg-brand-600 text-white transition-colors z-20"

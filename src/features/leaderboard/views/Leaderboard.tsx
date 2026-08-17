@@ -55,7 +55,7 @@ const PodiumCard = ({ item, rank, type, navigate }: {
             onClick={() => {
                 navigate(isPlayer ? `/user/${itemId}` : `/team/${itemId}`);
             }}
-            className={`relative flex flex-col items-center p-4 sm:p-8 rounded-2xl sm:rounded-3xl border ${borderColor} bg-gradient-to-b ${bgColor} to-black ${shadowColor} shadow-2xl cursor-pointer group hover:border-brand-500/50 transition-all duration-300 hover:-translate-y-2`}
+            className={`relative flex flex-col items-center p-4 sm:p-8 rounded-2xl sm:rounded-3xl border ${borderColor} bg-gradient-to-b ${bgColor} to-black ${shadowColor} shadow-2xl cursor-pointer group hover:border-brand-500/50 transition-colors duration-300 hover:-translate-y-2`}
         >
             {isFirst && (
                 <div className="absolute -top-4 bg-amber-500 text-black p-2 rounded-full shadow-lg">
@@ -227,7 +227,7 @@ const Leaderboard: React.FC = () => {
                     placeholder={`Search ${view}...`}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-card/50 border border-gray-800 rounded-3xl py-5 pl-16 pr-6 text-white font-black uppercase tracking-widest focus:border-brand-500 outline-none transition shadow-2xl"
+                    className="w-full bg-card/50 border border-gray-800 rounded-3xl py-5 pl-16 pr-6 text-white font-black uppercase tracking-widest focus:border-brand-500 focus-visible:outline-none transition shadow-2xl"
                 />
             </div>
 

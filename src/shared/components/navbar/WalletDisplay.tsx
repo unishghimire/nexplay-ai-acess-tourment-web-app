@@ -9,7 +9,7 @@ interface WalletDisplayProps {
 
 const WalletDisplay: React.FC<WalletDisplayProps> = ({ balance, onClick }) => {
   return (
-    <button 
+    <button type="button" 
       onClick={onClick}
       className="flex items-center justify-center h-11 gap-2 bg-gradient-to-r from-brand-900/20 to-purple-900/20 border border-brand-500/30 px-4 rounded-full shadow-lg hover:border-brand-500/50 transition cursor-pointer whitespace-nowrap shrink-0"
     >

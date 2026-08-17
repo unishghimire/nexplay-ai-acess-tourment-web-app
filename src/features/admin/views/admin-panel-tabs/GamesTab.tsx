@@ -10,7 +10,7 @@ export const GamesTab: React.FC<AdminPanelTabProps> = (props) => {
                 <div className="space-y-6">
                     <div className="flex justify-between items-center">
                         <h2 className="text-xl font-bold text-white uppercase tracking-wider">Game Management</h2>
-                        <button 
+                        <button type="button" 
                             onClick={() => {
                                 setEditingGame(null);
                                 setGameName('');
@@ -45,15 +45,15 @@ export const GamesTab: React.FC<AdminPanelTabProps> = (props) => {
                                     )}
                                 </div>
                                 <div className="flex flex-col gap-2">
-                                    <button onClick={() => openEditGame(game)} className="text-blue-400 hover:text-white" title="Edit Game"><Edit className="w-4 h-4" /></button>
-                                    <button
+                                    <button type="button" onClick={() => openEditGame(game)} className="text-blue-400 hover:text-white" title="Edit Game"><Edit className="w-4 h-4" /></button>
+                                    <button type="button"
                                         onClick={() => { setScoringModalGame(game); setIsScoringModalOpen(true); }}
                                         className="text-amber-400 hover:text-white"
                                         title="Scoring Settings"
                                     >
                                         <Trophy className="w-4 h-4" />
                                     </button>
-                                    <button onClick={() => handleDeleteGame(game.id)} className="text-red-400 hover:text-white" title="Delete Game"><Trash className="w-4 h-4" /></button>
+                                    <button type="button" onClick={() => handleDeleteGame(game.id)} className="text-red-400 hover:text-white" title="Delete Game"><Trash className="w-4 h-4" /></button>
                                 </div>
                             </div>
                         ))}
@@ -72,7 +72,7 @@ export const GamesTab: React.FC<AdminPanelTabProps> = (props) => {
                                             type="text" 
                                             value={gameName}
                                             onChange={(e) => setGameName(e.target.value)}
-                                            className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none"
+                                            className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 focus-visible:outline-none"
                                             placeholder="e.g. PUBG Mobile"
                                         />
                                     </div>
@@ -83,7 +83,7 @@ export const GamesTab: React.FC<AdminPanelTabProps> = (props) => {
                                             onDrop={handleDropGame}
                                             onDragOver={handleDragOverGame}
                                             onClick={() => document.getElementById('game-logo-file-input')?.click()}
-                                            className={`relative w-full aspect-video rounded-xl border-2 border-dashed transition-all flex items-center justify-center overflow-hidden group cursor-pointer ${uploading ? 'border-brand-500 bg-brand-500/10' : 'border-gray-700 hover:border-brand-500 bg-dark'}`}
+                                            className={`relative w-full aspect-video rounded-xl border-2 border-dashed transition-colors flex items-center justify-center overflow-hidden group cursor-pointer ${uploading ? 'border-brand-500 bg-brand-500/10' : 'border-gray-700 hover:border-brand-500 bg-dark'}`}
                                         >
                                             {uploading ? (
                                                 <div className="flex flex-col items-center gap-2">
@@ -120,7 +120,7 @@ export const GamesTab: React.FC<AdminPanelTabProps> = (props) => {
                                                 type="text" 
                                                 value={gameLogo}
                                                 onChange={(e) => setGameLogo(e.target.value)}
-                                                className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none text-sm"
+                                                className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 focus-visible:outline-none text-sm"
                                                 placeholder="Or paste image URL..."
                                             />
                                         </div>
@@ -130,7 +130,7 @@ export const GamesTab: React.FC<AdminPanelTabProps> = (props) => {
                                         <textarea 
                                             value={gameModes}
                                             onChange={(e) => setGameModes(e.target.value)}
-                                            className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 outline-none h-24"
+                                            className="w-full bg-dark border border-gray-700 rounded-lg p-3 text-white focus:border-brand-500 focus-visible:outline-none h-24"
                                             placeholder="Battle Royale, Ranked, Arcade..."
                                         />
                                     </div>
@@ -147,13 +147,13 @@ export const GamesTab: React.FC<AdminPanelTabProps> = (props) => {
                                 </div>
 
                                 <div className="flex gap-3 pt-4">
-                                    <button 
+                                    <button type="button" 
                                         onClick={() => setIsGameModalOpen(false)}
                                         className="flex-1 bg-surface hover:bg-surface text-white py-3 rounded-xl font-bold transition"
                                     >
                                         Cancel
                                     </button>
-                                    <button 
+                                    <button type="button" 
                                         onClick={handleSaveGame}
                                         className="flex-1 bg-brand-600 hover:bg-brand-500 text-white py-3 rounded-xl font-bold transition"
                                     >

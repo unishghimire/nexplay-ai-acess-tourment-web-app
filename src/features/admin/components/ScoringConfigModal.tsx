@@ -129,7 +129,7 @@ export const ScoringConfigModal: React.FC<ScoringConfigModalProps> = ({
                         <h3 className="text-xl font-black uppercase tracking-widest text-white">Scoring Configuration</h3>
                         <p className="text-xs text-slate-400 mt-1">{gameName} — Game-Level Scoring</p>
                     </div>
-                    <button onClick={onClose} className="p-2 text-slate-400 hover:text-white">
+                    <button type="button" onClick={onClose} className="p-2 text-slate-400 hover:text-white">
                         <X className="w-5 h-5" />
                     </button>
                 </div>
@@ -140,7 +140,7 @@ export const ScoringConfigModal: React.FC<ScoringConfigModalProps> = ({
                         <p className="text-sm font-bold text-white">Enable Scoring</p>
                         <p className="text-xs text-slate-400">When enabled, new tournaments inherit this scoring</p>
                     </div>
-                    <button
+                    <button type="button"
                         onClick={() => setEnabled(!enabled)}
                         className={`w-12 h-6 rounded-full transition ${enabled ? 'bg-brand-500' : 'bg-slate-700'} relative`}
                         aria-label="Toggle scoring"
@@ -159,7 +159,7 @@ export const ScoringConfigModal: React.FC<ScoringConfigModalProps> = ({
                             step="0.5"
                             value={killPoints}
                             onChange={e => setKillPoints(parseFloat(e.target.value) || 0)}
-                            className="w-24 bg-dark border border-slate-800 text-white rounded-xl p-3 text-center text-lg font-black focus:border-brand-500 outline-none"
+                            className="w-24 bg-dark border border-slate-800 text-white rounded-xl p-3 text-center text-lg font-black focus:border-brand-500 focus-visible:outline-none"
                         />
                         <span className="text-sm text-slate-400">point{killPoints !== 1 ? 's' : ''} per kill</span>
                     </div>
@@ -169,7 +169,7 @@ export const ScoringConfigModal: React.FC<ScoringConfigModalProps> = ({
                 <div>
                     <div className="flex justify-between items-center mb-2">
                         <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Placement Points</label>
-                        <button
+                        <button type="button"
                             onClick={handleAddPosition}
                             className="text-brand-500 hover:text-brand-400 text-xs font-bold flex items-center gap-1"
                         >
@@ -187,10 +187,10 @@ export const ScoringConfigModal: React.FC<ScoringConfigModalProps> = ({
                                     min="0"
                                     value={placementPoints[String(pos)] ?? 0}
                                     onChange={e => handlePlacementChange(String(pos), parseInt(e.target.value) || 0)}
-                                    className="flex-1 bg-surface border border-slate-800 text-white rounded-lg p-2 text-sm font-bold focus:border-brand-500 outline-none"
+                                    className="flex-1 bg-surface border border-slate-800 text-white rounded-lg p-2 text-sm font-bold focus:border-brand-500 focus-visible:outline-none"
                                 />
                                 <span className="text-xs text-slate-500">pts</span>
-                                <button
+                                <button type="button"
                                     onClick={() => handleRemovePosition(String(pos))}
                                     className="p-1.5 text-slate-600 hover:text-red-500 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition"
                                 >
@@ -225,13 +225,13 @@ export const ScoringConfigModal: React.FC<ScoringConfigModalProps> = ({
 
                 {/* Save */}
                 <div className="flex gap-3 pt-2 sticky bottom-0 bg-card">
-                    <button
+                    <button type="button"
                         onClick={onClose}
                         className="flex-1 py-3 rounded-xl border border-slate-700 text-slate-400 font-bold text-sm uppercase tracking-widest hover:bg-slate-800/50 transition"
                     >
                         Cancel
                     </button>
-                    <button
+                    <button type="button"
                         onClick={handleSave}
                         disabled={saving || !validation.valid}
                         className="flex-1 py-3 rounded-xl bg-brand-600 hover:bg-brand-500 disabled:opacity-50 text-white font-black text-sm uppercase tracking-widest transition flex items-center justify-center gap-2"

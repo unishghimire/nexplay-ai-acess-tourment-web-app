@@ -299,7 +299,7 @@ const Profile: React.FC = () => {
                 onDragOver={handleDragOver}
                 className="bg-card/50 rounded-3xl border border-gray-800 overflow-hidden shadow-2xl mb-6 relative group"
             >
-                <button 
+                <button type="button" 
                     onClick={() => setShowSettingsModal(true)}
                     className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black rounded-full border border-gray-700 transition text-gray-300 hover:text-white z-20 backdrop-blur-sm"
                     title="Settings"
@@ -311,7 +311,7 @@ const Profile: React.FC = () => {
                     style={profile.bannerUrl ? { backgroundImage: `url(${profile.bannerUrl})` } : {}}
                 >
                     <div className="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
-                    <button 
+                    <button type="button" 
                         onClick={() => setShowBannerPresetModal(true)}
                         className="absolute bottom-4 right-4 p-2 bg-black/50 hover:bg-black rounded-full border border-gray-700 transition text-gray-300 hover:text-white z-20 backdrop-blur-sm"
                         title="Change Banner"
@@ -374,7 +374,7 @@ const Profile: React.FC = () => {
                                     <div className="flex items-center gap-2 mb-3">
                                         <span className="text-xs text-gray-500 font-mono bg-black px-3 py-1.5 rounded-xl border border-gray-800 flex items-center gap-2">
                                             ID: {user?.uid}
-                                            <button onClick={handleCopyId} aria-label="Copy player ID" className="hover:text-white transition touch-target flex items-center justify-center">
+                                            <button type="button" onClick={handleCopyId} aria-label="Copy player ID" className="hover:text-white transition touch-target flex items-center justify-center">
                                                 {copiedId ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
                                             </button>
                                         </span>
@@ -400,7 +400,7 @@ const Profile: React.FC = () => {
 
                 {/* Tabs */}
                 <div className="flex border-t border-gray-800 px-8">
-                    <button 
+                    <button type="button" 
                         onClick={() => {
                             setActiveTab('settings');
                         }}
@@ -408,7 +408,7 @@ const Profile: React.FC = () => {
                     >
                         Overview
                     </button>
-                    <button 
+                    <button type="button" 
                         onClick={() => {
                             setActiveTab('activity');
                         }}
@@ -416,7 +416,7 @@ const Profile: React.FC = () => {
                     >
                         Activity
                     </button>
-                    <button 
+                    <button type="button" 
                         onClick={() => {
                             setShowSettingsModal(true);
                         }}
@@ -450,7 +450,7 @@ const Profile: React.FC = () => {
                             <div className="text-2xl font-black text-white">{formatCurrency(profile.totalEarnings || 0)}</div>
                         </div>
                         <div className="bg-card p-6 rounded-2xl border border-gray-800 shadow-lg relative overflow-hidden group">
-                            <div className="absolute top-0 left-0 h-1 bg-brand-500 transition-all duration-1000" style={{ width: `${getLevelProgress(profile.xp)}%` }}></div>
+                            <div className="absolute top-0 left-0 h-1 bg-brand-500 transition-colors duration-1000" style={{ width: `${getLevelProgress(profile.xp)}%` }}></div>
                             <div className="flex items-center gap-3 mb-3">
                                 <div className="p-2 bg-brand-500/10 rounded-lg border border-brand-500/20 text-brand-400">
                                     <Shield className="w-5 h-5" />
@@ -566,7 +566,7 @@ const Profile: React.FC = () => {
                                         setIsUploading(false);
                                     }
                                 }}
-                                className="relative group rounded-2xl overflow-hidden border-2 border-gray-800 hover:border-brand-500 transition-all aspect-square bg-dark"
+                                className="relative group rounded-2xl overflow-hidden border-2 border-gray-800 hover:border-brand-500 transition-colors aspect-square bg-dark"
                             >
                                 <img src={url || undefined} alt={`Avatar preset ${index + 1}`} className="w-full h-full object-cover p-2" loading="lazy" />
                                 <div className="absolute inset-0 bg-brand-500/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -760,7 +760,7 @@ const Profile: React.FC = () => {
                         </div>
 
                         <div className="pt-4">
-                            <button 
+                            <button type="button" 
                                 onClick={handleSave} 
                                 disabled={isSaving}
                                 className="w-full bg-brand-600 hover:bg-brand-500 disabled:bg-surface text-white py-4 rounded-xl font-black transition shadow-lg uppercase tracking-widest flex items-center justify-center gap-2 min-h-[44px]"
@@ -788,7 +788,7 @@ const Profile: React.FC = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="bg-card/50 p-4 rounded-xl border border-gray-800">
                                 <p className="text-xs text-gray-400 mb-4">Update your account password to keep your wallet secure.</p>
-                                <button 
+                                <button type="button" 
                                     onClick={async () => {
                                         const email = profile.email;
                                         setConfirmModal({
@@ -821,7 +821,7 @@ const Profile: React.FC = () => {
                                         placeholder="New Email Address" 
                                         className="bg-dark border border-gray-700 rounded-xl px-3 py-2 text-white flex-grow text-xs focus:border-brand-500 outline-none transition font-bold"
                                     />
-                                    <button 
+                                    <button type="button" 
                                         onClick={handleUpdateEmail} 
                                         disabled={isUpdatingEmail || !newEmail}
                                         className="bg-brand-600 px-4 min-h-[44px] rounded-xl hover:bg-brand-500 disabled:bg-surface text-white text-xs font-black transition uppercase tracking-widest shadow-lg whitespace-nowrap"
@@ -891,7 +891,7 @@ const Profile: React.FC = () => {
                                             />
                                         </div>
                                     </div>
-                                    <button 
+                                    <button type="button" 
                                         onClick={handleOrgApply} 
                                         disabled={isApplying}
                                         className="w-full bg-brand-600 py-4 rounded-xl hover:bg-brand-500 text-white text-xs font-black transition uppercase tracking-widest shadow-lg shadow-brand-600/20 flex items-center justify-center gap-2"
@@ -922,7 +922,7 @@ const Profile: React.FC = () => {
                         </div>
                     )}
                     {profile.orgStatus === 'rejected' && siteSettings?.isOrgFormOpen && (
-                        <button 
+                        <button type="button" 
                             onClick={() => {
                                 // Reset application state to allow re-applying
                                 updateDoc(doc(db, 'users', user.uid), { orgStatus: null });
@@ -941,7 +941,7 @@ const Profile: React.FC = () => {
                         <button
                             key={index}
                             onClick={() => handleBannerSelect(url)}
-                            className="relative group rounded-xl overflow-hidden border-2 border-transparent hover:border-brand-500 transition-all aspect-video"
+                            className="relative group rounded-xl overflow-hidden border-2 border-transparent hover:border-brand-500 transition-colors aspect-video"
                         >
                             <img src={url || undefined} alt={`Avatar preset ${index + 1}`} className="w-full h-full object-cover" loading="lazy" />
                             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">

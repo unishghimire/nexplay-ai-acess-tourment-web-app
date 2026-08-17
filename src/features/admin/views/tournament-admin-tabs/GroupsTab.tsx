@@ -45,15 +45,15 @@ export const GroupsTab: React.FC<TournamentAdminTabProps> = (props) => {
                             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 border-b border-gray-800 pb-4">
                                 <h2 className="text-base sm:text-lg font-black uppercase tracking-widest text-white">Groups Management</h2>
                                 <div className="flex gap-2 flex-wrap">
-                                    <button 
+                                    <button type="button" 
                                         onClick={handleAutoGenerateGroups}
-                                        className="bg-purple-600 hover:bg-purple-500 text-white px-3 sm:px-4 py-2.5 min-h-[44px] rounded-lg text-[10px] sm:text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all flex-1 sm:flex-none justify-center"
+                                        className="bg-purple-600 hover:bg-purple-500 text-white px-3 sm:px-4 py-2.5 min-h-[44px] rounded-lg text-[10px] sm:text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-colors flex-1 sm:flex-none justify-center"
                                     >
                                         <CheckCircle2 className="w-4 h-4 shrink-0" /> <span className="truncate">Auto Generate</span>
                                     </button>
-                                    <button 
+                                    <button type="button" 
                                         onClick={() => setIsCreateGroupModalOpen(true)}
-                                        className="bg-brand-600 hover:bg-brand-500 text-white px-3 sm:px-4 py-2.5 min-h-[44px] rounded-lg text-[10px] sm:text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all flex-1 sm:flex-none justify-center"
+                                        className="bg-brand-600 hover:bg-brand-500 text-white px-3 sm:px-4 py-2.5 min-h-[44px] rounded-lg text-[10px] sm:text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-colors flex-1 sm:flex-none justify-center"
                                     >
                                         <Plus className="w-4 h-4 shrink-0" /> <span className="truncate">Create Group</span>
                                     </button>
@@ -93,7 +93,7 @@ export const GroupsTab: React.FC<TournamentAdminTabProps> = (props) => {
                             value={newGroup.name}
                             onChange={(e) => setNewGroup({...newGroup, name: e.target.value})}
                             placeholder="e.g., Group A, Region East"
-                            className="w-full bg-dark border border-gray-800 text-white rounded-xl p-3 focus:border-brand-500 outline-none transition"
+                            className="w-full bg-dark border border-gray-800 text-white rounded-xl p-3 focus:border-brand-500 focus-visible:outline-none transition"
                         />
                     </div>
                     <div>
@@ -102,7 +102,7 @@ export const GroupsTab: React.FC<TournamentAdminTabProps> = (props) => {
                             type="number" 
                             value={newGroup.teamLimit}
                             onChange={(e) => setNewGroup({...newGroup, teamLimit: parseInt(e.target.value) || 0})}
-                            className="w-full bg-dark border border-gray-800 text-white rounded-xl p-3 focus:border-brand-500 outline-none transition"
+                            className="w-full bg-dark border border-gray-800 text-white rounded-xl p-3 focus:border-brand-500 focus-visible:outline-none transition"
                         />
                     </div>
                     <div className="flex items-center justify-between bg-dark p-3 rounded-xl border border-gray-800">
@@ -110,7 +110,7 @@ export const GroupsTab: React.FC<TournamentAdminTabProps> = (props) => {
                             <p className="text-sm font-bold text-white">Public Group</p>
                             <p className="text-xs text-gray-500">Anyone can join if they have the link</p>
                         </div>
-                        <button 
+                        <button type="button" 
                             onClick={() => setNewGroup({...newGroup, isPublic: !newGroup.isPublic})}
                             className={`w-12 h-6 rounded-full transition-colors relative ${newGroup.isPublic ? 'bg-brand-500' : 'bg-surface'}`}
                         >
@@ -125,18 +125,18 @@ export const GroupsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                 value={newGroup.passCode}
                                 onChange={(e) => setNewGroup({...newGroup, passCode: e.target.value})}
                                 placeholder="Enter a secure passcode"
-                                className="w-full bg-dark border border-gray-800 text-white rounded-xl p-3 focus:border-brand-500 outline-none transition"
+                                className="w-full bg-dark border border-gray-800 text-white rounded-xl p-3 focus:border-brand-500 focus-visible:outline-none transition"
                             />
                         </div>
                     )}
                     <div className="pt-4 flex gap-3">
-                        <button 
+                        <button type="button" 
                             onClick={() => setIsCreateGroupModalOpen(false)}
                             className="flex-1 bg-dark hover:bg-surface text-white py-3 rounded-xl font-bold transition border border-gray-800"
                         >
                             Cancel
                         </button>
-                        <button 
+                        <button type="button" 
                             onClick={handleCreateGroup}
                             disabled={!newGroup.name.trim()}
                             className="flex-1 bg-brand-600 hover:bg-brand-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3 rounded-xl font-bold transition"
@@ -176,7 +176,7 @@ export const GroupsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                                     <p className="text-[10px] text-gray-500">{team.players.length} Players</p>
                                                 </div>
                                             </div>
-                                            <button 
+                                            <button type="button" 
                                                 onClick={() => handleRemoveTeam(team.id)}
                                                 className="text-gray-500 hover:text-red-500 transition-colors p-2"
                                             >
@@ -222,10 +222,10 @@ export const GroupsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                                     <p className="text-[10px] text-gray-500">{team.players.length} Players</p>
                                                 </div>
                                             </div>
-                                            <button 
+                                            <button type="button" 
                                                 onClick={() => handleAssignTeam(team.participantId)}
                                                 disabled={selectedGroup.teams.length >= selectedGroup.teamLimit}
-                                                className="bg-brand-600/10 hover:bg-brand-600/20 text-brand-500 disabled:opacity-50 disabled:cursor-not-allowed px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all"
+                                                className="bg-brand-600/10 hover:bg-brand-600/20 text-brand-500 disabled:opacity-50 disabled:cursor-not-allowed px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-widest transition-colors"
                                             >
                                                 Assign
                                             </button>
@@ -275,7 +275,7 @@ function GroupCard({ group, onDelete, onSetRoom, onAddMatch, onManageTeams, onGe
     };
 
     return (
-        <div className="bg-surface border border-gray-800 rounded-2xl p-4 sm:p-5 hover:border-brand-500/20 transition-all shadow-xl">
+        <div className="bg-surface border border-gray-800 rounded-2xl p-4 sm:p-5 hover:border-brand-500/20 transition-colors shadow-xl">
             <div className="flex justify-between items-start mb-4">
                 <div>
                     <h3 className="text-md font-black text-white uppercase tracking-tight">{group.name}</h3>
@@ -283,7 +283,7 @@ function GroupCard({ group, onDelete, onSetRoom, onAddMatch, onManageTeams, onGe
                         <Users className="w-3 h-3 text-brand-500" /> {group.teams.length} / {group.teamLimit} TEAMS
                     </div>
                 </div>
-                <button 
+                <button type="button" 
                     onClick={() => onDelete(group.id)}
                     className="p-2 text-gray-600 hover:text-red-500 transition-colors bg-dark rounded-lg border border-gray-800"
                 >
@@ -326,14 +326,14 @@ function GroupCard({ group, onDelete, onSetRoom, onAddMatch, onManageTeams, onGe
                                 value={roomId}
                                 onChange={e => setRoomId(e.target.value)}
                                 placeholder="Room ID"
-                                className="w-full bg-black border border-gray-800 text-white rounded-lg p-2 text-xs font-mono focus:border-brand-500 outline-none"
+                                className="w-full bg-black border border-gray-800 text-white rounded-lg p-2 text-xs font-mono focus:border-brand-500 focus-visible:outline-none"
                             />
                             <input
                                 type="text"
                                 value={roomPass}
                                 onChange={e => setRoomPass(e.target.value)}
                                 placeholder="Password"
-                                className="w-full bg-black border border-gray-800 text-white rounded-lg p-2 text-xs font-mono focus:border-brand-500 outline-none"
+                                className="w-full bg-black border border-gray-800 text-white rounded-lg p-2 text-xs font-mono focus:border-brand-500 focus-visible:outline-none"
                             />
                             <button
                                 onClick={saveRoom}
@@ -347,19 +347,19 @@ function GroupCard({ group, onDelete, onSetRoom, onAddMatch, onManageTeams, onGe
             </div>
 
             <div className="mt-4 pt-4 border-t border-gray-800 flex flex-wrap gap-2">
-                <button 
+                <button type="button" 
                     onClick={onAddMatch}
-                    className="flex-1 min-w-[80px] min-h-[44px] flex items-center justify-center bg-purple-600/10 hover:bg-purple-600/20 text-purple-500 py-2.5 rounded-lg text-[10px] sm:text-[10px] font-black uppercase tracking-widest transition-all border border-purple-500/10"
+                    className="flex-1 min-w-[80px] min-h-[44px] flex items-center justify-center bg-purple-600/10 hover:bg-purple-600/20 text-purple-500 py-2.5 rounded-lg text-[10px] sm:text-[10px] font-black uppercase tracking-widest transition-colors border border-purple-500/10"
                 >
                     Match
                 </button>
-                <button 
+                <button type="button" 
                     onClick={onManageTeams}
-                    className="flex-1 min-w-[80px] min-h-[44px] flex items-center justify-center bg-brand-600/10 hover:bg-brand-600/20 text-brand-500 py-2.5 rounded-lg text-[10px] sm:text-[10px] font-black uppercase tracking-widest transition-all border border-brand-500/10"
+                    className="flex-1 min-w-[80px] min-h-[44px] flex items-center justify-center bg-brand-600/10 hover:bg-brand-600/20 text-brand-500 py-2.5 rounded-lg text-[10px] sm:text-[10px] font-black uppercase tracking-widest transition-colors border border-brand-500/10"
                 >
                     Teams
                 </button>
-                <button 
+                <button type="button" 
                     onClick={() => {
                         if (window.confirm("Generate a single Match for ALL teams in this group? (BR Style)")) {
                             onGenerateMatches('single');
@@ -368,7 +368,7 @@ function GroupCard({ group, onDelete, onSetRoom, onAddMatch, onManageTeams, onGe
                         }
                     }}
                     disabled={group.teams.length < 2}
-                    className="w-full min-h-[44px] flex items-center justify-center bg-blue-600/10 hover:bg-blue-600/20 text-blue-500 disabled:opacity-50 disabled:cursor-not-allowed py-2.5 rounded-lg text-[10px] sm:text-[10px] font-black uppercase tracking-widest transition-all border border-blue-500/10"
+                    className="w-full min-h-[44px] flex items-center justify-center bg-blue-600/10 hover:bg-blue-600/20 text-blue-500 disabled:opacity-50 disabled:cursor-not-allowed py-2.5 rounded-lg text-[10px] sm:text-[10px] font-black uppercase tracking-widest transition-colors border border-blue-500/10"
                 >
                     GENERATE MATCHES
                 </button>

@@ -161,7 +161,7 @@ const Teams: React.FC = () => {
                     <p className="text-gray-400 font-bold">Discover and join teams, or create your own.</p>
                 </div>
                 {user && (
-                    <button 
+                    <button type="button" 
                         onClick={() => {
                             if (myTeams.length >= 1) {
                                 showToast('You can only be in one team at a time.', 'error');
@@ -209,7 +209,7 @@ const Teams: React.FC = () => {
                                     onDrop={handleDrop}
                                     onDragOver={handleDragOver}
                                     onClick={() => document.getElementById('team-logo-file-input')?.click()}
-                                    className={`relative w-40 h-40 rounded-3xl border-2 border-dashed transition-all flex flex-center justify-center overflow-hidden group cursor-pointer ${isUploadingLogo ? 'border-brand-500 bg-brand-500/10' : 'border-gray-800 hover:border-brand-500 bg-black'}`}
+                                    className={`relative w-40 h-40 rounded-3xl border-2 border-dashed transition-colors flex flex-center justify-center overflow-hidden group cursor-pointer ${isUploadingLogo ? 'border-brand-500 bg-brand-500/10' : 'border-gray-800 hover:border-brand-500 bg-black'}`}
                                 >
                                     <input 
                                         id="team-logo-file-input"
@@ -251,13 +251,13 @@ const Teams: React.FC = () => {
                         </div>
                     </div>
                     <div className="flex justify-end gap-3 mt-6">
-                        <button 
+                        <button type="button" 
                             onClick={() => setIsCreating(false)}
                             className="px-6 py-3 rounded-xl font-bold text-gray-400 hover:text-white transition"
                         >
                             Cancel
                         </button>
-                        <button 
+                        <button type="button" 
                             onClick={handleCreateTeam}
                             disabled={creating || !newTeamName.trim()}
                             className="bg-brand-600 hover:bg-brand-500 disabled:bg-surface text-white px-8 py-3 rounded-xl font-black uppercase tracking-widest transition shadow-lg flex items-center gap-2"
@@ -278,7 +278,7 @@ const Teams: React.FC = () => {
                                     setNewTeamLogo(url);
                                     setShowPresetModal(false);
                                 }}
-                                className="relative group rounded-2xl overflow-hidden border-2 border-gray-800 hover:border-brand-500 transition-all aspect-square bg-dark"
+                                className="relative group rounded-2xl overflow-hidden border-2 border-gray-800 hover:border-brand-500 transition-colors aspect-square bg-dark"
                             >
                                 <img src={url} alt={`Preset ${index + 1}`} className="w-full h-full object-cover p-2" loading="lazy" />
                                 <div className="absolute inset-0 bg-brand-500/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">

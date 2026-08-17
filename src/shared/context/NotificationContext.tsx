@@ -174,7 +174,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
                         }`}
                     >
                         <div className="flex-grow font-bold text-sm">{toast.message}</div>
-                        <button onClick={() => setToasts(prev => prev.filter(t => t.id !== toast.id))} className="opacity-50 hover:opacity-100">
+                        <button type="button" onClick={() => setToasts(prev => prev.filter(t => t.id !== toast.id))} className="opacity-50 hover:opacity-100">
                             <X className="w-4 h-4" />
                         </button>
                     </div>

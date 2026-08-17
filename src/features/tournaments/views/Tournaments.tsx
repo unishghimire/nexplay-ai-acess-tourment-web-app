@@ -179,7 +179,7 @@ const Tournaments: React.FC = () => {
                     <button
                         key={s.id}
                         onClick={() => setStatusFilter(s.id)}
-                        className={`min-h-[44px] flex items-center gap-2 px-4 sm:px-6 py-3 sm:py-4 text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap shrink-0 ${
+                        className={`min-h-[44px] flex items-center gap-2 px-4 sm:px-6 py-3 sm:py-4 text-xs font-black uppercase tracking-widest transition-colors whitespace-nowrap shrink-0 ${
                             statusFilter === s.id
                                 ? 'text-white border-b-2 border-brand-500'
                                 : 'text-gray-500 hover:text-white'

@@ -160,7 +160,7 @@ const Dashboard: React.FC = () => {
                         <Component 
                             key={idx}
                             {...props}
-                            className="bg-card/50 p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-brand-500/50 transition-all hover:-translate-y-1 cursor-pointer group shadow-2xl flex flex-col items-center text-center gap-5"
+                            className="bg-card/50 p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-brand-500/50 transition-colors hover:-translate-y-1 cursor-pointer group shadow-2xl flex flex-col items-center text-center gap-5"
                         >
                             <div className="w-16 h-16 rounded-2xl bg-black flex items-center justify-center border border-gray-800 group-hover:bg-brand-500/10 group-hover:border-brand-500/50 transition duration-300">
                                 <item.icon className="w-7 h-7 text-brand-500" />
@@ -234,13 +234,13 @@ const Dashboard: React.FC = () => {
                                     </div>
                                 )}
                                 <div className="mt-6 sm:mt-8 flex flex-wrap gap-4 sm:gap-6 border-t border-gray-800 pt-6 sm:pt-8">
-                                    <button onClick={() => {
+                                    <button type="button" onClick={() => {
                                             navigate(`/tournaments/${t.id}`);
                                         }} className="flex items-center gap-3 text-xs font-black uppercase tracking-widest text-gray-400 hover:text-white transition touch-target">
                                         <Eye className="w-5 h-5" /> View Details
                                     </button>
                                     {isLive && t.role === 'organizer' && (
-                                        <button 
+                                        <button type="button" 
                                             onClick={() => {
                                                     handleUploadResult(t);
                                                 }}
@@ -250,7 +250,7 @@ const Dashboard: React.FC = () => {
                                         </button>
                                     )}
                                     {isCompleted && (
-                                        <button 
+                                        <button type="button" 
                                             onClick={() => {
                                                     setViewResultTournament(t);
                                                 }}

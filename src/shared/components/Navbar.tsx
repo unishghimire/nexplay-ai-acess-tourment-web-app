@@ -10,7 +10,6 @@ import MobileMenu from './navbar/MobileMenu';
 const navLinks = [
     { name: 'Home', path: '/' },
     { name: 'Games', path: '/games' },
-    { name: 'News', path: '/news' },
     { name: 'Organizations', path: '/organizations' }
 ];
 
@@ -42,7 +41,7 @@ const Navbar: React.FC = () => {
     const isActive = (path: string) => location.pathname === path;
 
     return (
-        <nav aria-label="Main navigation" className="sticky top-0 z-50 bg-dark/90 backdrop-blur-xl border-b border-gray-800 transition-all duration-200">
+        <nav aria-label="Main navigation" className="sticky top-0 z-50 bg-dark/90 backdrop-blur-xl border-b border-gray-800 transition-colors duration-200">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-[auto_1fr_auto] items-center h-16 sm:h-20 gap-2">
                     {/* Logo */}
@@ -60,7 +59,7 @@ const Navbar: React.FC = () => {
                                 <Link
                                     key={link.path}
                                     to={link.path}
-                                    className={`px-3 xl:px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-200 flex items-center whitespace-nowrap ${isActive(link.path) ? 'bg-brand-500 text-white shadow-md shadow-brand-500/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                                    className={`px-3 xl:px-5 py-2.5 rounded-full text-sm font-bold transition-colors duration-200 flex items-center whitespace-nowrap ${isActive(link.path) ? 'bg-brand-500 text-white shadow-md shadow-brand-500/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
                                 >
                                     {link.name}
                                 </Link>
@@ -82,7 +81,7 @@ const Navbar: React.FC = () => {
                             </>
                         ) : (
                             <div>
-                                <Link to="/login" className="bg-brand-500 hover:bg-brand-600 text-white h-9 px-3.5 sm:h-11 sm:px-6 flex items-center justify-center rounded-full font-black tracking-widest text-xs sm:text-sm transition-all shadow-lg hover:shadow-brand-500/25 whitespace-nowrap shrink-0">
+                                <Link to="/login" className="bg-brand-500 hover:bg-brand-600 text-white h-9 px-3.5 sm:h-11 sm:px-6 flex items-center justify-center rounded-full font-black tracking-widest text-xs sm:text-sm transition-colors shadow-lg hover:shadow-brand-500/25 whitespace-nowrap shrink-0">
                                     LOGIN
                                 </Link>
                             </div>

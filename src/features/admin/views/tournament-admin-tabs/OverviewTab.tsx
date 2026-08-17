@@ -37,9 +37,9 @@ export const OverviewTab: React.FC<TournamentAdminTabProps> = (props) => {
 
                              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                                  <h2 className="text-xl font-black uppercase tracking-tighter text-white">Tournament Controls</h2>
-                                 <button 
+                                 <button type="button" 
                                      onClick={() => window.location.reload()}
-                                     className="px-5 py-2 bg-card border border-gray-800 text-gray-500 rounded-full hover:text-white hover:border-gray-700 transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-widest"
+                                     className="px-5 py-2 bg-card border border-gray-800 text-gray-500 rounded-full hover:text-white hover:border-gray-700 transition-colors flex items-center gap-2 text-[10px] font-black uppercase tracking-widest"
                                  >
                                      <RotateCcw className="w-3 h-3" /> Refresh
                                  </button>
@@ -97,17 +97,17 @@ export const OverviewTab: React.FC<TournamentAdminTabProps> = (props) => {
                                  <div className="bg-card/50 p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border border-gray-800">
                                      <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-6">Status Control</h3>
                                      <div className="flex gap-3">
-                                         <button 
+                                         <button type="button" 
                                              onClick={() => handleUpdateStatus('live')}
                                              disabled={tournament.status === 'live'}
-                                             className="flex-1 bg-green-500/10 hover:bg-green-500/20 text-green-500 border border-green-500/20 disabled:opacity-30 disabled:cursor-not-allowed py-4 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all"
+                                             className="flex-1 bg-green-500/10 hover:bg-green-500/20 text-green-500 border border-green-500/20 disabled:opacity-30 disabled:cursor-not-allowed py-4 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-colors"
                                          >
                                              <Play className="w-3 h-3" /> Start
                                          </button>
-                                         <button 
+                                         <button type="button" 
                                              onClick={() => handleUpdateStatus('paused')}
                                              disabled={tournament.status === 'paused'}
-                                             className="flex-1 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-500 border border-yellow-500/20 disabled:opacity-30 disabled:cursor-not-allowed py-4 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all"
+                                             className="flex-1 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-500 border border-yellow-500/20 disabled:opacity-30 disabled:cursor-not-allowed py-4 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-colors"
                                          >
                                              <Pause className="w-3 h-3" /> Pause
                                          </button>
@@ -118,7 +118,7 @@ export const OverviewTab: React.FC<TournamentAdminTabProps> = (props) => {
                                      <select 
                                          value={tournament.stage || 'registration'}
                                          onChange={(e) => handleUpdateStage(e.target.value)}
-                                         className="w-full bg-dark border border-gray-800 rounded-full p-4 text-[10px] text-white font-black uppercase tracking-widest focus:border-brand-500 outline-none cursor-pointer transition-all"
+                                         className="w-full bg-dark border border-gray-800 rounded-full p-4 text-[10px] text-white font-black uppercase tracking-widest focus:border-brand-500 focus-visible:outline-none cursor-pointer transition-colors"
                                      >
                                          <option value="registration">Registration</option>
                                          <option value="group_stage">Group Stage</option>
@@ -129,7 +129,7 @@ export const OverviewTab: React.FC<TournamentAdminTabProps> = (props) => {
                                  <div className="bg-card/50 p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] border border-gray-800 sm:col-span-2 lg:col-span-1">
                                      <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-6">Quick Actions</h3>
                                      <div className="flex flex-col sm:flex-row lg:flex-col gap-3">
-                                         <button 
+                                         <button type="button" 
                                              onClick={() => {
                                                  if (tournament.groups && tournament.groups.length > 0) {
                                                      tournament.groups.forEach(g => handleGenerateGroupMatches(g.id));
@@ -137,21 +137,21 @@ export const OverviewTab: React.FC<TournamentAdminTabProps> = (props) => {
                                                      showToast('No groups to generate matches for', 'info');
                                                  }
                                              }}
-                                             className="flex-1 bg-brand-500/10 hover:bg-brand-500/20 text-brand-400 border border-brand-500/20 py-4 rounded-full text-[10px] font-black uppercase tracking-widest transition-all"
+                                             className="flex-1 bg-brand-500/10 hover:bg-brand-500/20 text-brand-400 border border-brand-500/20 py-4 rounded-full text-[10px] font-black uppercase tracking-widest transition-colors"
                                          >
                                              Generate All Matches
                                          </button>
                                          {roundStatus.complete && roundStatus.totalMatches > 0 ? (
-                                             <button 
+                                             <button type="button" 
                                                  onClick={() => setShowQualification(true)}
-                                                 className="flex-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 py-4 rounded-full text-[10px] font-black uppercase tracking-widest transition-all"
+                                                 className="flex-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 py-4 rounded-full text-[10px] font-black uppercase tracking-widest transition-colors"
                                              >
                                                  Review Qualification
                                              </button>
                                          ) : (
-                                             <button 
+                                             <button type="button" 
                                                  onClick={handleAdvanceRound}
-                                                 className="flex-1 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/20 py-4 rounded-full text-[10px] font-black uppercase tracking-widest transition-all"
+                                                 className="flex-1 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/20 py-4 rounded-full text-[10px] font-black uppercase tracking-widest transition-colors"
                                              >
                                                  Advance Stage
                                              </button>
@@ -190,7 +190,7 @@ export const OverviewTab: React.FC<TournamentAdminTabProps> = (props) => {
                                              value={gameStartGroupId}
                                              onChange={e => setGameStartGroupId(e.target.value)}
                                              aria-label="Select group for Discord announcement"
-                                             className="bg-dark border border-gray-800 rounded-full px-5 py-3 text-white text-xs font-black uppercase tracking-widest focus:border-[#5865F2] outline-none transition w-full sm:w-auto"
+                                             className="bg-dark border border-gray-800 rounded-full px-5 py-3 text-white text-xs font-black uppercase tracking-widest focus:border-[#5865F2] focus-visible:outline-none transition w-full sm:w-auto"
                                          >
                                              <option value="">All Groups</option>
                                              {tournament.groups?.map(g => (
@@ -213,7 +213,7 @@ export const OverviewTab: React.FC<TournamentAdminTabProps> = (props) => {
                                              key={btn.action}
                                              onClick={() => handleDiscord(btn.action)}
                                              disabled={discordSending !== null}
-                                             className={`flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-2xl border font-black text-[10px] uppercase tracking-widest transition-all disabled:opacity-50 disabled:cursor-not-allowed ${btn.color}`}
+                                             className={`flex flex-col items-center justify-center gap-2 py-4 px-3 rounded-2xl border font-black text-[10px] uppercase tracking-widest transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${btn.color}`}
                                          >
                                              {discordSending === btn.action ? (
                                                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />

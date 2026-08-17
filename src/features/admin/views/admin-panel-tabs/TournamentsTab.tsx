@@ -20,7 +20,7 @@ export const TournamentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                     placeholder="Search tournaments..." 
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="bg-dark border border-slate-700 rounded-lg pl-10 pr-4 py-2.5 min-h-[44px] text-white text-sm focus:border-brand-500 outline-none w-full sm:w-64"
+                                    className="bg-dark border border-slate-700 rounded-lg pl-10 pr-4 py-2.5 min-h-[44px] text-white text-sm focus:border-brand-500 focus-visible:outline-none w-full sm:w-64"
                                 />
                             </div>
                         </div>
@@ -46,23 +46,23 @@ export const TournamentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                                     {t.status}
                                                 </span>
                                                 <div className="flex gap-1">
-                                                    <button 
+                                                    <button type="button" 
                                                         onClick={() => handleViewParticipants(t)}
-                                                        className="p-2.5 min-w-[44px] min-h-[44px] bg-brand-600/20 hover:bg-brand-600 text-brand-500 hover:text-white rounded-lg transition-all border border-brand-500/30"
+                                                        className="p-2.5 min-w-[44px] min-h-[44px] bg-brand-600/20 hover:bg-brand-600 text-brand-500 hover:text-white rounded-lg transition-colors border border-brand-500/30"
                                                         title="View Participants"
                                                     >
                                                         <Users className="w-4 h-4" />
                                                     </button>
-                                                    <button 
+                                                    <button type="button" 
                                                         onClick={() => handleEditTournament(t)}
-                                                        className="p-2.5 min-w-[44px] min-h-[44px] bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white rounded-lg transition-all border border-blue-500/30"
+                                                        className="p-2.5 min-w-[44px] min-h-[44px] bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white rounded-lg transition-colors border border-blue-500/30"
                                                         title="Edit Tournament"
                                                     >
                                                         <Edit className="w-4 h-4" />
                                                     </button>
-                                                    <button 
+                                                    <button type="button" 
                                                         onClick={() => handleToggleFeatured(t)}
-                                                        className={`p-1.5 rounded-lg transition-all border ${
+                                                        className={`p-1.5 rounded-lg transition-colors border ${
                                                             t.isFeatured 
                                                                 ? 'bg-yellow-600/20 text-yellow-500 border-yellow-500/30 hover:bg-yellow-600 hover:text-white' 
                                                                 : 'bg-surface/20 text-gray-400 border-gray-500/30 hover:bg-surface hover:text-white'
@@ -72,9 +72,9 @@ export const TournamentsTab: React.FC<AdminPanelTabProps> = (props) => {
                                                         <Megaphone className="w-3 h-3" />
                                                     </button>
                                                     {t.status !== 'cancelled' && t.status !== 'completed' && (
-                                                        <button 
+                                                        <button type="button" 
                                                             onClick={() => handleCancelTournament(t)}
-                                                            className="p-2.5 min-w-[44px] min-h-[44px] bg-red-600/20 hover:bg-red-600 text-red-500 hover:text-white rounded-lg transition-all border border-red-500/30"
+                                                            className="p-2.5 min-w-[44px] min-h-[44px] bg-red-600/20 hover:bg-red-600 text-red-500 hover:text-white rounded-lg transition-colors border border-red-500/30"
                                                             title="Cancel Tournament"
                                                         >
                                                             <X className="w-4 h-4" />
