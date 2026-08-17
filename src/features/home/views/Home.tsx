@@ -196,6 +196,33 @@ const Home: React.FC = () => {
                     },
                     "query-input": "required name=search_term_string",
                 },
+            }, {
+                "@context": "https://schema.org",
+                "@type": "WebApplication",
+                name: "NexPlay",
+                url: "https://www.nexplayorg.app",
+                applicationCategory: "GameApplication",
+                operatingSystem: "Web Browser",
+                description: "Nepal's premier esports tournament and scrim platform. Host and compete in PUBG Mobile, Free Fire, Valorant, and Mobile Legends tournaments with secure wallets, live brackets, and national rankings.",
+                offers: {
+                    "@type": "Offer",
+                    price: "0",
+                    priceCurrency: "NPR",
+                    description: "Free to join. Premium tournaments may have entry fees.",
+                },
+                areaServed: {
+                    "@type": "Country",
+                    name: "Nepal",
+                },
+                featureList: [
+                    "Esports tournament hosting and registration",
+                    "Daily scrim matchmaking",
+                    "Secure wallet-based entry with escrow",
+                    "Real-time national leaderboard rankings",
+                    "Team management and roster tracking",
+                    "Admin-refereed tournament brackets",
+                    "Match result tracking and history",
+                ],
             }]}
         />
         <div className="animate-fade-in space-y-8 sm:space-y-12 md:space-y-16 pb-12 sm:pb-20 relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
