@@ -30,8 +30,14 @@ service cloud.firestore {
     // The Firestore-doc fallback was removed. Migration: run the
     // /api/admin/sync-claims endpoint once BEFORE deploying this ruleset so
     // existing doc-role admins/orgs are migrated to claims.
+    // ponytail: super-admin email allowlist — grants admin without custom claims.
+    // Ceiling: if this email is compromised, they have full admin. Upgrade path:
+    // set custom claims via /api/admin/bootstrap, then remove this check.
     function isAdmin() {
-      return isSignedIn() && request.auth.token.role == 'admin';
+      return isSignedIn() && (
+        request.auth.token.role == 'admin' ||
+        request.auth.token.email == 'nexplayorg@gmail.com'
+      );
     }
     function isOrganizer() {
       return isSignedIn() && (
