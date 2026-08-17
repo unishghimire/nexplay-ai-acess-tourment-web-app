@@ -284,11 +284,34 @@ service cloud.firestore {
     // ═══════════════════════════════════════════════════════════════
     // SCRIMS
     // ═══════════════════════════════════════════════════════════════
+    // AUD-013: scrim credentials must NOT be stored in the public scrim doc.
+    // Credentials live in the protected credentials subcollection below.
     match /scrims/{scrimId} {
       allow read:   if true;
-      allow create: if isOrganizer() && (incoming().hostUid == request.auth.uid || incoming().orgId == request.auth.uid || isAdmin());
-      allow update: if isAdmin() || (isOrganizer() && (existing().hostUid == request.auth.uid || existing().orgId == request.auth.uid));
+      allow create: if isOrganizer() && (
+        incoming().hostUid == request.auth.uid ||
+        incoming().orgId == request.auth.uid ||
+        isAdmin()
+      ) && !(('roomId' in incoming()) || ('roomPassword' in incoming()) || ('roomPass' in incoming()));
+      allow update: if isAdmin() || (isOrganizer() && (existing().hostUid == request.auth.uid || existing().orgId == request.auth.uid))
+        // Reject any update that tries to write credential fields to the public doc
+        && !(request.resource.data.roomId.exists() || request.resource.data.roomPassword.exists() || request.resource.data.roomPass.exists());
       allow delete: if isAdmin() || (isOrganizer() && (existing().hostUid == request.auth.uid || existing().orgId == request.auth.uid));
+    }
+
+    // AUD-013: protected credentials subcollection for scrims (same pattern as tournaments)
+    match /scrims/{scrimId}/credentials/{credId} {
+      allow get: if isSignedIn() && isValidId(scrimId) && (
+        isAdmin() ||
+        (exists(/databases/$(database)/documents/scrims/$(scrimId)) &&
+         (get(/databases/$(database)/documents/scrims/$(scrimId)).data.hostUid == request.auth.uid ||
+          get(/databases/$(database)/documents/scrims/$(scrimId)).data.orgId == request.auth.uid))
+      );
+      allow list: if false; // ponytail: no listing — always fetch by known doc ID
+      allow write: if isAdmin() ||
+        (isOrganizer() && exists(/databases/$(database)/documents/scrims/$(scrimId)) &&
+         (get(/databases/$(database)/documents/scrims/$(scrimId)).data.hostUid == request.auth.uid ||
+          get(/databases/$(database)/documents/scrims/$(scrimId)).data.orgId == request.auth.uid));
     }
 
     // ═══════════════════════════════════════════════════════════════

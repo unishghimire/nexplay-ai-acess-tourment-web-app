@@ -101,8 +101,9 @@ export default function ScrimCreateModal({
           return new Date(startDate.getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16);
         })(),
         bannerUrl: editScrim.bannerUrl || '',
-        roomId: editScrim.roomId || '',
-        roomPass: editScrim.roomPass || '',
+        // AUD-013: credentials no longer on public doc — will be fetched via credentials subcollection
+        roomId: '',
+        roomPass: '',
         streamUrl: editScrim.ytLink || editScrim.streamUrl || '',
         rules: editScrim.rules || '',
       });
@@ -219,7 +220,7 @@ export default function ScrimCreateModal({
           await updateDoc(doc(db, 'scrims', editScrim.id), scrimPayload).catch(() => {});
         }
         if (formData.roomId || formData.roomPass) {
-          await setDoc(doc(db, 'tournaments', editScrim.id, 'credentials', 'main'), {
+          await setDoc(doc(db, 'scrims', editScrim.id, 'credentials', 'main'), {
             roomId: formData.roomId,
             roomPass: formData.roomPass,
           }, { merge: true }).catch(() => {});
@@ -239,7 +240,7 @@ export default function ScrimCreateModal({
         }).catch(() => {});
 
         if (formData.roomId || formData.roomPass) {
-          await setDoc(doc(db, 'tournaments', docRef.id, 'credentials', 'main'), {
+          await setDoc(doc(db, 'scrims', docRef.id, 'credentials', 'main'), {
             roomId: formData.roomId,
             roomPass: formData.roomPass,
           }).catch(() => {});

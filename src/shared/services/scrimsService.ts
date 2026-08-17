@@ -5,6 +5,7 @@ import {
     getDoc,
     getDocs,
     updateDoc,
+    setDoc,
     query,
     where,
     orderBy,
@@ -135,11 +136,10 @@ export function mapDocToScrim(id: string, data: Record<string, any>): Scrim {
             platform: data.requirements?.platform ?? data.platform ?? 'mobile',
             customRules: data.requirements?.customRules ?? data.customRules ?? [],
         },
-        roomDetails: data.roomDetails || (data.roomId ? {
-            roomId: data.roomId,
-            roomPassword: data.roomPassword || data.roomPass || '',
+        // AUD-013: credentials are no longer in the public doc — only keep streamUrl
+        roomDetails: {
             streamUrl: data.streamUrl || data.ytLink || '',
-        } : undefined),
+        } as RoomDetails,
         bannerUrl: data.bannerUrl || '',
         createdAt: data.createdAt || new Date().toISOString(),
         updatedAt: data.updatedAt || new Date().toISOString(),
@@ -201,11 +201,10 @@ export const ScrimsService = {
                 platform: data.requirements?.platform || 'mobile',
                 customRules: Array.isArray(data.requirements?.customRules) ? data.requirements?.customRules : [],
             },
-            roomDetails: data.roomDetails ? {
-                roomId: data.roomDetails.roomId || '',
-                roomPassword: data.roomDetails.roomPassword || '',
-                streamUrl: data.roomDetails.streamUrl || '',
-            } : null,
+            // AUD-013: credentials must NOT be stored in the public scrim doc.
+            // Only streamUrl is public — roomId/roomPassword go to credentials subcollection.
+            ytLink: data.roomDetails?.streamUrl || '',
+            streamUrl: data.roomDetails?.streamUrl || '',
             bannerUrl: data.bannerUrl || '',
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
@@ -213,12 +212,18 @@ export const ScrimsService = {
 
         try {
             const docRef = await addDoc(collection(db, SCRIMS_COLLECTION), scrimPayload);
+            // AUD-013: write credentials to protected subcollection, not public doc
+            if (data.roomDetails?.roomId || data.roomDetails?.roomPassword) {
+                await setDoc(doc(db, SCRIMS_COLLECTION, docRef.id, 'credentials', 'main'), {
+                    roomId: data.roomDetails.roomId || '',
+                    roomPass: data.roomDetails.roomPassword || '',
+                });
+            }
             return {
                 id: docRef.id,
                 ...scrimPayload,
                 createdAt: new Date(),
                 updatedAt: new Date(),
-                roomDetails: scrimPayload.roomDetails || undefined,
             } as Scrim;
         } catch (error: any) {
             console.error('Error creating scrim in Firestore:', error);
@@ -252,20 +257,22 @@ export const ScrimsService = {
             updatedAt: serverTimestamp(),
         };
 
-        if (roomDetails) {
-            updatePayload.roomDetails = {
-                roomId: roomDetails.roomId || '',
-                roomPassword: roomDetails.roomPassword || '',
-                streamUrl: roomDetails.streamUrl || '',
-            };
-            // Also store top-level roomId and roomPass for backwards compatibility
-            updatePayload.roomId = roomDetails.roomId || '';
-            updatePayload.roomPassword = roomDetails.roomPassword || '';
+        // AUD-013: only streamUrl goes to the public doc — credentials go to subcollection
+        if (roomDetails?.streamUrl) {
+            updatePayload.ytLink = roomDetails.streamUrl;
+            updatePayload.streamUrl = roomDetails.streamUrl;
         }
 
         try {
             const docRef = doc(db, SCRIMS_COLLECTION, scrimId);
             await updateDoc(docRef, updatePayload);
+            // Write credentials to protected subcollection
+            if (roomDetails?.roomId || roomDetails?.roomPassword) {
+                await setDoc(doc(db, SCRIMS_COLLECTION, scrimId, 'credentials', 'main'), {
+                    roomId: roomDetails.roomId || '',
+                    roomPass: roomDetails.roomPassword || '',
+                }, { merge: true });
+            }
         } catch (error: any) {
             console.error(`Error updating scrim status for ${scrimId}:`, error);
             throw new Error(`Failed to update scrim status: ${error?.message || 'Database update error'}`);

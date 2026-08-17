@@ -63,7 +63,7 @@ export default function ScrimDetailPage() {
         }
         setScrim(data);
         setScrimCollection('tournaments');
-        fetchRoomCredentials(id).then(credentials => {
+        fetchRoomCredentials(id, undefined, 'tournaments').then(credentials => {
           setRoomId(credentials?.roomId || '');
           setRoomPass(credentials?.roomPass || '');
         }).catch(e => {
@@ -89,6 +89,13 @@ export default function ScrimDetailPage() {
             }
             setScrim(data);
             setScrimCollection('scrims');
+            // AUD-013: fetch credentials from scrims subcollection (not tournaments)
+            fetchRoomCredentials(id, undefined, 'scrims').then(credentials => {
+                setRoomId(credentials?.roomId || '');
+                setRoomPass(credentials?.roomPass || '');
+            }).catch(e => {
+                console.warn('Room credentials fetch warning:', e);
+            });
             setStreamUrl((data as any).ytLink || (data as any).streamUrl || '');
           } else {
             setScrim(null);

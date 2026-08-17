@@ -145,7 +145,10 @@ const OrganizerPanel: React.FC = () => {
 
   const handleOpenRoomDispatch = useCallback(async (target: any) => {
     setRoomDispatchTarget(target);
-    const credentials = await fetchRoomCredentials(target.id || target.tournamentId);
+    // AUD-013: scrims in the 'scrims' collection need credentials from there, not 'tournaments'
+    const targetId = target.id || target.tournamentId;
+    const isScrim = target.isScrim === true || target.matchType === 'scrims' || target.type === 'scrim';
+    const credentials = await fetchRoomCredentials(targetId, undefined, isScrim ? 'scrims' : 'tournaments');
     setRoomId(credentials?.roomId || '');
     setRoomPass(credentials?.roomPass || '');
     setStreamUrl(target?.ytLink || target?.streamUrl || '');
