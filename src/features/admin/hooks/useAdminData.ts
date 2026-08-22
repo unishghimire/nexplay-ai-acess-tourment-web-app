@@ -998,11 +998,11 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
     };
 
     const toggleOrgForm = async () => {
-        if (!siteSettings) return;
         try {
-            const newValue = !siteSettings.isOrgFormOpen;
-            await updateDoc(doc(db, 'settings', 'site'), { isOrgFormOpen: newValue });
-            setSiteSettings(prev => prev ? { ...prev, isOrgFormOpen: newValue } : null);
+            const currentVal = siteSettings?.isOrgFormOpen ?? true;
+            const newValue = !currentVal;
+            await setDoc(doc(db, 'settings', 'site'), { isOrgFormOpen: newValue }, { merge: true });
+            setSiteSettings(prev => ({ ...(prev || {}), isOrgFormOpen: newValue } as any));
             showToast(`Organizer applications ${newValue ? 'opened' : 'closed'}`, 'success');
         } catch (error) {
             console.error("Error toggling org form:", error);

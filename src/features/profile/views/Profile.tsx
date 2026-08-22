@@ -834,7 +834,7 @@ const Profile: React.FC = () => {
                     </div>
 
                     {/* Organizer Application */}
-                    {profile.role === 'player' && (profile.orgStatus === 'pending' || profile.orgStatus === 'rejected' || !profile.orgStatus) && siteSettings?.isOrgFormOpen && (
+                    {profile.role === 'player' && (profile.orgStatus === 'pending' || profile.orgStatus === 'rejected' || !profile.orgStatus) && (siteSettings?.isOrgFormOpen ?? true) && (
                         <div className="pt-8 border-t border-gray-800">
                             <div className="bg-brand-500/5 p-6 rounded-2xl border border-brand-500/20">
                                 <div className="flex items-center gap-3 mb-4">
@@ -921,7 +921,7 @@ const Profile: React.FC = () => {
                             <X className="w-4 h-4" /> Application Rejected. You can apply again later.
                         </div>
                     )}
-                    {profile.orgStatus === 'rejected' && siteSettings?.isOrgFormOpen && (
+                    {profile.orgStatus === 'rejected' && (siteSettings?.isOrgFormOpen ?? true) && (
                         <button type="button" 
                             onClick={() => {
                                 // Reset application state to allow re-applying

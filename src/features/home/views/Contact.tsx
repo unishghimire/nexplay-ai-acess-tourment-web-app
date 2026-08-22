@@ -115,7 +115,7 @@ const Contact: React.FC = () => {
             </div>
 
             {/* Organization Application Section */}
-            {settings?.isOrgFormOpen ? (
+            {(settings?.isOrgFormOpen ?? true) ? (
                 <div className="bg-gradient-to-br from-brand-900/20 to-dark p-5 sm:p-8 rounded-2xl border border-brand-500/20 shadow-2xl relative overflow-hidden group">
                     <div className="absolute -right-20 -top-20 w-64 h-64 bg-brand-500/5 rounded-full blur-3xl group-hover:bg-brand-500/10 transition-colors"></div>
                     
