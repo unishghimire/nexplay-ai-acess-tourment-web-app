@@ -144,13 +144,22 @@ const ResultUploadModal: React.FC<ResultUploadModalProps> = ({ isOpen, onClose, 
                 if (isNaN(res.score)) {
                     showToast('Score must be a number for all leaderboard entries.', 'error');
                     return;
+        // Validate prize pool allocation for manual payout
+        if (activeTab === 'manual' && tournament.prizePool && tournament.prizePool > 0) {
+            const totalAllocated = winners.reduce((sum, w) => sum + (Number(w.amount) || 0), 0);
+            if (totalAllocated !== tournament.prizePool) {
+                if (totalAllocated > tournament.prizePool) {
+                    showToast(`Total distributed prizes (NPR ${totalAllocated}) exceed tournament prize pool (NPR ${tournament.prizePool})`, 'error');
+                } else {
+                    showToast(`Total distributed prizes (NPR ${totalAllocated}) must equal tournament prize pool (NPR ${tournament.prizePool}). Remaining: NPR ${tournament.prizePool - totalAllocated}`, 'error');
                 }
+                return;
             }
         }
 
         setLoading(true);
         try {
-            const validWinners = winners.filter(w => w.uid !== '').map(({ uid, amount, rank, username }) => ({ userId: uid, prize: amount, rank, username }));
+            const validWinners = winners.filter(w => w.uid !== '').map(({ uid, amount, rank, username }) => ({ userId: uid, prize: Number(amount) || 0, rank, username }));
 
             const token = await auth.currentUser?.getIdToken();
             if (!token) throw new Error('Authentication required');
@@ -323,6 +332,33 @@ const ResultUploadModal: React.FC<ResultUploadModalProps> = ({ isOpen, onClose, 
                                     <Plus className="w-3 h-3" /> Add Winner
                                 </button>
                             </div>
+
+                            {/* Live Prize Allocation Summary */}
+                            {typeof tournament.prizePool === 'number' && tournament.prizePool > 0 && (() => {
+                                const totalAllocated = winners.reduce((sum, w) => sum + (Number(w.amount) || 0), 0);
+                                const isMatched = totalAllocated === tournament.prizePool;
+                                const isExceeded = totalAllocated > tournament.prizePool;
+                                return (
+                                    <div className={`p-3.5 rounded-xl border flex items-center justify-between text-xs font-bold ${
+                                        isMatched
+                                            ? 'bg-green-500/10 border-green-500/30 text-green-400'
+                                            : isExceeded
+                                            ? 'bg-red-500/10 border-red-500/30 text-red-400'
+                                            : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                                    }`}>
+                                        <span className="uppercase tracking-wider">
+                                            Prize Pool: NPR {tournament.prizePool}
+                                        </span>
+                                        <span className="font-black">
+                                            {isMatched
+                                                ? `✓ 100% Allocated (NPR ${totalAllocated})`
+                                                : isExceeded
+                                                ? `Exceeds pool by NPR ${totalAllocated - tournament.prizePool}`
+                                                : `Allocated: NPR ${totalAllocated} (Remaining: NPR ${tournament.prizePool - totalAllocated})`}
+                                        </span>
+                                    </div>
+                                );
+                            })()}
 
                             <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                                 {winners.map((winner, index) => (

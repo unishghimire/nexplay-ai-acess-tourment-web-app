@@ -121,11 +121,30 @@ const ScrimsContent: React.FC = () => {
         fetchScrims();
     }, [fetchScrims]);
 
+    // Extract dynamic unique games list from fetched scrims + standard titles
+    const availableGames = React.useMemo(() => {
+        const standardGames = ['PUBG Mobile', 'Free Fire', 'Mobile Legends', 'Valorant', 'MLBB'];
+        const fromScrims = scrims.map(s => s.game).filter(Boolean);
+        return Array.from(new Set(['All', ...standardGames, ...fromScrims]));
+    }, [scrims]);
+
+    const normalizeGameStr = (g?: string) => {
+        if (!g) return '';
+        const lower = g.trim().toLowerCase();
+        if (lower === 'mlbb' || lower === 'mobile legends') return 'mlbb';
+        if (lower === 'pubg' || lower === 'pubg mobile') return 'pubg';
+        return lower;
+    };
+
     const filteredScrims = scrims.filter(s => {
         const titleMatch = s.title ? s.title.toLowerCase().includes(searchTerm.toLowerCase()) : false;
         const gameMatch = s.game ? s.game.toLowerCase().includes(searchTerm.toLowerCase()) : false;
         const matchesSearch = !searchTerm || titleMatch || gameMatch;
-        const matchesGame = filterGame === 'All' || s.game === filterGame;
+
+        const matchesGame = filterGame === 'All' || 
+            normalizeGameStr(s.game) === normalizeGameStr(filterGame) ||
+            s.game === filterGame;
+
         const matchesMode = filterMode === 'All' || s.type === filterMode;
         return matchesSearch && matchesGame && matchesMode;
     });
@@ -204,11 +223,11 @@ const ScrimsContent: React.FC = () => {
                             onChange={(e) => setFilterGame(e.target.value)}
                             className="w-full bg-black border border-gray-800 rounded-2xl py-4 pl-12 pr-6 text-white focus:border-brand-500 focus-visible:outline-none transition-colors shadow-xl font-bold appearance-none"
                         >
-                            <option value="All">All Games</option>
-                            <option value="PUBG Mobile">PUBG Mobile</option>
-                            <option value="Free Fire">Free Fire</option>
-                            <option value="Mobile Legends">Mobile Legends</option>
-                            <option value="Valorant">Valorant</option>
+                            {availableGames.map(game => (
+                                <option key={game} value={game}>
+                                    {game === 'All' ? 'All Games' : game}
+                                </option>
+                            ))}
                         </select>
                     </div>
                 </div>
