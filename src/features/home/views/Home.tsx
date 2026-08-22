@@ -60,7 +60,6 @@ const Home: React.FC = () => {
     const [slides, setSlides] = useState<Slide[]>([]);
     const [recentResults, setRecentResults] = useState<Tournament[]>([]);
     const [loading, setLoading] = useState(true);
-    const [totalPlayersCount, setTotalPlayersCount] = useState(0);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -125,18 +124,6 @@ const Home: React.FC = () => {
                 setRecentResults(resultsData);
             } catch (error) {
                 console.warn("Could not fetch results:", error);
-            }
-
-            // Fetch active players count for live analytics metadata.
-            // Never read the `users` collection (PII: contact/wallet/XP data) for a
-            // cosmetic number — sample public profiles instead.
-            try {
-                const usersSnap = await getDocs(query(collection(db, 'users_public'), limit(100)));
-                if (!usersSnap.empty) {
-                    setTotalPlayersCount(usersSnap.size * 12);
-                }
-            } catch (e) {
-                console.warn("Analytics fetch failed, using fallback values", e);
             }
 
             setLoading(false);

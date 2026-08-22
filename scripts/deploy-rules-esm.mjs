@@ -20,20 +20,27 @@ admin.initializeApp({
 async function deploy() {
   try {
     const rulesPath = join(__dirname, '..', 'firestore.rules');
-    const rulesSource = readFileSync(rulesPath, 'utf8');
+    // Normalize line endings to LF (Firebase REST API is picky about CRLF)
+    const rulesSource = readFileSync(rulesPath, 'utf8').replace(/\r\n/g, '\n');
 
-    console.log(`Deploying firestore.rules to project: ${serviceAccount.project_id}...`);
+    console.log(`Deploying firestore.rules (${rulesSource.length} bytes) to: ${serviceAccount.project_id}...`);
 
     const securityRules = admin.securityRules();
-    
-    // createRulesetFromSource expects a RulesFile object directly
-    const ruleset = await securityRules.createRulesetFromSource(rulesSource);
+
+    // Correct API: createRuleset takes a single RulesFile object {name, content}
+    const ruleset = await securityRules.createRuleset({
+      name: 'firestore.rules',
+      content: rulesSource
+    });
 
     console.log(`Created ruleset: ${ruleset.name}`);
-    await securityRules.releaseFirestoreRuleset(ruleset.name);
+
+    // Release the ruleset to Firestore
+    await securityRules.releaseFirestoreRuleset(ruleset);
     console.log(`✅ Successfully deployed Firestore rules to ${serviceAccount.project_id}!`);
   } catch (error) {
     console.error('❌ ERROR:', error.message || error);
+    if (error.errorInfo) console.error('Firebase error info:', JSON.stringify(error.errorInfo));
     process.exit(1);
   }
 }

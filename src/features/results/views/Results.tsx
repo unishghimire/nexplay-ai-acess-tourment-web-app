@@ -262,9 +262,9 @@ const Results: React.FC = () => {
                                         <div className="flex items-center gap-2 text-[10px] text-gray-500 font-black uppercase tracking-widest">
                                             <Calendar className="w-4 h-4" /> {formatDate(t.startTime)}
                                         </div>
-                                        <button type="button" className="text-brand-500 group-hover:text-white transition-colors flex items-center gap-2 text-xs font-black uppercase tracking-widest">
+                                        <span className="text-brand-500 group-hover:text-white transition-colors flex items-center gap-2 text-xs font-black uppercase tracking-widest">
                                             Details <ChevronRight className="w-4 h-4" />
-                                        </button>
+                                        </span>
                                     </div>
                                 </div>
                             </div>

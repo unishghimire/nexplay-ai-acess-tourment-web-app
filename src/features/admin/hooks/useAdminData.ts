@@ -2,7 +2,10 @@ import { useState, useEffect } from 'react';
 import { collection, query, where, getDocs, doc, updateDoc, deleteDoc, orderBy, limit, setDoc, serverTimestamp, getDoc, writeBatch, Timestamp } from 'firebase/firestore';
 import { db, auth } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
-import { Transaction, UserProfile, Slide, PromoCode, Game, PaymentMethod, PaymentCategory, SiteSettings, OrgApplication, Tournament, TournamentEarning } from '../../../shared/types/types';
+import { Transaction, UserProfile, Slide, PromoCode, Game, PaymentMethod, PaymentCategory, SiteSettings, OrgApplication, Tournament, TournamentEarning, SubscriptionPlan } from '../../../shared/types/types';
+import { GameScoringConfig } from '../../../shared/types/scoring';
+import { DEFAULT_BANNER, NEXPLAY_LOGO } from '../../../shared/constants/constants';
+import { ImageUploader } from '../../../shared/components/ImageUploader';
 import { formatCurrency, formatDate, formatGameName, toDateSafe } from '../../../shared/utils/utils';
 import { NotificationService } from '../../../shared/services/NotificationService';
 import { useInvisibleImage } from '../../../shared/hooks/useInvisibleImage';
@@ -606,7 +609,8 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
                     await fetch('/api/admin/set-claims', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                        body: JSON.stringify({ uid: app.userId, role: 'organizer' }) });
+                        body: JSON.stringify({ uid: app.userId, role: 'player' }),
+                    });
                 }
             } catch (claimsErr) {
                 console.error('Failed to sync custom claims for org approval:', claimsErr);

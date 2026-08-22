@@ -12,7 +12,7 @@ import { formatDate, timeAgo, formatCurrency } from '../../../shared/utils/utils
 const PublicProfile: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { user, profile: currentUserProfile } = useAuth();
     const { showToast } = useNotification();
     
     const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -126,7 +126,7 @@ const PublicProfile: React.FC = () => {
                 await addDoc(collection(db, 'notifications'), {
                     userId: id,
                     title: 'New Follower',
-                    message: `${user.username} is now following you`,
+                    message: `${currentUserProfile?.username || user?.username || 'A user'} is now following you`,
                     type: 'info',
                     read: false,
                     link: `/user/${user.uid}`,

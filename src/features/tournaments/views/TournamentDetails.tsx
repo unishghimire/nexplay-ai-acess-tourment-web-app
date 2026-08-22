@@ -766,7 +766,7 @@ export default function TournamentDetails() {
                     )}
 
                     {/* Related Tournaments */}
-                    ({relatedTournaments.length > 0 && (
+                    {relatedTournaments.length > 0 && (
                         <div className="space-y-6 pt-8 border-t border-gray-800/50">
                             <div className="flex justify-between items-center">
                                 <button type="button" onClick={() => navigate('/tournaments')} className="text-xs font-black text-brand-500 uppercase tracking-widest hover:text-brand-400 transition-colors flex items-center gap-1">

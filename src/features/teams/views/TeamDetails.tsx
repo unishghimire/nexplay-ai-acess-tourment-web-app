@@ -163,7 +163,7 @@ const TeamDetails: React.FC = () => {
             await addDoc(collection(db, 'team_activity'), {
                 teamId: team.id,
                 userId: user.uid,
-                userName: user.username,
+                userName: profile?.username || user?.username || 'User',
                 action,
                 details,
                 createdAt: serverTimestamp()
