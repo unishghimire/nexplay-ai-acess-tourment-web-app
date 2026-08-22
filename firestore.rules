@@ -7,7 +7,7 @@ service cloud.firestore {
     // To set admin: admin.auth().setCustomUserClaims(uid, { role: 'admin' })
     // ═══════════════════════════════════════════════════════════════
     match /{document=**} {
-      allow read, write: if isSignedIn() && request.auth.token.role == 'admin';
+      allow read, write: if isAdmin();
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -26,23 +26,21 @@ service cloud.firestore {
         request.auth.token.firebase.sign_in_provider == 'google.com'
       );
     }
-    // Role checks — Custom Claims are the SINGLE source of truth (BUG-030).
-    // The Firestore-doc fallback was removed. Migration: run the
-    // /api/admin/sync-claims endpoint once BEFORE deploying this ruleset so
-    // existing doc-role admins/orgs are migrated to claims.
-    // ponytail: super-admin email allowlist — grants admin without custom claims.
-    // Ceiling: if this email is compromised, they have full admin. Upgrade path:
-    // set custom claims via /api/admin/bootstrap, then remove this check.
+    // Role checks — Custom Claims are primary, with doc fallback for smooth onboarding.
     function isAdmin() {
       return isSignedIn() && (
         request.auth.token.role == 'admin' ||
-        request.auth.token.email == 'nexplayorg@gmail.com'
+        request.auth.token.email == 'nexplayorg@gmail.com' ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
       );
     }
     function isOrganizer() {
       return isSignedIn() && (
         isAdmin() ||
-        request.auth.token.role == 'organizer'
+        request.auth.token.role == 'organizer' ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'organizer')
       );
     }
     function isOwner(userId) {

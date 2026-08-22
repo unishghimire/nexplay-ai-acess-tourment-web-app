@@ -350,13 +350,30 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
             if (savedTxTo) setTxDateTo(savedTxTo);
 
             // Log any failures for debugging
-            const failures = results.filter(r => r.status === 'rejected');
+            const failures = results
+                .map((r, i) => ({ index: i, result: r }))
+                .filter(item => item.result.status === 'rejected');
+
             if (failures.length > 0) {
-                console.warn('Admin data: ' + failures.length + ' queries failed (loaded partial data)');
+                console.warn(`Admin data: ${failures.length} of ${results.length} queries failed`, failures.map(f => ({
+                    queryIndex: f.index,
+                    reason: (f.result as PromiseRejectedResult).reason
+                })));
+
+                // Check if failures are permission errors; if so, trigger background claim sync
+                const isPermissionError = failures.some(f => {
+                    const errStr = String((f.result as PromiseRejectedResult).reason || '');
+                    return errStr.includes('permission-denied') || errStr.includes('Permission');
+                });
+
+                if (isPermissionError) {
+                    auth.currentUser?.getIdToken(true).catch(() => {});
+                }
+
                 if (failures.length === results.length) {
-                    showToast('Failed to load admin data', 'error');
+                    showToast('Failed to load admin data. Please refresh or check admin permissions.', 'error');
                 } else {
-                    showToast('Some admin data failed to load (' + failures.length + ' errors)', 'warning');
+                    showToast(`Some admin data failed to load (${failures.length} errors)`, 'warning');
                 }
             }
         };
