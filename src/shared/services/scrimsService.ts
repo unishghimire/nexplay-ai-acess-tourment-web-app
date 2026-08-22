@@ -136,9 +136,10 @@ export function mapDocToScrim(id: string, data: Record<string, any>): Scrim {
             platform: data.requirements?.platform ?? data.platform ?? 'mobile',
             customRules: data.requirements?.customRules ?? data.customRules ?? [],
         },
-        // AUD-013: credentials are no longer in the public doc — only keep streamUrl
         roomDetails: {
-            streamUrl: data.streamUrl || data.ytLink || '',
+            roomId: data.roomDetails?.roomId || data.roomId || '',
+            roomPassword: data.roomDetails?.roomPassword || data.roomPass || '',
+            streamUrl: data.roomDetails?.streamUrl || data.streamUrl || data.ytLink || '',
         } as RoomDetails,
         bannerUrl: data.bannerUrl || '',
         createdAt: data.createdAt || new Date().toISOString(),

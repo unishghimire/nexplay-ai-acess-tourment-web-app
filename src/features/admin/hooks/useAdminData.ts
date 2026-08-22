@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { collection, query, where, getDocs, doc, updateDoc, deleteDoc, orderBy, limit, setDoc, serverTimestamp, getDoc, writeBatch, Timestamp } from 'firebase/firestore';
 import { db, auth } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
-import { Transaction, UserProfile, Slide, PromoCode, Game, PaymentMethod, PaymentCategory, SiteSettings, OrgApplication, Tournament, TournamentEarning, SubscriptionPlan } from '../../../shared/types/types';
+import { Transaction, UserProfile, Slide, PromoCode, Game, PaymentMethod, PaymentCategory, SiteSettings, OrgApplication, Tournament, TournamentEarning } from '../../../shared/types/types';
 import { GameScoringConfig } from '../../../shared/types/scoring';
 import { DEFAULT_BANNER, NEXPLAY_LOGO } from '../../../shared/constants/constants';
 import { ImageUploader } from '../../../shared/components/ImageUploader';
@@ -10,9 +10,6 @@ import { formatCurrency, formatDate, formatGameName, toDateSafe } from '../../..
 import { NotificationService } from '../../../shared/services/NotificationService';
 import { useInvisibleImage } from '../../../shared/hooks/useInvisibleImage';
 import { MediaCategory, deleteImage } from '../../../shared/services/mediaService';
-import { GameScoringConfig } from '../../../shared/types/scoring';
-import { DEFAULT_BANNER, NEXPLAY_LOGO } from '../../../shared/constants/constants';
-import { ImageUploader } from '../../../shared/components/ImageUploader';
 
 export function useAdminData(showToast: (message: string, type: 'success' | 'error' | 'info' | 'warning') => void) {
     const { profile } = useAuth();
