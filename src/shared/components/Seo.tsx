@@ -36,8 +36,14 @@ export const Seo: React.FC<SeoProps> = ({
         <Helmet>
             <title>{title}</title>
             <meta name="description" content={description} />
-            <meta name="robots" content={robotsContent} />
             {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
+
+            {/* Favicons & Icons for Googlebot-Favicon */}
+            <link rel="icon" type="image/png" sizes="512x512" href={`${BASE_URL}/logo.png`} />
+            <link rel="icon" type="image/png" sizes="192x192" href={`${BASE_URL}/logo.png`} />
+            <link rel="icon" type="image/png" sizes="48x48" href={`${BASE_URL}/logo.png`} />
+            <link rel="shortcut icon" href={`${BASE_URL}/logo.png`} />
+            <link rel="apple-touch-icon" href={`${BASE_URL}/apple-touch-icon.png`} />
 
             {/* Open Graph */}
             <meta property="og:type" content={ogType} />
