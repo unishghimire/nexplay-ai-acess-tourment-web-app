@@ -421,6 +421,13 @@ async function runE2ETests() {
     }
     assert(true, "Ledger Integrity: 100% of user balances reconcile perfectly with historical ledger transactions");
 
+    // 2. Scrim Format Slot Matrix Invariant Verification
+    const { SCRIM_FORMAT_SLOTS, getScrimSlotCount } = await import('../utils/scrimSlots');
+    assert(SCRIM_FORMAT_SLOTS.Squad === 12, "Scrim Engine: Squad format strictly fixed at exactly 12 slots");
+    assert(SCRIM_FORMAT_SLOTS.Duo === 25, "Scrim Engine: Duo format strictly fixed at exactly 25 slots");
+    assert(SCRIM_FORMAT_SLOTS.Solo === 48, "Scrim Engine: Solo format strictly fixed at exactly 48 slots");
+    assert(getScrimSlotCount('Squad') === 12 && getScrimSlotCount('Duo') === 25 && getScrimSlotCount('Solo') === 48, "Scrim Engine: getScrimSlotCount resolves format slots with 100% precision");
+
     // 2. Room Credential Access Control Simulation
     function getRoomCredentials(tournamentId: string, requestUser: MockUser): { allowed: boolean; credentials?: any } {
       const t = db.tournaments.get(tournamentId);

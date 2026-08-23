@@ -359,13 +359,17 @@ export default function ScrimCreateModal({
                 </label>
                 <select
                   value={formData.teamType}
-                  onChange={(e) => setFormData({ ...formData, teamType: e.target.value })}
+                  onChange={(e) => {
+                    const type = e.target.value;
+                    const slots = type === 'solo' ? 48 : type === 'duo' ? 25 : 12;
+                    setFormData({ ...formData, teamType: type, totalSlots: slots });
+                  }}
                   className="w-full bg-black border border-gray-800 rounded-xl p-3 text-sm text-white font-bold focus-visible:outline-none focus:border-emerald-500"
                 >
-                  <option value="solo">Solo (1v1 / BR Solo)</option>
-                  <option value="duo">Duo (2v2)</option>
-                  <option value="squad">Squad (4v4 / BR Squad)</option>
-                  <option value="5v5">5v5 Custom Lobby</option>
+                  <option value="squad">Squad (12 Slots - 12 Teams)</option>
+                  <option value="duo">Duo (25 Slots - 25 Teams)</option>
+                  <option value="solo">Solo (48 Slots - 48 Players)</option>
+                  <option value="5v5">5v5 Custom Lobby (12 Slots)</option>
                 </select>
               </div>
 
@@ -378,10 +382,9 @@ export default function ScrimCreateModal({
                   onChange={(e) => setFormData({ ...formData, totalSlots: Number(e.target.value) })}
                   className="w-full bg-black border border-gray-800 rounded-xl p-3 text-sm text-white font-bold focus-visible:outline-none focus:border-emerald-500"
                 >
-                  <option value={12}>12 Slots (Classic BR)</option>
-                  <option value={20}>20 Slots (Expanded BR)</option>
-                  <option value={24}>24 Slots (Duo/Squad BR)</option>
-                  <option value={48}>48 Slots (Full BR Lobby)</option>
+                  <option value={12}>12 Slots (Squad BR - 12 Teams)</option>
+                  <option value={25}>25 Slots (Duo BR - 25 Teams)</option>
+                  <option value={48}>48 Slots (Solo BR - 48 Players)</option>
                 </select>
               </div>
             </div>
