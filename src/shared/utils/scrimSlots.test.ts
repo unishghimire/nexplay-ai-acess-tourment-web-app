@@ -20,4 +20,12 @@ const malformedSlots = normalizeScrimSlots([{ status: 'unexpected' }], 10);
 assert(malformedSlots[0].slotNumber === 1, 'invalid slot numbers should fall back to position');
 assert(malformedSlots[0].status === 'open', 'unknown states should safely become open');
 
-console.log('Scrim slot normalization tests: 7 passed, 0 failed');
+import { SCRIM_FORMAT_SLOTS, getScrimSlotCount } from './scrimSlots';
+assert(SCRIM_FORMAT_SLOTS.Squad === 12, 'Squad format must have exactly 12 slots');
+assert(SCRIM_FORMAT_SLOTS.Duo === 25, 'Duo format must have exactly 25 slots');
+assert(SCRIM_FORMAT_SLOTS.Solo === 48, 'Solo format must have exactly 48 slots');
+assert(getScrimSlotCount('Squad') === 12, 'getScrimSlotCount(Squad) must return 12');
+assert(getScrimSlotCount('Duo') === 25, 'getScrimSlotCount(Duo) must return 25');
+assert(getScrimSlotCount('Solo') === 48, 'getScrimSlotCount(Solo) must return 48');
+
+console.log('Scrim slot normalization tests: 13 passed, 0 failed');

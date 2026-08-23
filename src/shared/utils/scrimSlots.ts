@@ -5,6 +5,18 @@ export interface ScrimSlot {
   teamId?: string | null;
 }
 
+export const SCRIM_FORMAT_SLOTS = {
+  Squad: 12,
+  Duo: 25,
+  Solo: 48,
+} as const;
+
+export function getScrimSlotCount(format?: string | null): number {
+  if (format === 'Solo') return 48;
+  if (format === 'Duo') return 25;
+  return 12; // Squad & default
+}
+
 const toPositiveInteger = (value: unknown, fallback = 0) => {
   const number = Number(value);
   return Number.isInteger(number) && number > 0 ? number : fallback;

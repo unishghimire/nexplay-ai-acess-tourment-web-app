@@ -3,6 +3,7 @@ import { authenticateToken, db, rateLimit, admin } from "../server/shared.js";
 import { requireAdmin } from "../server/authz.js";
 
 import authRoutes from "../server/routes/auth.js";
+import scrimRoutes from "../server/routes/scrims.js";
 import tournamentRoutes from "../server/routes/tournaments.js";
 import mediaRoutes from "../server/routes/media.js";
 import aiRoutes from "../server/routes/ai.js";
@@ -123,6 +124,7 @@ app.post("/api/admin/seed-game", rateLimit(5, 15 * 60 * 1000), async (req: any, 
 
 // Mount route groups
 app.use(authRoutes);
+app.use(scrimRoutes);
 app.use(tournamentRoutes);
 app.use(mediaRoutes);
 app.use(aiRoutes);

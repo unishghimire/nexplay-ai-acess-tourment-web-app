@@ -5,12 +5,12 @@ import { db } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { fetchRoomCredentials } from '../../../shared/services/roomCredentials';
-import { countFilledScrimSlots, normalizeScrimSlots } from '../../../shared/utils/scrimSlots';
+import { countFilledScrimSlots, normalizeScrimSlots, getScrimSlotCount } from '../../../shared/utils/scrimSlots';
 import { toDateSafe } from '../../../shared/utils/utils';
 import {
   ChevronLeft, Save, Radio, Users, DollarSign, Calendar,
   Gamepad2, Edit2, Check, X, Lock, Unlock, Copy, Trophy,
-  Clock, MapPin, Play, CheckCircle2, RotateCcw,
+  Clock, MapPin, Play, CheckCircle2, RotateCcw, Trash2
 } from 'lucide-react';
 
 const formatRupees = (n: number = 0) => `Rs. ${new Intl.NumberFormat('en-IN').format(n)}`;
@@ -225,6 +225,32 @@ export default function ScrimDetailPage() {
     }
   }, [id, scrimCollection, showToast]);
 
+  const handleDeleteScrim = useCallback(async () => {
+    if (!id || !window.confirm(`Are you sure you want to permanently delete "${scrim?.title || 'this scrim'}"?`)) return;
+    try {
+      const token = await user?.getIdToken();
+      const res = await fetch(`/api/scrims/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) {
+        // Fallback to /api/tournaments/:id
+        const fallbackRes = await fetch(`/api/tournaments/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!fallbackRes.ok) {
+          const err = await fallbackRes.json().catch(() => ({}));
+          throw new Error(err.message || 'Failed to delete scrim');
+        }
+      }
+      showToast('Scrim deleted successfully', 'success');
+      navigate('/organizer?tab=scrims');
+    } catch (err: any) {
+      showToast(err.message || 'Failed to delete scrim', 'error');
+    }
+  }, [id, scrim?.title, user, navigate, showToast]);
+
   const copyToClipboard = async (text: string, label: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -299,21 +325,31 @@ export default function ScrimDetailPage() {
               </button>
             </>
           ) : (
-            <button type="button" onClick={() => {
-              const startDate = toDateSafe(scrim.startTime);
-              const startFormatted = startDate ? new Date(startDate.getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) : '';
-              setEditForm({
-                title: scrim.title || '',
-                startTime: startFormatted,
-                entryFee: scrim.entryFee || 0,
-                prizePool: scrim.prizePool || 0,
-                slots: scrim.totalSlots || (Array.isArray(scrim.slots) ? scrim.slots.length : Number(scrim.slots) || 12),
-                map: scrim.map || ''
-              });
-              setIsEditing(true);
-            }} className="px-4 py-2 rounded-lg bg-surface text-white text-sm hover:bg-surface flex items-center gap-2 min-h-[44px]">
-              <Edit2 className="w-4 h-4" /> Edit Scrim
-            </button>
+            <>
+              <button type="button" onClick={() => {
+                const startDate = toDateSafe(scrim.startTime);
+                const startFormatted = startDate ? new Date(startDate.getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) : '';
+                setEditForm({
+                  title: scrim.title || '',
+                  startTime: startFormatted,
+                  entryFee: scrim.entryFee || 0,
+                  prizePool: scrim.prizePool || 0,
+                  slots: scrim.totalSlots || (Array.isArray(scrim.slots) ? scrim.slots.length : Number(scrim.slots) || 12),
+                  map: scrim.map || ''
+                });
+                setIsEditing(true);
+              }} className="px-4 py-2 rounded-lg bg-surface text-white text-sm hover:bg-surface flex items-center gap-2 min-h-[44px]">
+                <Edit2 className="w-4 h-4" /> Edit Scrim
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteScrim}
+                className="px-4 py-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-sm flex items-center gap-2 min-h-[44px] transition-colors"
+                title="Delete Scrim"
+              >
+                <Trash2 className="w-4 h-4" /> Delete
+              </button>
+            </>
           )}
         </div>
       </div>

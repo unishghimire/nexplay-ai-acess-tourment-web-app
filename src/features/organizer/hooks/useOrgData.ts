@@ -250,10 +250,17 @@ export function useOrgData() {
   // pass through here so an organizer can never act on another org's data.
   const assertTournamentHost = useCallback(async (tournamentId: string) => {
     if (!user) throw new Error('Not authenticated');
-    const tSnap = await getDocs(query(collection(db, 'tournaments'), where('__name__', '==', tournamentId)));
-    if (tSnap.empty) throw new Error('Tournament not found');
-    if (tSnap.docs[0].data().hostUid !== user.uid) throw new Error('Not authorized — you do not own this tournament');
-  }, [user]);
+    let tSnap = await getDocs(query(collection(db, 'tournaments'), where('__name__', '==', tournamentId)));
+    if (tSnap.empty) {
+      tSnap = await getDocs(query(collection(db, 'scrims'), where('__name__', '==', tournamentId)));
+    }
+    if (tSnap.empty) throw new Error('Tournament or scrim not found');
+    const data = tSnap.docs[0].data();
+    const ownerId = data.hostUid || data.orgId || data.hostId || data.userId || data.organizerId || data.createdBy;
+    if (ownerId !== user.uid && profile?.role !== 'admin') {
+      throw new Error('Not authorized — you do not own this tournament or scrim');
+    }
+  }, [user, profile?.role]);
 
   const deleteTournament = useCallback(async (id: string) => {
     if (!user) throw new Error('Not authenticated');
@@ -264,7 +271,8 @@ export function useOrgData() {
       headers: { 'Authorization': `Bearer ${token}` },
     });
     if (!res.ok) {
-      throw new Error('Failed to delete tournament');
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.message || 'Failed to delete tournament or scrim');
     }
     setHostedTournaments(prev => prev.filter(t => t.id !== id));
   }, [user]);

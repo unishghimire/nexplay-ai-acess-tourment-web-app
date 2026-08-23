@@ -317,64 +317,85 @@ router.post("/api/tournaments/:id/advance", authenticateToken, rateLimit(10, 15 
 // Uses Admin SDK (bypasses Firestore rules) after verifying ownership
 router.delete("/api/tournaments/:id",
   authenticateToken,
-  rateLimit(3, 15 * 60 * 1000),
+  rateLimit(10, 15 * 60 * 1000),
   async (req: any, res) => {
     try {
       const { id } = req.params;
-      if (!id || id.length > 128) return res.status(400).json({ success: false, message: "Invalid tournament ID" });
+      if (!id || id.length > 128) return res.status(400).json({ success: false, message: "Invalid tournament or scrim ID" });
 
       const uid = req.user.userId;
-      const tourneyRef = db.collection("tournaments").doc(id);
-      const tourneySnap = await tourneyRef.get();
+      let targetRef = db.collection("tournaments").doc(id);
+      let targetSnap = await targetRef.get();
+      let collectionName = "tournaments";
 
-      if (!tourneySnap.exists) return res.status(404).json({ success: false, message: "Tournament not found" });
-
-      const tourneyData = tourneySnap.data();
-      if (!tourneyData) return res.status(404).json({ success: false, message: "Tournament not found" });
-
-      // Authorization: only tournament host or admin can delete
-      if (tourneyData.hostUid !== uid && req.user.role !== "admin") {
-        return res.status(403).json({ success: false, message: "Unauthorized — only the tournament host can delete this tournament" });
+      if (!targetSnap.exists) {
+        // Fallback: check 'scrims' collection
+        targetRef = db.collection("scrims").doc(id);
+        targetSnap = await targetRef.get();
+        collectionName = "scrims";
       }
 
-      // Block deletion of live tournaments
-      if (tourneyData.status === "live") {
-        return res.status(400).json({ success: false, message: "Cannot delete a live tournament. End or cancel it first." });
+      if (!targetSnap.exists) {
+        return res.status(404).json({ success: false, message: "Tournament or scrim not found" });
       }
 
-      // Chunked cleanup avoids Firestore's 500-operation batch ceiling. The
-      // parent document is deleted last, so a retry can safely resume after a
-      // transient failure without exposing a deleted parent with live children.
+      const targetData = targetSnap.data();
+      if (!targetData) return res.status(404).json({ success: false, message: "Event not found" });
+
+      // Flexible ownership verification: check hostUid, orgId, hostId, userId, organizerId, or createdBy
+      const hostId = targetData.hostUid || targetData.orgId || targetData.hostId || targetData.userId || targetData.organizerId || targetData.createdBy;
+      const isOwner = hostId === uid;
+      const isAdmin = req.user.role === "admin";
+
+      if (!isOwner && !isAdmin) {
+        return res.status(403).json({ success: false, message: "Unauthorized — only the host/organizer or admin can delete this event" });
+      }
+
+      // Block deletion of live events
+      if (targetData.status === "live") {
+        return res.status(400).json({ success: false, message: "Cannot delete an active live match. End or cancel it first." });
+      }
+
+      // Chunked cleanup avoids Firestore's 500-operation batch ceiling.
       const operations: Array<(batch: FirebaseFirestore.WriteBatch) => void> = [];
 
-      // Delete participants
+      // 1. Delete participants
       const partsSnap = await db.collection("participants").where("tournamentId", "==", id).get();
       partsSnap.docs.forEach(d => operations.push(batch => batch.delete(d.ref)));
 
-      // Delete results
+      // 2. Delete results
       const resultsSnap = await db.collection("results").where("tournamentId", "==", id).get();
       resultsSnap.docs.forEach(d => operations.push(batch => batch.delete(d.ref)));
 
-      // Delete tournament earnings
+      // 3. Delete tournament earnings
       const earningsSnap = await db.collection("tournamentEarnings").where("tournamentId", "==", id).get();
       earningsSnap.docs.forEach(d => operations.push(batch => batch.delete(d.ref)));
 
-      // Delete credentials subcollection
-      const credsSnap = await tourneyRef.collection("credentials").get();
-      credsSnap.docs.forEach(d => operations.push(batch => batch.delete(d.ref)));
+      // 4. Delete credentials subcollection for tournaments
+      const tourneyCredsSnap = await db.collection("tournaments").doc(id).collection("credentials").get();
+      tourneyCredsSnap.docs.forEach(d => operations.push(batch => batch.delete(d.ref)));
 
-      // Delete groups subcollection
-      const groupsSnap = await tourneyRef.collection("groups").get();
+      // 5. Delete credentials subcollection for scrims
+      const scrimCredsSnap = await db.collection("scrims").doc(id).collection("credentials").get();
+      scrimCredsSnap.docs.forEach(d => operations.push(batch => batch.delete(d.ref)));
+
+      // 6. Delete groups subcollection
+      const groupsSnap = await db.collection("tournaments").doc(id).collection("groups").get();
       groupsSnap.docs.forEach(d => operations.push(batch => batch.delete(d.ref)));
 
-      // Delete the tournament document itself
-      operations.push(batch => batch.delete(tourneyRef));
+      // 7. Delete both document pointers if present
+      operations.push(batch => batch.delete(db.collection("tournaments").doc(id)));
+      operations.push(batch => batch.delete(db.collection("scrims").doc(id)));
 
       await commitBatchedWrites(() => db.batch(), operations);
-      res.json({ success: true, message: "Tournament deleted successfully", deletedChildren: partsSnap.size + resultsSnap.size + earningsSnap.size + credsSnap.size + groupsSnap.size });
+      return res.json({
+        success: true,
+        message: `${collectionName === 'scrims' ? 'Scrim' : 'Tournament'} deleted successfully`,
+        deletedChildren: partsSnap.size + resultsSnap.size + earningsSnap.size + tourneyCredsSnap.size + scrimCredsSnap.size + groupsSnap.size
+      });
     } catch (error: any) {
-      console.error("Tournament delete error:", error);
-      res.status(500).json({ success: false, message: error.message || "Internal server error" });
+      console.error("Tournament/Scrim delete error:", error);
+      return res.status(500).json({ success: false, message: error.message || "Internal server error" });
     }
   }
 );

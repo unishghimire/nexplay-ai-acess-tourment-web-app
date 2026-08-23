@@ -97,10 +97,10 @@ const OrganizerPanel: React.FC = () => {
     if (!deleteTarget) return;
     try {
       await org.deleteTournament(deleteTarget.id);
-      showToast('Tournament deleted', 'success');
+      showToast(`"${deleteTarget.title || 'Event'}" deleted successfully`, 'success');
     } catch (err: any) {
-      const msg = err?.message || 'Failed to delete tournament';
-      showToast(msg.includes('permission') ? 'Only admins can delete tournaments' : msg, 'error');
+      const msg = err?.message || 'Failed to delete';
+      showToast(msg, 'error');
     } finally {
       setActiveOverlay(null);
       setDeleteTarget(null);
