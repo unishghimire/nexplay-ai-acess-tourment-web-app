@@ -364,6 +364,12 @@ export function useOrgData() {
   const saveOrgSettings = useCallback(async (settings: { orgName?: string; bio?: string; whatsapp?: string; contactInfo?: string; discord?: string; youtubeUrl?: string; twitchUrl?: string; refereeName?: string; refereeEnabled?: boolean; casterName?: string; casterEnabled?: boolean }) => {
     if (!user) return;
     await updateDoc(doc(db, 'users', user.uid), settings);
+    if (settings.orgName) {
+      await updateDoc(doc(db, 'users_public', user.uid), {
+        orgName: settings.orgName,
+        updatedAt: serverTimestamp(),
+      }).catch(() => {});
+    }
   }, [user]);
 
   const toggleScrimSlot = useCallback(async (scrimId: string, slotNumber: number) => {
@@ -399,29 +405,23 @@ export function useOrgData() {
 
   const toggleRosterLock = useCallback(async (teamId: string) => {
     if (!user) throw new Error('Not authenticated');
-    const q = query(collection(db, 'participants'), where('teamId', '==', teamId));
-    const snap = await getDocs(q);
+    let q = query(collection(db, 'participants'), where('teamId', '==', teamId));
+    let snap = await getDocs(q);
     if (snap.empty) {
-      const q2 = query(collection(db, 'participants'), where('userId', '==', teamId));
-      const snap2 = await getDocs(q2);
-      if (snap2.empty) throw new Error('Team not found');
-      const pDoc = snap2.docs[0];
-      const current = pDoc.data() as any;
-      const tournamentId = current.tournamentId;
-      const tSnap = await getDocs(query(collection(db, 'tournaments'), where('__name__', '==', tournamentId)));
-      const tData = tSnap.docs[0]?.data() as any;
-      if (tData?.hostUid !== user.uid) throw new Error('Not authorized');
-      await updateDoc(pDoc.ref, { rosterLocked: !current.rosterLocked });
-      return;
+      q = query(collection(db, 'participants'), where('userId', '==', teamId));
+      snap = await getDocs(q);
     }
+    if (snap.empty) throw new Error('Team not found');
+    
     const pDoc = snap.docs[0];
     const current = pDoc.data() as any;
     const tournamentId = current.tournamentId;
-    const tSnap = await getDocs(query(collection(db, 'tournaments'), where('__name__', '==', tournamentId)));
-    const tData = tSnap.docs[0]?.data() as any;
-    if (tData?.hostUid !== user.uid) throw new Error('Not authorized');
-    await updateDoc(pDoc.ref, { rosterLocked: !current.rosterLocked });
-  }, [user]);
+    await assertTournamentHost(tournamentId);
+
+    const newLockState = !current.rosterLocked;
+    await updateDoc(pDoc.ref, { rosterLocked: newLockState });
+    setParticipants(prev => prev.map(p => (p.teamId === teamId || p.userId === teamId) ? { ...p, rosterLocked: newLockState } : p));
+  }, [user, assertTournamentHost]);
 
   const issueWarning = useCallback(async (teamName: string, reason: string) => {
     if (!user) throw new Error('Not authenticated');
@@ -431,32 +431,37 @@ export function useOrgData() {
     const pDoc = snap.docs[0];
     const current = pDoc.data() as any;
     const tournamentId = current.tournamentId;
-    const tSnap = await getDocs(query(collection(db, 'tournaments'), where('__name__', '==', tournamentId)));
-    const tData = tSnap.docs[0]?.data() as any;
-    if (tData?.hostUid !== user.uid) throw new Error('Not authorized');
+    await assertTournamentHost(tournamentId);
+
     const newStrikes = (current.strikes || 0) + 1;
     await updateDoc(pDoc.ref, { strikes: newStrikes, lastWarning: reason, lastWarningAt: serverTimestamp() });
-  }, [user]);
+    setParticipants(prev => prev.map(p => p.teamName === teamName ? { ...p, strikes: newStrikes, lastWarning: reason } : p));
+  }, [user, assertTournamentHost]);
 
   const toggleBanTeam = useCallback(async (teamId: string, teamName: string) => {
     if (!user) throw new Error('Not authenticated');
-    const q = query(collection(db, 'participants'), where('teamId', '==', teamId));
-    const snap = await getDocs(q);
+    let q = query(collection(db, 'participants'), where('teamId', '==', teamId));
+    let snap = await getDocs(q);
+    if (snap.empty) {
+      q = query(collection(db, 'participants'), where('teamName', '==', teamName));
+      snap = await getDocs(q);
+    }
     if (snap.empty) throw new Error('Team not found');
     const pDoc = snap.docs[0];
     const current = pDoc.data() as any;
     const tournamentId = current.tournamentId;
-    const tSnap = await getDocs(query(collection(db, 'tournaments'), where('__name__', '==', tournamentId)));
-    const tData = tSnap.docs[0]?.data() as any;
-    if (tData?.hostUid !== user.uid) throw new Error('Not authorized');
-    await updateDoc(pDoc.ref, { banned: !current.banned });
-  }, [user]);
+    await assertTournamentHost(tournamentId);
+
+    const newBanState = !current.banned;
+    await updateDoc(pDoc.ref, { banned: newBanState });
+    setParticipants(prev => prev.map(p => (p.teamId === teamId || p.teamName === teamName) ? { ...p, banned: newBanState } : p));
+  }, [user, assertTournamentHost]);
 
   const resolveDispute = useCallback(async (disputeId: string, action: 'warn' | 'ban' | 'dismiss') => {
     if (!user) throw new Error('Not authenticated');
     const dRef = doc(db, 'disputes', disputeId);
     const dSnap = await getDoc(dRef);
-    if (!dSnap.exists) throw new Error('Dispute not found');
+    if (!dSnap.exists()) throw new Error('Dispute not found');
     const tournamentId = dSnap.data().tournamentId as string | undefined;
     if (!tournamentId) throw new Error('Dispute has no tournament reference');
     await assertTournamentHost(tournamentId);

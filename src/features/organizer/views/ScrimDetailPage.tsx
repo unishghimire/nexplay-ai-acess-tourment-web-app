@@ -213,6 +213,11 @@ export default function ScrimDetailPage() {
         setDoc(doc(db, scrimCollection, id, 'credentials', 'main'), { roomId, roomPass }, { merge: true }),
         updateDoc(doc(db, scrimCollection, id), { ytLink: streamUrl }),
       ]);
+      const altCollection = scrimCollection === 'tournaments' ? 'scrims' : 'tournaments';
+      await Promise.all([
+        setDoc(doc(db, altCollection, id, 'credentials', 'main'), { roomId, roomPass }, { merge: true }).catch(() => {}),
+        updateDoc(doc(db, altCollection, id), { ytLink: streamUrl }).catch(() => {}),
+      ]);
       showToast('Room credentials broadcasted', 'success');
     } catch {
       showToast('Failed to broadcast', 'error');

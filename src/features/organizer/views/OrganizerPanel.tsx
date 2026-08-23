@@ -14,6 +14,7 @@ import { OrgOverlayManager, OverlayType } from '../components/OrgOverlayManager'
 import { Seo } from '../../../shared/components/Seo';
 import { fetchRoomCredentials } from '../../../shared/services/roomCredentials';
 import TabErrorBoundary from '../../../shared/components/TabErrorBoundary';
+import { normalizeScrimSlots, countFilledScrimSlots } from '../../../shared/utils/scrimSlots';
 
 // Lazy-load tab components
 const OverviewTab = React.lazy(() => import('../components/OverviewTab'));
@@ -169,7 +170,9 @@ const OrganizerPanel: React.FC = () => {
   }, [roomDispatchTarget, roomId, roomPass, streamUrl, org, showToast]);
 
   const handleOpenSlotGrid = useCallback((scrim: any) => {
-    setScrimSlotTarget(scrim);
+    if (!scrim) return;
+    const normalizedSlots = normalizeScrimSlots(scrim.slots, scrim.totalSlots, scrim.filledSlots ?? scrim.currentPlayers);
+    setScrimSlotTarget({ ...scrim, slots: normalizedSlots });
     setActiveOverlay('SCRIM_SLOTS');
   }, []);
 
@@ -183,12 +186,14 @@ const OrganizerPanel: React.FC = () => {
       showToast(`Slot ${slotNumber} toggled`, 'info');
       setScrimSlotTarget((prev: any) => {
         if (!prev || prev.id !== scrimId) return prev;
-        const newSlots = (prev.slots || []).map((s: any) => {
+        const currentSlots = normalizeScrimSlots(prev.slots, prev.totalSlots, prev.filledSlots ?? prev.currentPlayers);
+        const newSlots = currentSlots.map((s: any) => {
           if (s.slotNumber !== slotNumber) return s;
           if (s.status === 'filled') return { ...s, status: 'open', teamName: null, teamId: null };
           return { ...s, status: 'filled', teamName: 'Reserved', teamId: null };
         });
-        return { ...prev, slots: newSlots };
+        const filled = countFilledScrimSlots(newSlots);
+        return { ...prev, slots: newSlots, filledSlots: filled, currentPlayers: filled };
       });
     } catch (err: any) {
       showToast(err?.message || 'Failed to toggle slot', 'error');
