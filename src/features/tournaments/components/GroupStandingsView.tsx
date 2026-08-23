@@ -107,22 +107,21 @@ function StandingsTable({ standings }: { standings: TeamStanding[] }) {
     if (isBR) {
         return (
             <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-                <table className="w-full text-left min-w-[600px]">
+                <table className="w-full text-left min-w-[580px]">
                     <thead>
                         <tr className="border-b border-gray-800 text-[10px] font-black uppercase tracking-widest text-gray-500">
-                            <th className="pb-3 pl-2 w-12">#</th>
-                            <th className="pb-3">Team / Player</th>
-                            <th className="pb-3 text-center w-16">Matches</th>
-                            <th className="pb-3 text-center w-16">Kills</th>
-                            <th className="pb-3 text-center w-20">Place Pts</th>
-                            <th className="pb-3 text-center w-20">Kill Pts</th>
-                            <th className="pb-3 text-center w-16">Total</th>
+                            <th className="pb-3 pl-2 w-12 text-center">#</th>
+                            <th className="pb-3 w-14">LOGO</th>
+                            <th className="pb-3">NAME</th>
+                            <th className="pb-3 text-center w-20">KILL</th>
+                            <th className="pb-3 text-center w-24">PLACEMENT</th>
+                            <th className="pb-3 text-right pr-4 w-20">TOTAL</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-800/50">
                         {standings.map((s, idx) => (
                             <tr key={s.id} className={`transition ${s.isCurrentUser ? 'bg-brand-500/10 font-bold' : 'hover:bg-white/[0.02]'}`}>
-                                <td className="py-3.5 pl-2 font-black text-sm">
+                                <td className="py-3.5 pl-2 text-center font-black text-sm">
                                     <span className={`inline-flex items-center justify-center w-6 h-6 rounded-lg text-xs font-black ${
                                         idx === 0 ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
                                         idx === 1 ? 'bg-gray-400/20 text-gray-300 border border-gray-400/30' :
@@ -133,15 +132,17 @@ function StandingsTable({ standings }: { standings: TeamStanding[] }) {
                                     </span>
                                 </td>
                                 <td className="py-3.5">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-xl bg-surface border border-gray-700 flex items-center justify-center font-black text-xs text-brand-400 overflow-hidden shrink-0">
-                                            {s.logoUrl ? (
-                                                <img src={s.logoUrl} alt={s.name} className="w-full h-full object-cover" loading="lazy" />
-                                            ) : (
-                                                s.name.charAt(0).toUpperCase()
-                                            )}
-                                        </div>
-                                        <span className={`text-sm font-black truncate max-w-[180px] ${s.isCurrentUser ? 'text-brand-400' : 'text-white'}`}>
+                                    <div className="w-9 h-9 rounded-xl bg-surface border border-gray-700 flex items-center justify-center font-black text-xs text-brand-400 overflow-hidden shrink-0">
+                                        {s.logoUrl ? (
+                                            <img src={s.logoUrl} alt={s.name} className="w-full h-full object-cover" loading="lazy" />
+                                        ) : (
+                                            s.name.charAt(0).toUpperCase()
+                                        )}
+                                    </div>
+                                </td>
+                                <td className="py-3.5">
+                                    <div className="flex items-center gap-2">
+                                        <span className={`text-sm font-black truncate max-w-[200px] ${s.isCurrentUser ? 'text-brand-400' : 'text-white'}`}>
                                             {s.name}
                                         </span>
                                         {s.isCurrentUser && (
@@ -151,16 +152,14 @@ function StandingsTable({ standings }: { standings: TeamStanding[] }) {
                                         )}
                                     </div>
                                 </td>
-                                <td className="py-3.5 text-center font-bold text-gray-300 text-sm">{s.matches ?? 0}</td>
-                                <td className="py-3.5 text-center font-bold text-red-400/80 text-sm">{s.kills}</td>
-                                <td className="py-3.5 text-center font-bold text-blue-400/80 text-sm">{s.placementPoints ?? 0}</td>
-                                <td className="py-3.5 text-center font-bold text-emerald-400/80 text-sm">{s.killPoints ?? 0}</td>
-                                <td className="py-3.5 text-center font-black text-brand-400 text-sm">{s.points}</td>
+                                <td className="py-3.5 text-center font-black text-red-400 text-sm">{s.killPoints ?? (s.kills || 0)}</td>
+                                <td className="py-3.5 text-center font-black text-blue-400 text-sm">{s.placementPoints ?? 0}</td>
+                                <td className="py-3.5 text-right pr-4 font-black text-amber-400 text-base">{s.points}</td>
                             </tr>
                         ))}
                         {standings.length === 0 && (
                             <tr>
-                                <td colSpan={7} className="py-8 text-center text-gray-500 text-xs uppercase font-black tracking-widest">
+                                <td colSpan={6} className="py-8 text-center text-gray-500 text-xs uppercase font-black tracking-widest">
                                     No teams assigned yet
                                 </td>
                             </tr>

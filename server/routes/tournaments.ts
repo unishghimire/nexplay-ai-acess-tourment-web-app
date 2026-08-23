@@ -125,9 +125,121 @@ router.post("/api/tournaments/:id/results/upload", authenticateToken, rateLimit(
       ['Group not found'].includes(message) ? 404 : message.includes('already been uploaded') ? 409 : 500;
     res.status(status).json({ success: false, message: status === 500 ? "Result upload failed" : message });
   }
+// Assign Team to Group with strict max_teams limit
+router.post("/api/tournaments/:id/groups/:groupId/assign-team", authenticateToken, rateLimit(10, 15 * 60 * 1000), async (req: any, res) => {
+  try {
+    const { id, groupId } = req.params;
+    const { teamId, teamName, teamLogo, captainUid, memberUids } = req.body;
+
+    if (!teamId || !teamName) {
+      return res.status(400).json({ success: false, message: "Team ID and Name are required." });
+    }
+
+    const tourneyRef = db.collection("tournaments").doc(id);
+    const tourneySnap = await tourneyRef.get();
+    if (!tourneySnap.exists) return res.status(404).json({ success: false, message: "Tournament not found." });
+    const tourneyData = tourneySnap.data();
+
+    if (tourneyData?.hostUid !== req.user.userId && req.user.role !== "admin") {
+      return res.status(403).json({ success: false, message: "Unauthorized — only tournament host can assign teams." });
+    }
+
+    const groupRef = tourneyRef.collection("groups").doc(groupId);
+    const result = await db.runTransaction(async (transaction) => {
+      const groupSnap = await transaction.get(groupRef);
+      if (!groupSnap.exists) throw new Error("Group not found.");
+
+      const groupData = groupSnap.data()!;
+      const maxTeams = groupData.maxTeams || 12;
+      const currentTeams = Array.isArray(groupData.teams) ? groupData.teams : [];
+
+      if (currentTeams.length >= maxTeams) {
+        throw new Error(`Group is full (Maximum limit of ${maxTeams} teams reached).`);
+      }
+
+      if (currentTeams.some((t: any) => t.id === teamId || t.teamId === teamId)) {
+        throw new Error(`Team "${teamName}" is already assigned to this group.`);
+      }
+
+      const newTeamEntry = {
+        id: teamId,
+        teamId,
+        name: teamName,
+        teamName,
+        logoUrl: teamLogo || "",
+        captainUid: captainUid || req.user.userId,
+        memberUids: Array.isArray(memberUids) ? memberUids : [captainUid || req.user.userId],
+        assignedAt: new Date().toISOString()
+      };
+
+      const updatedTeams = [...currentTeams, newTeamEntry];
+      transaction.update(groupRef, {
+        teams: updatedTeams,
+        currentTeamsCount: updatedTeams.length,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+
+      return { success: true, message: `Team assigned successfully (${updatedTeams.length}/${maxTeams}).`, currentTeamsCount: updatedTeams.length, maxTeams };
+    });
+
+    return res.status(200).json(result);
+  } catch (error: any) {
+    const msg = error.message || "Team assignment failed.";
+    const status = msg.includes("full") || msg.includes("already assigned") ? 400 : 500;
+    return res.status(status).json({ success: false, message: msg });
+  }
 });
 
-// Advance Round
+// Fetch Group Results with Tie-Breaker Sorting (TOTAL -> PLACEMENT -> KILL)
+router.get("/api/tournaments/:id/groups/:groupId/results", authenticateToken, rateLimit(30, 60 * 1000), async (req: any, res) => {
+  try {
+    const { id, groupId } = req.params;
+    const tourneyRef = db.collection("tournaments").doc(id);
+    const tourneySnap = await tourneyRef.get();
+    if (!tourneySnap.exists) return res.status(404).json({ success: false, message: "Tournament not found." });
+    const tourneyData = tourneySnap.data();
+
+    const groupRef = tourneyRef.collection("groups").doc(groupId);
+    const groupSnap = await groupRef.get();
+    if (!groupSnap.exists) return res.status(404).json({ success: false, message: "Group not found." });
+    const groupData = groupSnap.data()!;
+
+    // Security Check: Admin, Host, or assigned team member
+    const isHostOrAdmin = tourneyData?.hostUid === req.user.userId || req.user.role === "admin";
+    const isMember = Array.isArray(groupData.teams) && groupData.teams.some((t: any) =>
+      t.captainUid === req.user.userId || (Array.isArray(t.memberUids) && t.memberUids.includes(req.user.userId))
+    );
+
+    if (!isHostOrAdmin && !isMember) {
+      return res.status(403).json({ success: false, message: "Access Denied: You do not belong to this group." });
+    }
+
+    const rawResults = Array.isArray(groupData.results) ? groupData.results : [];
+    const formatted = rawResults.map((r: any) => ({
+      teamId: r.teamId,
+      teamName: r.teamName || r.name || "Unknown Team",
+      teamLogo: r.teamLogo || r.logoUrl || "",
+      killPoints: Number(r.killPoints) || Number(r.kills) || 0,
+      placementPoints: Number(r.placementPoints) || 0,
+      totalPoints: Number(r.totalPoints) || (Number(r.placementPoints || 0) + Number(r.killPoints || r.kills || 0)),
+    }));
+
+    // Tie-breaker sorting: 1. TOTAL (desc) -> 2. PLACEMENT (desc) -> 3. KILL (desc)
+    const sorted = formatted.sort((a: any, b: any) => {
+      if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+      if (b.placementPoints !== a.placementPoints) return b.placementPoints - a.placementPoints;
+      return b.killPoints - a.killPoints;
+    });
+
+    sorted.forEach((team: any, idx: number) => {
+      team.rank = idx + 1;
+    });
+
+    return res.json({ success: true, groupId, results: sorted });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message || "Failed to fetch group results." });
+  }
+});
 // [BUG-026] maintenance-only endpoint — no client callers; kept for ops/debugging.
 router.post("/api/tournaments/:id/advance", authenticateToken, rateLimit(10, 15 * 60 * 1000), async (req: any, res) => {
   try {

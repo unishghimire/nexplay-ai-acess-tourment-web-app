@@ -233,14 +233,14 @@ export function aggregateStandings(params: {
 
     // Sort with tie-breakers:
     // 1. Total points (desc)
-    // 2. Kill points (desc)
-    // 3. Placement points (desc)
+    // 2. Placement points (desc)
+    // 3. Kill points (desc)
     // 4. Best placement (asc — lower is better)
     // 5. Team name (asc — stable deterministic fallback)
     const sorted = Object.values(map).sort((a, b) => {
         if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
-        if (b.killPoints !== a.killPoints) return b.killPoints - a.killPoints;
         if (b.placementPoints !== a.placementPoints) return b.placementPoints - a.placementPoints;
+        if (b.killPoints !== a.killPoints) return b.killPoints - a.killPoints;
         if (a.bestPlacement !== b.bestPlacement) return a.bestPlacement - b.bestPlacement;
         return a.teamName.localeCompare(b.teamName);
     });
