@@ -368,10 +368,17 @@ export function useOrgData() {
 
   const toggleScrimSlot = useCallback(async (scrimId: string, slotNumber: number) => {
     if (!user) throw new Error('Not authenticated');
-    const snap = await getDocs(query(collection(db, 'tournaments'), where('__name__', '==', scrimId)));
-    if (snap.empty) throw new Error('Scrim not found');
-    const data = snap.docs[0].data() as any;
-    if (data.hostUid !== user.uid) throw new Error('Not authorized');
+    let targetDocRef = doc(db, 'tournaments', scrimId);
+    let snap = await getDoc(targetDocRef);
+    let targetCollection = 'tournaments';
+    if (!snap.exists()) {
+      targetDocRef = doc(db, 'scrims', scrimId);
+      snap = await getDoc(targetDocRef);
+      targetCollection = 'scrims';
+    }
+    if (!snap.exists()) throw new Error('Scrim not found');
+    const data = snap.data() as any;
+    if (data.hostUid !== user.uid && profile?.role !== 'admin') throw new Error('Not authorized');
 
     const currentSlots = normalizeScrimSlots(data.slots, data.totalSlots, data.filledSlots ?? data.currentPlayers);
     const newSlots = currentSlots.map((s: any) => {
@@ -380,12 +387,15 @@ export function useOrgData() {
       return { ...s, status: 'filled', teamName: 'Reserved', teamId: null };
     });
     const filled = countFilledScrimSlots(newSlots);
-    await updateDoc(doc(db, 'tournaments', scrimId), { slots: newSlots, filledSlots: filled, currentPlayers: filled });
+    await updateDoc(targetDocRef, { slots: newSlots, filledSlots: filled, currentPlayers: filled });
+    const altCollection = targetCollection === 'tournaments' ? 'scrims' : 'tournaments';
+    await updateDoc(doc(db, altCollection, scrimId), { slots: newSlots, filledSlots: filled, currentPlayers: filled }).catch(() => {});
+
     setHostedTournaments(prev => prev.map(t => t.id === scrimId
       ? { ...t, slots: newSlots as any, filledSlots: filled, currentPlayers: filled }
       : t
     ));
-  }, [user]);
+  }, [user, profile?.role]);
 
   const toggleRosterLock = useCallback(async (teamId: string) => {
     if (!user) throw new Error('Not authenticated');

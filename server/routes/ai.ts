@@ -43,7 +43,7 @@ Context: title=${cleanTitle}; game=${cleanGame}; type=${cleanType}; tournamentTy
     let aiResult: any = null;
     try {
       const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
+        model: "gemini-2.5-flash",
         contents: [{ role: "user", parts: [{ text: prompt }] }],
         config: {
           responseMimeType: "application/json",
@@ -143,7 +143,7 @@ Be direct, detailed, and highly technical. Never generate fake boilerplate findi
     const userPrompt = `Audit the following HTML content for the resource: ${targetUrl}\n\nHTML CONTENT:\n\`\`\`html\n${truncatedHtml}\n\`\`\`\n\nAnalyze the code and return a JSON response adhering EXACTLY to the specified schema format. Ensure the response is valid parseable JSON.`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
+      model: "gemini-2.5-flash",
       contents: [{ role: "user", parts: [{ text: userPrompt }] }],
       config: {
         systemInstruction: systemPrompt,
@@ -222,7 +222,7 @@ Be concise and direct. Reference specific audit findings when relevant.`;
     const userPrompt = `Audit Context: ${serializedContext}\n\nUser Question: ${message.trim()}`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
+      model: "gemini-2.5-flash",
       contents: [{ role: "user", parts: [{ text: userPrompt }] }],
       config: { systemInstruction: systemPrompt, responseMimeType: "application/json" },
     });

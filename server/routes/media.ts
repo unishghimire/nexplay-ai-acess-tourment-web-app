@@ -31,7 +31,21 @@ const MEDIA_CATEGORIES = new Set([
 ]);
 
 function getMediaCategory(value: unknown): string | null {
-  return typeof value === 'string' && MEDIA_CATEGORIES.has(value) ? value : null;
+  if (typeof value !== 'string') return null;
+  const upper = value.trim().toUpperCase();
+  if (MEDIA_CATEGORIES.has(upper)) return upper;
+  switch (upper) {
+    case "AVATARS": case "AVATAR": return "USER_AVATAR";
+    case "TEAMS": case "TEAM": return "TEAM_LOGO";
+    case "ORGANIZATIONS": case "ORGS": case "ORG": return "ORG_LOGO";
+    case "TOURNAMENTS": case "TOURNAMENT": return "TOURNAMENT_BANNER";
+    case "SCRIMS": case "SCRIM": return "SCRIM_BANNER";
+    case "PRODUCTS": case "PRODUCT": return "PRODUCT_IMAGE";
+    case "NEWS": return "NEWS_IMAGE";
+    case "SPONSORS": case "SPONSOR": return "SPONSOR_LOGO";
+    case "PAYMENTS": case "PAYMENT": return "PAYMENT_PROOF";
+    default: return "OTHER";
+  }
 }
 
 async function uploadBufferMultiProvider(

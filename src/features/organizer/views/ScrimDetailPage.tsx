@@ -185,7 +185,7 @@ export default function ScrimDetailPage() {
   }, [id, scrim, editForm, scrimCollection, showToast]);
 
   const handleToggleSlot = useCallback(async (slotNumber: number) => {
-    if (!scrim) return;
+    if (!scrim || !id) return;
 
     try {
       const slotsArray = normalizeScrimSlots(scrim.slots, scrim.totalSlots, scrim.filledSlots ?? scrim.currentPlayers);
@@ -197,6 +197,9 @@ export default function ScrimDetailPage() {
       });
       const filled = countFilledScrimSlots(newSlots);
       await updateDoc(doc(db, scrimCollection, id), { slots: newSlots, filledSlots: filled, currentPlayers: filled });
+      const altCollection = scrimCollection === 'tournaments' ? 'scrims' : 'tournaments';
+      await updateDoc(doc(db, altCollection, id), { slots: newSlots, filledSlots: filled, currentPlayers: filled }).catch(() => {});
+      setScrim((prev: any) => prev ? { ...prev, slots: newSlots, filledSlots: filled, currentPlayers: filled } : prev);
       showToast(`Slot ${slotNumber} toggled`, 'info');
     } catch {
       showToast('Failed to toggle slot', 'error');
