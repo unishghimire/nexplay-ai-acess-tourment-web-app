@@ -117,16 +117,27 @@ const ScrimsContent: React.FC = () => {
         setLoading(false);
     }, []);
 
-    useEffect(() => {
-        fetchScrims();
-    }, [fetchScrims]);
+    const [dbGames, setDbGames] = useState<string[]>([]);
 
-    // Extract dynamic unique games list from fetched scrims + standard titles
+    useEffect(() => {
+        const fetchDbGames = async () => {
+            try {
+                const snap = await getDocs(query(collection(db, 'games'), where('isPublished', '==', true)));
+                const names = snap.docs.map(d => d.data().name).filter(Boolean);
+                setDbGames(names);
+            } catch (err) {
+                console.warn('Could not fetch published games for scrims filter:', err);
+            }
+        };
+        fetchDbGames();
+    }, []);
+
+    // Extract dynamic unique games list strictly from database games + active scrims
     const availableGames = React.useMemo(() => {
-        const standardGames = ['PUBG Mobile', 'Free Fire', 'Mobile Legends', 'Valorant', 'MLBB'];
         const fromScrims = scrims.map(s => s.game).filter(Boolean);
-        return Array.from(new Set(['All', ...standardGames, ...fromScrims]));
-    }, [scrims]);
+        const combined = Array.from(new Set([...dbGames, ...fromScrims]));
+        return combined.length > 0 ? ['All', ...combined] : ['All'];
+    }, [dbGames, scrims]);
 
     const normalizeGameStr = (g?: string) => {
         if (!g) return '';

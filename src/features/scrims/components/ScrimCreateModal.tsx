@@ -34,14 +34,6 @@ interface ScrimCreateModalProps {
   onSuccess?: () => void;
 }
 
-const GAME_OPTIONS = [
-  'Free Fire',
-  'PUBG Mobile',
-  'Mobile Legends',
-  'Valorant',
-  'Call of Duty Mobile',
-];
-
 const MAP_OPTIONS: Record<string, string[]> = {
   'Free Fire': ['Bermuda', 'Kalahari', 'Purgatory', 'Alpine', 'NeXTerra'],
   'PUBG Mobile': ['Erangel', 'Miramar', 'Sanhok', 'Vikendi', 'Nusa'],
@@ -66,6 +58,28 @@ export default function ScrimCreateModal({
   const { showToast } = useNotification();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [dbGames, setDbGames] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchGames = async () => {
+      try {
+        const snap = await getDocs(query(collection(db, 'games'), where('isPublished', '==', true)));
+        const gList = snap.docs.map(d => ({ id: d.id, ...(d.data() as any) }));
+        setDbGames(gList);
+        if (!editScrim && gList.length > 0) {
+          const firstGame = gList[0].name;
+          setFormData(prev => ({
+            ...prev,
+            game: prev.game || firstGame,
+            map: MAP_OPTIONS[firstGame]?.[0] || 'Default Map'
+          }));
+        }
+      } catch (e) {
+        console.warn('Could not fetch games in ScrimCreateModal:', e);
+      }
+    };
+    fetchGames();
+  }, [editScrim]);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -111,10 +125,10 @@ export default function ScrimCreateModal({
     } else {
       setFormData({
         title: '',
-        game: 'Free Fire',
+        game: dbGames[0]?.name || 'Free Fire',
         format: 'Battle Royale',
         teamType: 'squad',
-        map: 'Bermuda',
+        map: MAP_OPTIONS[dbGames[0]?.name]?.[0] || 'Bermuda',
         totalSlots: 12,
         entryFee: 0,
         prizePool: 0,
@@ -326,7 +340,10 @@ export default function ScrimCreateModal({
                   }}
                   className="w-full bg-black border border-gray-800 rounded-xl p-3 text-sm text-white font-bold focus-visible:outline-none focus:border-emerald-500"
                 >
-                  {GAME_OPTIONS.map((g) => (
+                  {(dbGames.length > 0
+                    ? Array.from(new Set(dbGames.map((g) => g.name)))
+                    : (formData.game ? [formData.game] : ['Free Fire'])
+                  ).map((g) => (
                     <option key={g} value={g}>
                       {g}
                     </option>
