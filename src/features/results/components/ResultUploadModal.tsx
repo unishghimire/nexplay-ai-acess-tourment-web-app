@@ -144,6 +144,10 @@ const ResultUploadModal: React.FC<ResultUploadModalProps> = ({ isOpen, onClose, 
                 if (isNaN(res.score)) {
                     showToast('Score must be a number for all leaderboard entries.', 'error');
                     return;
+                }
+            }
+        }
+
         // Validate prize pool allocation for manual payout
         if (activeTab === 'manual' && tournament.prizePool && tournament.prizePool > 0) {
             const totalAllocated = winners.reduce((sum, w) => sum + (Number(w.amount) || 0), 0);

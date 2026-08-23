@@ -298,9 +298,14 @@ service cloud.firestore {
     }
 
     // AUD-013: protected credentials subcollection for scrims (same pattern as tournaments)
+    function isScrimParticipant(scrimId) {
+      return isSignedIn() &&
+             exists(/databases/$(database)/documents/participants/$(scrimId + '_' + request.auth.uid));
+    }
     match /scrims/{scrimId}/credentials/{credId} {
       allow get: if isSignedIn() && isValidId(scrimId) && (
         isAdmin() ||
+        isScrimParticipant(scrimId) ||
         (exists(/databases/$(database)/documents/scrims/$(scrimId)) &&
          (get(/databases/$(database)/documents/scrims/$(scrimId)).data.hostUid == request.auth.uid ||
           get(/databases/$(database)/documents/scrims/$(scrimId)).data.orgId == request.auth.uid))

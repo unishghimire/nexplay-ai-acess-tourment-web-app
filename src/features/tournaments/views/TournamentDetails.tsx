@@ -53,36 +53,63 @@ export default function TournamentDetails() {
     const [roomCreds, setRoomCreds] = useState<{ roomId?: string; roomPass?: string } | null>(null);
     const [hostProfile, setHostProfile] = useState<UserProfile | null>(null);
 
+    const [eventCollection, setEventCollection] = useState<'tournaments' | 'scrims'>('tournaments');
+
     useEffect(() => {
         if (!id) return;
         setLoading(true);
 
-        // 1. Core Tournament Listener (Real-time & Self-healing)
+        let unsubScrims: (() => void) | null = null;
+
+        // 1. Core Tournament Listener (Real-time & Self-healing with fallback to 'scrims')
         const unsubTournament = onSnapshot(doc(db, 'tournaments', id), (snapshot) => {
             if (snapshot.exists()) {
                 const tData = { id: snapshot.id, ...snapshot.data() } as Tournament;
                 setTournament(tData);
+                setEventCollection('tournaments');
                 setLoading(false);
             } else {
-                showToast("Tournament not found", "error");
-                navigate('/tournaments');
+                // Fallback to legacy 'scrims' collection
+                unsubScrims = onSnapshot(doc(db, 'scrims', id), (scrimSnap) => {
+                    if (scrimSnap.exists()) {
+                        const sData = { id: scrimSnap.id, ...scrimSnap.data(), matchType: 'scrims' } as Tournament;
+                        setTournament(sData);
+                        setEventCollection('scrims');
+                        setLoading(false);
+                    } else {
+                        showToast("Event not found", "error");
+                        navigate('/tournaments');
+                    }
+                }, () => {
+                    showToast("Event not found", "error");
+                    navigate('/tournaments');
+                });
             }
         }, (error) => {
             console.error("Tournament lookup failed:", error);
             // Self-healing: if listener fails, try one-time fetch as fallback
             getDoc(doc(db, 'tournaments', id)).then(snap => {
-                if (snap.exists()) setTournament({ id: snap.id, ...snap.data() } as Tournament);
+                if (snap.exists()) {
+                    setTournament({ id: snap.id, ...snap.data() } as Tournament);
+                    setEventCollection('tournaments');
+                } else {
+                    getDoc(doc(db, 'scrims', id)).then(scrimSnap => {
+                        if (scrimSnap.exists()) {
+                            setTournament({ id: scrimSnap.id, ...scrimSnap.data(), matchType: 'scrims' } as Tournament);
+                            setEventCollection('scrims');
+                        }
+                    });
+                }
             }).finally(() => setLoading(false));
         });
-
-        // 2. Participants Listener — moved to a separate effect so the full
-        // roster subscription is limited to host/admin (BUG-037). Non-hosts
-        // only see their own registration via per-doc get rules.
 
         // 3. Related Tournaments & Host Profile (One-time fetch is okay)
         const fetchMeta = async () => {
             try {
-                const docSnap = await getDoc(doc(db, 'tournaments', id));
+                let docSnap = await getDoc(doc(db, 'tournaments', id));
+                if (!docSnap.exists()) {
+                    docSnap = await getDoc(doc(db, 'scrims', id));
+                }
                 if (docSnap.exists()) {
                     const tData = docSnap.data() as Tournament;
                     
@@ -114,8 +141,9 @@ export default function TournamentDetails() {
 
         return () => {
             unsubTournament();
+            if (unsubScrims) unsubScrims();
         };
-    }, [id]);
+    }, [id, navigate, showToast]);
 
     // Participants roster subscription — full roster is only readable by the
     // tournament host or an admin (BUG-037). Non-hosts get their own
@@ -336,10 +364,10 @@ export default function TournamentDetails() {
     useEffect(() => {
         if (!tournament || !isJoined || !user) return;
         if (tournament.status !== 'live' && tournament.status !== 'upcoming') return;
-        fetchRoomCredentials(tournament.id).then(creds => {
+        fetchRoomCredentials(tournament.id, undefined, eventCollection).then(creds => {
             if (creds) setRoomCreds(creds);
         });
-    }, [tournament?.id, tournament?.status, isJoined, user]);
+    }, [tournament?.id, tournament?.status, isJoined, user, eventCollection]);
 
     if (loading) {
         return (
