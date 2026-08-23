@@ -125,6 +125,8 @@ router.post("/api/tournaments/:id/results/upload", authenticateToken, rateLimit(
       ['Group not found'].includes(message) ? 404 : message.includes('already been uploaded') ? 409 : 500;
     res.status(status).json({ success: false, message: status === 500 ? "Result upload failed" : message });
   }
+});
+
 // Assign Team to Group with strict max_teams limit
 router.post("/api/tournaments/:id/groups/:groupId/assign-team", authenticateToken, rateLimit(10, 15 * 60 * 1000), async (req: any, res) => {
   try {
@@ -400,39 +402,6 @@ router.delete("/api/tournaments/:id",
   }
 );
 
-// Scrims API
-router.get("/api/scrims", rateLimit(30, 60 * 1000), async (req, res) => {
-  try {
-    // Each source has a different schema history. Query by indexed fields,
-    // rather than scanning every tournament, then merge partial successes.
-    const sources = await Promise.allSettled([
-      db.collection("scrims").where("status", "in", ["open", "live"]).get(),
-      db.collection("tournaments").where("matchType", "==", "scrims").get(),
-      db.collection("tournaments").where("isScrim", "==", true).get(),
-    ]);
-    const snapshots = sources
-      .filter((result): result is PromiseFulfilledResult<FirebaseFirestore.QuerySnapshot> => result.status === 'fulfilled')
-      .map(result => result.value);
-
-    if (snapshots.length === 0) {
-      const errors = sources
-        .filter((result): result is PromiseRejectedResult => result.status === 'rejected')
-        .map(result => result.reason);
-      console.error("All scrim data sources failed:", errors);
-      return res.status(503).json({ success: false, message: "Scrims are temporarily unavailable", scrims: [] });
-    }
-
-    const activeStatuses = new Set(["open", "upcoming", "published", "live"]);
-    const combinedMap = new Map<string, any>();
-    snapshots
-      .flatMap(snapshot => snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })))
-      .filter((scrim: any) => activeStatuses.has(scrim.status))
-      .forEach(scrim => combinedMap.set(scrim.id, scrim));
-    const allScrims = Array.from(combinedMap.values());
-
-    res.json({ success: true, scrims: allScrims });
-  } catch (error: any) {
-    console.error("Error in /api/scrims route:", error);
 // Automated Match Reminders Dispatcher (Cron / Automated Agent)
 router.post("/api/tournaments/cron/match-reminders", rateLimit(10, 15 * 60 * 1000), async (req, res) => {
   try {

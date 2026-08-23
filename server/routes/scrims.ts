@@ -13,23 +13,41 @@ export function getScrimFormatSlots(format?: string | null): number {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 1. GET /api/scrims — Fetch all active scrims
+// 1. GET /api/scrims — Fetch all active scrims (dual-collection resilient)
 // ─────────────────────────────────────────────────────────────────────────────
 router.get("/api/scrims", rateLimit(60, 60 * 1000), async (req, res) => {
   try {
     const { game, format } = req.query;
-    let scrimsQuery: FirebaseFirestore.Query = db.collection("scrims")
-      .where("status", "in", ["open", "full", "credentials_sent", "live"]);
+    const sources = await Promise.allSettled([
+      db.collection("scrims").get(),
+      db.collection("tournaments").where("matchType", "==", "scrims").get(),
+      db.collection("tournaments").where("isScrim", "==", true).get(),
+    ]);
 
-    if (typeof game === "string" && game.trim()) {
-      scrimsQuery = scrimsQuery.where("game", "==", game.trim());
-    }
-    if (typeof format === "string" && format.trim()) {
-      scrimsQuery = scrimsQuery.where("format", "==", format.trim());
+    const activeStatuses = new Set(["open", "full", "credentials_sent", "live", "upcoming", "published"]);
+    const combinedMap = new Map<string, any>();
+
+    for (const result of sources) {
+      if (result.status === 'fulfilled') {
+        for (const doc of result.value.docs) {
+          const data = { id: doc.id, ...doc.data() };
+          if (activeStatuses.has(data.status)) {
+            combinedMap.set(doc.id, data);
+          }
+        }
+      }
     }
 
-    const snap = await scrimsQuery.get();
-    const scrims = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    let scrims = Array.from(combinedMap.values());
+
+    if (typeof game === "string" && game.trim() && game !== "All") {
+      const g = game.trim().toLowerCase();
+      scrims = scrims.filter(s => s.game && (s.game.toLowerCase() === g || (g === "mlbb" && s.game.toLowerCase().includes("legend"))));
+    }
+
+    if (typeof format === "string" && format.trim() && format !== "All") {
+      scrims = scrims.filter(s => s.format === format.trim());
+    }
 
     return res.json({ success: true, scrims });
   } catch (error: any) {
