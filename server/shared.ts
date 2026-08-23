@@ -29,9 +29,9 @@ export const __filename = filename;
 export const __dirname = dirname;
 
 let firebaseConfig: any = {
-  projectId: process.env.FIREBASE_PROJECT_ID || process.env.VITE_FIREBASE_PROJECT_ID || "gen-lang-client-0077787807",
-  storageBucket: process.env.FIREBASE_STORAGE_BUCKET || process.env.VITE_FIREBASE_STORAGE_BUCKET || "gen-lang-client-0077787807.firebasestorage.app",
-  firestoreDatabaseId: process.env.FIREBASE_DATABASE_ID || process.env.VITE_FIREBASE_DATABASE_ID || "ai-studio-26f2d1e6-0f23-429d-bff6-19f4e58cf589",
+  projectId: process.env.FIREBASE_PROJECT_ID || process.env.VITE_FIREBASE_PROJECT_ID || "nexplayorg-app",
+  storageBucket: process.env.FIREBASE_STORAGE_BUCKET || process.env.VITE_FIREBASE_STORAGE_BUCKET || "nexplayorg-app.firebasestorage.app",
+  firestoreDatabaseId: process.env.FIREBASE_DATABASE_ID || process.env.VITE_FIREBASE_DATABASE_ID || undefined,
 };
 
 try {
@@ -88,7 +88,9 @@ if (credential) {
 
 export const firebaseApp = admin.initializeApp(appOptions);
 
-export const db = getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId);
+export const db = firebaseConfig.firestoreDatabaseId
+  ? getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId)
+  : getFirestore(firebaseApp);
 export const bucket = admin.storage().bucket();
 export { admin, Type };
 

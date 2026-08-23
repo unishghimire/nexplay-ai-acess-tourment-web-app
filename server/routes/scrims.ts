@@ -402,36 +402,64 @@ router.post("/api/scrims/:id/payout", authenticateToken, rateLimit(5, 15 * 60 * 
 router.delete("/api/scrims/:id", authenticateToken, rateLimit(10, 15 * 60 * 1000), async (req: any, res) => {
   try {
     const { id } = req.params;
+    if (!id || id.length > 128) return res.status(400).json({ success: false, message: "Invalid scrim ID" });
     const uid = req.user.userId;
 
-    const scrimRef = db.collection("scrims").doc(id);
-    const scrimSnap = await scrimRef.get();
-    if (!scrimSnap.exists) return res.status(404).json({ success: false, message: "Scrim not found" });
+    let targetRef = db.collection("scrims").doc(id);
+    let targetSnap = await targetRef.get();
 
-    const scrim = scrimSnap.data()!;
-    const isOwner = scrim.hostUid === uid || scrim.orgId === uid || req.user.role === "admin";
-    if (!isOwner) return res.status(403).json({ success: false, message: "Unauthorized" });
+    if (!targetSnap.exists) {
+      targetRef = db.collection("tournaments").doc(id);
+      targetSnap = await targetRef.get();
+    }
+
+    if (!targetSnap.exists) {
+      return res.status(404).json({ success: false, message: "Scrim not found" });
+    }
+
+    const scrim = targetSnap.data()!;
+    const ownerId = scrim.hostUid || scrim.orgId || scrim.hostId || scrim.userId || scrim.organizerId || scrim.createdBy;
+    const isOwner = ownerId === uid || req.user.role === "admin";
+    if (!isOwner) return res.status(403).json({ success: false, message: "Unauthorized — only the host/organizer or admin can delete this scrim" });
 
     if (scrim.status === "live") {
-      return res.status(400).json({ success: false, message: "Cannot delete an active live scrim. End it first." });
+      return res.status(400).json({ success: false, message: "Cannot delete an active live scrim. End or cancel it first." });
     }
 
     const operations: Array<(batch: FirebaseFirestore.WriteBatch) => void> = [];
 
-    // Delete participants
-    const partsSnap = await db.collection("participants").where("scrimId", "==", id).get();
-    partsSnap.docs.forEach(d => operations.push(batch => batch.delete(d.ref)));
+    // 1. Delete participants (both scrimId and tournamentId references)
+    const [pScrimSnap, pTournSnap] = await Promise.all([
+      db.collection("participants").where("scrimId", "==", id).get(),
+      db.collection("participants").where("tournamentId", "==", id).get()
+    ]);
+    pScrimSnap.docs.forEach(d => operations.push(batch => batch.delete(d.ref)));
+    pTournSnap.docs.forEach(d => operations.push(batch => batch.delete(d.ref)));
 
-    // Delete credentials subcollection
-    const credsSnap = await scrimRef.collection("credentials").get();
-    credsSnap.docs.forEach(d => operations.push(batch => batch.delete(d.ref)));
+    // 2. Delete credentials subcollections in both locations
+    const [sCreds, tCreds] = await Promise.all([
+      db.collection("scrims").doc(id).collection("credentials").get(),
+      db.collection("tournaments").doc(id).collection("credentials").get()
+    ]);
+    sCreds.docs.forEach(d => operations.push(batch => batch.delete(d.ref)));
+    tCreds.docs.forEach(d => operations.push(batch => batch.delete(d.ref)));
 
-    // Delete scrim document
-    operations.push(batch => batch.delete(scrimRef));
+    // 3. Delete results and earnings if any
+    const [resultsSnap, earningsSnap] = await Promise.all([
+      db.collection("results").where("tournamentId", "==", id).get(),
+      db.collection("tournamentEarnings").where("tournamentId", "==", id).get()
+    ]);
+    resultsSnap.docs.forEach(d => operations.push(batch => batch.delete(d.ref)));
+    earningsSnap.docs.forEach(d => operations.push(batch => batch.delete(d.ref)));
+
+    // 4. Delete document in both collections
+    operations.push(batch => batch.delete(db.collection("scrims").doc(id)));
+    operations.push(batch => batch.delete(db.collection("tournaments").doc(id)));
 
     await commitBatchedWrites(() => db.batch(), operations);
     return res.json({ success: true, message: "Scrim deleted successfully" });
   } catch (error: any) {
+    console.error("Delete scrim error:", error);
     return res.status(500).json({ success: false, message: error.message || "Failed to delete scrim" });
   }
 });
