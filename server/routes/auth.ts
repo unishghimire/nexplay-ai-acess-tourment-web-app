@@ -47,6 +47,8 @@ router.post("/api/admin/set-claims", authenticateToken, requireAdmin, rateLimit(
     }
     // Set custom claims on the Firebase Auth user
     await admin.auth().setCustomUserClaims(uid, { role });
+    await db.collection("users").doc(uid).set({ role }, { merge: true });
+    await db.collection("users_public").doc(uid).set({ role }, { merge: true });
     res.json({ success: true, message: `Custom claims set: role=${role} for uid=${uid}` });
   } catch (error: any) {
     console.error("Set claims error:", error);

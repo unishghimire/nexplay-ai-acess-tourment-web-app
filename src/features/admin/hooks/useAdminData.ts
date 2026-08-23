@@ -1014,6 +1014,7 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
         try {
             // Update Firestore doc
             await updateDoc(doc(db, 'users', uid), { role: newRole });
+            await setDoc(doc(db, 'users_public', uid), { role: newRole, updatedAt: serverTimestamp() }, { merge: true }).catch(() => {});
             // Sync custom claims to Firebase Auth (server-side admin call)
             try {
                 const token = await auth.currentUser?.getIdToken();

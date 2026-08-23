@@ -25,13 +25,22 @@ const OrgBrowser: React.FC = () => {
     const fetchOrgs = async () => {
         setLoading(true);
         try {
-            const snap = await getDocs(query(collection(db, 'users_public'), where('role', '==', 'organizer'), limit(200)));
+            const snap = await getDocs(query(collection(db, 'users_public'), where('role', 'in', ['organizer', 'admin']), limit(200)));
             const orgsData = snap.docs
                 .map(d => ({ uid: d.id, ...(d.data() as any) }))
-                .filter((d: any) => d.role === 'organizer');
+                .filter((d: any) => d.role === 'organizer' || d.role === 'admin' || (d.orgName && d.orgName.trim() !== ''));
             setOrgs(orgsData);
         } catch (error: any) {
             console.error('FetchOrganizersFailed:', error);
+            try {
+                const fallbackSnap = await getDocs(query(collection(db, 'users_public'), limit(200)));
+                const fallbackData = fallbackSnap.docs
+                    .map(d => ({ uid: d.id, ...(d.data() as any) }))
+                    .filter((d: any) => d.role === 'organizer' || d.role === 'admin' || (d.orgName && d.orgName.trim() !== ''));
+                setOrgs(fallbackData);
+            } catch (fbErr) {
+                console.error('FallbackFetchOrganizersFailed:', fbErr);
+            }
         } finally {
             setLoading(false);
         }
