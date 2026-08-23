@@ -26,9 +26,19 @@ export function useOrgData() {
     setLoading(true);
     setError(null);
     try {
-      const q = query(collection(db, 'tournaments'), where('hostUid', '==', user.uid));
-      const snap = await getDocs(q);
-      const tours = await Promise.all(snap.docs.map(async d => {
+      const [tSnap, sSnap] = await Promise.all([
+        getDocs(query(collection(db, 'tournaments'), where('hostUid', '==', user.uid))),
+        getDocs(query(collection(db, 'scrims'), where('hostUid', '==', user.uid))).catch(() => ({ docs: [] } as any)),
+      ]);
+
+      const seenIds = new Set<string>();
+      const combinedDocs = [...tSnap.docs, ...sSnap.docs].filter(d => {
+        if (seenIds.has(d.id)) return false;
+        seenIds.add(d.id);
+        return true;
+      });
+
+      const tours = await Promise.all(combinedDocs.map(async d => {
         const tournament = { id: d.id, ...d.data() } as Tournament;
         if (tournament.status !== 'live') return tournament;
         const credentials = await fetchRoomCredentials(tournament.id);
@@ -266,10 +276,17 @@ export function useOrgData() {
     if (!user) throw new Error('Not authenticated');
     const token = await auth.currentUser?.getIdToken();
     if (!token) throw new Error('Authentication required');
-    const res = await fetch(`/api/tournaments/${id}`, {
+    let res = await fetch(`/api/tournaments/${id}`, {
       method: 'DELETE',
       headers: { 'Authorization': `Bearer ${token}` },
     });
+    if (!res.ok) {
+      // Fallback attempt with /api/scrims
+      res = await fetch(`/api/scrims/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+    }
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
       throw new Error(errData.message || 'Failed to delete tournament or scrim');
