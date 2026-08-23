@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { doc, getDoc, onSnapshot, setDoc, updateDoc, Timestamp } from 'firebase/firestore';
-import { db } from '../../../shared/config/firebase';
+import { db, auth } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { fetchRoomCredentials } from '../../../shared/services/roomCredentials';
@@ -228,7 +228,7 @@ export default function ScrimDetailPage() {
   const handleDeleteScrim = useCallback(async () => {
     if (!id || !window.confirm(`Are you sure you want to permanently delete "${scrim?.title || 'this scrim'}"?`)) return;
     try {
-      const token = await user?.getIdToken();
+      const token = await auth.currentUser?.getIdToken();
       const res = await fetch(`/api/scrims/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }

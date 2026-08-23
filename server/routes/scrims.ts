@@ -30,7 +30,7 @@ router.get("/api/scrims", rateLimit(60, 60 * 1000), async (req, res) => {
     for (const result of sources) {
       if (result.status === 'fulfilled') {
         for (const doc of result.value.docs) {
-          const data = { id: doc.id, ...doc.data() };
+          const data: any = { id: doc.id, ...doc.data() };
           if (activeStatuses.has(data.status)) {
             combinedMap.set(doc.id, data);
           }
