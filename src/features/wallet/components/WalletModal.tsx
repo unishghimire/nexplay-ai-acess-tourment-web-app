@@ -181,10 +181,6 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
     if (!transactionCode) {
       return showToast('Please enter the transaction reference code or name', 'error');
     }
-    if (!proofUrl) {
-      return showToast('Payment screenshot is required — please select/paste receipt image', 'error');
-    }
-
     const amount = parseFloat(depositAmount);
     if (isNaN(amount) || amount <= 0) return showToast('Please enter a valid amount greater than 0', 'error');
 
@@ -204,7 +200,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
           method: selectedMethod.name || 'Digital Wallet',
           senderNumber: senderNumber.trim(),
           transactionCode: transactionCode.trim(),
-          proofUrl,
+          proofUrl: proofUrl || '',
         }),
       });
 
@@ -242,7 +238,8 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
     if (settings?.minWithdrawal && amount < settings.minWithdrawal) {
       return showToast(`Minimum withdrawal amount is ${formatCurrency(settings.minWithdrawal)}`, 'error');
     }
-    if (amount > (profile?.balance || 0)) return showToast('Insufficient balance', 'error');
+    const totalAvailable = (profile?.balance || 0) + (profile?.orgWalletBalance || 0);
+    if (amount > totalAvailable) return showToast('Insufficient balance', 'error');
 
     setIsSubmitting(true);
     try {
@@ -459,7 +456,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
 
                     <button type="button" 
                       onClick={handleDepositSubmit}
-                      disabled={isSubmitting || isUploading || !proofUrl}
+                      disabled={isSubmitting || isUploading}
                       className="w-full bg-brand-600 hover:bg-brand-500 text-white py-4 rounded-xl font-black uppercase tracking-widest transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isSubmitting ? 'Processing...' : 'Submit Deposit'}
@@ -472,7 +469,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
             <div className="space-y-6 animate-fade-in">
               <div className="bg-dark p-4 rounded-xl border border-gray-800 text-center">
                 <p className="text-[10px] text-gray-500 uppercase font-black mb-1">Available Balance</p>
-                <p className="text-2xl font-black text-brand-400">{formatCurrency(profile?.balance || 0)}</p>
+                <p className="text-2xl font-black text-brand-400">{formatCurrency((profile?.balance || 0) + (profile?.orgWalletBalance || 0))}</p>
               </div>
               <div className="space-y-4">
                 <input 

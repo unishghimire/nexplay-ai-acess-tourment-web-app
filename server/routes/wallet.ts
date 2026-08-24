@@ -43,16 +43,13 @@ router.post("/api/wallet/deposit",
       if (!transactionCode || typeof transactionCode !== 'string' || transactionCode.length > 50) {
         return res.status(400).json({ success: false, message: "Invalid transaction code" });
       }
-      if (!proofUrl || typeof proofUrl !== 'string') {
-        return res.status(400).json({ success: false, message: "Payment screenshot is required" });
-      }
-      const isDataUri = proofUrl.startsWith("data:image/");
-      if (!isDataUri) {
+      let finalProofUrl = (typeof proofUrl === 'string') ? proofUrl.trim() : '';
+      if (finalProofUrl && !finalProofUrl.startsWith("data:image/")) {
         try {
-          const url = new URL(proofUrl);
-          if (!['http:', 'https:'].includes(url.protocol)) throw new Error();
+          const url = new URL(finalProofUrl);
+          if (!['http:', 'https:'].includes(url.protocol)) finalProofUrl = '';
         } catch {
-          return res.status(400).json({ success: false, message: "Invalid screenshot URL" });
+          finalProofUrl = '';
         }
       }
 
@@ -88,7 +85,7 @@ router.post("/api/wallet/deposit",
         timestamp: admin.firestore.FieldValue.serverTimestamp(),
         accountDetails: `Sender Number: ${senderNumber}\nTransaction Code/Name: ${transactionCode}`,
         transactionCode,
-        proofUrl,
+        proofUrl: finalProofUrl,
         refId: `DEP-${Date.now()}`,
       });
 
@@ -128,8 +125,14 @@ router.post("/api/wallet/withdraw",
         const userDoc = await tx.get(userRef);
         if (!userDoc.exists) throw new Error("User not found");
 
-        const balanceBefore = userDoc.data()?.balance || 0;
-        if (numAmount > balanceBefore) throw new Error("Insufficient balance");
+        const userData = userDoc.data() || {};
+        const playerBalance = Number(userData.balance || 0);
+        const orgBalance = Number(userData.orgWalletBalance || 0);
+        const totalAvailable = playerBalance + orgBalance;
+
+        if (numAmount > totalAvailable) {
+          throw new Error("Insufficient balance");
+        }
 
         // Idempotency: block duplicate pending withdrawals with same amount + method within 5 min
         const dupSnap = await db.collection('transactions')
@@ -145,7 +148,19 @@ router.post("/api/wallet/withdraw",
           if (age < 5 * 60 * 1000) throw new Error("Duplicate withdrawal request. Please wait a few minutes before trying again.");
         }
 
-        const balanceAfter = balanceBefore - numAmount;
+        // Allocate deduction across player balance and org wallet balance
+        let deductPlayer = 0;
+        let deductOrg = 0;
+        if (req.body.source === 'org' || (!playerBalance && orgBalance >= numAmount)) {
+          deductOrg = Math.min(orgBalance, numAmount);
+          deductPlayer = numAmount - deductOrg;
+        } else {
+          deductPlayer = Math.min(playerBalance, numAmount);
+          deductOrg = numAmount - deductPlayer;
+        }
+
+        const balanceBefore = totalAvailable;
+        const balanceAfter = totalAvailable - numAmount;
 
         const txRef = db.collection('transactions').doc();
         tx.set(txRef, {
@@ -160,11 +175,18 @@ router.post("/api/wallet/withdraw",
           refId: `WIT-${Date.now()}`,
           balanceBefore,
           balanceAfter,
+          deductPlayer,
+          deductOrg,
         });
 
-        tx.update(userRef, {
-          balance: admin.firestore.FieldValue.increment(-numAmount),
-        });
+        const updates: any = {};
+        if (deductPlayer > 0) {
+          updates.balance = admin.firestore.FieldValue.increment(-deductPlayer);
+        }
+        if (deductOrg > 0) {
+          updates.orgWalletBalance = admin.firestore.FieldValue.increment(-deductOrg);
+        }
+        tx.update(userRef, updates);
 
         return { transactionId: txRef.id, newBalance: balanceAfter };
       });
