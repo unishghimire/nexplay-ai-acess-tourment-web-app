@@ -7,9 +7,10 @@ import { DEFAULT_BANNER } from '../../../shared/constants/constants';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { formatCurrency, formatDate, formatGameName, getYoutubeId, toDateSafe, sanitizeUrl } from '../../../shared/utils/utils';
 import { getSlotCount, getFilledSlotCount } from '../../../shared/utils/scrimSlots';
-import { Clock, Users, Trophy, Lock, Eye, EyeOff, Play, Share2, Calendar, MapPin, Info, Medal, ExternalLink, ChevronRight, AlertCircle, CheckCircle2, Search, Building2 , Target} from 'lucide-react';
+import { Clock, Users, Trophy, Lock, Eye, EyeOff, Play, Share2, Calendar, MapPin, Info, Medal, ExternalLink, ChevronRight, AlertCircle, CheckCircle2, Search, Building2 , Target, Trash2, Settings2 } from 'lucide-react';
 import RegistrationModal from '../components/RegistrationModal';
 import JoinTournamentModal from '../components/JoinTournamentModal';
+import Modal from '../../../shared/components/Modal';
 import { motion, AnimatePresence } from 'motion/react';
 import { NotificationService } from '../../../shared/services/NotificationService';
 import { useNotification } from '../../../shared/context/NotificationContext';
@@ -52,8 +53,22 @@ export default function TournamentDetails() {
     const [showPassword, setShowPassword] = useState(false);
     const [roomCreds, setRoomCreds] = useState<{ roomId?: string; roomPass?: string } | null>(null);
     const [hostProfile, setHostProfile] = useState<UserProfile | null>(null);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const [eventCollection, setEventCollection] = useState<'tournaments' | 'scrims'>('tournaments');
+
+    const isHostOrAdmin = Boolean(
+        (user && tournament && (
+            tournament.hostUid === user.uid ||
+            (tournament as any).orgId === user.uid ||
+            (tournament as any).hostId === user.uid ||
+            (tournament as any).userId === user.uid ||
+            (tournament as any).createdBy === user.uid
+        )) ||
+        profile?.role === 'admin' ||
+        user?.role === 'admin'
+    );
 
     useEffect(() => {
         if (!id) return;
@@ -360,6 +375,46 @@ export default function TournamentDetails() {
         }
     };
 
+    const handleDeleteTournament = async () => {
+        if (!id || isDeleting || !tournament) return;
+        setIsDeleting(true);
+        try {
+            const token = await auth.currentUser?.getIdToken();
+            if (!token) throw new Error("Authentication required");
+
+            let res = await fetch(`/api/tournaments/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) {
+                res = await fetch(`/api/scrims/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+            }
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.message || 'Failed to delete');
+            }
+
+            const isScrim = tournament.matchType === 'scrims' || (tournament as any).isScrim === true;
+            showToast(
+                isScrim ? 'Scrim deleted successfully' : 'Tournament deleted successfully',
+                'success'
+            );
+            setShowDeleteModal(false);
+            if (isScrim) {
+                navigate('/organizer?tab=scrims');
+            } else {
+                navigate('/organizer?tab=tournaments');
+            }
+        } catch (err: any) {
+            showToast(err.message || 'Failed to delete tournament', 'error');
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
     // Fetch room credentials from secure subcollection (not the public tournament doc)
     useEffect(() => {
         if (!tournament || !isJoined || !user) return;
@@ -446,13 +501,44 @@ export default function TournamentDetails() {
                     )}
                 </div>
 
-                <button type="button" 
-                    onClick={handleShare}
-                    aria-label="Share Tournament"
-                    className="absolute top-3 right-3 sm:top-8 sm:right-8 p-2.5 sm:p-4 bg-white/5 backdrop-blur-md hover:bg-white/10 text-white rounded-full transition-colors border border-white/10 active:scale-95 z-20 shadow-xl"
-                >
-                    <Share2 className="w-4 h-4 sm:w-6 sm:h-6" />
-                </button>
+                <div className="absolute top-3 right-3 sm:top-8 sm:right-8 flex items-center gap-2 sm:gap-3 z-20">
+                    <button type="button" 
+                        onClick={handleShare}
+                        aria-label="Share Tournament"
+                        className="p-2.5 sm:p-4 bg-white/5 backdrop-blur-md hover:bg-white/10 text-white rounded-full transition-colors border border-white/10 active:scale-95 shadow-xl"
+                        title="Share"
+                    >
+                        <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </button>
+                    {isHostOrAdmin && (
+                        <>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    if (tournament.matchType === 'scrims' || (tournament as any).isScrim === true) {
+                                        navigate(`/organizer/scrim/${tournament.id}`);
+                                    } else {
+                                        navigate(`/tournament-admin/${tournament.id}`);
+                                    }
+                                }}
+                                aria-label="Manage Event"
+                                className="p-2.5 sm:p-4 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white rounded-full transition-colors border border-white/10 active:scale-95 shadow-xl flex items-center justify-center"
+                                title="Manage / Edit Details"
+                            >
+                                <Settings2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setShowDeleteModal(true)}
+                                aria-label="Delete Event"
+                                className="p-2.5 sm:p-4 bg-red-600/30 backdrop-blur-md hover:bg-red-600/50 text-red-300 hover:text-white rounded-full transition-colors border border-red-500/40 active:scale-95 shadow-xl flex items-center justify-center"
+                                title={tournament.matchType === 'scrims' || (tournament as any).isScrim === true ? "Delete Scrim" : "Delete Tournament"}
+                            >
+                                <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                            </button>
+                        </>
+                    )}
+                </div>
 
                 <div className="absolute bottom-3 left-3 right-3 sm:bottom-8 sm:left-8 sm:right-8 lg:bottom-12 lg:left-12 lg:right-12 z-10">
                     <motion.h1 
@@ -997,6 +1083,50 @@ export default function TournamentDetails() {
                     onClose={() => setIsResultModalOpen(false)}
                     tournament={tournament}
                 />
+            )}
+
+            {/* Host / Admin Delete Confirmation Modal */}
+            {showDeleteModal && tournament && (
+                <Modal
+                    isOpen={showDeleteModal}
+                    onClose={() => setShowDeleteModal(false)}
+                    title={tournament.matchType === 'scrims' || (tournament as any).isScrim === true ? "Delete Scrim" : "Delete Tournament"}
+                >
+                    <div className="p-6 text-center">
+                        <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <Trash2 className="w-8 h-8 text-red-500" />
+                        </div>
+                        <h3 className="text-lg font-bold text-white mb-2">
+                            Permanently delete "{tournament.title}"?
+                        </h3>
+                        <p className="text-sm text-gray-400 mb-6">
+                            This action cannot be undone. All match credentials, participant registrations, and bracket records will be permanently removed.
+                        </p>
+                        <div className="flex gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setShowDeleteModal(false)}
+                                disabled={isDeleting}
+                                className="flex-1 bg-card hover:bg-surface text-white py-3 rounded-lg font-medium text-sm border border-gray-800 transition-colors min-h-[44px]"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleDeleteTournament}
+                                disabled={isDeleting}
+                                className="flex-1 bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg font-medium text-sm transition-colors min-h-[44px] flex items-center justify-center gap-2"
+                            >
+                                {isDeleting ? (
+                                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                    <Trash2 className="w-4 h-4" />
+                                )}
+                                <span>{isDeleting ? "Deleting..." : "Confirm Delete"}</span>
+                            </button>
+                        </div>
+                    </div>
+                </Modal>
             )}
         </div>
     );

@@ -7,10 +7,11 @@ import { useNotification } from '../../../shared/context/NotificationContext';
 import { fetchRoomCredentials } from '../../../shared/services/roomCredentials';
 import { countFilledScrimSlots, normalizeScrimSlots, getScrimSlotCount } from '../../../shared/utils/scrimSlots';
 import { toDateSafe } from '../../../shared/utils/utils';
+import { DEFAULT_BANNER } from '../../../shared/constants/constants';
 import {
   ChevronLeft, Save, Radio, Users, DollarSign, Calendar,
   Gamepad2, Edit2, Check, X, Lock, Unlock, Copy, Trophy,
-  Clock, MapPin, Play, CheckCircle2, RotateCcw, Trash2
+  Clock, MapPin, Play, CheckCircle2, RotateCcw, Trash2, Share2
 } from 'lucide-react';
 
 const formatRupees = (n: number = 0) => `Rs. ${new Intl.NumberFormat('en-IN').format(n)}`;
@@ -309,83 +310,140 @@ export default function ScrimDetailPage() {
 
   return (
     <div className="min-h-[100dvh] pt-20 sm:pt-24 pb-16 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <button type="button" onClick={() => navigate('/organizer?tab=scrims')} className="text-gray-400 hover:text-white">
-            <ChevronLeft className="w-6 h-6" />
+      {/* Scrim Hero Banner */}
+      <div className="relative h-64 sm:h-72 md:h-80 rounded-2xl sm:rounded-[2rem] overflow-hidden shadow-2xl group border border-gray-800 w-full">
+        <div 
+          className="absolute inset-0 bg-dark transition-transform duration-700 group-hover:scale-105" 
+          style={{
+            backgroundImage: `url('${scrim.bannerUrl || DEFAULT_BANNER}')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            opacity: 0.55
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/70 to-transparent" />
+        
+        {/* Top Badges & Actions */}
+        <div className="absolute top-3 left-3 sm:top-6 sm:left-6 flex flex-wrap items-center gap-2 z-10">
+          <button 
+            type="button" 
+            onClick={() => navigate('/organizer?tab=scrims')} 
+            className="p-2 sm:p-2.5 rounded-full bg-white/10 backdrop-blur-md hover:bg-white/20 text-white transition-colors border border-white/10 shadow-lg flex items-center justify-center"
+            title="Back to Scrims"
+          >
+            <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
-          <div>
-            <h1 className="text-2xl font-bold text-white tracking-tight">{scrim.title}</h1>
-            <p className="text-sm text-gray-500 mt-1">
-              {scrim.game || 'Free Fire'} · {scrim.format === '5v5' ? '5v5' : 'Battle Royale'}
-            </p>
-          </div>
+          <span className="bg-white/10 backdrop-blur-md text-white text-xs font-black px-3 py-1.5 rounded-full uppercase tracking-wider border border-white/10 shadow-lg">
+            {scrim.game || 'Free Fire'}
+          </span>
+          <span className="bg-brand-500/80 backdrop-blur-md text-white text-xs font-black px-3 py-1.5 rounded-full uppercase tracking-wider shadow-lg">
+            {scrim.format === '5v5' ? '5v5' : 'Battle Royale'}
+          </span>
+          <span className={`backdrop-blur-md text-white text-xs font-black px-3 py-1.5 rounded-full uppercase tracking-wider shadow-lg border ${
+            scrim.status === 'live' ? 'bg-emerald-600/90 border-emerald-500/30' :
+            scrim.status === 'completed' ? 'bg-blue-600/90 border-blue-500/30' :
+            'bg-zinc-800/90 border-zinc-700/30'
+          }`}>
+            {scrim.status === 'live' && <span className="inline-block w-1.5 h-1.5 rounded-full bg-white animate-pulse mr-1.5" />}
+            {(scrim.status || 'open').toUpperCase()}
+          </span>
         </div>
-        <div className="flex items-center gap-2">
+
+        {/* Top Right Quick Actions */}
+        <div className="absolute top-3 right-3 sm:top-6 sm:right-6 flex items-center gap-2 z-20">
           {isEditing ? (
             <>
-              <button type="button" onClick={() => setIsEditing(false)} className="px-4 py-2 rounded-lg bg-surface text-gray-300 text-sm hover:bg-surface flex items-center gap-2 min-h-[44px]">
-                <X className="w-4 h-4" /> Cancel
+              <button 
+                type="button" 
+                onClick={() => setIsEditing(false)} 
+                className="px-3.5 py-2 rounded-xl bg-white/10 backdrop-blur-md text-gray-200 text-xs font-bold hover:bg-white/20 flex items-center gap-1.5 border border-white/10 shadow-lg transition-colors min-h-[38px]"
+              >
+                <X className="w-3.5 h-3.5" /> Cancel
               </button>
-              <button type="button" onClick={handleSaveEdit} className="px-4 py-2 rounded-lg bg-brand-500 text-white text-sm hover:bg-brand-400 flex items-center gap-2 min-h-[44px]">
-                <Save className="w-4 h-4" /> Save
+              <button 
+                type="button" 
+                onClick={handleSaveEdit} 
+                className="px-3.5 py-2 rounded-xl bg-brand-500 hover:bg-brand-400 text-white text-xs font-bold flex items-center gap-1.5 shadow-lg transition-colors min-h-[38px]"
+              >
+                <Save className="w-3.5 h-3.5" /> Save
               </button>
             </>
           ) : (
             <>
-              <button type="button" onClick={() => {
-                const startDate = toDateSafe(scrim.startTime);
-                const startFormatted = startDate ? new Date(startDate.getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) : '';
-                setEditForm({
-                  title: scrim.title || '',
-                  startTime: startFormatted,
-                  entryFee: scrim.entryFee || 0,
-                  prizePool: scrim.prizePool || 0,
-                  slots: scrim.totalSlots || (Array.isArray(scrim.slots) ? scrim.slots.length : Number(scrim.slots) || 12),
-                  map: scrim.map || ''
-                });
-                setIsEditing(true);
-              }} className="px-4 py-2 rounded-lg bg-surface text-white text-sm hover:bg-surface flex items-center gap-2 min-h-[44px]">
-                <Edit2 className="w-4 h-4" /> Edit Scrim
+              <button 
+                type="button" 
+                onClick={() => {
+                  const startDate = toDateSafe(scrim.startTime);
+                  const startFormatted = startDate ? new Date(startDate.getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) : '';
+                  setEditForm({
+                    title: scrim.title || '',
+                    startTime: startFormatted,
+                    entryFee: scrim.entryFee || 0,
+                    prizePool: scrim.prizePool || 0,
+                    slots: scrim.totalSlots || (Array.isArray(scrim.slots) ? scrim.slots.length : Number(scrim.slots) || 12),
+                    map: scrim.map || ''
+                  });
+                  setIsEditing(true);
+                }} 
+                className="px-3.5 py-2 rounded-xl bg-white/10 backdrop-blur-md text-white text-xs font-bold hover:bg-white/20 flex items-center gap-1.5 border border-white/10 shadow-lg transition-colors min-h-[38px]"
+                title="Edit Scrim"
+              >
+                <Edit2 className="w-3.5 h-3.5" /> Edit
               </button>
               <button
                 type="button"
                 onClick={handleDeleteScrim}
-                className="px-4 py-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-sm flex items-center gap-2 min-h-[44px] transition-colors"
+                className="px-3.5 py-2 rounded-xl bg-red-600/30 backdrop-blur-md hover:bg-red-600/50 text-red-300 hover:text-white border border-red-500/40 text-xs font-bold flex items-center gap-1.5 shadow-lg transition-colors min-h-[38px]"
                 title="Delete Scrim"
               >
-                <Trash2 className="w-4 h-4" /> Delete
+                <Trash2 className="w-3.5 h-3.5" /> Delete Scrim
               </button>
             </>
           )}
         </div>
+
+        {/* Hero Bottom Content */}
+        <div className="absolute bottom-3 left-3 right-3 sm:bottom-6 sm:left-6 sm:right-6 z-10">
+          <h1 className="text-xl sm:text-3xl md:text-4xl font-black text-white mb-2 tracking-tight leading-tight drop-shadow-md">
+            {scrim.title}
+          </h1>
+          <div className="flex flex-wrap items-center gap-3 sm:gap-6 text-gray-200 font-bold text-xs uppercase tracking-wider">
+            <div className="flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5 text-brand-500" />
+              <span>{toDateSafe(scrim.startTime)?.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) || 'TBD'}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <MapPin className="w-3.5 h-3.5 text-brand-500" />
+              <span>{scrim.map || 'Bermuda'}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Users className="w-3.5 h-3.5 text-brand-500" />
+              <span>{filledCount} / {totalCount} Slots</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Trophy className="w-3.5 h-3.5 text-brand-500" />
+              <span>{formatRupees(scrim.prizePool)}</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Status bar */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${
-          scrim.status === 'live' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-          scrim.status === 'open' ? 'bg-surface text-gray-300 border border-gray-700' :
-          'bg-zinc-900 text-gray-500 border border-zinc-800'
-        }`}>
-          {scrim.status === 'live' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />}
-          {(scrim.status || 'open').toUpperCase()}
-        </span>
-        {/* Status toggle buttons */}
+      {/* Status control bar */}
+      <div className="flex items-center gap-3 flex-wrap bg-dark/40 border border-gray-800 rounded-xl p-3">
+        <span className="text-xs text-gray-400 font-medium">Quick Status:</span>
         {scrim.status === 'open' && (
-          <button type="button" onClick={() => handleStatusChange('live')} className="px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-medium hover:bg-emerald-500/20 flex items-center gap-1.5">
+          <button type="button" onClick={() => handleStatusChange('live')} className="px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold hover:bg-emerald-500/20 flex items-center gap-1.5 transition-colors">
             <Play className="w-3.5 h-3.5" /> Go Live
           </button>
         )}
         {scrim.status === 'live' && (
-          <button type="button" onClick={() => handleStatusChange('completed')} className="px-3 py-1.5 rounded-lg bg-surface text-gray-300 border border-gray-700 text-xs font-medium hover:bg-surface flex items-center gap-1.5">
-            <CheckCircle2 className="w-3.5 h-3.5" /> Finalize
+          <button type="button" onClick={() => handleStatusChange('completed')} className="px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20 text-xs font-semibold hover:bg-blue-500/20 flex items-center gap-1.5 transition-colors">
+            <CheckCircle2 className="w-3.5 h-3.5" /> Finalize Match
           </button>
         )}
         {scrim.status === 'completed' && (
-          <button type="button" onClick={() => handleStatusChange('open')} className="px-3 py-1.5 rounded-lg bg-surface text-gray-300 border border-gray-700 text-xs font-medium hover:bg-surface flex items-center gap-1.5">
-            <RotateCcw className="w-3.5 h-3.5" /> Reopen
+          <button type="button" onClick={() => handleStatusChange('open')} className="px-3 py-1.5 rounded-lg bg-surface text-gray-300 border border-gray-700 text-xs font-semibold hover:bg-card flex items-center gap-1.5 transition-colors">
+            <RotateCcw className="w-3.5 h-3.5" /> Reopen Scrim
           </button>
         )}
       </div>
