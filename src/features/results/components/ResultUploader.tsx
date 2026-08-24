@@ -201,9 +201,10 @@ export const ResultUploader: React.FC<ResultUploaderProps> = ({ isOpen, onClose,
 
                     if (response.ok) {
                         const json = await response.json();
-                        screenshotUrl = json.url;
+                        screenshotUrl = json.url || base64Data;
                     } else {
-                        console.error("Failed to upload screenshot to server API");
+                        console.warn("Server image processing fallback to local data URI");
+                        screenshotUrl = base64Data;
                     }
                 } catch (err) {
                     console.error("Error processing screenshot file upload:", err);

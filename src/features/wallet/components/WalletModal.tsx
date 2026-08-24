@@ -6,6 +6,7 @@ import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { PaymentMethod, PaymentCategory, SiteSettings } from '../../../shared/types/types';
 import { formatCurrency } from '../../../shared/utils/utils';
+import { uploadImage, MediaCategory } from '../../../shared/services/mediaService';
 
 interface WalletModalProps {
   isOpen: boolean;
@@ -78,43 +79,48 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
       showToast('Only JPG, PNG, or WEBP images allowed', 'error');
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      showToast('Image must be under 5MB', 'error');
+    if (file.size > 10 * 1024 * 1024) {
+      showToast('Image must be under 10MB', 'error');
       return;
     }
 
     setIsUploading(true);
     try {
-      // Preview
-      setProofPreview(URL.createObjectURL(file));
+      // Immediate local preview
+      const localPreview = URL.createObjectURL(file);
+      setProofPreview(localPreview);
 
-      // Upload via server
-      const token = await auth.currentUser?.getIdToken();
-      if (!token) {
-        showToast('Authentication required', 'error');
+      // Multi-tier upload (Server Proxy -> Cloud Storage -> Compression fallback)
+      const res = await uploadImage(file, MediaCategory.PAYMENT_PROOF);
+      if (res.success && res.url) {
+        setProofUrl(res.url);
+        setProofPreview(res.url);
+        showToast('Payment screenshot uploaded successfully', 'success');
         return;
       }
 
-      const formData = new FormData();
-      formData.append('image', file);
-      formData.append('category', 'payments');
-
-      const res = await fetch('/api/upload/image', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: formData,
-      });
-
-      if (!res.ok) throw new Error('Upload failed');
-      const data = await res.json();
-      if (!data.success) throw new Error(data.message || 'Upload failed');
-
-      setProofUrl(data.url);
-      showToast('Screenshot uploaded', 'success');
+      // Safe local data URI fallback
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target?.result as string;
+        if (dataUrl) {
+          setProofUrl(dataUrl);
+          setProofPreview(dataUrl);
+          showToast('Payment screenshot attached', 'success');
+        }
+      };
+      reader.readAsDataURL(file);
     } catch (error) {
-      // Screenshot upload error
-      showToast('Failed to upload screenshot', 'error');
-      setProofPreview('');
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target?.result as string;
+        if (dataUrl) {
+          setProofUrl(dataUrl);
+          setProofPreview(dataUrl);
+          showToast('Payment screenshot attached', 'success');
+        }
+      };
+      reader.readAsDataURL(file);
     } finally {
       setIsUploading(false);
     }

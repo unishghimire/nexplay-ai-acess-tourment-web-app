@@ -46,11 +46,14 @@ router.post("/api/wallet/deposit",
       if (!proofUrl || typeof proofUrl !== 'string') {
         return res.status(400).json({ success: false, message: "Payment screenshot is required" });
       }
-      try {
-        const url = new URL(proofUrl);
-        if (!['http:', 'https:'].includes(url.protocol)) throw new Error();
-      } catch {
-        return res.status(400).json({ success: false, message: "Invalid screenshot URL" });
+      const isDataUri = proofUrl.startsWith("data:image/");
+      if (!isDataUri) {
+        try {
+          const url = new URL(proofUrl);
+          if (!['http:', 'https:'].includes(url.protocol)) throw new Error();
+        } catch {
+          return res.status(400).json({ success: false, message: "Invalid screenshot URL" });
+        }
       }
 
       // Duplicate detection: same transactionCode + amount within 24h

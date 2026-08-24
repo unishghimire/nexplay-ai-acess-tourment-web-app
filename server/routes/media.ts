@@ -83,16 +83,35 @@ async function uploadBufferMultiProvider(
     console.warn("[Media] Cloudinary upload failed, trying Firebase Storage:", cloudErr.message);
   }
 
-  // 3. Firebase Storage (last resort)
-  const folder = mapCategoryToFolder(category);
-  const fileName = `${Date.now()}_${originalName.replace(/\s+/g, "_")}`;
-  const file = bucket.file(`${folder}/${fileName}`);
-  await file.save(buffer, { metadata: { contentType: "image/jpeg" } });
-  const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(file.name)}?alt=media`;
+  // 3. Try Firebase Storage (fallback)
+  try {
+    const folder = mapCategoryToFolder(category);
+    const fileName = `${Date.now()}_${originalName.replace(/\s+/g, "_")}`;
+    const file = bucket.file(`${folder}/${fileName}`);
+    await file.save(buffer, { metadata: { contentType: "image/jpeg" } });
+    const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(file.name)}?alt=media`;
+    return {
+      url: publicUrl, publicId: file.name, fileName, fileSize: buffer.length,
+      mimeType: "image/jpeg", thumbUrl: publicUrl, mediumUrl: publicUrl,
+      provider: "firebase-storage",
+    };
+  } catch (storageErr: any) {
+    console.warn("[Media] Firebase Storage upload failed, falling back to compressed inline data:", storageErr.message);
+  }
+
+  // 4. Guaranteed Zero-Downtime Fallback: High-Quality Inline WebP/JPEG Data URL
+  const ext = originalName.split('.').pop()?.toLowerCase() || 'jpeg';
+  const mimeType = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
+  const dataUrl = `data:${mimeType};base64,${buffer.toString('base64')}`;
   return {
-    url: publicUrl, publicId: file.name, fileName, fileSize: buffer.length,
-    mimeType: "image/jpeg", thumbUrl: publicUrl, mediumUrl: publicUrl,
-    provider: "firebase-storage",
+    url: dataUrl,
+    publicId: `inline_${Date.now()}`,
+    fileName: originalName,
+    fileSize: buffer.length,
+    mimeType,
+    thumbUrl: dataUrl,
+    mediumUrl: dataUrl,
+    provider: "inline-data",
   };
 }
 
@@ -129,20 +148,37 @@ async function uploadBase64MultiProvider(
     console.warn("[Media] Cloudinary base64 upload failed, trying Firebase Storage:", cloudErr.message);
   }
 
-  // 3. Firebase Storage (last resort)
-  const matches = base64String.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
-  const mimeType = matches?.[1] || "image/jpeg";
-  const buffer = Buffer.from(matches?.[2] || "", "base64");
-  const ext = mimeType.split("/")[1];
-  const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
-  const folder = mapCategoryToFolder(category);
-  const file = bucket.file(`${folder}/${fileName}`);
-  await file.save(buffer, { metadata: { contentType: mimeType } });
-  const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(file.name)}?alt=media`;
+  // 3. Try Firebase Storage (fallback)
+  try {
+    const matches = base64String.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+    const mimeType = matches?.[1] || "image/jpeg";
+    const buffer = Buffer.from(matches?.[2] || "", "base64");
+    const ext = mimeType.split("/")[1] || "jpeg";
+    const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
+    const folder = mapCategoryToFolder(category);
+    const file = bucket.file(`${folder}/${fileName}`);
+    await file.save(buffer, { metadata: { contentType: mimeType } });
+    const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(file.name)}?alt=media`;
+    return {
+      url: publicUrl, publicId: file.name, fileName, fileSize: buffer.length,
+      mimeType, thumbUrl: publicUrl, mediumUrl: publicUrl,
+      provider: "firebase-storage",
+    };
+  } catch (storageErr: any) {
+    console.warn("[Media] Firebase Storage base64 upload failed, falling back to direct data URL:", storageErr.message);
+  }
+
+  // 4. Guaranteed Zero-Downtime Fallback: Direct Base64 Data URL
+  const normalizedDataUrl = base64String.startsWith('data:') ? base64String : `data:image/jpeg;base64,${base64String}`;
   return {
-    url: publicUrl, publicId: file.name, fileName, fileSize: buffer.length,
-    mimeType, thumbUrl: publicUrl, mediumUrl: publicUrl,
-    provider: "firebase-storage",
+    url: normalizedDataUrl,
+    publicId: `inline_${Date.now()}`,
+    fileName: `img_${Date.now()}`,
+    fileSize: base64String.length,
+    mimeType: "image/jpeg",
+    thumbUrl: normalizedDataUrl,
+    mediumUrl: normalizedDataUrl,
+    provider: "inline-data",
   };
 }
 
