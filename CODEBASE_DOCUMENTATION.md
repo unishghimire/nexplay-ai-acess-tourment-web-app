@@ -162,14 +162,26 @@ export const db = (firebaseConfig as any).firestoreDatabaseId
 
 ### 2.4 Security Rules (`firestore.rules`)
 
-Key rules:
-- **Admin bypass:** Uses Firebase Auth Custom Claims (`request.auth.token.role == 'admin'`), NOT hardcoded UIDs
-- **Role checks:** Dual-check — Custom Claims OR Firestore doc role (migration period, `ponytail:` comment marks the ceiling)
-- **User profiles:** Players can only update non-financial fields (`username`, `bio`, `profilePicUrl`, etc.). Financial fields (`balance`, `totalEarnings`, `orgWalletBalance`) are locked — only admin can change them
-- **Transactions:** User creates with `status: 'pending'` only. Amount, type, status validated server-side
-- **Tournaments:** Organizer creates with `hostUid == request.auth.uid`. Public read. Organizer updates own tournament
-- **Site settings:** Public read, admin write
-- **Validation blueprints:** `isValidUserProfile()`, `isValidTournament()`, `isValidTransaction()`, `isValidPublicProfile()`
+### 2.5 Scrims vs. Tournaments Decoupled Architecture
+
+The platform strictly decouples **Scrims** (fast-paced daily practice) and **Tournaments** (multi-stage championships) into two isolated data models and controllers:
+
+#### A. Scrims Engine
+* **Data Model:** `src/shared/types/scrim.types.ts` (`Scrim`, `ScrimSlot`, `ScrimCredentials`, `ScrimResultEntry`).
+* **Backend Controller:** `server/routes/scrims.ts` (`GET /api/scrims`, `POST /api/scrims`, `POST /api/scrims/:id/join`, `POST /api/scrims/:id/slot`, `POST /api/scrims/:id/dispatch-room`, `POST /api/scrims/:id/payout`, `DELETE /api/scrims/:id`).
+* **Format Slot Matrix:**
+  * **Squad Format:** Strictly fixed at exactly **12 slots** (Slots 1 to 12).
+  * **Duo Format:** Strictly fixed at exactly **25 slots** (Slots 1 to 25).
+  * **Solo Format:** Strictly fixed at exactly **48 slots** (Slots 1 to 48).
+  * Helper: `getScrimSlotCount(format)` in `src/shared/utils/scrimSlots.ts`.
+* **Lobby Structure:** Single flat lobby with real-time seat lock/unlock toggling and atomic concurrency locks.
+* **Credentials:** Isolated in `/scrims/{id}/credentials/main`.
+
+#### B. Tournaments Engine
+* **Data Model:** `src/shared/types/tournament.types.ts` (`Tournament`, `TournamentStageConfig`, `TournamentGroup`, `TournamentGroupTeam`).
+* **Backend Controller:** `server/routes/tournaments.ts` (`POST /api/tournaments/:id/groups/generate`, `POST /api/tournaments/:id/advance`, `DELETE /api/tournaments/:id`).
+* **Format Structure:** Multi-stage roadmap (Qualifiers $\rightarrow$ Quarterfinals $\rightarrow$ Semifinals $\rightarrow$ Grand Finals) with 12 teams max per group and automated advancement.
+* **Dual-Collection Resilience:** All search, read, and delete operations automatically aggregate and reconcile records across both `/scrims` and `/tournaments` collections.
 
 ---
 
