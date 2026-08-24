@@ -73,12 +73,25 @@ function isBRMatch(match: Match): boolean {
     return !!(match.results && match.results.length > 0);
 }
 
-/** Check if tournament is BR-style (Free Fire, PUBG, BGMI) */
+/** Check if tournament is BR-style (Free Fire, PUBG, BGMI with 12 teams/lobby) */
 export function isBRTournament(tournament: Tournament): boolean {
-    const game = tournament.game.toLowerCase();
-    const type = tournament.type.toLowerCase();
+    const game = (tournament.game || '').toLowerCase();
+    const type = (tournament.type || '').toLowerCase();
+    const format = (tournament.format || '').toLowerCase();
+    const mode = ((tournament as any).mode || '').toLowerCase();
+
+    // Explicit 4v4, Clash Squad, TDM, 1v1, or Head-to-Head formats are match-based, not BR lobbies
+    if (
+        format.includes('4v4') || format.includes('clash squad') || format.includes('tdm') || format.includes('1v1') ||
+        mode.includes('4v4') || mode.includes('clash squad') || mode.includes('tdm') || mode.includes('1v1') ||
+        type.includes('4v4') || type.includes('clash squad') || type.includes('head-to-head')
+    ) {
+        return false;
+    }
+
     return game.includes('free fire') || game.includes('pubg') || game.includes('bgmi') ||
-           type.includes('br') || type.includes('battle royale');
+           type.includes('br') || type.includes('battle royale') ||
+           format.includes('br') || format.includes('battle royale');
 }
 
 // ─── Group Distribution Algorithm ──────────────────────────────
