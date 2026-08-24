@@ -379,10 +379,22 @@ export function rateLimit(maxRequests: number = 10, windowMs: number = 15 * 60 *
         return res.status(503).json({ success: false, message: 'Request protection is temporarily at capacity. Please try again shortly.' });
       }
       rateLimitMap.set(key, { count: 1, resetTime: now + windowMs });
+      res.set({
+        'X-RateLimit-Limit': String(maxRequests),
+        'X-RateLimit-Remaining': String(maxRequests - 1),
+        'X-RateLimit-Reset': String(Math.ceil((now + windowMs) / 1000)),
+      });
       return next();
     }
 
     entry.count++;
+    const remaining = Math.max(0, maxRequests - entry.count);
+    res.set({
+      'X-RateLimit-Limit': String(maxRequests),
+      'X-RateLimit-Remaining': String(remaining),
+      'X-RateLimit-Reset': String(Math.ceil(entry.resetTime / 1000)),
+    });
+
     if (entry.count > maxRequests) {
       res.set('Retry-After', String(Math.max(1, Math.ceil((entry.resetTime - now) / 1000))));
       return res.status(429).json({ success: false, message: "Too many requests. Please try again later." });

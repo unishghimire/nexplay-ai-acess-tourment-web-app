@@ -19,9 +19,9 @@ router.get("/api/scrims", rateLimit(60, 60 * 1000), async (req, res) => {
   try {
     const { game, format } = req.query;
     const sources = await Promise.allSettled([
-      db.collection("scrims").get(),
-      db.collection("tournaments").where("matchType", "==", "scrims").get(),
-      db.collection("tournaments").where("isScrim", "==", true).get(),
+      db.collection("scrims").limit(100).get(),
+      db.collection("tournaments").where("matchType", "==", "scrims").limit(100).get(),
+      db.collection("tournaments").where("isScrim", "==", true).limit(100).get(),
     ]);
 
     const activeStatuses = new Set(["open", "full", "credentials_sent", "live", "upcoming", "published"]);
