@@ -166,8 +166,8 @@ export interface ImgBBResult {
  * ImgBB accepts base64-encoded image data via POST to api.imgbb.com/1/upload
  */
 export async function uploadToImgBB(buffer: Buffer, originalName: string): Promise<ImgBBResult> {
-  const apiKey = process.env.IMGBB_API_KEY;
-  if (!apiKey) throw new Error("IMGBB_API_KEY environment variable is not set.");
+  const apiKey = process.env.IMGBB_API_KEY || process.env.VITE_IMGBB_API_KEY || "0d2e0f9e1bb3f4d0e32ff75d14c11d48";
+  if (!apiKey) throw new Error("IMGBB_API_KEY is not configured.");
 
   const base64 = buffer.toString("base64");
   const cleanName = originalName.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9-_]/g, "_") || `img_${Date.now()}`;
@@ -179,6 +179,10 @@ export async function uploadToImgBB(buffer: Buffer, originalName: string): Promi
   const uploadUrl = `https://api.imgbb.com/1/upload?key=${encodeURIComponent(apiKey)}`;
   const resp = await fetch(uploadUrl, {
     method: "POST",
+    headers: {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      "Accept": "application/json",
+    },
     body: formData,
     signal: AbortSignal.timeout(12000),
   });
@@ -216,8 +220,8 @@ export async function uploadToImgBB(buffer: Buffer, originalName: string): Promi
  * Strips the data:image/...;base64, prefix before sending.
  */
 export async function uploadBase64ToImgBB(base64String: string): Promise<ImgBBResult> {
-  const apiKey = process.env.IMGBB_API_KEY;
-  if (!apiKey) throw new Error("IMGBB_API_KEY environment variable is not set.");
+  const apiKey = process.env.IMGBB_API_KEY || process.env.VITE_IMGBB_API_KEY || "0d2e0f9e1bb3f4d0e32ff75d14c11d48";
+  if (!apiKey) throw new Error("IMGBB_API_KEY is not configured.");
 
   // Strip data URI prefix if present
   const base64Data = base64String.replace(/^data:[^;]+;base64,/, "");
