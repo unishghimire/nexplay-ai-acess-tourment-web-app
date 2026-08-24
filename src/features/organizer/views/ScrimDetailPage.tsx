@@ -11,11 +11,21 @@ import { DEFAULT_BANNER } from '../../../shared/constants/constants';
 import {
   ChevronLeft, Save, Radio, Users, DollarSign, Calendar,
   Gamepad2, Edit2, Check, X, Lock, Unlock, Copy, Trophy,
-  Clock, MapPin, Play, CheckCircle2, RotateCcw, Trash2, Share2
+  Clock, MapPin, Play, CheckCircle2, RotateCcw, Trash2, Share2,
+  Award, Medal, Flame, Plus, Trash, AlertCircle, TrendingUp
 } from 'lucide-react';
 
 const formatRupees = (n: number = 0) => `Rs. ${new Intl.NumberFormat('en-IN').format(n)}`;
-const SCRIM_COLLECTION = 'tournaments'; // scrims stored as tournaments with matchType='scrims'
+
+interface WinnerTier {
+  rank: number;
+  teamName: string;
+  teamId: string;
+  userId: string;
+  prize: number;
+  kills: number;
+  points: number;
+}
 
 export default function ScrimDetailPage() {
   const { id } = useParams();
@@ -35,6 +45,15 @@ export default function ScrimDetailPage() {
   const [streamUrl, setStreamUrl] = useState('');
   const [copied, setCopied] = useState<string | null>(null);
 
+  // Multi-tier winners modal state
+  const [showWinnerModal, setShowWinnerModal] = useState(false);
+  const [winnerTiers, setWinnerTiers] = useState<WinnerTier[]>([
+    { rank: 1, teamName: '', teamId: '', userId: '', prize: 0, kills: 0, points: 0 },
+    { rank: 2, teamName: '', teamId: '', userId: '', prize: 0, kills: 0, points: 0 },
+    { rank: 3, teamName: '', teamId: '', userId: '', prize: 0, kills: 0, points: 0 },
+  ]);
+  const [submittingPayout, setSubmittingPayout] = useState(false);
+
   // --- Load scrim ---
   useEffect(() => {
     if (!id) {
@@ -43,7 +62,6 @@ export default function ScrimDetailPage() {
       return;
     }
 
-    // Real Firestore
     if (!user) { setLoading(false); return; }
     setLoading(true);
     setLoadError(null);
@@ -90,12 +108,11 @@ export default function ScrimDetailPage() {
             }
             setScrim(data);
             setScrimCollection('scrims');
-            // AUD-013: fetch credentials from scrims subcollection (not tournaments)
             fetchRoomCredentials(id, undefined, 'scrims').then(credentials => {
-                setRoomId(credentials?.roomId || '');
-                setRoomPass(credentials?.roomPass || '');
+              setRoomId(credentials?.roomId || '');
+              setRoomPass(credentials?.roomPass || '');
             }).catch(e => {
-                console.warn('Room credentials fetch warning:', e);
+              console.warn('Room credentials fetch warning:', e);
             });
             setStreamUrl((data as any).ytLink || (data as any).streamUrl || '');
           } else {
@@ -109,7 +126,6 @@ export default function ScrimDetailPage() {
       }
     }, (err) => {
       console.error('Scrim load error:', err);
-      // Fallback check on permission or collection error
       getDoc(doc(db, 'scrims', id)).then((legacySnap) => {
         if (legacySnap.exists()) {
           const data = { id: legacySnap.id, ...legacySnap.data() } as any;
@@ -193,8 +209,8 @@ export default function ScrimDetailPage() {
 
       const newSlots = slotsArray.map((s: any) => {
         if (s.slotNumber !== slotNumber) return s;
-        if (s.status === 'filled') return { ...s, status: 'open', teamName: null, teamId: null };
-        return { ...s, status: 'filled', teamName: 'Reserved', teamId: null };
+        if (s.status === 'filled') return { ...s, status: 'open', teamName: null, teamId: null, userId: null };
+        return { ...s, status: 'filled', teamName: 'Reserved', teamId: null, userId: null };
       });
       const filled = countFilledScrimSlots(newSlots);
       await updateDoc(doc(db, scrimCollection, id), { slots: newSlots, filledSlots: filled, currentPlayers: filled });
@@ -243,7 +259,6 @@ export default function ScrimDetailPage() {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!res.ok) {
-        // Fallback to /api/tournaments/:id
         const fallbackRes = await fetch(`/api/tournaments/${id}`, {
           method: 'DELETE',
           headers: { 'Authorization': `Bearer ${token}` }
@@ -258,7 +273,7 @@ export default function ScrimDetailPage() {
     } catch (err: any) {
       showToast(err.message || 'Failed to delete scrim', 'error');
     }
-  }, [id, scrim?.title, user, navigate, showToast]);
+  }, [id, scrim?.title, navigate, showToast]);
 
   const copyToClipboard = async (text: string, label: string) => {
     try {
@@ -267,6 +282,87 @@ export default function ScrimDetailPage() {
       setTimeout(() => setCopied(null), 1500);
     } catch {
       showToast('Clipboard access is unavailable. Copy the value manually.', 'error');
+    }
+  };
+
+  // --- Multi-Tier Presets & Actions ---
+  const applyPreset = (preset: 'top3' | 'top2' | 'all' | 'top5') => {
+    const pool = Number(scrim?.prizePool) || 0;
+    if (preset === 'top3') {
+      setWinnerTiers([
+        { rank: 1, teamName: winnerTiers[0]?.teamName || '', teamId: winnerTiers[0]?.teamId || '', userId: winnerTiers[0]?.userId || '', prize: Math.round(pool * 0.5), kills: winnerTiers[0]?.kills || 0, points: 15 },
+        { rank: 2, teamName: winnerTiers[1]?.teamName || '', teamId: winnerTiers[1]?.teamId || '', userId: winnerTiers[1]?.userId || '', prize: Math.round(pool * 0.3), kills: winnerTiers[1]?.kills || 0, points: 12 },
+        { rank: 3, teamName: winnerTiers[2]?.teamName || '', teamId: winnerTiers[2]?.teamId || '', userId: winnerTiers[2]?.userId || '', prize: Math.round(pool * 0.2), kills: winnerTiers[2]?.kills || 0, points: 10 },
+      ]);
+    } else if (preset === 'top2') {
+      setWinnerTiers([
+        { rank: 1, teamName: winnerTiers[0]?.teamName || '', teamId: winnerTiers[0]?.teamId || '', userId: winnerTiers[0]?.userId || '', prize: Math.round(pool * 0.7), kills: winnerTiers[0]?.kills || 0, points: 15 },
+        { rank: 2, teamName: winnerTiers[1]?.teamName || '', teamId: winnerTiers[1]?.teamId || '', userId: winnerTiers[1]?.userId || '', prize: Math.round(pool * 0.3), kills: winnerTiers[1]?.kills || 0, points: 12 },
+      ]);
+    } else if (preset === 'all') {
+      setWinnerTiers([
+        { rank: 1, teamName: winnerTiers[0]?.teamName || '', teamId: winnerTiers[0]?.teamId || '', userId: winnerTiers[0]?.userId || '', prize: pool, kills: winnerTiers[0]?.kills || 0, points: 20 },
+      ]);
+    } else if (preset === 'top5') {
+      setWinnerTiers([
+        { rank: 1, teamName: winnerTiers[0]?.teamName || '', teamId: winnerTiers[0]?.teamId || '', userId: winnerTiers[0]?.userId || '', prize: Math.round(pool * 0.4), kills: 0, points: 15 },
+        { rank: 2, teamName: winnerTiers[1]?.teamName || '', teamId: winnerTiers[1]?.teamId || '', userId: winnerTiers[1]?.userId || '', prize: Math.round(pool * 0.25), kills: 0, points: 12 },
+        { rank: 3, teamName: winnerTiers[2]?.teamName || '', teamId: winnerTiers[2]?.teamId || '', userId: winnerTiers[2]?.userId || '', prize: Math.round(pool * 0.15), kills: 0, points: 10 },
+        { rank: 4, teamName: '', teamId: '', userId: '', prize: Math.round(pool * 0.10), kills: 0, points: 8 },
+        { rank: 5, teamName: '', teamId: '', userId: '', prize: Math.round(pool * 0.10), kills: 0, points: 6 },
+      ]);
+    }
+  };
+
+  const handleAddTier = () => {
+    const nextRank = winnerTiers.length + 1;
+    setWinnerTiers([...winnerTiers, { rank: nextRank, teamName: '', teamId: '', userId: '', prize: 0, kills: 0, points: 0 }]);
+  };
+
+  const handleRemoveTier = (index: number) => {
+    if (winnerTiers.length <= 1) return;
+    const updated = winnerTiers.filter((_, i) => i !== index).map((t, i) => ({ ...t, rank: i + 1 }));
+    setWinnerTiers(updated);
+  };
+
+  const handlePayoutMultiTier = async () => {
+    if (!id || !scrim) return;
+    const validTiers = winnerTiers.filter(t => (t.teamName.trim() || t.userId) && Number(t.prize) > 0);
+    if (validTiers.length === 0) {
+      showToast('Please select at least one winning team with a prize amount', 'error');
+      return;
+    }
+
+    const totalAllocated = validTiers.reduce((acc, t) => acc + (Number(t.prize) || 0), 0);
+    const expectedPool = Number(scrim.prizePool) || 0;
+    if (expectedPool > 0 && Math.abs(totalAllocated - expectedPool) > 0.01) {
+      showToast(`Distributed prize sum (${formatRupees(totalAllocated)}) must equal scrim prize pool (${formatRupees(expectedPool)})`, 'error');
+      return;
+    }
+
+    setSubmittingPayout(true);
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      const res = await fetch(`/api/scrims/${id}/payout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ winners: validTiers })
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || 'Failed to distribute prizes');
+      }
+
+      showToast(`Multi-tier prizes successfully distributed (${formatRupees(totalAllocated)})!`, 'success');
+      setShowWinnerModal(false);
+    } catch (err: any) {
+      showToast(err.message || 'Failed to distribute prizes', 'error');
+    } finally {
+      setSubmittingPayout(false);
     }
   };
 
@@ -307,6 +403,13 @@ export default function ScrimDetailPage() {
   const filledCount = countFilledScrimSlots(slots);
   const totalCount = slots.length;
   const fillPercent = totalCount > 0 ? (filledCount / totalCount) * 100 : 0;
+  const filledTeams = slots.filter(s => s.status === 'filled' && s.teamName && s.teamName !== 'Reserved');
+
+  const totalAllocatedPrize = winnerTiers.reduce((acc, t) => acc + (Number(t.prize) || 0), 0);
+  const scrimPrizePool = Number(scrim.prizePool) || 0;
+  const isPrizeBalanced = Math.abs(totalAllocatedPrize - scrimPrizePool) < 0.01;
+
+  const resultsList = scrim.winners || scrim.results || [];
 
   return (
     <div className="min-h-[100dvh] pt-20 sm:pt-24 pb-16 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-6">
@@ -328,15 +431,14 @@ export default function ScrimDetailPage() {
           <button 
             type="button" 
             onClick={() => navigate('/organizer?tab=scrims')} 
-            className="p-2 sm:p-2.5 rounded-full bg-white/10 backdrop-blur-md hover:bg-white/20 text-white transition-colors border border-white/10 shadow-lg flex items-center justify-center"
-            title="Back to Scrims"
+            className="px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md text-gray-300 text-xs font-semibold hover:bg-black/80 flex items-center gap-1.5 border border-white/10 transition-colors"
           >
-            <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+            <ChevronLeft className="w-4 h-4" /> Scrims Hub
           </button>
-          <span className="bg-white/10 backdrop-blur-md text-white text-xs font-black px-3 py-1.5 rounded-full uppercase tracking-wider border border-white/10 shadow-lg">
+          <span className="backdrop-blur-md bg-brand-500/80 border border-brand-400/30 text-white text-xs font-black px-3 py-1.5 rounded-full uppercase tracking-wider shadow-lg">
             {scrim.game || 'Free Fire'}
           </span>
-          <span className="bg-brand-500/80 backdrop-blur-md text-white text-xs font-black px-3 py-1.5 rounded-full uppercase tracking-wider shadow-lg">
+          <span className="backdrop-blur-md bg-white/10 text-white text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider border border-white/10 shadow-lg">
             {scrim.format === '5v5' ? '5v5' : 'Battle Royale'}
           </span>
           <span className={`backdrop-blur-md text-white text-xs font-black px-3 py-1.5 rounded-full uppercase tracking-wider shadow-lg border ${
@@ -396,7 +498,7 @@ export default function ScrimDetailPage() {
                 className="px-3.5 py-2 rounded-xl bg-red-600/30 backdrop-blur-md hover:bg-red-600/50 text-red-300 hover:text-white border border-red-500/40 text-xs font-bold flex items-center gap-1.5 shadow-lg transition-colors min-h-[38px]"
                 title="Delete Scrim"
               >
-                <Trash2 className="w-3.5 h-3.5" /> Delete Scrim
+                <Trash2 className="w-3.5 h-3.5" /> Delete
               </button>
             </>
           )}
@@ -428,25 +530,135 @@ export default function ScrimDetailPage() {
         </div>
       </div>
 
-      {/* Status control bar */}
-      <div className="flex items-center gap-3 flex-wrap bg-dark/40 border border-gray-800 rounded-xl p-3">
-        <span className="text-xs text-gray-400 font-medium">Quick Status:</span>
-        {scrim.status === 'open' && (
-          <button type="button" onClick={() => handleStatusChange('live')} className="px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold hover:bg-emerald-500/20 flex items-center gap-1.5 transition-colors">
-            <Play className="w-3.5 h-3.5" /> Go Live
-          </button>
-        )}
-        {scrim.status === 'live' && (
-          <button type="button" onClick={() => handleStatusChange('completed')} className="px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20 text-xs font-semibold hover:bg-blue-500/20 flex items-center gap-1.5 transition-colors">
-            <CheckCircle2 className="w-3.5 h-3.5" /> Finalize Match
-          </button>
-        )}
-        {scrim.status === 'completed' && (
-          <button type="button" onClick={() => handleStatusChange('open')} className="px-3 py-1.5 rounded-lg bg-surface text-gray-300 border border-gray-700 text-xs font-semibold hover:bg-card flex items-center gap-1.5 transition-colors">
-            <RotateCcw className="w-3.5 h-3.5" /> Reopen Scrim
-          </button>
-        )}
+      {/* Status control bar & Multi-Tier Settlement Trigger */}
+      <div className="flex items-center justify-between gap-3 flex-wrap bg-dark/40 border border-gray-800 rounded-xl p-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs text-gray-400 font-medium">Quick Status:</span>
+          {scrim.status === 'open' && (
+            <button type="button" onClick={() => handleStatusChange('live')} className="px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold hover:bg-emerald-500/20 flex items-center gap-1.5 transition-colors">
+              <Play className="w-3.5 h-3.5" /> Go Live
+            </button>
+          )}
+          {scrim.status === 'live' && (
+            <button type="button" onClick={() => handleStatusChange('completed')} className="px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20 text-xs font-semibold hover:bg-blue-500/20 flex items-center gap-1.5 transition-colors">
+              <CheckCircle2 className="w-3.5 h-3.5" /> Finalize Match
+            </button>
+          )}
+          {scrim.status === 'completed' && (
+            <button type="button" onClick={() => handleStatusChange('open')} className="px-3 py-1.5 rounded-lg bg-surface text-gray-300 border border-gray-700 text-xs font-semibold hover:bg-card flex items-center gap-1.5 transition-colors">
+              <RotateCcw className="w-3.5 h-3.5" /> Reopen Scrim
+            </button>
+          )}
+        </div>
+
+        {/* Multi-Tier Winner Payout Action Button */}
+        <button
+          type="button"
+          onClick={() => {
+            if (winnerTiers[0].prize === 0 && Number(scrim.prizePool) > 0) {
+              applyPreset('top3');
+            }
+            setShowWinnerModal(true);
+          }}
+          className="px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-brand-500 hover:from-amber-400 hover:to-brand-400 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-amber-500/20 transition-all cursor-pointer"
+        >
+          <Trophy className="w-4 h-4" />
+          {scrim.payoutStatus === 'paid' ? 'View / Update Winners' : 'Settle Multi-Tier Winners'}
+        </button>
       </div>
+
+      {/* Multi-Tier Winner Podium (When scrim has results) */}
+      {resultsList.length > 0 && (
+        <div className="bg-dark/60 border border-amber-500/30 rounded-2xl p-6 relative overflow-hidden shadow-2xl">
+          <div className="absolute -top-12 -right-12 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl" />
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-black text-white flex items-center gap-2.5">
+              <Award className="w-5 h-5 text-amber-400" />
+              Official Scrim Winner Podium
+            </h3>
+            <span className="text-xs bg-amber-500/20 text-amber-300 font-bold px-3 py-1 rounded-full border border-amber-500/30 uppercase tracking-wider">
+              {scrim.payoutStatus === 'paid' ? '🏆 Payout Completed' : 'Results Recorded'}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+            {/* Rank 2 (Silver) */}
+            {resultsList[1] && (
+              <div className="bg-card/70 border border-gray-700/50 rounded-xl p-5 flex flex-col items-center text-center order-2 md:order-1 relative group hover:border-gray-500 transition-all">
+                <div className="w-12 h-12 rounded-full bg-slate-300/20 border border-slate-300/40 flex items-center justify-center text-slate-200 text-lg font-black mb-3 shadow-md">
+                  🥈
+                </div>
+                <span className="text-xs uppercase font-bold text-slate-400 tracking-wider mb-1">Rank #2 Runner-Up</span>
+                <h4 className="text-base font-black text-white truncate max-w-full">{resultsList[1].teamName || 'Team 2'}</h4>
+                <div className="mt-3 w-full bg-surface/60 rounded-lg p-2.5 flex items-center justify-around text-xs">
+                  <div>
+                    <span className="text-gray-500 block text-[10px] uppercase">Prize</span>
+                    <span className="font-black text-amber-400">{formatRupees(resultsList[1].prize)}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 block text-[10px] uppercase">Kills</span>
+                    <span className="font-bold text-white">{resultsList[1].kills || 0}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 block text-[10px] uppercase">Points</span>
+                    <span className="font-bold text-white">{resultsList[1].points || 0}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Rank 1 (Gold - Center & Elevated) */}
+            {resultsList[0] && (
+              <div className="bg-gradient-to-b from-amber-500/20 via-card to-card border-2 border-amber-500/60 rounded-xl p-6 flex flex-col items-center text-center order-1 md:order-2 relative shadow-xl shadow-amber-500/10 group hover:border-amber-400 transition-all">
+                <div className="w-16 h-16 rounded-full bg-amber-500/30 border-2 border-amber-400 flex items-center justify-center text-amber-300 text-2xl font-black mb-3 shadow-lg">
+                  🥇
+                </div>
+                <span className="text-xs uppercase font-black text-amber-400 tracking-wider mb-1">Rank #1 Champion</span>
+                <h4 className="text-lg font-black text-white truncate max-w-full">{resultsList[0].teamName || 'Team 1'}</h4>
+                <div className="mt-4 w-full bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 flex items-center justify-around text-xs">
+                  <div>
+                    <span className="text-amber-300/70 block text-[10px] uppercase font-bold">Prize</span>
+                    <span className="font-black text-amber-300 text-sm">{formatRupees(resultsList[0].prize)}</span>
+                  </div>
+                  <div>
+                    <span className="text-amber-300/70 block text-[10px] uppercase font-bold">Kills</span>
+                    <span className="font-bold text-white text-sm">{resultsList[0].kills || 0}</span>
+                  </div>
+                  <div>
+                    <span className="text-amber-300/70 block text-[10px] uppercase font-bold">Points</span>
+                    <span className="font-bold text-white text-sm">{resultsList[0].points || 0}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Rank 3 (Bronze) */}
+            {resultsList[2] && (
+              <div className="bg-card/70 border border-amber-900/40 rounded-xl p-5 flex flex-col items-center text-center order-3 relative group hover:border-amber-800 transition-all">
+                <div className="w-12 h-12 rounded-full bg-amber-700/20 border border-amber-600/40 flex items-center justify-center text-amber-500 text-lg font-black mb-3 shadow-md">
+                  🥉
+                </div>
+                <span className="text-xs uppercase font-bold text-amber-600 tracking-wider mb-1">Rank #3 2nd Runner-Up</span>
+                <h4 className="text-base font-black text-white truncate max-w-full">{resultsList[2].teamName || 'Team 3'}</h4>
+                <div className="mt-3 w-full bg-surface/60 rounded-lg p-2.5 flex items-center justify-around text-xs">
+                  <div>
+                    <span className="text-gray-500 block text-[10px] uppercase">Prize</span>
+                    <span className="font-black text-amber-400">{formatRupees(resultsList[2].prize)}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 block text-[10px] uppercase">Kills</span>
+                    <span className="font-bold text-white">{resultsList[2].kills || 0}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 block text-[10px] uppercase">Points</span>
+                    <span className="font-bold text-white">{resultsList[2].points || 0}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Details grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -590,8 +802,8 @@ export default function ScrimDetailPage() {
               >
                 <span className="text-xs text-gray-500 mb-0.5">Slot {slot.slotNumber}</span>
                 {slot.status === 'filled' ? (
-                  <span className="flex items-center gap-1 text-[11px]">
-                    <Lock className="w-3 h-3" /> {slot.teamName || 'Reserved'}
+                  <span className="flex items-center gap-1 text-[11px] truncate max-w-full px-1">
+                    <Lock className="w-3 h-3 flex-shrink-0" /> {slot.teamName || 'Reserved'}
                   </span>
                 ) : (
                   <span className="flex items-center gap-1 text-[11px]">
@@ -605,6 +817,214 @@ export default function ScrimDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Multi-Tier Winner Settlement Modal */}
+      {showWinnerModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-gray-950 border border-gray-800 rounded-2xl max-w-2xl w-full p-6 space-y-6 shadow-2xl relative">
+            <div className="flex items-center justify-between border-b border-gray-800 pb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center">
+                  <Trophy className="w-5 h-5 text-amber-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-white">Multi-Tier Winner Payout</h3>
+                  <p className="text-xs text-gray-400">Total Scrim Prize Pool: <span className="font-bold text-amber-400">{formatRupees(scrimPrizePool)}</span></p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowWinnerModal(false)}
+                className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-card"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Presets Bar */}
+            <div className="space-y-2">
+              <span className="text-xs uppercase font-bold text-gray-400 tracking-wider">Quick Split Presets</span>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <button
+                  type="button"
+                  onClick={() => applyPreset('top3')}
+                  className="px-3 py-2 rounded-xl bg-card border border-gray-800 hover:border-amber-500/50 text-xs font-bold text-gray-200 hover:text-white transition-all text-center"
+                >
+                  🥇🥈🥉 Top 3 (50/30/20)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyPreset('top2')}
+                  className="px-3 py-2 rounded-xl bg-card border border-gray-800 hover:border-amber-500/50 text-xs font-bold text-gray-200 hover:text-white transition-all text-center"
+                >
+                  🥇🥈 Top 2 (70/30)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyPreset('all')}
+                  className="px-3 py-2 rounded-xl bg-card border border-gray-800 hover:border-amber-500/50 text-xs font-bold text-gray-200 hover:text-white transition-all text-center"
+                >
+                  👑 Winner Takes All (100%)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyPreset('top5')}
+                  className="px-3 py-2 rounded-xl bg-card border border-gray-800 hover:border-amber-500/50 text-xs font-bold text-gray-200 hover:text-white transition-all text-center"
+                >
+                  🎖️ Top 5 (40/25/15/10/10)
+                </button>
+              </div>
+            </div>
+
+            {/* Dynamic Tier Rows */}
+            <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+              {winnerTiers.map((tier, idx) => (
+                <div key={idx} className="bg-card/80 border border-gray-800/80 rounded-xl p-3 flex flex-wrap sm:flex-nowrap items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-lg bg-surface flex items-center justify-center font-black text-sm text-amber-400 flex-shrink-0">
+                    {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${tier.rank}`}
+                  </div>
+
+                  {/* Team Selector / Input */}
+                  <div className="flex-1 min-w-[140px]">
+                    <select
+                      value={tier.teamName}
+                      onChange={(e) => {
+                        const selectedTeam = e.target.value;
+                        const matchedSlot = slots.find(s => s.teamName === selectedTeam);
+                        const updated = [...winnerTiers];
+                        updated[idx].teamName = selectedTeam;
+                        updated[idx].teamId = matchedSlot?.teamId || '';
+                        updated[idx].userId = (matchedSlot as any)?.userId || matchedSlot?.teamId || user?.uid || '';
+                        setWinnerTiers(updated);
+                      }}
+                      className="w-full bg-black border border-gray-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-amber-500 focus-visible:outline-none"
+                    >
+                      <option value="">-- Select Team --</option>
+                      {filledTeams.map((s, sIdx) => (
+                        <option key={sIdx} value={s.teamName}>{s.teamName} (Slot {s.slotNumber})</option>
+                      ))}
+                      {tier.teamName && !filledTeams.some(s => s.teamName === tier.teamName) && (
+                        <option value={tier.teamName}>{tier.teamName}</option>
+                      )}
+                    </select>
+                  </div>
+
+                  {/* Kills Input */}
+                  <div className="w-16 flex-shrink-0">
+                    <input
+                      type="number"
+                      placeholder="Kills"
+                      value={tier.kills || ''}
+                      onChange={(e) => {
+                        const updated = [...winnerTiers];
+                        updated[idx].kills = Number(e.target.value) || 0;
+                        setWinnerTiers(updated);
+                      }}
+                      className="w-full bg-black border border-gray-800 rounded-lg px-2 py-1.5 text-xs text-center text-white focus:border-amber-500 focus-visible:outline-none"
+                      title="Kills"
+                    />
+                  </div>
+
+                  {/* Placement Points Input */}
+                  <div className="w-16 flex-shrink-0">
+                    <input
+                      type="number"
+                      placeholder="Pts"
+                      value={tier.points || ''}
+                      onChange={(e) => {
+                        const updated = [...winnerTiers];
+                        updated[idx].points = Number(e.target.value) || 0;
+                        setWinnerTiers(updated);
+                      }}
+                      className="w-full bg-black border border-gray-800 rounded-lg px-2 py-1.5 text-xs text-center text-white focus:border-amber-500 focus-visible:outline-none"
+                      title="Placement Points"
+                    />
+                  </div>
+
+                  {/* Prize Amount Input */}
+                  <div className="w-28 flex-shrink-0">
+                    <input
+                      type="number"
+                      placeholder="Prize NPR"
+                      value={tier.prize || ''}
+                      onChange={(e) => {
+                        const updated = [...winnerTiers];
+                        updated[idx].prize = Number(e.target.value) || 0;
+                        setWinnerTiers(updated);
+                      }}
+                      className="w-full bg-black border border-gray-800 rounded-lg px-2.5 py-1.5 text-xs text-amber-400 font-bold focus:border-amber-500 focus-visible:outline-none"
+                      title="Prize NPR"
+                    />
+                  </div>
+
+                  {/* Delete Tier Action */}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveTier(idx)}
+                    className="p-1.5 text-gray-500 hover:text-red-400 hover:bg-card rounded-lg transition-colors flex-shrink-0"
+                    title="Remove Tier"
+                  >
+                    <Trash className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {/* Add Tier Action */}
+            <button
+              type="button"
+              onClick={handleAddTier}
+              className="w-full py-2 border border-dashed border-gray-800 hover:border-gray-700 rounded-xl text-xs font-bold text-gray-400 hover:text-white flex items-center justify-center gap-1.5 transition-colors"
+            >
+              <Plus className="w-4 h-4" /> Add Another Winner Tier
+            </button>
+
+            {/* Prize Balance & Allocation Summary */}
+            <div className={`p-4 rounded-xl border flex items-center justify-between text-xs ${
+              isPrizeBalanced ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+            }`}>
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <span>
+                  Allocated: <strong className="text-white">{formatRupees(totalAllocatedPrize)}</strong> / {formatRupees(scrimPrizePool)}
+                </span>
+              </div>
+              <span className="font-bold">
+                {isPrizeBalanced ? '✓ Exact Match' : `Remaining: ${formatRupees(scrimPrizePool - totalAllocatedPrize)}`}
+              </span>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowWinnerModal(false)}
+                className="px-4 py-2 rounded-xl bg-card border border-gray-800 hover:bg-surface text-gray-300 text-xs font-bold transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handlePayoutMultiTier}
+                disabled={submittingPayout || !isPrizeBalanced}
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-brand-500 hover:from-amber-400 hover:to-brand-400 disabled:opacity-50 text-white text-xs font-black flex items-center gap-2 shadow-lg shadow-amber-500/20 transition-all cursor-pointer"
+              >
+                {submittingPayout ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Distributing...
+                  </>
+                ) : (
+                  <>
+                    <Trophy className="w-4 h-4" />
+                    Confirm & Distribute Prizes
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

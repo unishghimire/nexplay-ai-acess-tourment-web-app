@@ -337,45 +337,64 @@ router.post("/api/scrims/:id/payout", authenticateToken, rateLimit(5, 15 * 60 * 
       return res.status(400).json({ success: false, message: "Winners list is required." });
     }
 
-    const scrimRef = db.collection("scrims").doc(id);
-    const scrimSnap = await scrimRef.get();
+    let scrimRef = db.collection("scrims").doc(id);
+    let scrimSnap = await scrimRef.get();
+    if (!scrimSnap.exists) {
+      scrimRef = db.collection("tournaments").doc(id);
+      scrimSnap = await scrimRef.get();
+    }
     if (!scrimSnap.exists) return res.status(404).json({ success: false, message: "Scrim not found" });
 
     const scrim = scrimSnap.data()!;
-    const isOwner = scrim.hostUid === uid || scrim.orgId === uid || req.user.role === "admin";
+    const hostId = scrim.hostUid || scrim.orgId || scrim.hostId || scrim.userId || scrim.organizerId || scrim.createdBy;
+    const isOwner = hostId === uid || req.user.role === "admin";
     if (!isOwner) return res.status(403).json({ success: false, message: "Unauthorized" });
 
     if (scrim.payoutStatus === "paid") {
       return res.status(400).json({ success: false, message: "Prizes have already been distributed for this scrim." });
     }
 
-    // Validate winners sum
-    validatePrizeWinners(winners);
+    // Validate winners sum and structure
+    const valError = validatePrizeWinners(winners);
+    if (valError) {
+      return res.status(400).json({ success: false, message: valError });
+    }
+
     const totalAllocated = winners.reduce((sum, w) => sum + (Number(w.prize) || 0), 0);
-    if (scrim.prizePool > 0 && totalAllocated !== scrim.prizePool) {
+    const expectedPool = Number(scrim.prizePool) || 0;
+    if (expectedPool > 0 && Math.abs(totalAllocated - expectedPool) > 0.01) {
       return res.status(400).json({
         success: false,
-        message: `Distributed prize sum (NPR ${totalAllocated}) must equal scrim prize pool (NPR ${scrim.prizePool}).`
+        message: `Distributed prize sum (NPR ${totalAllocated}) must equal scrim prize pool (NPR ${expectedPool}).`
       });
     }
 
     await db.runTransaction(async (transaction) => {
       for (const winner of winners) {
-        if (winner.userId && winner.prize > 0) {
-          const userRef = db.collection("users").doc(winner.userId);
-          transaction.update(userRef, {
-            balance: admin.firestore.FieldValue.increment(winner.prize),
-            updatedAt: admin.firestore.FieldValue.serverTimestamp()
-          });
+        const targetUserId = winner.userId || winner.captainId || winner.leaderId;
+        const prizeAmount = Number(winner.prize) || 0;
+
+        if (targetUserId && prizeAmount > 0) {
+          const userRef = db.collection("users").doc(targetUserId);
+          const userDoc = await transaction.get(userRef);
+          if (userDoc.exists) {
+            transaction.update(userRef, {
+              balance: admin.firestore.FieldValue.increment(prizeAmount),
+              totalEarnings: admin.firestore.FieldValue.increment(prizeAmount),
+              updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            });
+          }
 
           const txRef = db.collection("transactions").doc();
           transaction.set(txRef, {
             id: txRef.id,
-            userId: winner.userId,
+            userId: targetUserId,
+            username: winner.teamName || winner.username || "Winner",
             type: "prize_payout",
-            amount: winner.prize,
+            amount: prizeAmount,
             scrimId: id,
-            rank: winner.rank,
+            rank: winner.rank || 1,
+            desc: `Prize payout for Rank #${winner.rank || 1} in ${scrim.title || 'Scrim'}`,
             status: "completed",
             createdAt: admin.firestore.FieldValue.serverTimestamp()
           });
@@ -386,12 +405,22 @@ router.post("/api/scrims/:id/payout", authenticateToken, rateLimit(5, 15 * 60 * 
         status: "completed",
         payoutStatus: "paid",
         winners,
+        results: winners.map((w: any) => ({
+          rank: w.rank,
+          teamName: w.teamName || `Rank ${w.rank}`,
+          teamId: w.teamId || w.userId || '',
+          prize: w.prize || 0,
+          kills: w.kills || 0,
+          points: w.points || 0,
+          userId: w.userId || '',
+        })),
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
       });
     });
 
-    return res.json({ success: true, message: `Prizes successfully paid (Total: NPR ${totalAllocated}).` });
+    return res.json({ success: true, message: `Multi-tier prizes successfully distributed (Total: NPR ${totalAllocated}).`, winners });
   } catch (error: any) {
+    console.error("Payout error:", error);
     return res.status(400).json({ success: false, message: error.message || "Failed to payout prizes" });
   }
 });
