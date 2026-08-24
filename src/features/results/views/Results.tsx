@@ -43,8 +43,8 @@ const Results: React.FC = () => {
     }, []);
 
     const filteredResults = results.filter(r => 
-        r.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        r.game.toLowerCase().includes(searchTerm.toLowerCase())
+        (r.title || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+        (r.game || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     const featuredResult = filteredResults[0] || results[0];

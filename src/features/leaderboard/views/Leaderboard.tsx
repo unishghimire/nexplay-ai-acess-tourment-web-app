@@ -43,8 +43,8 @@ const PodiumCard = ({ item, rank, type, navigate }: {
     const team = !isPlayer ? (item as Team) : null;
     const itemId = isPlayer ? player!.uid : team!.id;
     const avatarUrl = isPlayer ? player?.profilePicUrl : team?.logoUrl;
-    const avatarSeed = isPlayer ? player?.username : team?.name;
-    const displayName = isPlayer ? player?.username : team?.name;
+    const avatarSeed = (isPlayer ? player?.username || player?.uid : team?.name || team?.id) || 'player';
+    const displayName = (isPlayer ? player?.username : team?.name) || 'Anonymous';
     const subLabel = isPlayer ? player?.teamName || 'Free Agent' : team?.tag || 'TEAM';
 
     return (

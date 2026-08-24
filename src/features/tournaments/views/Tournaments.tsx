@@ -74,6 +74,15 @@ const Tournaments: React.FC = () => {
     }, []);
 
     useEffect(() => {
+        const game = searchParams.get('game');
+        if (game && game !== gameFilter) setGameFilter(game);
+        const mode = searchParams.get('mode');
+        if (mode && mode !== modeFilter) setModeFilter(mode);
+        const status = searchParams.get('status');
+        if (status && status !== statusFilter) setStatusFilter(status);
+    }, [searchParams]);
+
+    useEffect(() => {
         const params = new URLSearchParams();
         if (gameFilter !== 'all') params.set('game', gameFilter);
         if (modeFilter !== 'all') params.set('mode', modeFilter);
@@ -84,11 +93,11 @@ const Tournaments: React.FC = () => {
     }, [gameFilter, modeFilter, statusFilter, entryFilter, teamTypeFilter, setSearchParams]);
 
     const filteredTournaments = tournaments.filter(t => {
-        const matchesGame = gameFilter === 'all' || t.game === gameFilter;
-        const matchesMode = modeFilter === 'all' || t.type === modeFilter;
+        const matchesGame = gameFilter === 'all' || t.game === gameFilter || t.game?.toLowerCase() === gameFilter.toLowerCase();
+        const matchesMode = modeFilter === 'all' || t.type === modeFilter || t.type?.toLowerCase() === modeFilter.toLowerCase();
         const matchesStatus = statusFilter === 'all' || t.status === statusFilter;
         const matchesEntry = entryFilter === 'all' || (entryFilter === 'free' ? t.entryFee === 0 : t.entryFee > 0);
-        const matchesTeamType = teamTypeFilter === 'all' || t.teamType === teamTypeFilter;
+        const matchesTeamType = teamTypeFilter === 'all' || t.teamType === teamTypeFilter || t.teamType?.toLowerCase() === teamTypeFilter.toLowerCase();
         
         return matchesGame && matchesMode && matchesStatus && matchesEntry && matchesTeamType;
     });

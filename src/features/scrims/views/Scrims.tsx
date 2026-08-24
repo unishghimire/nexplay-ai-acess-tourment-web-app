@@ -51,6 +51,13 @@ const ScrimsContent: React.FC = () => {
     const [filterMode, setFilterMode] = useState(searchParams.get('mode') || 'All');
     const navigate = useNavigate();
 
+    useEffect(() => {
+        const game = searchParams.get('game');
+        if (game && game !== filterGame) setFilterGame(game);
+        const mode = searchParams.get('mode');
+        if (mode && mode !== filterMode) setFilterMode(mode);
+    }, [searchParams]);
+
     const fetchScrims = useCallback(async () => {
         setLoading(true);
         setFetchError(null);
@@ -156,7 +163,7 @@ const ScrimsContent: React.FC = () => {
             normalizeGameStr(s.game) === normalizeGameStr(filterGame) ||
             s.game === filterGame;
 
-        const matchesMode = filterMode === 'All' || s.type === filterMode;
+        const matchesMode = filterMode === 'All' || s.type === filterMode || s.type?.toLowerCase() === filterMode.toLowerCase() || (s as any).mode === filterMode || (s as any).mode?.toLowerCase() === filterMode.toLowerCase();
         return matchesSearch && matchesGame && matchesMode;
     });
 
