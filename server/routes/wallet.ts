@@ -21,7 +21,7 @@ const CANCELLATION_PAGE_SIZE = 100;
 // POST /api/wallet/deposit — create a pending deposit request
 router.post("/api/wallet/deposit",
   authenticateToken,
-  rateLimit(5, 15 * 60 * 1000),
+  rateLimit(30, 15 * 60 * 1000),
   async (req: any, res) => {
     try {
       const { amount, method, senderNumber, transactionCode, proofUrl } = req.body;
@@ -56,7 +56,7 @@ router.post("/api/wallet/deposit",
         }
       }
 
-      // Duplicate detection: same transactionCode + amount within 24h
+      // Duplicate detection: same transactionCode + amount within 24h (only if active/pending)
       const dupQuery = db.collection('transactions')
         .where('userId', '==', uid)
         .where('transactionCode', '==', transactionCode)
@@ -65,9 +65,12 @@ router.post("/api/wallet/deposit",
         .limit(1);
       const dupSnap = await dupQuery.get();
       if (!dupSnap.empty) {
-        const age = Date.now() - (dupSnap.docs[0].data().timestamp?.toMillis?.() || 0);
-        if (age < 24 * 60 * 60 * 1000) {
-          return res.status(409).json({ success: false, message: "Duplicate transaction detected. This transaction code was already submitted." });
+        const existingTx = dupSnap.docs[0].data();
+        if (existingTx.status !== 'rejected') {
+          const age = Date.now() - (existingTx.timestamp?.toMillis?.() || 0);
+          if (age < 24 * 60 * 60 * 1000) {
+            return res.status(409).json({ success: false, message: "Duplicate transaction detected. This transaction code was already submitted." });
+          }
         }
       }
 

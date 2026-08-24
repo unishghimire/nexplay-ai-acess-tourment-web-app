@@ -159,9 +159,9 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
       setSelectedMethod(null);
       setSelectedCategory(null);
       onClose();
-    } catch (error) {
-      // Error submitting deposit
-      showToast('Failed to submit deposit request', 'error');
+    } catch (error: any) {
+      console.error('Error submitting deposit:', error);
+      showToast(error.message || 'Failed to submit deposit request', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -382,11 +382,12 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
                       <input
                         ref={fileInputRef}
                         type="file"
-                        accept="image/jpeg,image/png,image/webp"
+                        accept="image/*"
                         className="hidden"
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) handleScreenshotUpload(file);
+                          e.target.value = '';
                         }}
                       />
                     </div>
