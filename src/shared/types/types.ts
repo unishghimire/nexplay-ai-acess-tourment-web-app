@@ -165,6 +165,7 @@ export interface Team {
     wins?: number;
     totalEarnings?: number;
     players?: string[]; // Array of user IDs
+    members?: string[]; // Array of user IDs or member usernames
     captainId?: string;
     stats?: {
         wins: number;
@@ -373,6 +374,8 @@ export interface TeamMember {
     id: string;
     teamId: string;
     userId: string;
+    username?: string;
+    inGameName?: string;
     role: 'admin' | 'moderator' | 'member';
     roleInTeam?: 'Captain' | 'Fragger' | 'IGL' | 'Support' | 'Scout';
     joinedAt: Timestamp | any;

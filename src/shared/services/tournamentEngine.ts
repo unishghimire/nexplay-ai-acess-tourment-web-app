@@ -203,8 +203,14 @@ export function generateGroups(params: {
         orderedTeams = fisherYatesShuffle(teams);
     }
 
-    // Calculate group sizes (even distribution, diff <= 1)
-    const sizes = calculateGroupSizes(orderedTeams.length, numGroups);
+    // Strict Battle Royale limit: never allow more than 12 teams in one BR group
+    const isBR = (params as any).isBR ?? true;
+    const effectiveNumGroups = isBR
+        ? Math.max(numGroups, Math.ceil(orderedTeams.length / 12))
+        : numGroups;
+
+    // Calculate group sizes (even distribution, diff <= 1, max 12 for BR)
+    const sizes = calculateGroupSizes(orderedTeams.length, effectiveNumGroups);
 
     // Build groups
     const groups = sizes.map((size, i) => {
@@ -212,7 +218,7 @@ export function generateGroups(params: {
         return {
             id: `group-r${roundNumber}-${Date.now()}-${i}`,
             name: generateGroupName(i, namingStyle),
-            teamLimit: params.teamsPerGroup || size,
+            teamLimit: isBR ? Math.min(params.teamsPerGroup || 12, 12) : (params.teamsPerGroup || size),
             teams: groupTeams,
             matches: [],
             isPublic: true,
@@ -534,8 +540,13 @@ export function createNextRound(params: {
     // Cross-group distribution: interleave qualifiers from different source groups
     const distributedTeams = crossGroupDistribute(qualifiersByGroup, numGroups);
 
-    // Calculate group sizes
-    const sizes = calculateGroupSizes(distributedTeams.length, numGroups);
+    // Strict Battle Royale limit: never allow more than 12 teams in one BR group
+    const effectiveNumGroups = isBR
+        ? Math.max(numGroups, Math.ceil(distributedTeams.length / 12))
+        : numGroups;
+
+    // Calculate group sizes (even distribution, diff <= 1, max 12 for BR)
+    const sizes = calculateGroupSizes(distributedTeams.length, effectiveNumGroups);
 
     // Build groups
     const groups: TournamentGroup[] = sizes.map((size, i) => {
@@ -543,7 +554,7 @@ export function createNextRound(params: {
         return {
             id: `group-r${roundNumber}-${Date.now()}-${i}`,
             name: generateGroupName(i, namingStyle),
-            teamLimit: nextRoundConfig.teamsPerGroup || size,
+            teamLimit: isBR ? Math.min(nextRoundConfig.teamsPerGroup || 12, 12) : (nextRoundConfig.teamsPerGroup || size),
             teams: groupTeams,
             matches: [],
             isPublic: true,

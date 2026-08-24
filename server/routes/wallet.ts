@@ -246,7 +246,7 @@ router.post("/api/wallet/join-tournament",
   rateLimit(10, 15 * 60 * 1000),
   async (req: any, res) => {
     try {
-      const { tournamentId, teammates } = req.body;
+      const { tournamentId, teammates, teamId, teamName, selectedPlayers } = req.body;
       const uid = req.user.userId;
 
       if (!tournamentId || typeof tournamentId !== 'string' || tournamentId.length > 128) {
@@ -293,6 +293,9 @@ router.post("/api/wallet/join-tournament",
 
         tx.update(uRef, { balance: balanceAfter, xp: newXP, level: newLevel });
 
+        const effectiveTeamName = teamName || uData.teamName || uData.username || 'Registered Player';
+        const effectiveTeamId = teamId || uData.teamId || uid;
+
         const tournamentUpdates: any = {
           currentPlayers: (tData.currentPlayers || 0) + 1,
         };
@@ -304,8 +307,8 @@ router.post("/api/wallet/join-tournament",
             updatedSlots[slotIdx] = {
               ...updatedSlots[slotIdx],
               status: 'filled',
-              teamName: uData.teamName || uData.username || 'Registered Team',
-              teamId: uData.teamId || uid,
+              teamName: effectiveTeamName,
+              teamId: effectiveTeamId,
               inGameId: uData.inGameId || '',
             };
             tournamentUpdates.slots = updatedSlots;
@@ -319,15 +322,20 @@ router.post("/api/wallet/join-tournament",
           tournamentId,
           inGameId: uData.inGameId || '',
           inGameName: uData.inGameName || '',
-          teamName: uData.teamName || '',
-          teamId: uData.teamId || '',
+          teamName: effectiveTeamName,
+          teamId: effectiveTeamId,
           username: uData.username || '',
           logoUrl: uData.profilePicUrl || '',
           status: tData.registrationType === 'manual' ? 'pending' : 'approved',
           timestamp: admin.firestore.FieldValue.serverTimestamp()
         };
         if (Array.isArray(teammates) && teammates.length > 0) {
-          participantData.teammates = teammates.slice(0, 3);
+          participantData.teammates = teammates.slice(0, 4);
+        }
+        if (Array.isArray(selectedPlayers) && selectedPlayers.length > 0) {
+          participantData.selectedPlayers = selectedPlayers.slice(0, 5);
+        } else {
+          participantData.selectedPlayers = [uData.inGameName || uData.username, ...(teammates || [])];
         }
         tx.set(partRef, participantData);
 
