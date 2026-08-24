@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { collection, query, where, getDocs, getDoc, doc, updateDoc, setDoc, serverTimestamp, increment, writeBatch, orderBy, limit } from 'firebase/firestore';
+import { collection, query, where, getDocs, getDoc, doc, updateDoc, deleteDoc, setDoc, serverTimestamp, increment, writeBatch, orderBy, limit } from 'firebase/firestore';
 import { db, auth } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { Tournament, Participant, Transaction } from '../../../shared/types/types';
@@ -275,24 +275,46 @@ export function useOrgData() {
   const deleteTournament = useCallback(async (id: string) => {
     if (!user) throw new Error('Not authenticated');
     const token = await auth.currentUser?.getIdToken();
-    if (!token) throw new Error('Authentication required');
-    let res = await fetch(`/api/tournaments/${id}`, {
-      method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${token}` },
-    });
-    if (!res.ok) {
-      // Fallback attempt with /api/scrims
-      res = await fetch(`/api/scrims/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
+    let deleted = false;
+    let lastErrorMsg = '';
+
+    if (token) {
+      try {
+        let res = await fetch(`/api/tournaments/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        if (!res.ok) {
+          // Fallback attempt with /api/scrims
+          res = await fetch(`/api/scrims/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` },
+          });
+        }
+        if (res.ok) {
+          deleted = true;
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          lastErrorMsg = errData.message || '';
+        }
+      } catch (err: any) {
+        console.warn('API delete request failed, attempting direct Firestore delete:', err);
+      }
     }
-    if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      throw new Error(errData.message || 'Failed to delete tournament or scrim');
+
+    if (!deleted) {
+      try {
+        await assertTournamentHost(id);
+        await deleteDoc(doc(db, 'tournaments', id)).catch(() => {});
+        await deleteDoc(doc(db, 'scrims', id)).catch(() => {});
+        deleted = true;
+      } catch (fsErr: any) {
+        throw new Error(lastErrorMsg || fsErr.message || 'Failed to delete tournament or scrim');
+      }
     }
+
     setHostedTournaments(prev => prev.filter(t => t.id !== id));
-  }, [user]);
+  }, [user, assertTournamentHost]);
 
   const updateTournamentStatus = useCallback(async (id: string, status: Tournament['status']) => {
     await assertTournamentHost(id);

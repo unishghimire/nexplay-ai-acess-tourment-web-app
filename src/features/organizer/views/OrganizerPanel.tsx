@@ -78,6 +78,7 @@ const OrganizerPanel: React.FC = () => {
   const [editScrim, setEditScrim] = useState<any>(null);
 
   // Loading states for async operations
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isTogglingSlot, setIsTogglingSlot] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [isResolvingDispute, setIsResolvingDispute] = useState(false);
@@ -95,18 +96,20 @@ const OrganizerPanel: React.FC = () => {
   }, []);
 
   const confirmDelete = useCallback(async () => {
-    if (!deleteTarget) return;
+    if (!deleteTarget || isDeleting) return;
+    setIsDeleting(true);
     try {
       await org.deleteTournament(deleteTarget.id);
       showToast(`"${deleteTarget.title || 'Event'}" deleted successfully`, 'success');
+      setActiveOverlay(null);
+      setDeleteTarget(null);
     } catch (err: any) {
       const msg = err?.message || 'Failed to delete';
       showToast(msg, 'error');
     } finally {
-      setActiveOverlay(null);
-      setDeleteTarget(null);
+      setIsDeleting(false);
     }
-  }, [deleteTarget, org, showToast]);
+  }, [deleteTarget, isDeleting, org, showToast]);
 
   const handleUpdateStatus = useCallback(async (id: string, status: string) => {
     if (isUpdatingStatus) return;
@@ -246,11 +249,13 @@ const OrganizerPanel: React.FC = () => {
     setActiveOverlay('DISPUTE_RESOLVER');
   }, []);
 
-  const handleResolveDispute = useCallback(async (action: 'warn' | 'ban' | 'dismiss') => {
-    if (!disputeTarget || isResolvingDispute) return;
+  const handleResolveDispute = useCallback(async (disputeIdOrAction: string, actionParam?: 'warn' | 'ban' | 'dismiss') => {
+    const disputeId = actionParam ? disputeIdOrAction : disputeTarget;
+    const action = actionParam || (disputeIdOrAction as 'warn' | 'ban' | 'dismiss');
+    if (!disputeId || isResolvingDispute) return;
     setIsResolvingDispute(true);
     try {
-      await org.resolveDispute(disputeTarget, action);
+      await org.resolveDispute(disputeId, action);
       showToast(`Dispute ${action === 'dismiss' ? 'dismissed' : `resolved — ${action} issued`}`, 'success');
       setActiveOverlay(null);
       setDisputeTarget(null);
@@ -445,6 +450,7 @@ const OrganizerPanel: React.FC = () => {
         activeOverlay={activeOverlay}
         onClose={() => { setActiveOverlay(null); setDeleteTarget(null); setWarningTeam(null); setRoomDispatchTarget(null); setScrimSlotTarget(null); setDisputeTarget(null); }}
         deleteTarget={deleteTarget?.title}
+        isDeleting={isDeleting}
         onConfirmDelete={confirmDelete}
         teamName={warningTeam}
         warningReason={warningReason}

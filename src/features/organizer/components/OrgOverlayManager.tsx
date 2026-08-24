@@ -16,6 +16,7 @@ interface OrgOverlayManagerProps {
   onClose: () => void;
   // Delete confirm
   deleteTarget?: string;
+  isDeleting?: boolean;
   onConfirmDelete?: () => void;
   // Team warning
   teamName?: string | null;
@@ -43,6 +44,7 @@ export const OrgOverlayManager: React.FC<OrgOverlayManagerProps> = ({
   activeOverlay,
   onClose,
   deleteTarget,
+  isDeleting,
   onConfirmDelete,
   teamName,
   warningReason,
@@ -74,11 +76,21 @@ export const OrgOverlayManager: React.FC<OrgOverlayManagerProps> = ({
               Permanently delete <span className="text-white font-bold">"{deleteTarget}"</span>? All match data, registrations, and brackets will be removed.
             </p>
             <div className="flex gap-3">
-              <button type="button" onClick={onClose} className="flex-1 bg-card hover:bg-surface text-white py-3 rounded-lg font-medium text-sm border border-gray-800 transition-colors min-h-[44px]">
+              <button type="button" onClick={onClose} disabled={isDeleting} className="flex-1 bg-card hover:bg-surface text-white py-3 rounded-lg font-medium text-sm border border-gray-800 transition-colors min-h-[44px]">
                 Cancel
               </button>
-              <button type="button" onClick={onConfirmDelete} className="flex-1 bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg font-medium text-sm transition-colors min-h-[44px]">
-                Delete
+              <button
+                type="button"
+                onClick={onConfirmDelete}
+                disabled={isDeleting}
+                className="flex-1 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white py-3 rounded-lg font-medium text-sm transition-colors min-h-[44px] flex items-center justify-center gap-2"
+              >
+                {isDeleting ? (
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4" />
+                )}
+                <span>{isDeleting ? 'Deleting...' : 'Delete'}</span>
               </button>
             </div>
           </div>

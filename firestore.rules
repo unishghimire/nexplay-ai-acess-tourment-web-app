@@ -211,7 +211,10 @@ service cloud.firestore {
             incoming().status in ['upcoming', 'published', 'live', 'paused']))
       );
 
-      allow delete: if isAdmin() && isValidId(tournamentId);
+      allow delete: if isValidId(tournamentId) && (
+        isAdmin() ||
+        (isOrganizer() && (existing().hostUid == request.auth.uid || (('orgId' in existing()) && existing().orgId == request.auth.uid)))
+      );
     }
 
     // Subcollection groups (legacy path — current app stores groups inside tournament doc)
