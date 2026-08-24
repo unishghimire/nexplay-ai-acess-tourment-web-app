@@ -170,24 +170,32 @@ export async function uploadToImgBB(buffer: Buffer, originalName: string): Promi
   if (!apiKey) throw new Error("IMGBB_API_KEY environment variable is not set.");
 
   const base64 = buffer.toString("base64");
-  const formData = new FormData();
-  formData.append("key", apiKey);
-  formData.append("image", base64);
-  formData.append("name", originalName.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9-_]/g, "_") || `img_${Date.now()}`);
+  const cleanName = originalName.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9-_]/g, "_") || `img_${Date.now()}`;
 
-  const resp = await fetch("https://api.imgbb.com/1/upload", {
+  const formData = new FormData();
+  formData.append("image", base64);
+  formData.append("name", cleanName);
+
+  const uploadUrl = `https://api.imgbb.com/1/upload?key=${encodeURIComponent(apiKey)}`;
+  const resp = await fetch(uploadUrl, {
     method: "POST",
     body: formData,
+    signal: AbortSignal.timeout(12000),
   });
 
   if (!resp.ok) {
     const errText = await resp.text().catch(() => resp.statusText);
-    throw new Error(`ImgBB upload failed (${resp.status}): ${errText}`);
+    let errMsg = errText;
+    try {
+      const parsed = JSON.parse(errText);
+      if (parsed?.error?.message) errMsg = parsed.error.message;
+    } catch {}
+    throw new Error(`ImgBB upload failed (${resp.status}): ${errMsg}`);
   }
 
   const json = await resp.json() as any;
   if (!json?.success || !json?.data) {
-    throw new Error("ImgBB returned unexpected response format");
+    throw new Error(json?.error?.message || "ImgBB returned unexpected response format");
   }
 
   const d = json.data;
@@ -215,22 +223,28 @@ export async function uploadBase64ToImgBB(base64String: string): Promise<ImgBBRe
   const base64Data = base64String.replace(/^data:[^;]+;base64,/, "");
 
   const formData = new FormData();
-  formData.append("key", apiKey);
   formData.append("image", base64Data);
 
-  const resp = await fetch("https://api.imgbb.com/1/upload", {
+  const uploadUrl = `https://api.imgbb.com/1/upload?key=${encodeURIComponent(apiKey)}`;
+  const resp = await fetch(uploadUrl, {
     method: "POST",
     body: formData,
+    signal: AbortSignal.timeout(12000),
   });
 
   if (!resp.ok) {
     const errText = await resp.text().catch(() => resp.statusText);
-    throw new Error(`ImgBB upload failed (${resp.status}): ${errText}`);
+    let errMsg = errText;
+    try {
+      const parsed = JSON.parse(errText);
+      if (parsed?.error?.message) errMsg = parsed.error.message;
+    } catch {}
+    throw new Error(`ImgBB upload failed (${resp.status}): ${errMsg}`);
   }
 
   const json = await resp.json() as any;
   if (!json?.success || !json?.data) {
-    throw new Error("ImgBB returned unexpected response format");
+    throw new Error(json?.error?.message || "ImgBB returned unexpected response format");
   }
 
   const d = json.data;

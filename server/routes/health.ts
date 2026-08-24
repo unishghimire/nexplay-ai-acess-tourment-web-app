@@ -1,12 +1,14 @@
 import { Router } from "express";
 import { db, admin } from "../shared.js";
+import fs from "fs";
+import path from "path";
 
 const router = Router();
 
 // GET /api/health — Comprehensive diagnostics for Vercel and local environments
 router.get("/api/health", async (req, res) => {
   const startTime = Date.now();
-  const checks: Record<string, { status: "ok" | "degraded" | "error"; latencyMs?: number; message?: string }> = {};
+  const checks: Record<string, { status: "ok" | "degraded" | "missing" | "error"; latencyMs?: number; message?: string }> = {};
 
   // 1. Firestore connectivity check
   try {
@@ -20,25 +22,52 @@ router.get("/api/health", async (req, res) => {
   // 2. Firebase Admin SDK check
   try {
     const isInitialized = admin.apps.length > 0;
-    checks.firebaseAdmin = { status: isInitialized ? "ok" : "degraded", message: `Active apps: ${admin.apps.length}` };
+    const hasServiceAccount = fs.existsSync(path.join(process.cwd(), "service-account.json")) || Boolean(process.env.FIREBASE_SERVICE_ACCOUNT);
+    checks.firebaseAdmin = {
+      status: isInitialized ? "ok" : "degraded",
+      message: `Active apps: ${admin.apps.length}, Service Account: ${hasServiceAccount ? "configured" : "using ADC"}`
+    };
   } catch (err: any) {
     checks.firebaseAdmin = { status: "error", message: err.message };
   }
 
-  // 3. Environment Variables check
-  const criticalEnv = [
-    "FIREBASE_PROJECT_ID",
-    "FIREBASE_CLIENT_EMAIL",
-    "FIREBASE_PRIVATE_KEY",
-    "GEMINI_API_KEY",
-  ];
-  const missingEnv = criticalEnv.filter((key) => !process.env[key]);
-  checks.environment = {
-    status: missingEnv.length === 0 ? "ok" : "degraded",
-    message: missingEnv.length === 0 ? "All critical environment variables present" : `Missing: ${missingEnv.join(", ")}`,
+  // 3. Firebase Client Config (firebase-applet-config.json)
+  const appletConfigPath = path.join(process.cwd(), "firebase-applet-config.json");
+  const hasAppletConfig = fs.existsSync(appletConfigPath);
+  checks.firebaseClientConfig = {
+    status: hasAppletConfig ? "ok" : "degraded",
+    message: hasAppletConfig ? "firebase-applet-config.json loaded successfully" : "Using fallback environment variables"
   };
 
-  const isHealthy = Object.values(checks).every((c) => c.status !== "error");
+  // 4. ImgBB API Key check
+  const hasImgBB = Boolean(process.env.IMGBB_API_KEY?.trim());
+  checks.imgbb = {
+    status: hasImgBB ? "ok" : "missing",
+    message: hasImgBB ? "IMGBB_API_KEY is configured" : "IMGBB_API_KEY is missing from environment. Add it in .env or Vercel Environment Variables."
+  };
+
+  // 5. Cloudinary check
+  const hasCloudinary = Boolean(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);
+  checks.cloudinary = {
+    status: hasCloudinary ? "ok" : "missing",
+    message: hasCloudinary ? "Cloudinary credentials configured (fallback ready)" : "Cloudinary credentials missing (optional fallback)"
+  };
+
+  // 6. Gemini AI check
+  const hasGemini = Boolean(process.env.GEMINI_API_KEY?.trim());
+  checks.geminiAi = {
+    status: hasGemini ? "ok" : "missing",
+    message: hasGemini ? "GEMINI_API_KEY is configured" : "GEMINI_API_KEY is missing from environment"
+  };
+
+  // 7. Discord Webhook check
+  const hasDiscord = Boolean(process.env.DISCORD_WEBHOOK_TOURNAMENTS || process.env.DISCORD_WEBHOOK_SCRIMS);
+  checks.discord = {
+    status: hasDiscord ? "ok" : "missing",
+    message: hasDiscord ? "Discord webhooks configured" : "Discord webhooks not set (optional)"
+  };
+
+  const isHealthy = checks.firestore?.status === "ok" && checks.firebaseAdmin?.status !== "error";
   const overallLatency = Date.now() - startTime;
 
   res.status(isHealthy ? 200 : 503).json({
