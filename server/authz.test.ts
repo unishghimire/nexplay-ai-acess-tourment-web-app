@@ -1,4 +1,4 @@
-import { requireAdmin } from './authz';
+import { requireAdmin, requireOrganizer } from './authz';
 
 function assert(condition: boolean, message: string) {
   if (!condition) {
@@ -7,7 +7,7 @@ function assert(condition: boolean, message: string) {
   }
 }
 
-function runMiddleware(role?: string) {
+function runAdminMiddleware(role?: string) {
   let statusCode: number | undefined;
   let body: unknown;
   let nextCalled = false;
@@ -15,9 +15,9 @@ function runMiddleware(role?: string) {
   requireAdmin(
     { user: role ? { role } : undefined } as any,
     {
-      status: (code) => {
+      status: (code: number) => {
         statusCode = code;
-        return { json: (response) => { body = response; } };
+        return { json: (response: any) => { body = response; } };
       },
     } as any,
     () => { nextCalled = true; },
@@ -26,16 +26,49 @@ function runMiddleware(role?: string) {
   return { statusCode, body, nextCalled };
 }
 
-const anonymous = runMiddleware();
-assert(anonymous.statusCode === 403, 'missing user is rejected');
-assert(!anonymous.nextCalled, 'missing user cannot reach the handler');
+function runOrganizerMiddleware(role?: string) {
+  let statusCode: number | undefined;
+  let body: unknown;
+  let nextCalled = false;
 
-const organizer = runMiddleware('organizer');
-assert(organizer.statusCode === 403, 'non-admin user is rejected');
-assert(!organizer.nextCalled, 'non-admin cannot reach the handler');
+  requireOrganizer(
+    { user: role ? { role } : undefined } as any,
+    {
+      status: (code: number) => {
+        statusCode = code;
+        return { json: (response: any) => { body = response; } };
+      },
+    } as any,
+    () => { nextCalled = true; },
+  );
 
-const admin = runMiddleware('admin');
-assert(admin.statusCode === undefined, 'admin is not rejected');
-assert(admin.nextCalled, 'admin reaches the handler');
+  return { statusCode, body, nextCalled };
+}
 
-console.log('Admin authorization middleware tests: 5 passed, 0 failed');
+// Admin Middleware Checks
+const anonymous = runAdminMiddleware();
+assert(anonymous.statusCode === 403, 'missing user is rejected by requireAdmin');
+assert(!anonymous.nextCalled, 'missing user cannot reach the admin handler');
+
+const organizer = runAdminMiddleware('organizer');
+assert(organizer.statusCode === 403, 'organizer is rejected by requireAdmin');
+assert(!organizer.nextCalled, 'organizer cannot reach the admin handler');
+
+const admin = runAdminMiddleware('admin');
+assert(admin.statusCode === undefined, 'admin is not rejected by requireAdmin');
+assert(admin.nextCalled, 'admin reaches the admin handler');
+
+// Organizer Middleware Checks
+const playerForOrg = runOrganizerMiddleware('player');
+assert(playerForOrg.statusCode === 403, 'player is rejected by requireOrganizer');
+assert(!playerForOrg.nextCalled, 'player cannot reach the organizer handler');
+
+const orgForOrg = runOrganizerMiddleware('organizer');
+assert(orgForOrg.statusCode === undefined, 'organizer is accepted by requireOrganizer');
+assert(orgForOrg.nextCalled, 'organizer reaches the organizer handler');
+
+const adminForOrg = runOrganizerMiddleware('admin');
+assert(adminForOrg.statusCode === undefined, 'admin is accepted by requireOrganizer');
+assert(adminForOrg.nextCalled, 'admin reaches the organizer handler');
+
+console.log('Authorization middleware tests (Admin & Organizer): 12 passed, 0 failed');

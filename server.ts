@@ -13,6 +13,9 @@ import discordRoutes from "./server/routes/discord.js";
 import walletRoutes from "./server/routes/wallet.js";
 import adminScrimRoutes from "./server/routes/admin-scrims.js";
 import adminMoneyRoutes from "./server/routes/admin-money.js";
+import disputesRoutes from "./server/routes/disputes.js";
+import teamsRoutes from "./server/routes/teams.js";
+import healthRoutes from "./server/routes/health.js";
 import { generateSitemapXml, handleIndexNow } from "./server/seo.js";
 
 async function startServer() {
@@ -32,6 +35,9 @@ async function startServer() {
   app.use(adminScrimRoutes);
   app.use(adminMoneyRoutes);
   app.use(discordRoutes);
+  app.use(disputesRoutes);
+  app.use(teamsRoutes);
+  app.use(healthRoutes);
 
   // Dynamic Sitemap for SEO
   app.get("/sitemap.xml", async (req, res) => {
