@@ -50,13 +50,35 @@ try {
 // ponytail: file fallback covers local dev + Vercel if env var missing
 // ═══════════════════════════════════════════════════════════════
 function getFirebaseCredential(): admin.credential.Credential | undefined {
-  // 1. Env var (Vercel production — JSON string)
+  // 1. Env var (Vercel production — JSON string or Base64 encoded JSON)
   const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
   if (serviceAccountJson) {
     try {
-      return admin.credential.cert(JSON.parse(serviceAccountJson));
+      const raw = serviceAccountJson.trim();
+      const parsed = raw.startsWith('{')
+        ? JSON.parse(raw)
+        : JSON.parse(Buffer.from(raw, 'base64').toString('utf-8'));
+      return admin.credential.cert(parsed);
     } catch (e) {
-      console.error("FIREBASE_SERVICE_ACCOUNT env var is set but invalid JSON:", e);
+      console.error("FIREBASE_SERVICE_ACCOUNT env var is set but invalid JSON/Base64:", e);
+    }
+  }
+
+  // 1b. Discrete Env Vars (FIREBASE_CLIENT_EMAIL + FIREBASE_PRIVATE_KEY)
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  let privateKey = process.env.FIREBASE_PRIVATE_KEY;
+  if (clientEmail && privateKey) {
+    try {
+      if (privateKey.includes('\\n')) {
+        privateKey = privateKey.replace(/\\n/g, '\n');
+      }
+      return admin.credential.cert({
+        projectId: firebaseConfig.projectId || "nexplayorg-app",
+        clientEmail,
+        privateKey,
+      });
+    } catch (e) {
+      console.error("Firebase discrete env credentials invalid:", e);
     }
   }
 
