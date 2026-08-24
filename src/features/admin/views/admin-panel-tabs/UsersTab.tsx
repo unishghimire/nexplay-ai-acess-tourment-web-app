@@ -38,8 +38,8 @@ export const UsersTab: React.FC<AdminPanelTabProps> = (props) => {
                             <tbody className="divide-y divide-gray-800/50">
                                 {users
                                     .filter(u => 
-                                        u.username.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                                        u.email.toLowerCase().includes(searchQuery.toLowerCase())
+                                        (u.username || '').toLowerCase().includes((searchQuery || '').toLowerCase()) || 
+                                        (u.email || '').toLowerCase().includes((searchQuery || '').toLowerCase())
                                     )
                                     .map(u => (
                                     <tr key={u.uid} className="hover:bg-white/[0.02] transition-colors">
@@ -49,14 +49,14 @@ export const UsersTab: React.FC<AdminPanelTabProps> = (props) => {
                                                     <Users className="text-brand-500 w-4 h-4" />
                                                 </div>
                                                 <div>
-                                                    <div className="text-sm font-bold text-white">{u.username}</div>
-                                                    <div className="text-[10px] text-gray-500">{u.email}</div>
+                                                    <div className="text-sm font-bold text-white">{u.username || 'Unnamed User'}</div>
+                                                    <div className="text-[10px] text-gray-500">{u.email || 'No email'}</div>
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="px-4 py-4">
                                             <select 
-                                                value={u.role}
+                                                value={u.role || 'player'}
                                                 onChange={(e) => handleUpdateUserRole(u.uid, e.target.value as any)}
                                                 className="bg-dark border border-gray-700 rounded-lg px-2 py-2 text-xs text-white focus-visible:outline-none focus:border-brand-500"
                                             >
@@ -66,7 +66,7 @@ export const UsersTab: React.FC<AdminPanelTabProps> = (props) => {
                                             </select>
                                         </td>
                                         <td className="px-4 py-4">
-                                            <div className="text-sm font-mono font-bold text-white">{formatCurrency(u.balance)}</div>
+                                            <div className="text-sm font-mono font-bold text-white">{formatCurrency(u.balance || 0)}</div>
                                         </td>
                                         <td className="px-4 py-4">
                                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${u.isBanned ? 'bg-red-600/20 text-red-400' : 'bg-green-600/20 text-green-400'}`}>
@@ -96,6 +96,13 @@ export const UsersTab: React.FC<AdminPanelTabProps> = (props) => {
                                         </td>
                                     </tr>
                                 ))}
+                                {users.length === 0 && (
+                                    <tr>
+                                        <td colSpan={5} className="text-center py-8 text-gray-500 text-sm">
+                                            No registered users found.
+                                        </td>
+                                    </tr>
+                                )}
                             </tbody>
                         </table>
                         {users.filter(u => 

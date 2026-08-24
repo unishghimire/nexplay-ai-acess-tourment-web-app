@@ -257,8 +257,8 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
                 getDocs(query(collection(db, 'orgApplications'), where('status', '==', 'pending'))),
                 // 9: organizers + admins
                 getDocs(query(collection(db, 'users'), where('role', 'in', ['organizer', 'admin']))),
-                // 10: users (first 50)
-                getDocs(query(collection(db, 'users'), orderBy('createdAt', 'desc'), limit(50))),
+                // 10: users (up to 500)
+                getDocs(query(collection(db, 'users'), limit(500))),
                 // 11: activity logs
                 getDocs(query(collection(db, 'activityLogs'), orderBy('timestamp', 'desc'), limit(10))),
                 // 12: tournament earnings
@@ -304,6 +304,11 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
             if (results[10].status === 'fulfilled') {
                 const usersSnap = results[10].value;
                 const usersData = usersSnap.docs.map(d => ({ uid: d.id, ...d.data() } as UserProfile));
+                usersData.sort((a, b) => {
+                    const aTime = toDateSafe(a.createdAt || (a as any).joinedAt || (a as any).timestamp)?.getTime() || 0;
+                    const bTime = toDateSafe(b.createdAt || (b as any).joinedAt || (b as any).timestamp)?.getTime() || 0;
+                    return bTime - aTime;
+                });
                 setUsers(usersData);
             }
             if (results[11].status === 'fulfilled')
