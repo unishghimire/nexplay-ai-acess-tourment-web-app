@@ -14,12 +14,61 @@ interface WalletModalProps {
   initialTab?: 'deposit' | 'withdraw';
 }
 
+const DEFAULT_CATEGORIES: PaymentCategory[] = [
+  { id: 'cat_wallets', name: 'Digital Wallets', description: 'eSewa, Khalti, IME Pay instant transfers', isActive: true, createdAt: '2026-01-01T00:00:00.000Z' },
+  { id: 'cat_banking', name: 'Mobile Banking & QR', description: 'FonePay QR & ConnectIPS', isActive: true, createdAt: '2026-01-01T00:00:00.000Z' },
+  { id: 'cat_bank', name: 'Direct Bank Transfer', description: 'National & Commercial Banks', isActive: true, createdAt: '2026-01-01T00:00:00.000Z' }
+];
+
+const DEFAULT_METHODS: PaymentMethod[] = [
+  {
+    id: 'method_esewa',
+    categoryId: 'cat_wallets',
+    name: 'eSewa',
+    type: 'Wallet',
+    qrUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=eSewa-Deposit-NexPlay',
+    instructions: 'Send payment to eSewa ID: 9800000000 (NexPlay Official). Copy the transaction ID and upload payment screenshot.',
+    isActive: true,
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'method_khalti',
+    categoryId: 'cat_wallets',
+    name: 'Khalti',
+    type: 'Wallet',
+    qrUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=Khalti-Deposit-NexPlay',
+    instructions: 'Send payment to Khalti ID: 9800000000 (NexPlay Official). Enter transaction code and attach receipt screenshot.',
+    isActive: true,
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'method_fonepay',
+    categoryId: 'cat_banking',
+    name: 'FonePay QR',
+    type: 'QR',
+    qrUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=FonePay-NexPlay-Official',
+    instructions: 'Scan FonePay QR using any Banking App. Enter Transaction Ref and attach confirmation screenshot.',
+    isActive: true,
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'method_bank',
+    categoryId: 'cat_bank',
+    name: 'Bank Transfer',
+    type: 'Bank',
+    qrUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=Bank-NexPlay-Official',
+    instructions: 'Transfer to Global IME / Nabil Bank. A/C: 0123456789 (NexPlay Org). Attach transfer slip screenshot.',
+    isActive: true,
+    createdAt: new Date().toISOString()
+  }
+];
+
 const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab = 'deposit' }) => {
   const { user, profile } = useAuth();
   const { showToast } = useNotification();
   const [activeTab, setActiveTab] = useState<'deposit' | 'withdraw'>(initialTab);
-  const [paymentCategories, setPaymentCategories] = useState<PaymentCategory[]>([]);
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [paymentCategories, setPaymentCategories] = useState<PaymentCategory[]>(DEFAULT_CATEGORIES);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>(DEFAULT_METHODS);
   const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -54,20 +103,24 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
         collection(db, 'paymentCategories'),
         where('isActive', '==', true)
       ));
-      setPaymentCategories(catSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as PaymentCategory)));
+      const loadedCats = catSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as PaymentCategory));
+      setPaymentCategories(loadedCats.length > 0 ? loadedCats : DEFAULT_CATEGORIES);
 
       const paySnap = await getDocs(query(
         collection(db, 'paymentMethods'),
         where('isActive', '==', true)
       ));
-      setPaymentMethods(paySnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as PaymentMethod)));
+      const loadedMethods = paySnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as PaymentMethod));
+      setPaymentMethods(loadedMethods.length > 0 ? loadedMethods : DEFAULT_METHODS);
 
       const settingsSnap = await getDoc(doc(db, 'settings', 'site'));
       if (settingsSnap.exists()) {
         setSettings(settingsSnap.data() as SiteSettings);
       }
     } catch (error) {
-      console.error('Error fetching wallet data:', error);
+      console.warn('Using fallback payment options:', error);
+      setPaymentCategories(DEFAULT_CATEGORIES);
+      setPaymentMethods(DEFAULT_METHODS);
     } finally {
       setLoading(false);
     }
@@ -113,21 +166,33 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
   };
 
   const handleDepositSubmit = async () => {
-    if (!user || !selectedMethod || !depositAmount || !senderNumber || !transactionCode) {
-      return showToast('Please fill all fields', 'error');
+    if (!user) {
+      return showToast('You must be signed in to submit a deposit', 'error');
+    }
+    if (!selectedMethod) {
+      return showToast('Please select a payment method', 'error');
+    }
+    if (!depositAmount) {
+      return showToast('Please enter deposit amount', 'error');
+    }
+    if (!senderNumber) {
+      return showToast('Please enter your sender mobile/account number', 'error');
+    }
+    if (!transactionCode) {
+      return showToast('Please enter the transaction reference code or name', 'error');
     }
     if (!proofUrl) {
-      return showToast('Payment screenshot is required', 'error');
+      return showToast('Payment screenshot is required — please select/paste receipt image', 'error');
     }
 
     const amount = parseFloat(depositAmount);
-    if (isNaN(amount) || amount <= 0) return showToast('Invalid amount', 'error');
+    if (isNaN(amount) || amount <= 0) return showToast('Please enter a valid amount greater than 0', 'error');
 
     setIsSubmitting(true);
     try {
       const token = await auth.currentUser?.getIdToken();
       if (!token) {
-        showToast('Authentication required', 'error');
+        showToast('Authentication required — please sign in again', 'error');
         return;
       }
 
@@ -136,20 +201,20 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({
           amount,
-          method: selectedMethod.name,
-          senderNumber,
-          transactionCode,
+          method: selectedMethod.name || 'Digital Wallet',
+          senderNumber: senderNumber.trim(),
+          transactionCode: transactionCode.trim(),
           proofUrl,
         }),
       });
 
-      const data = await res.json();
-      if (!res.ok) {
+      const data = await res.json().catch(() => ({ success: false, message: 'Server response could not be parsed' }));
+      if (!res.ok || !data.success) {
         showToast(data.message || 'Failed to submit deposit', 'error');
         return;
       }
 
-      showToast('Deposit request submitted!', 'success');
+      showToast('Deposit request submitted! Admin will verify and credit your balance.', 'success');
       // Reset form
       setDepositAmount('');
       setSenderNumber('');

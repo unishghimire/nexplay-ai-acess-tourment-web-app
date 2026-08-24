@@ -94,7 +94,8 @@ router.post("/api/wallet/deposit",
 
       return res.status(201).json({ success: true, message: "Deposit request submitted", transactionId: txRef.id });
     } catch (error: any) {
-      return res.status(500).json({ success: false, message: "Failed to submit deposit request" });
+      console.error("Deposit submission error:", error);
+      return res.status(500).json({ success: false, message: error.message || "Failed to submit deposit request" });
     }
   }
 );
