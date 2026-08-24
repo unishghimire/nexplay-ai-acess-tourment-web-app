@@ -1,4 +1,16 @@
 {
-    "chat.useNestedAgentsMdFiles": true,
-    "chat.useAgentSkills": true
+  "chat.useNestedAgentsMdFiles": true,
+  "chat.useAgentSkills": true,
+  "editor.formatOnSave": true,
+  "editor.tabSize": 2,
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "files.associations": {
+    "*.rules": "javascript",
+    "*.indexes.json": "json"
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/.git": true
+  }
 }
