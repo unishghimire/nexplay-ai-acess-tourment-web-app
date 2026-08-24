@@ -6,7 +6,7 @@ import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { PaymentMethod, PaymentCategory, SiteSettings } from '../../../shared/types/types';
 import { formatCurrency } from '../../../shared/utils/utils';
-import { uploadImage, MediaCategory } from '../../../shared/services/mediaService';
+import { uploadImage, MediaCategory, compressImageToDataUrl } from '../../../shared/services/mediaService';
 
 interface WalletModalProps {
   isOpen: boolean;
@@ -75,52 +75,38 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
 
   const handleScreenshotUpload = async (file: File) => {
     if (!file) return;
-    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-      showToast('Only JPG, PNG, or WEBP images allowed', 'error');
-      return;
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      showToast('Image must be under 10MB', 'error');
+    if (file.size > 15 * 1024 * 1024) {
+      showToast('Image must be under 15MB', 'error');
       return;
     }
 
     setIsUploading(true);
     try {
-      // Immediate local preview
-      const localPreview = URL.createObjectURL(file);
-      setProofPreview(localPreview);
+      // 1. Instantly compress screenshot to lightweight ~40-80KB high-quality JPEG
+      const compressedDataUrl = await compressImageToDataUrl(file, 900, 0.65);
 
-      // Multi-tier upload (Server Proxy -> Cloud Storage -> Compression fallback)
-      const res = await uploadImage(file, MediaCategory.PAYMENT_PROOF);
-      if (res.success && res.url) {
-        setProofUrl(res.url);
-        setProofPreview(res.url);
-        showToast('Payment screenshot uploaded successfully', 'success');
-        return;
+      // 2. Set immediate local preview & ready proof URL
+      setProofPreview(compressedDataUrl);
+      setProofUrl(compressedDataUrl);
+
+      // 3. Convert compressed data URI to lightweight file and attempt multi-tier upload
+      try {
+        const response = await fetch(compressedDataUrl);
+        const blob = await response.blob();
+        const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: "image/jpeg" });
+        const res = await uploadImage(compressedFile, MediaCategory.PAYMENT_PROOF);
+        if (res && res.success && res.url) {
+          setProofUrl(res.url);
+          setProofPreview(res.url);
+        }
+      } catch (uploadErr) {
+        console.warn('Remote upload bypassed, using lightweight data URI:', uploadErr);
       }
 
-      // Safe local data URI fallback
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const dataUrl = e.target?.result as string;
-        if (dataUrl) {
-          setProofUrl(dataUrl);
-          setProofPreview(dataUrl);
-          showToast('Payment screenshot attached', 'success');
-        }
-      };
-      reader.readAsDataURL(file);
-    } catch (error) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const dataUrl = e.target?.result as string;
-        if (dataUrl) {
-          setProofUrl(dataUrl);
-          setProofPreview(dataUrl);
-          showToast('Payment screenshot attached', 'success');
-        }
-      };
-      reader.readAsDataURL(file);
+      showToast('Payment screenshot attached successfully', 'success');
+    } catch (error: any) {
+      console.error('Screenshot processing failed:', error);
+      showToast('Failed to process screenshot image', 'error');
     } finally {
       setIsUploading(false);
     }

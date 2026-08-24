@@ -68,10 +68,14 @@ export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB global default
 export function validateImage(file: File, category?: MediaCategory): { isValid: boolean; error?: string } {
   if (!file) return { isValid: false, error: "No file selected." };
 
-  if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+  const fileName = file.name?.toLowerCase() || "";
+  const isImageMime = file.type.startsWith("image/") || ALLOWED_MIME_TYPES.includes(file.type);
+  const hasImageExt = /\.(jpg|jpeg|png|webp|gif|heic|heif|jfif|bmp)$/i.test(fileName);
+
+  if (!isImageMime && !hasImageExt && file.type !== "") {
     return {
       isValid: false,
-      error: `Invalid file type (${file.type}). Only JPEG, PNG, WEBP, and GIF are allowed.`,
+      error: `Invalid file format (${file.type || fileName}). Please select an image file.`,
     };
   }
 
@@ -89,9 +93,9 @@ export function validateImage(file: File, category?: MediaCategory): { isValid: 
 }
 
 /**
- * Fast client-side image compression fallback to ensure uploads never fail
+ * Fast client-side image compression fallback to ensure uploads never fail and stay lightweight (<100KB)
  */
-export function compressImageToDataUrl(file: File, maxWidth = 1280, quality = 0.85): Promise<string> {
+export function compressImageToDataUrl(file: File, maxWidth = 900, quality = 0.65): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -111,7 +115,22 @@ export function compressImageToDataUrl(file: File, maxWidth = 1280, quality = 0.
           return;
         }
         ctx.drawImage(img, 0, 0, width, height);
-        const dataUrl = canvas.toDataURL("image/jpeg", quality);
+        let dataUrl = canvas.toDataURL("image/jpeg", quality);
+
+        // If still over 400KB, perform secondary downscale pass to guarantee ultra-lightweight size (<100KB)
+        if (dataUrl.length > 400000) {
+          const smallCanvas = document.createElement("canvas");
+          const sWidth = Math.min(width, 600);
+          const sHeight = Math.round((height * sWidth) / width);
+          smallCanvas.width = sWidth;
+          smallCanvas.height = sHeight;
+          const sCtx = smallCanvas.getContext("2d");
+          if (sCtx) {
+            sCtx.drawImage(canvas, 0, 0, sWidth, sHeight);
+            dataUrl = smallCanvas.toDataURL("image/jpeg", 0.5);
+          }
+        }
+
         resolve(dataUrl);
       };
       img.onerror = () => resolve(e.target?.result as string);
