@@ -66,9 +66,12 @@ export default function ScrimDetailPage() {
     setLoading(true);
     setLoadError(null);
 
-    const unsub = onSnapshot(doc(db, 'tournaments', id), (snap) => {
-      if (snap.exists()) {
-        const data = { id: snap.id, ...snap.data() } as any;
+    let unsubTournaments: (() => void) | null = null;
+
+    // Check modern 'scrims' collection first with real-time updates
+    const unsubScrims = onSnapshot(doc(db, 'scrims', id), (scrimSnap) => {
+      if (scrimSnap.exists()) {
+        const data = { id: scrimSnap.id, ...scrimSnap.data() } as any;
         const scrimHostId = data.hostUid || data.orgId || data.hostId || data.userId || data.organizerId || data.createdBy;
         const isAuthorized = user && (
           user.uid === scrimHostId ||
@@ -81,80 +84,63 @@ export default function ScrimDetailPage() {
           return;
         }
         setScrim(data);
-        setScrimCollection('tournaments');
-        fetchRoomCredentials(id, undefined, 'tournaments').then(credentials => {
+        setScrimCollection('scrims');
+        fetchRoomCredentials(id, undefined, 'scrims').then(credentials => {
           setRoomId(credentials?.roomId || '');
           setRoomPass(credentials?.roomPass || '');
         }).catch(e => {
           console.warn('Room credentials fetch warning:', e);
         });
-        setStreamUrl((data as any).ytLink || (data as any).streamUrl || '');
+        setStreamUrl(data.ytLink || data.streamUrl || '');
         setLoading(false);
       } else {
-        // Fallback: check 'scrims' collection for legacy records
-        getDoc(doc(db, 'scrims', id)).then((legacySnap) => {
-          if (legacySnap.exists()) {
-            const data = { id: legacySnap.id, ...legacySnap.data() } as any;
-            const scrimHostId = data.hostUid || data.orgId || data.hostId || data.userId || data.organizerId || data.createdBy;
-            const isAuthorized = user && (
-              user.uid === scrimHostId ||
-              profile?.role === 'admin' ||
-              !scrimHostId
-            );
-            if (!isAuthorized) {
-              showToast('Unauthorized — you do not own this scrim', 'error');
-              navigate('/organizer?tab=scrims');
-              return;
+        // Fallback: subscribe to 'tournaments' collection for legacy records
+        if (!unsubTournaments) {
+          unsubTournaments = onSnapshot(doc(db, 'tournaments', id), (tournSnap) => {
+            if (tournSnap.exists()) {
+              const data = { id: tournSnap.id, ...tournSnap.data() } as any;
+              const scrimHostId = data.hostUid || data.orgId || data.hostId || data.userId || data.organizerId || data.createdBy;
+              const isAuthorized = user && (
+                user.uid === scrimHostId ||
+                profile?.role === 'admin' ||
+                !scrimHostId
+              );
+              if (!isAuthorized) {
+                showToast('Unauthorized — you do not own this scrim', 'error');
+                navigate('/organizer?tab=scrims');
+                return;
+              }
+              setScrim(data);
+              setScrimCollection('tournaments');
+              fetchRoomCredentials(id, undefined, 'tournaments').then(credentials => {
+                setRoomId(credentials?.roomId || '');
+                setRoomPass(credentials?.roomPass || '');
+              }).catch(e => {
+                console.warn('Room credentials fetch warning:', e);
+              });
+              setStreamUrl(data.ytLink || data.streamUrl || '');
+              setLoading(false);
+            } else {
+              setScrim(null);
+              setLoading(false);
             }
-            setScrim(data);
-            setScrimCollection('scrims');
-            fetchRoomCredentials(id, undefined, 'scrims').then(credentials => {
-              setRoomId(credentials?.roomId || '');
-              setRoomPass(credentials?.roomPass || '');
-            }).catch(e => {
-              console.warn('Room credentials fetch warning:', e);
-            });
-            setStreamUrl((data as any).ytLink || (data as any).streamUrl || '');
-          } else {
-            setScrim(null);
-          }
-          setLoading(false);
-        }).catch((e) => {
-          console.warn('Fallback scrim load error:', e);
-          setLoading(false);
-        });
+          }, (err) => {
+            console.error('Tournaments collection load error:', err);
+            setLoadError('Failed to load scrim details.');
+            setLoading(false);
+          });
+        }
       }
     }, (err) => {
-      console.error('Scrim load error:', err);
-      getDoc(doc(db, 'scrims', id)).then((legacySnap) => {
-        if (legacySnap.exists()) {
-          const data = { id: legacySnap.id, ...legacySnap.data() } as any;
-          const scrimHostId = data.hostUid || data.orgId || data.hostId || data.userId || data.organizerId || data.createdBy;
-          const isAuthorized = user && (
-            user.uid === scrimHostId ||
-            profile?.role === 'admin' ||
-            !scrimHostId
-          );
-          if (!isAuthorized) {
-            showToast('Unauthorized — you do not own this scrim', 'error');
-            navigate('/organizer?tab=scrims');
-            return;
-          }
-          setScrim(data);
-          setScrimCollection('scrims');
-          setStreamUrl((data as any).ytLink || (data as any).streamUrl || '');
-          setLoading(false);
-        } else {
-          setLoadError('We could not load this scrim. Check your connection and try again.');
-          setLoading(false);
-        }
-      }).catch(() => {
-        setLoadError('We could not load this scrim. Check your connection and try again.');
-        setLoading(false);
-      });
+      console.error('Scrims collection load error:', err);
+      setLoadError('Failed to load scrim details.');
+      setLoading(false);
     });
 
-    return () => unsub();
+    return () => {
+      unsubScrims();
+      if (unsubTournaments) unsubTournaments();
+    };
   }, [id, user, profile?.role, navigate, showToast, retryKey]);
 
   // --- Handlers ---
