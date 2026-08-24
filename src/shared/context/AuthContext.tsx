@@ -81,7 +81,7 @@ const getClaimRole = async (firebaseUser: FirebaseUser, forceRefresh = false): P
 // Ceiling: if this email is compromised, they have full admin. Upgrade path: set
 // custom claims via /api/admin/bootstrap once ADMIN_BOOTSTRAP_KEY env var is configured,
 // then remove this allowlist.
-const SUPER_ADMIN_EMAILS = ['nexplayorg@gmail.com'];
+const SUPER_ADMIN_EMAILS = ['nexplayorg@gmail.com', 'nex.unishghimire@gmail.com', 'admin@nexplay.gg'];
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<AuthUser | null>(null);

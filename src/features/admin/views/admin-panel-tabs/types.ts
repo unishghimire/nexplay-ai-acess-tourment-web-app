@@ -29,6 +29,8 @@ export type AdminPanelTabProps = Record<string, any> & {
     getRelativeTime?: any;
     handleApproveOrg?: any;
     handleApproveTx?: any;
+    handleRejectTx?: any;
+    handleRefundTx?: any;
     handleCancelTournament?: any;
     handleDeleteCategory?: any;
     handleDeleteGame?: any;

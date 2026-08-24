@@ -37,9 +37,9 @@ const writeAudit = (tx: any, req: any, action: string, details: string) => {
   });
 };
 
-// POST /api/admin/transactions/approve — credit deposit, mark success
+// POST /api/admin/transactions/approve — credit deposit or approve withdrawal, mark success
 router.post("/api/admin/transactions/approve",
-  authenticateToken, requireAdmin, rateLimit(20, 15 * 60 * 1000),
+  authenticateToken, requireAdmin, rateLimit(300, 15 * 60 * 1000),
   async (req: any, res) => {
     try {
       const { transactionId } = req.body;
@@ -54,25 +54,36 @@ router.post("/api/admin/transactions/approve",
         const txData = txDoc.data();
         if (txData.status === "success") throw new Error("Transaction already approved");
         if (txData.status === "rejected") throw new Error("Transaction already rejected");
-        if (txData.type !== "deposit") throw new Error("Only deposits can be approved");
+        if (txData.type !== "deposit" && txData.type !== "withdrawal") {
+          throw new Error("Only deposits or withdrawals can be approved");
+        }
 
-        const amount = Number(txData.amount || 0);
-        if (!isFinite(amount)) throw new Error("Invalid transaction amount");
+        const rawAmount = Number(txData.amount || 0);
+        if (!isFinite(rawAmount) || rawAmount === 0) throw new Error("Invalid transaction amount");
+        const amount = Math.abs(rawAmount);
 
         const userRef = db.collection("users").doc(txData.userId);
         const userDoc = await tx.get(userRef);
-        const balanceBefore = userDoc.exists ? userDoc.data()?.balance || 0 : 0;
-        const balanceAfter = balanceBefore + amount;
+        const balanceBefore = userDoc.exists ? (userDoc.data()?.balance || 0) : 0;
+        let balanceAfter = balanceBefore;
 
-        tx.update(userRef, { balance: admin.firestore.FieldValue.increment(amount) });
+        if (txData.type === "deposit") {
+          balanceAfter = balanceBefore + amount;
+          tx.update(userRef, { balance: admin.firestore.FieldValue.increment(amount) });
+        } else if (txData.type === "withdrawal") {
+          // Funds were already deducted when withdrawal request was placed.
+          balanceAfter = balanceBefore;
+        }
+
         tx.update(txRef, {
           status: "success",
           confirmedBy: req.user.userId,
           confirmedByUsername: req.user.username,
           balanceBefore,
           balanceAfter,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
-        writeAudit(tx, req, "transaction_approved", `Approved deposit of ${amount} for ${txData.userId}`);
+        writeAudit(tx, req, "transaction_approved", `Approved ${txData.type} of ${amount} for ${txData.userId}`);
         return { balanceAfter };
       });
 
@@ -86,7 +97,7 @@ router.post("/api/admin/transactions/approve",
 
 // POST /api/admin/transactions/reject — reject deposit or withdrawal
 router.post("/api/admin/transactions/reject",
-  authenticateToken, requireAdmin, rateLimit(20, 15 * 60 * 1000),
+  authenticateToken, requireAdmin, rateLimit(300, 15 * 60 * 1000),
   async (req: any, res) => {
     try {
       const { transactionId, reason } = req.body;
@@ -102,16 +113,17 @@ router.post("/api/admin/transactions/reject",
         if (txData.status === "rejected") throw new Error("Transaction already rejected");
         if (txData.status === "success") throw new Error("Transaction already approved");
 
-        // Withdrawals lock funds at request time — rejection releases them.
+        // Withdrawals lock funds at request time — rejection releases them back to the user's wallet.
         if (txData.type === "withdrawal") {
           const userRef = db.collection("users").doc(txData.userId);
           tx.update(userRef, { balance: admin.firestore.FieldValue.increment(Math.abs(Number(txData.amount || 0))) });
         }
         tx.update(txRef, {
           status: "rejected",
-          rejectionReason: typeof reason === "string" && reason ? reason : "No reason provided",
+          rejectionReason: typeof reason === "string" && reason ? reason : "Rejected by admin",
           confirmedBy: req.user.userId,
           confirmedByUsername: req.user.username,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
         writeAudit(tx, req, "transaction_rejected", `Rejected ${txData.type} of ${txData.amount} for ${txData.userId}`);
       });

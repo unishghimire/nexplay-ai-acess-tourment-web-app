@@ -378,8 +378,8 @@ export const authenticateToken = async (req: any, res: any, next: any) => {
     // Custom claims are the single source of truth for role (BUG-030).
     // The Firestore-doc fallback has been REMOVED — run /api/admin/sync-claims
     // before deploying so existing doc-role admins/orgs are migrated to claims.
-    // ponytail: super-admin email allowlist — see AuthContext for ceiling/upgrade path.
-    const role = decodedIdToken.role || (decodedIdToken.email === 'nexplayorg@gmail.com' ? 'admin' : 'player');
+    const SUPER_ADMIN_EMAILS = ['nexplayorg@gmail.com', 'nex.unishghimire@gmail.com', 'admin@nexplay.gg'];
+    const role = decodedIdToken.role || (SUPER_ADMIN_EMAILS.includes(decodedIdToken.email || '') ? 'admin' : 'player');
     const username = decodedIdToken.name || decodedIdToken.email?.split("@")[0] || "User";
     req.user = { userId: decodedIdToken.uid, email: decodedIdToken.email, username, role };
     return next();

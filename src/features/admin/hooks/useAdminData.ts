@@ -464,19 +464,23 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
 
     const executeRejectTx = async (tx: Transaction, reason: string) => {
         try {
-            await adminPost('/api/admin/transactions/reject', { transactionId: tx.id, reason: reason || 'No reason provided' });
+            await adminPost('/api/admin/transactions/reject', { transactionId: tx.id, reason: reason || 'Rejected by admin' });
 
             // Send Notification
             await NotificationService.create(
                 tx.userId,
                 'Transaction Rejected',
-                `Your ${tx.type} of ${formatCurrency(tx.amount)} was rejected. Reason: ${reason || 'No reason provided'}`,
+                `Your ${tx.type} of ${formatCurrency(Math.abs(tx.amount))} was rejected. Reason: ${reason || 'Rejected by admin'}`,
                 'alert',
                 '/profile'
             );
 
             showToast('Transaction Rejected', 'success');
             setPendingTransactions(prev => prev.filter(t => t.id !== tx.id));
+            setAllTransactions(prev => prev.map(t => t.id === tx.id ? { ...t, status: 'rejected', rejectionReason: reason || 'Rejected by admin' } : t));
+            if (selectedTx && selectedTx.id === tx.id) {
+                setSelectedTx({ ...selectedTx, status: 'rejected', rejectionReason: reason || 'Rejected by admin' });
+            }
             setSelectedTx(null);
             setRejectionReason('');
         } catch (error: any) {
@@ -485,18 +489,19 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
         }
     };
 
-    const handleRejectTx = (tx: Transaction) => {
-        if (!rejectionReason) {
+    const handleRejectTx = (tx: Transaction, reason?: string) => {
+        const finalReason = reason || rejectionReason;
+        if (!finalReason) {
             setConfirmModal({
                 isOpen: true,
-                title: 'Reject without reason?',
-                message: 'Are you sure you want to reject this transaction without providing a reason?',
+                title: `Reject ${tx.type === 'deposit' ? 'Deposit' : 'Withdrawal'}?`,
+                message: `Are you sure you want to reject this ${tx.type} of ${formatCurrency(Math.abs(tx.amount))} for ${tx.username || 'this user'}?${tx.type === 'withdrawal' ? ' The withdrawn funds will be refunded to their wallet.' : ''}`,
                 isDestructive: true,
-                onConfirm: () => executeRejectTx(tx, rejectionReason)
+                onConfirm: () => executeRejectTx(tx, 'Rejected by admin')
             });
             return;
         }
-        executeRejectTx(tx, rejectionReason);
+        executeRejectTx(tx, finalReason);
     };
 
     const handleAdjustBalance = async () => {
@@ -1157,7 +1162,7 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
         const pendingWithdrawalsCount = pendingTransactions.filter(t => t.type === 'withdrawal').length;
         const pendingOrgCount = orgApplications.length;
 
-        const tabProps = { paymentQr, processAndUploadPayment, handleDragOverPayment, handleDropPayment, handlePastePayment, processAndUploadGame, handleDragOverGame, handleDropGame, handlePasteGame, processAndUploadSlide, handleDragOverSlide, handleDropSlide, handlePasteSlide, setPaymentType, setEditingOrg, setSelectedUser, setSelectedTx, setConfirmModal, DEFAULT_BANNER, ImageUploader, MediaCategory, NEXPLAY_LOGO, activeTab, activityLogs, allTournaments, allTransactions, categoryActive, categoryDescription, categoryName, closeConfirmModal, editingCategory, editingGame, editingPayment, editingPromo, editingSlide, executeRejectTx, fetchMedia, fetchOrgTournaments, formatCurrency, formatDate, formatGameName, gameLogo, gameModes, gameName, games, getRelativeTime, handleApproveOrg, handleApproveTx, handleCancelTournament, handleDeleteCategory, handleDeleteGame, handleDeleteMedia, handleDeletePayment, handleDeletePromo, handleDeleteSlide, handleEditTournament, handleRejectOrg, handleReleaseEarnings, handleSaveCategory, handleSaveGame, handleSaveScoring, handleSaveOrgDetails, handleSavePayment, handleSavePromo, handleSaveSettings, handleSaveSlide, handleSuspendOrg, handleToggleFeatured, handleUpdateUserRole, handleViewParticipants, isCategoryModalOpen, isGameModalOpen, isScoringModalOpen, isNoticeActive, isOrgEditModalOpen, isPaymentModalOpen, isPromoModalOpen, isPublished, isSlideModalOpen, maintenanceMode, mediaFilter, mediaItems, mediaLoading, mediaSearch, minWithdrawal, mockUploadUrl, notice, openEditGame, orgApplications, orgDiscord, orgEmail, orgFormDescription, orgNameEdit, orgTournaments, orgWhatsapp, orgYoutube, organizers, paymentActive, paymentCategories, paymentCategoryId, paymentInstructions, paymentMethods, paymentName, pendingTransactions, promoActive, promoAmount, promoCode, promoCodes, promoMaxUses, searchQuery, selectedMediaCategory, selectedOrgId, setCategoryActive, setCategoryDescription, setCategoryName, setEditingCategory, setEditingGame, setEditingPayment, setEditingPromo, setEditingSlide, setGameLogo, setGameModes, setGameName, setIsCategoryModalOpen, setIsGameModalOpen, setIsScoringModalOpen, scoringModalGame, setScoringModalGame, setIsNoticeActive, setIsOrgEditModalOpen, setIsPaymentModalOpen, setIsPromoModalOpen, setIsPublished, setIsSlideModalOpen, setMaintenanceMode, setMediaFilter, setMediaSearch, setMinWithdrawal, setMockUploadUrl, setNotice, setOrgDiscord, setOrgEmail, setOrgFormDescription, setOrgNameEdit, setOrgWhatsapp, setOrgYoutube, setPaymentActive, setPaymentCategoryId, setPaymentInstructions, setPaymentName, setPaymentQr, setPromoActive, setPromoAmount, setPromoCode, setPromoMaxUses, setSearchQuery, setSelectedMediaCategory, setSlideBtnText, setSlideDescription, setSlideImage, setSlideIsActive, setSlideLink, setSlideTitle, setSupportEmail, setSupportPhone, showToast, siteSettings, slideBtnText, slideDescription, slideImage, slideIsActive, slideLink, slideTitle, slides, stats, supportEmail, supportPhone, toggleOrgForm, togglePowerOrganizer, tournamentEarnings, uploading, users };
+        const tabProps = { paymentQr, processAndUploadPayment, handleDragOverPayment, handleDropPayment, handlePastePayment, processAndUploadGame, handleDragOverGame, handleDropGame, handlePasteGame, processAndUploadSlide, handleDragOverSlide, handleDropSlide, handlePasteSlide, setPaymentType, setEditingOrg, setSelectedUser, setSelectedTx, setConfirmModal, DEFAULT_BANNER, ImageUploader, MediaCategory, NEXPLAY_LOGO, activeTab, activityLogs, allTournaments, allTransactions, categoryActive, categoryDescription, categoryName, closeConfirmModal, editingCategory, editingGame, editingPayment, editingPromo, editingSlide, executeRejectTx, handleRejectTx, handleRefundTx, fetchMedia, fetchOrgTournaments, formatCurrency, formatDate, formatGameName, gameLogo, gameModes, gameName, games, getRelativeTime, handleApproveOrg, handleApproveTx, handleCancelTournament, handleDeleteCategory, handleDeleteGame, handleDeleteMedia, handleDeletePayment, handleDeletePromo, handleDeleteSlide, handleEditTournament, handleRejectOrg, handleReleaseEarnings, handleSaveCategory, handleSaveGame, handleSaveScoring, handleSaveOrgDetails, handleSavePayment, handleSavePromo, handleSaveSettings, handleSaveSlide, handleSuspendOrg, handleToggleFeatured, handleUpdateUserRole, handleViewParticipants, isCategoryModalOpen, isGameModalOpen, isScoringModalOpen, isNoticeActive, isOrgEditModalOpen, isPaymentModalOpen, isPromoModalOpen, isPublished, isSlideModalOpen, maintenanceMode, mediaFilter, mediaItems, mediaLoading, mediaSearch, minWithdrawal, mockUploadUrl, notice, openEditGame, orgApplications, orgDiscord, orgEmail, orgFormDescription, orgNameEdit, orgTournaments, orgWhatsapp, orgYoutube, organizers, paymentActive, paymentCategories, paymentCategoryId, paymentInstructions, paymentMethods, paymentName, pendingTransactions, promoActive, promoAmount, promoCode, promoCodes, promoMaxUses, searchQuery, selectedMediaCategory, selectedOrgId, setCategoryActive, setCategoryDescription, setCategoryName, setEditingCategory, setEditingGame, setEditingPayment, setEditingPromo, setEditingSlide, setGameLogo, setGameModes, setGameName, setIsCategoryModalOpen, setIsGameModalOpen, setIsScoringModalOpen, scoringModalGame, setScoringModalGame, setIsNoticeActive, setIsOrgEditModalOpen, setIsPaymentModalOpen, setIsPromoModalOpen, setIsPublished, setIsSlideModalOpen, setMaintenanceMode, setMediaFilter, setMediaSearch, setMinWithdrawal, setMockUploadUrl, setNotice, setOrgDiscord, setOrgEmail, setOrgFormDescription, setOrgNameEdit, setOrgWhatsapp, setOrgYoutube, setPaymentActive, setPaymentCategoryId, setPaymentInstructions, setPaymentName, setPaymentQr, setPromoActive, setPromoAmount, setPromoCode, setPromoMaxUses, setSearchQuery, setSelectedMediaCategory, setSlideBtnText, setSlideDescription, setSlideImage, setSlideIsActive, setSlideLink, setSlideTitle, setSupportEmail, setSupportPhone, showToast, siteSettings, slideBtnText, slideDescription, slideImage, slideIsActive, slideLink, slideTitle, slides, stats, supportEmail, supportPhone, toggleOrgForm, togglePowerOrganizer, tournamentEarnings, uploading, users };
     return {
         activeTab,
         activityLogs,
