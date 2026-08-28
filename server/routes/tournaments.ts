@@ -315,7 +315,238 @@ router.post("/api/tournaments/:id/advance", authenticateToken, rateLimit(10, 15 
   }
 });
 
-// DELETE /api/tournaments/:id — delete tournament with child cleanup
+// ═══════════════════════════════════════════════════════════════
+// TOURNAMENT ACTIVATION & PRIZE FUNDING ESCROW
+// Atomically verifies wallet balance, locks required prize funding,
+// and sets tournament status to 'upcoming' (or rejects with shortage).
+// ═══════════════════════════════════════════════════════════════
+router.post("/api/tournaments/:id/activate", authenticateToken, rateLimit(15, 15 * 60 * 1000), async (req: any, res) => {
+  try {
+    const { id } = req.params;
+    const uid = req.user.userId;
+
+    if (!id || typeof id !== 'string' || id.length > 128) {
+      return res.status(400).json({ success: false, message: "Invalid tournament ID" });
+    }
+
+    const result = await db.runTransaction(async (tx) => {
+      const tRef = db.collection('tournaments').doc(id);
+      const tDoc = await tx.get(tRef);
+
+      if (!tDoc.exists) {
+        throw new Error("Tournament not found");
+      }
+
+      const tData = tDoc.data()!;
+
+      // Authorization: only tournament host or admin can activate
+      if (tData.hostUid !== uid && req.user.role !== 'admin') {
+        throw new Error("Unauthorized — only tournament host can activate tournament");
+      }
+
+      if (['completed', 'cancelled'].includes(tData.status)) {
+        throw new Error(`Cannot activate a ${tData.status} tournament`);
+      }
+
+      // Server-side calculation of required funding
+      const prizePool = Math.max(0, Math.round(Number(tData.prizePool || 0)));
+      const requiredFunding = prizePool;
+
+      // Case A: Zero prize pool (Free with no cash prize) -> CAN RUN with 0 wallet funds
+      if (requiredFunding === 0) {
+        tx.update(tRef, {
+          status: 'upcoming',
+          fundingStatus: 'NOT_REQUIRED',
+          requiredFunding: 0,
+          reservedFunding: 0,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          auditLog: admin.firestore.FieldValue.arrayUnion({
+            timestamp: new Date().toISOString(),
+            userId: uid,
+            userName: req.user.email || 'Organizer',
+            action: 'TOURNAMENT_ACTIVATED',
+            details: 'Tournament activated with zero prize pool (no funding required).'
+          })
+        });
+
+        const fundingRef = db.collection('tournament_funding').doc(id);
+        tx.set(fundingRef, {
+          tournamentId: id,
+          organizationId: tData.hostUid,
+          requiredAmount: 0,
+          reservedAmount: 0,
+          releasedAmount: 0,
+          usedAmount: 0,
+          status: 'NOT_REQUIRED',
+          currency: tData.currency || 'NPR',
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+
+        return {
+          status: 'upcoming',
+          fundingStatus: 'NOT_REQUIRED',
+          requiredAmount: 0,
+          reservedAmount: 0,
+          availableAmount: 0,
+          shortageAmount: 0,
+        };
+      }
+
+      // Case B: Monetary prize pool > 0 -> Check if already funded (idempotent)
+      if (tData.fundingStatus === 'RESERVED' && (tData.reservedFunding || 0) >= requiredFunding) {
+        return {
+          status: tData.status || 'upcoming',
+          fundingStatus: 'RESERVED',
+          requiredAmount: requiredFunding,
+          reservedAmount: tData.reservedFunding,
+          availableAmount: 0,
+          shortageAmount: 0,
+        };
+      }
+
+      // Fetch organizer's user doc for wallet balances
+      const uRef = db.collection('users').doc(tData.hostUid);
+      const uDoc = await tx.get(uRef);
+      if (!uDoc.exists) {
+        throw new Error("Organizer wallet account not found");
+      }
+
+      const userData = uDoc.data()!;
+      const orgBalance = Math.max(0, Number(userData.orgWalletBalance || 0));
+      const playerBalance = Math.max(0, Number(userData.balance || 0));
+      const totalAvailable = orgBalance + playerBalance;
+
+      // Check sufficient funds
+      if (totalAvailable < requiredFunding) {
+        const shortage = requiredFunding - totalAvailable;
+        tx.update(tRef, {
+          status: 'pending_funding',
+          fundingStatus: 'PENDING_FUNDING',
+          requiredFunding,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        const error: any = new Error("INSUFFICIENT_FUNDS");
+        error.requiredAmount = requiredFunding;
+        error.availableAmount = totalAvailable;
+        error.shortageAmount = shortage;
+        throw error;
+      }
+
+      // Deduct from available wallet and lock into reservedBalance
+      const deductOrg = Math.min(orgBalance, requiredFunding);
+      const deductPlayer = requiredFunding - deductOrg;
+
+      const userUpdates: any = {
+        reservedBalance: admin.firestore.FieldValue.increment(requiredFunding),
+      };
+      if (deductOrg > 0) {
+        userUpdates.orgWalletBalance = admin.firestore.FieldValue.increment(-deductOrg);
+      }
+      if (deductPlayer > 0) {
+        userUpdates.balance = admin.firestore.FieldValue.increment(-deductPlayer);
+      }
+      tx.update(uRef, userUpdates);
+
+      // Ledger transaction record
+      const txRef = db.collection('transactions').doc();
+      tx.set(txRef, {
+        id: txRef.id,
+        userId: tData.hostUid,
+        username: userData.username || tData.hostName || '',
+        type: 'tournament_reservation',
+        amount: -requiredFunding,
+        method: 'Tournament Prize Escrow',
+        refId: `RSV-${id.slice(0, 8)}-${Date.now().toString().slice(-4)}`,
+        status: 'completed',
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        desc: `Prize pool reserve locked for ${tData.title}`,
+        tournamentId: id,
+        balanceBefore: totalAvailable,
+        balanceAfter: totalAvailable - requiredFunding,
+        deductOrg,
+        deductPlayer,
+      });
+
+      // Tournament funding document
+      const fundingRef = db.collection('tournament_funding').doc(id);
+      tx.set(fundingRef, {
+        tournamentId: id,
+        organizationId: tData.hostUid,
+        requiredAmount: requiredFunding,
+        reservedAmount: requiredFunding,
+        releasedAmount: 0,
+        usedAmount: 0,
+        status: 'RESERVED',
+        currency: tData.currency || 'NPR',
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+
+      // Update tournament to UPCOMING and RESERVED
+      tx.update(tRef, {
+        status: 'upcoming',
+        fundingStatus: 'RESERVED',
+        requiredFunding,
+        reservedFunding: requiredFunding,
+        fundingReservedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        auditLog: admin.firestore.FieldValue.arrayUnion({
+          timestamp: new Date().toISOString(),
+          userId: uid,
+          userName: userData.username || req.user.email || 'Organizer',
+          action: 'FUNDS_RESERVED',
+          details: `Prize pool of NPR ${requiredFunding} reserved in escrow. Tournament activated.`
+        })
+      });
+
+      return {
+        status: 'upcoming',
+        fundingStatus: 'RESERVED',
+        requiredAmount: requiredFunding,
+        reservedAmount: requiredFunding,
+        availableAmount: totalAvailable - requiredFunding,
+        shortageAmount: 0,
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: result.fundingStatus === 'RESERVED' ? "Prize funds reserved and tournament activated" : "Tournament activated",
+      status: result.status,
+      fundingStatus: result.fundingStatus,
+      requiredAmount: result.requiredAmount,
+      reservedAmount: result.reservedAmount,
+      availableAmount: result.availableAmount,
+    });
+  } catch (error: any) {
+    if (error.message === "INSUFFICIENT_FUNDS") {
+      return res.status(422).json({
+        success: false,
+        error: "INSUFFICIENT_FUNDS",
+        message: `Insufficient wallet balance. Required: NPR ${error.requiredAmount}, Available: NPR ${error.availableAmount}, Shortage: NPR ${error.shortageAmount}. The platform will not fund this tournament. Please add funds to your wallet.`,
+        requiredAmount: error.requiredAmount,
+        availableAmount: error.availableAmount,
+        shortageAmount: error.shortageAmount,
+        tournamentStatus: "pending_funding"
+      });
+    }
+
+    const msg = error.message || "Failed to activate tournament";
+    const status = msg.startsWith("Tournament not found") ? 404 :
+      msg.startsWith("Unauthorized") ? 403 : 400;
+    return res.status(status).json({ success: false, message: msg });
+  }
+});
+
+// Alias: POST /api/tournaments/:id/fund
+router.post("/api/tournaments/:id/fund", authenticateToken, rateLimit(15, 15 * 60 * 1000), (req, res, next) => {
+  // Forward directly to activate handler
+  (router as any).handle(req, res, next);
+});
+
+// DELETE /api/tournaments/:id — delete tournament with child cleanup and escrow release
 // Uses Admin SDK (bypasses Firestore rules) after verifying ownership
 router.delete("/api/tournaments/:id",
   authenticateToken,
@@ -360,6 +591,35 @@ router.delete("/api/tournaments/:id",
 
       // Chunked cleanup avoids Firestore's 500-operation batch ceiling.
       const operations: Array<(batch: FirebaseFirestore.WriteBatch) => void> = [];
+
+      // Escrow Release: If tournament had reserved prize funds, return them to the host's wallet
+      if (targetData.fundingStatus === 'RESERVED' && Number(targetData.reservedFunding || 0) > 0 && hostId) {
+        const reservedAmount = Number(targetData.reservedFunding || 0);
+        const hostRef = db.collection("users").doc(hostId);
+        operations.push(batch => batch.update(hostRef, {
+          orgWalletBalance: admin.firestore.FieldValue.increment(reservedAmount),
+          reservedBalance: admin.firestore.FieldValue.increment(-reservedAmount)
+        }));
+        const releaseTxRef = db.collection("transactions").doc();
+        operations.push(batch => batch.set(releaseTxRef, {
+          id: releaseTxRef.id,
+          userId: hostId,
+          type: "tournament_release",
+          amount: reservedAmount,
+          method: "Tournament Escrow Release",
+          refId: `REL-${id.slice(0, 8)}-${Date.now().toString().slice(-4)}`,
+          status: "completed",
+          timestamp: admin.firestore.FieldValue.serverTimestamp(),
+          desc: `Released prize pool reserve on deletion of ${targetData.title || 'tournament'}`,
+          tournamentId: id,
+        }));
+        const fundingRef = db.collection("tournament_funding").doc(id);
+        operations.push(batch => batch.set(fundingRef, {
+          releasedAmount: reservedAmount,
+          status: "REFUNDED",
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true }));
+      }
 
       // 1. Delete participants
       const partsSnap = await db.collection("participants").where("tournamentId", "==", id).get();

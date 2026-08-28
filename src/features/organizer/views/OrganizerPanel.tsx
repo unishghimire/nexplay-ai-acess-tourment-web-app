@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../shared/context/AuthContext';
+import { auth } from '../../../shared/config/firebase';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import DashboardLayout from '../../../shared/components/layouts/DashboardLayout';
 import TournamentCreateModal from '../../tournaments/components/TournamentCreateModal';
@@ -137,6 +138,29 @@ const OrganizerPanel: React.FC = () => {
       navigate(`/tournament-admin/${id}`);
     }
   }, [navigate]);
+
+  const handleActivateTournament = useCallback(async (id: string) => {
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) {
+        showToast('Please sign in to activate tournament', 'error');
+        return;
+      }
+      const res = await fetch(`/api/tournaments/${id}/activate`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
+        showToast(data.message || 'Tournament activated and prize funds locked in escrow!', 'success');
+        org.fetchHostedTournaments();
+      } else {
+        showToast(data.message || 'Failed to activate tournament', 'error');
+      }
+    } catch (err: any) {
+      showToast(err.message || 'Failed to activate tournament', 'error');
+    }
+  }, [org, showToast]);
 
   const handleEditTournament = useCallback((tournament: any) => {
     setEditTournament(tournament);
@@ -308,6 +332,7 @@ const OrganizerPanel: React.FC = () => {
               onOpenRoomDispatch={handleOpenRoomDispatch}
               onManageTournament={handleManageTournament}
               onEditTournament={handleEditTournament}
+              onActivateTournament={handleActivateTournament}
             />
           </TabErrorBoundary>
         );

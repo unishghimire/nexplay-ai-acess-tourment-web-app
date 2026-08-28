@@ -26,6 +26,10 @@ import {
   CheckCircle2,
   Info,
   Target,
+  Lock,
+  ShieldAlert,
+  AlertTriangle,
+  Wallet,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import PrizeDistributionInput from './PrizeDistributionInput';
@@ -232,6 +236,10 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
         teamId: null,
       })) : formData.slots;
 
+      const requiredFunding = Math.max(0, Math.round(Number(formData.prizePool || 0)));
+      const initialFundingStatus = requiredFunding === 0 ? 'NOT_REQUIRED' : 'PENDING_FUNDING';
+      const initialStatus = requiredFunding === 0 ? 'upcoming' : 'pending_funding';
+
       const tournamentData = {
         ...publicFormData,
         matchType: formData.matchType || (isScrim ? 'scrims' : 'tournament'),
@@ -242,7 +250,10 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
         tournamentMode: formData.tournamentMode,
         hostUid: editTournament ? editTournament.hostUid : user.uid,
         currentPlayers: editTournament ? editTournament.currentPlayers : 0,
-        status: editTournament ? editTournament.status : 'upcoming',
+        status: editTournament ? editTournament.status : initialStatus,
+        fundingStatus: editTournament ? (editTournament.fundingStatus || initialFundingStatus) : initialFundingStatus,
+        requiredFunding,
+        reservedFunding: editTournament ? (editTournament.reservedFunding || 0) : 0,
         stage: editTournament ? editTournament.stage : 'registration',
         updatedAt: serverTimestamp(),
         startTime: Timestamp.fromDate(new Date(formData.startTime)),
@@ -295,7 +306,30 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
         if (roomId || roomPass) {
           await setDoc(doc(db, 'tournaments', docRef.id, 'credentials', 'main'), { roomId, roomPass });
         }
-        showToast('Tournament created successfully!', 'success');
+
+        // If funded tournament, attempt atomic activation/fund reservation immediately
+        if (requiredFunding > 0) {
+          try {
+            const token = await auth.currentUser?.getIdToken();
+            if (token) {
+              const activateRes = await fetch(`/api/tournaments/${docRef.id}/activate`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+              });
+              const activateData = await activateRes.json().catch(() => ({}));
+              if (activateRes.ok && activateData.fundingStatus === 'RESERVED') {
+                showToast(`Tournament created and Rs. ${requiredFunding.toLocaleString()} prize funds secured in escrow!`, 'success');
+              } else {
+                showToast(`Tournament created in PENDING FUNDING. Top up your wallet to activate registration.`, 'info');
+              }
+            }
+          } catch (fundErr) {
+            console.warn("Auto-funding activation check deferred:", fundErr);
+            showToast('Tournament created in PENDING FUNDING status.', 'info');
+          }
+        } else {
+          showToast('Tournament created successfully!', 'success');
+        }
 
         // Notify followers
         const followsSnap = await getDocs(query(collection(db, 'follows'), where('followingId', '==', user.uid)));
@@ -668,6 +702,67 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
               onCurrencyChange={(newCurrency) => setFormData({ ...formData, currency: newCurrency })}
               totalPrizePool={formData.prizePool}
             />
+
+            {/* ─── TOURNAMENT FUNDING & WALLET ESCROW STATUS ─── */}
+            {(() => {
+              const reqFunding = Math.max(0, Math.round(Number(formData.prizePool || 0)));
+              const availableOrg = (profile?.orgWalletBalance || 0) + (profile?.balance || 0);
+              const shortage = Math.max(0, reqFunding - availableOrg);
+              const isFunded = availableOrg >= reqFunding;
+
+              if (reqFunding === 0) {
+                return (
+                  <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+                    <div>
+                      <div className="text-xs font-black text-emerald-300 uppercase tracking-wide">Free Event — Zero Prize Pool</div>
+                      <div className="text-[11px] text-gray-400 mt-0.5">
+                        This tournament requires NPR 0 organizer funding and will be published directly as upcoming upon creation.
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <div className={`p-4 rounded-xl border space-y-3 ${isFunded ? 'bg-brand-500/10 border-brand-500/30' : 'bg-amber-500/10 border-amber-500/30'}`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {isFunded ? <Lock className="w-4 h-4 text-brand-400" /> : <AlertTriangle className="w-4 h-4 text-amber-400" />}
+                      <span className="text-xs font-black uppercase tracking-wider text-white">
+                        {isFunded ? 'Prize Pool Funding Secured' : 'Organizer Funding Required'}
+                      </span>
+                    </div>
+                    <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${isFunded ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'}`}>
+                      {isFunded ? 'Sufficient Funds' : 'Funding Shortage'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 bg-black/40 p-3 rounded-lg border border-white/5 text-center">
+                    <div>
+                      <div className="text-[9px] text-gray-500 uppercase font-black tracking-widest">Required</div>
+                      <div className="text-xs font-black text-white font-mono">Rs. {reqFunding.toLocaleString()}</div>
+                    </div>
+                    <div>
+                      <div className="text-[9px] text-gray-500 uppercase font-black tracking-widest">Available</div>
+                      <div className="text-xs font-black text-emerald-400 font-mono">Rs. {availableOrg.toLocaleString()}</div>
+                    </div>
+                    <div>
+                      <div className="text-[9px] text-gray-500 uppercase font-black tracking-widest">{shortage > 0 ? 'Shortage' : 'Status'}</div>
+                      <div className={`text-xs font-black font-mono ${shortage > 0 ? 'text-red-400' : 'text-brand-400'}`}>
+                        {shortage > 0 ? `Rs. ${shortage.toLocaleString()}` : 'Ready'}
+                      </div>
+                    </div>
+                  </div>
+
+                  <p className="text-[11px] text-gray-400 leading-relaxed">
+                    {isFunded
+                      ? `Upon creation, NPR ${reqFunding.toLocaleString()} will be securely locked in escrow from your organization wallet. The platform does not advance or subsidize prize money.`
+                      : `The platform does NOT advance or subsidize tournament prizes. This tournament will be saved in PENDING FUNDING status until your wallet is topped up.`}
+                  </p>
+                </div>
+              );
+            })()}
           </motion.div>
         );
       case 4:

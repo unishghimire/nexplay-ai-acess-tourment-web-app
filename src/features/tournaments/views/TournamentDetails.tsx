@@ -7,7 +7,7 @@ import { DEFAULT_BANNER } from '../../../shared/constants/constants';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { formatCurrency, formatDate, formatGameName, getYoutubeId, toDateSafe, sanitizeUrl } from '../../../shared/utils/utils';
 import { getSlotCount, getFilledSlotCount } from '../../../shared/utils/scrimSlots';
-import { Clock, Users, Trophy, Lock, Eye, EyeOff, Play, Share2, Calendar, MapPin, Info, Medal, ExternalLink, ChevronRight, AlertCircle, CheckCircle2, Search, Building2 , Target, Trash2, Settings2 } from 'lucide-react';
+import { Clock, Users, Trophy, Lock, Eye, EyeOff, Play, Share2, Calendar, MapPin, Info, Medal, ExternalLink, ChevronRight, AlertCircle, CheckCircle2, Search, Building2 , Target, Trash2, Settings2, AlertTriangle } from 'lucide-react';
 import RegistrationModal from '../components/RegistrationModal';
 import JoinTournamentModal from '../components/JoinTournamentModal';
 import Modal from '../../../shared/components/Modal';
@@ -281,12 +281,44 @@ export default function TournamentDetails() {
         (p.teammates && Array.isArray(p.teammates) && p.teammates.some((tm: string) => typeof tm === 'string' && tm.toLowerCase().includes(searchTerm.toLowerCase())))
     );
 
+    const handleActivateFunding = async () => {
+        if (!tournament || !id) return;
+        try {
+            const token = await auth.currentUser?.getIdToken();
+            if (!token) {
+                showToast("Please sign in to activate tournament", "error");
+                return;
+            }
+            const res = await fetch(`/api/tournaments/${id}/activate`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json().catch(() => ({}));
+            if (res.ok && data.success) {
+                showToast(data.message || "Tournament activated and prize funds locked in escrow!", "success");
+                const docSnap = await getDoc(doc(db, 'tournaments', id));
+                if (docSnap.exists()) {
+                    setTournament({ id: docSnap.id, ...docSnap.data() } as Tournament);
+                }
+            } else {
+                showToast(data.message || "Failed to activate tournament", "error");
+            }
+        } catch (err: any) {
+            showToast(err.message || "Failed to activate tournament", "error");
+        }
+    };
+
     const handleJoinClick = () => {
         if (!user) {
             showToast("Please login to join!", "warning");
             return;
         }
         if (!tournament || !profile) return;
+
+        if ((tournament.status as string) === 'pending_funding' || ((tournament.prizePool || 0) > 0 && tournament.fundingStatus === 'PENDING_FUNDING')) {
+            showToast("Tournament is currently awaiting organizer prize funding. Registration is locked until funds are secured.", "warning");
+            return;
+        }
 
         // Requirement: In-game ID is compulsory for all games
         if (!profile.inGameId) {
@@ -1030,6 +1062,33 @@ export default function TournamentDetails() {
                                     </div>
                                 )}
                             </div>
+                        ) : (tournament.status === 'pending_funding' || ((tournament.prizePool || 0) > 0 && tournament.fundingStatus === 'PENDING_FUNDING')) ? (
+                            tournament.hostUid === profile?.uid ? (
+                                <div className="space-y-3 p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl text-center">
+                                    <AlertTriangle className="w-6 h-6 text-amber-400 mx-auto" />
+                                    <div>
+                                        <div className="text-xs font-black text-amber-300 uppercase tracking-wider">Funding Required: Rs. {(tournament.prizePool || 0).toLocaleString()}</div>
+                                        <p className="text-[11px] text-gray-400 mt-1">Available Org Wallet: Rs. {((profile?.orgWalletBalance || 0) + (profile?.balance || 0)).toLocaleString()}</p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={handleActivateFunding}
+                                        className="w-full bg-amber-600 hover:bg-amber-500 text-white py-3.5 rounded-xl text-xs font-black uppercase tracking-wider transition shadow-lg shadow-amber-600/20 flex items-center justify-center gap-2"
+                                    >
+                                        <Lock className="w-4 h-4" />
+                                        Activate & Reserve Prize Funds
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="p-4 bg-slate-900/60 border border-amber-500/20 rounded-2xl text-center space-y-2">
+                                    <Clock className="w-6 h-6 text-amber-400 mx-auto" />
+                                    <div className="text-xs font-black text-amber-300 uppercase tracking-wider">Awaiting Organizer Funding</div>
+                                    <p className="text-[11px] text-gray-400">Registration will open once the tournament prize funds are secured in escrow by the organizer.</p>
+                                    <button type="button" disabled className="w-full bg-amber-500/10 text-amber-400/60 py-3 rounded-xl text-xs font-black uppercase tracking-widest cursor-not-allowed border border-amber-500/20">
+                                        Registration Locked
+                                    </button>
+                                </div>
+                            )
                         ) : getFilledSlotCount(tournament) >= getSlotCount(tournament) ? (
                             <button type="button" disabled className="w-full bg-red-900/20 text-red-500 border border-red-900/50 py-4 sm:py-5 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-widest cursor-not-allowed">
                                 Tournament Full

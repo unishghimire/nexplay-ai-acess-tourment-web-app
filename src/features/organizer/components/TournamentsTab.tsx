@@ -10,6 +10,8 @@ import {
   ChevronUp,
   Settings2,
   Edit2,
+  Lock,
+  AlertTriangle,
 } from 'lucide-react';
 import { getSlotCount, getFilledSlotCount } from '../../../shared/utils/scrimSlots';
 
@@ -36,6 +38,7 @@ export interface TournamentsTabProps {
   onOpenRoomDispatch: (tournament: any) => void;
   onManageTournament?: (id: string, matchType?: string) => void;
   onEditTournament?: (tournament: any) => void;
+  onActivateTournament?: (id: string) => Promise<void>;
 }
 
 const TournamentsTab: React.FC<TournamentsTabProps> = ({
@@ -46,6 +49,7 @@ const TournamentsTab: React.FC<TournamentsTabProps> = ({
   onOpenRoomDispatch,
   onManageTournament,
   onEditTournament,
+  onActivateTournament,
 }) => {
   const [expandedBrackets, setExpandedBrackets] = useState<Record<string, boolean>>({});
 
@@ -66,8 +70,16 @@ const TournamentsTab: React.FC<TournamentsTabProps> = ({
       .join(' ');
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, fundingStatus?: string) => {
     const s = status ? status.toLowerCase() : 'upcoming';
+    if (s === 'pending_funding' || fundingStatus === 'PENDING_FUNDING') {
+      return (
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
+          <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
+          Pending Funding
+        </span>
+      );
+    }
     switch (s) {
       case 'live':
         return (
@@ -255,7 +267,7 @@ const TournamentsTab: React.FC<TournamentsTabProps> = ({
                       {tournament.title}
                     </h3>
                   </div>
-                  <div>{getStatusBadge(tournament.status)}</div>
+                  <div>{getStatusBadge(tournament.status, tournament.fundingStatus)}</div>
                 </div>
 
                 {/* Stats Grid */}
@@ -288,6 +300,17 @@ const TournamentsTab: React.FC<TournamentsTabProps> = ({
 
                 {/* Actions */}
                 <div className="flex flex-wrap items-center gap-2 pt-1">
+                  {/* Activate & Reserve Funds for Pending Funding tournaments */}
+                  {(tournament.status === 'pending_funding' || tournament.fundingStatus === 'PENDING_FUNDING') && onActivateTournament && (
+                    <button
+                      onClick={() => onActivateTournament(tournament.id)}
+                      className="min-h-[44px] px-3.5 py-2 rounded-lg text-sm font-medium bg-amber-600 hover:bg-amber-500 text-white transition-colors flex items-center justify-center gap-2 shadow-sm"
+                    >
+                      <Lock className="w-4 h-4" />
+                      <span>Activate & Reserve Funds</span>
+                    </button>
+                  )}
+
                   {/* Manage / Details */}
                   {onManageTournament && (
                     <button
@@ -328,7 +351,7 @@ const TournamentsTab: React.FC<TournamentsTabProps> = ({
                       <Check className="w-4 h-4" />
                       <span>Finalize</span>
                     </button>
-                  ) : !isCompleted ? (
+                  ) : !isCompleted && tournament.status !== 'pending_funding' ? (
                     <button
                       onClick={() => onUpdateStatus(tournament.id, 'live')}
                       className="min-h-[44px] px-3.5 py-2 rounded-lg text-sm font-medium bg-emerald-600 hover:bg-emerald-500 text-white transition-colors flex items-center justify-center gap-2 shadow-sm"

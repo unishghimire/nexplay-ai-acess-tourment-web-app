@@ -43,6 +43,7 @@ export interface UserProfile {
     lastActive?: Timestamp | any;
     orgPendingEarnings?: number;
     orgWalletBalance?: number;
+    reservedBalance?: number;
     stats?: {
         totalMatches: number;
         wins: number;
@@ -245,7 +246,7 @@ export interface Tournament {
     map?: string;
     startTime: Timestamp | any;
     rules?: string;
-    status: 'upcoming' | 'live' | 'completed' | 'cancelled' | 'draft' | 'published' | 'paused';
+    status: 'upcoming' | 'live' | 'completed' | 'cancelled' | 'draft' | 'published' | 'paused' | 'pending_funding';
     stage?: TournamentStage;
     format?: TournamentFormat;
     groups?: TournamentGroup[];
@@ -266,6 +267,11 @@ export interface Tournament {
     currentRound?: number;
     pointSystem?: PointRule; // Multi-match points
     registrationType?: 'auto' | 'manual';
+    // ─── Funding & Prize Reserve Fields ───
+    fundingStatus?: TournamentFundingStatus;
+    requiredFunding?: number;
+    reservedFunding?: number;
+    fundingReservedAt?: Timestamp | any;
     // ─── Engine fields (optional, backward compat) ───
     participantMode?: 'team' | 'solo';
     // Frozen scoring snapshot — inherited from game at creation, never changes
@@ -298,12 +304,44 @@ export interface Tournament {
     }[];
 }
 
+export type TournamentFundingStatus =
+    | 'NOT_REQUIRED'
+    | 'PENDING_FUNDING'
+    | 'RESERVED'
+    | 'COMPLETED'
+    | 'REFUNDED'
+    | 'CANCELLED';
+
+export interface TournamentFundingRecord {
+    tournamentId: string;
+    organizationId: string;
+    requiredAmount: number;
+    reservedAmount: number;
+    releasedAmount: number;
+    usedAmount: number;
+    status: TournamentFundingStatus;
+    currency: string;
+    createdAt: Timestamp | any;
+    updatedAt: Timestamp | any;
+}
+
 export interface Transaction {
     id: string;
     userId: string;
     username?: string;
     userEmail?: string;
-    type: 'deposit' | 'withdrawal' | 'withdraw' | 'prize' | 'refund' | 'entry_fee' | 'promo';
+    type:
+        | 'deposit'
+        | 'withdrawal'
+        | 'withdraw'
+        | 'prize'
+        | 'refund'
+        | 'entry_fee'
+        | 'promo'
+        | 'tournament_reservation'
+        | 'tournament_release'
+        | 'prize_payout'
+        | 'admin_adjustment';
     amount: number;
     method: string;
     refId: string;

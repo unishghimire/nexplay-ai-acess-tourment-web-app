@@ -273,6 +273,13 @@ router.post("/api/wallet/join-tournament",
         const uData = uDoc.data()!;
 
         if (!['upcoming', 'published', 'live'].includes(tData.status)) throw new Error("Tournament is not open for registration");
+        
+        // Registration Protection: If tournament has a monetary prize pool, funding must be secured
+        const prizePool = Math.max(0, Math.round(Number(tData.prizePool || 0)));
+        if (prizePool > 0 && tData.fundingStatus !== 'RESERVED') {
+          throw new Error("Tournament is currently awaiting organizer funding. Registration will open once funding is secured.");
+        }
+
         const totalSlotsCount = typeof tData.totalSlots === 'number' && !isNaN(tData.totalSlots) && tData.totalSlots > 0
           ? tData.totalSlots
           : typeof tData.slots === 'number' && !isNaN(tData.slots) && tData.slots > 0
@@ -585,6 +592,8 @@ router.post("/api/wallet/distribute-prizes",
         // Firestore transactions require all reads before writes. Reading every
         // winner up-front also prevents a completed tournament from silently
         // skipping a missing payout recipient.
+        const hostRef = db.collection('users').doc(tData.hostUid);
+        const hostDoc = await tx.get(hostRef);
         const winnerProfiles = new Map<string, FirebaseFirestore.DocumentSnapshot>();
         for (const winner of winners) {
           const userDoc = await tx.get(db.collection('users').doc(winner.userId));
@@ -600,7 +609,37 @@ router.post("/api/wallet/distribute-prizes",
           }
         }
 
-        tx.update(tRef, { status: 'completed', completedAt: admin.firestore.FieldValue.serverTimestamp() });
+        // Payout from Organizer Escrow:
+        // Deduct prize payout from host's reserved escrow balance and release any unawarded leftover funds back to org wallet
+        if (tData.fundingStatus === 'RESERVED' && (tData.reservedFunding || 0) > 0 && hostDoc.exists) {
+          const reservedTotal = Number(tData.reservedFunding || 0);
+          const leftover = Math.max(0, reservedTotal - totalPrizes);
+
+          const hostUpdates: any = {
+            reservedBalance: admin.firestore.FieldValue.increment(-reservedTotal),
+          };
+          if (leftover > 0) {
+            hostUpdates.orgWalletBalance = admin.firestore.FieldValue.increment(leftover);
+          }
+          tx.update(hostRef, hostUpdates);
+
+          const fundingRef = db.collection('tournament_funding').doc(tournamentId);
+          tx.set(fundingRef, {
+            tournamentId,
+            organizationId: tData.hostUid,
+            usedAmount: totalPrizes,
+            releasedAmount: leftover,
+            status: 'COMPLETED',
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          }, { merge: true });
+        }
+
+        tx.update(tRef, {
+          status: 'completed',
+          fundingStatus: 'COMPLETED',
+          distributedAmount: totalPrizes,
+          completedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
 
         // Create results document
         const resultRef = db.collection('results').doc();
@@ -729,9 +768,48 @@ router.post("/api/wallet/cancel-tournament",
         if (!snapshot.exists) throw new Error('Tournament not found');
         const data = snapshot.data()!;
         if (data.status === 'completed') throw new Error('Completed tournaments cannot be cancelled');
+        
+        // If tournament had reserved prize funds, release them back to the host's wallet
+        if (data.fundingStatus === 'RESERVED' && Number(data.reservedFunding || 0) > 0 && data.hostUid) {
+          const hostRef = db.collection('users').doc(data.hostUid);
+          const hostDoc = await tx.get(hostRef);
+          if (hostDoc.exists) {
+            const reservedAmount = Number(data.reservedFunding || 0);
+            tx.update(hostRef, {
+              orgWalletBalance: admin.firestore.FieldValue.increment(reservedAmount),
+              reservedBalance: admin.firestore.FieldValue.increment(-reservedAmount)
+            });
+
+            const releaseTxRef = db.collection('transactions').doc();
+            tx.set(releaseTxRef, {
+              id: releaseTxRef.id,
+              userId: data.hostUid,
+              type: 'tournament_release',
+              amount: reservedAmount,
+              method: 'Tournament Escrow Release',
+              refId: `REL-${tournamentId.slice(0, 8)}-${Date.now().toString().slice(-4)}`,
+              status: 'completed',
+              timestamp: admin.firestore.FieldValue.serverTimestamp(),
+              desc: `Released prize pool reserve for cancelled tournament: ${data.title || ''}`,
+              tournamentId,
+            });
+
+            const fundingRef = db.collection('tournament_funding').doc(tournamentId);
+            tx.set(fundingRef, {
+              tournamentId,
+              organizationId: data.hostUid,
+              releasedAmount: reservedAmount,
+              status: 'REFUNDED',
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            }, { merge: true });
+          }
+        }
+
         if (data.status !== 'cancelled') {
           tx.update(tournamentRef, {
             status: 'cancelled',
+            fundingStatus: data.fundingStatus === 'RESERVED' ? 'REFUNDED' : data.fundingStatus || 'CANCELLED',
+            reservedFunding: 0,
             cancellationStartedAt: admin.firestore.FieldValue.serverTimestamp(),
             cancelledBy: req.user.userId,
           });

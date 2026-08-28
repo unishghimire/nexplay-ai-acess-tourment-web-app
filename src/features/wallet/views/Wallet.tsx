@@ -233,14 +233,18 @@ const Wallet: React.FC = () => {
                         </p>
                         
                         {isOrg && (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8 pt-6 sm:pt-8 border-t border-gray-800">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 pt-6 sm:pt-8 border-t border-gray-800">
                                 <div>
-                                    <h3 className="text-xs font-black text-gray-500 uppercase tracking-widest mb-2">Org Wallet</h3>
-                                    <p className="text-3xl font-black text-white tracking-tight">{formatCurrency(profile.orgWalletBalance || 0)}</p>
+                                    <h3 className="text-xs font-black text-gray-500 uppercase tracking-widest mb-2">Org Available</h3>
+                                    <p className="text-2xl sm:text-3xl font-black text-emerald-400 tracking-tight">{formatCurrency(profile.orgWalletBalance || 0)}</p>
+                                </div>
+                                <div>
+                                    <h3 className="text-xs font-black text-gray-500 uppercase tracking-widest mb-2">Reserved Escrow</h3>
+                                    <p className="text-2xl sm:text-3xl font-black text-amber-400 tracking-tight">{formatCurrency(profile.reservedBalance || 0)}</p>
                                 </div>
                                 <div>
                                     <h3 className="text-xs font-black text-gray-500 uppercase tracking-widest mb-2">Pending</h3>
-                                    <p className="text-3xl font-black text-white tracking-tight">{formatCurrency(profile.orgPendingEarnings || 0)}</p>
+                                    <p className="text-2xl sm:text-3xl font-black text-white tracking-tight">{formatCurrency(profile.orgPendingEarnings || 0)}</p>
                                 </div>
                             </div>
                         )}
