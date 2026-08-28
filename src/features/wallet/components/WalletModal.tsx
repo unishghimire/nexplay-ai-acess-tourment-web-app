@@ -6,7 +6,7 @@ import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { PaymentMethod, PaymentCategory, SiteSettings } from '../../../shared/types/types';
 import { formatCurrency } from '../../../shared/utils/utils';
-import { uploadImage, MediaCategory, compressImageToDataUrl } from '../../../shared/services/mediaService';
+import { uploadImage, MediaCategory } from '../../../shared/services/mediaService';
 
 interface WalletModalProps {
   isOpen: boolean;
@@ -135,31 +135,22 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
 
     setIsUploading(true);
     try {
-      // 1. Instantly compress screenshot to lightweight ~40-80KB high-quality JPEG
-      const compressedDataUrl = await compressImageToDataUrl(file, 900, 0.65);
+      // 1. Instant local preview
+      const previewUrl = URL.createObjectURL(file);
+      setProofPreview(previewUrl);
 
-      // 2. Set immediate local preview & ready proof URL
-      setProofPreview(compressedDataUrl);
-      setProofUrl(compressedDataUrl);
-
-      // 3. Convert compressed data URI to lightweight file and attempt multi-tier upload
-      try {
-        const response = await fetch(compressedDataUrl);
-        const blob = await response.blob();
-        const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: "image/jpeg" });
-        const res = await uploadImage(compressedFile, MediaCategory.PAYMENT_PROOF);
-        if (res && res.success && res.url) {
-          setProofUrl(res.url);
-          setProofPreview(res.url);
-        }
-      } catch (uploadErr) {
-        console.warn('Remote upload bypassed, using lightweight data URI:', uploadErr);
+      // 2. Upload directly to ImgBB via mediaService
+      const res = await uploadImage(file, MediaCategory.PAYMENT_PROOF);
+      if (res && res.success && res.url) {
+        setProofUrl(res.url);
+        setProofPreview(res.url);
+        showToast('Payment screenshot attached successfully', 'success');
+      } else {
+        showToast(res?.error || 'Failed to upload screenshot to ImgBB', 'error');
       }
-
-      showToast('Payment screenshot attached successfully', 'success');
     } catch (error: any) {
-      console.error('Screenshot processing failed:', error);
-      showToast('Failed to process screenshot image', 'error');
+      console.error('Screenshot upload error:', error);
+      showToast('Failed to attach screenshot. Please try again.', 'error');
     } finally {
       setIsUploading(false);
     }

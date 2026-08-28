@@ -4,7 +4,7 @@ import {DollarSign} from 'lucide-react';
 import { AdminPanelTabProps } from './types';
 
 export const OrgEarningsTab: React.FC<AdminPanelTabProps> = (props) => {
-    const { formatCurrency, handleReleaseEarnings, tournamentEarnings } = props;
+    const { formatCurrency, formatDate, handleReleaseEarnings, tournamentEarnings } = props;
     const [releasingId, setReleasingId] = useState<string | null>(null);
     return (
                 <div className="bg-card p-6 rounded-2xl border border-slate-800 space-y-6">
@@ -40,7 +40,7 @@ export const OrgEarningsTab: React.FC<AdminPanelTabProps> = (props) => {
                                     tournamentEarnings.map(earning => (
                                         <tr key={earning.id} className="hover:bg-surface/20 transition-colors">
                                             <td className="p-4 text-gray-300">
-                                                {earning.createdAt?.toDate().toLocaleDateString() || 'N/A'}
+                                                {formatDate ? formatDate(earning.createdAt) : (earning.createdAt?.toDate ? earning.createdAt.toDate().toLocaleDateString() : 'N/A')}
                                             </td>
                                             <td className="p-4 text-white font-medium">
                                                 {earning.tournamentName}

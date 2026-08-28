@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, admin, ai, Type, authenticateToken, rateLimit, sanitizeHexColor, buildTournamentBannerSvg, uploadBase64ToCloudinary } from "../shared.js";
+import { db, admin, ai, Type, authenticateToken, rateLimit, sanitizeHexColor, buildTournamentBannerSvg, uploadBase64ToImgBB } from "../shared.js";
 import { MAX_AUDIT_HTML_BYTES, SafeUrlFetchError, fetchPublicHtml } from "../safeUrlFetch.js";
 
 const router = Router();
@@ -23,44 +23,60 @@ router.post("/api/generate-banner", authenticateToken, rateLimit(5, 15 * 60 * 10
     const { title, game, type, tournamentType, entryFee, prizePool, theme, mood } = req.body || {};
     const cleanTitle = typeof title === "string" ? title.trim() : "";
     const cleanGame = typeof game === "string" ? game.trim() : "";
-    if (!cleanTitle || !cleanGame) return res.status(400).json({ success: false, message: "Title and game are required." });
-    if (cleanTitle.length > MAX_BANNER_TITLE_LENGTH || cleanGame.length > MAX_BANNER_GAME_LENGTH) {
-      return res.status(400).json({ success: false, message: "Title or game name is too long." });
+    const cleanMood = typeof mood === "string" ? mood.trim() : "";
+    const cleanEntryFee = typeof entryFee === "number" || typeof entryFee === "string" ? entryFee : 0;
+    const cleanPrizePool = typeof prizePool === "number" || typeof prizePool === "string" ? prizePool : 0;
+
+    if (!cleanTitle || !cleanGame) {
+      return res.status(400).json({ success: false, message: "title and game are required" });
     }
 
-    const cleanType = optionalText(type, MAX_BANNER_CONTEXT_LENGTH, "Tournament");
-    const cleanTournamentType = optionalText(tournamentType, MAX_BANNER_CONTEXT_LENGTH, "tournament");
-    const cleanTheme = optionalText(theme, MAX_BANNER_CONTEXT_LENGTH, "competitive");
-    const cleanMood = optionalText(mood, MAX_BANNER_CONTEXT_LENGTH, "high-energy");
-    const cleanEntryFee = typeof entryFee === "number" && Number.isFinite(entryFee) ? entryFee : 0;
-    const cleanPrizePool = typeof prizePool === "number" && Number.isFinite(prizePool) ? prizePool : 0;
+    const prompt = `Design a vibrant tournament banner concept for an esports event:
+Title: ${cleanTitle}
+Game: ${cleanGame}
+Format: ${type || tournamentType || "Knockout"}
+Entry Fee: ${cleanEntryFee} NPR
+Prize Pool: ${cleanPrizePool} NPR
+Visual Theme: ${theme || "NEON_CYBERPUNK"}
+Mood: ${cleanMood || "HIGH_ENERGY"}
 
-    const prompt = `Create a concise esports banner concept for a tournament.
-Return only JSON with: headline, subtitle, motif, accentColor, secondaryColor, backgroundColor, glowColor.
-Rules: use short high-impact text only, no markdown, no code fences, no extra commentary.
-Context: title=${cleanTitle}; game=${cleanGame}; type=${cleanType}; tournamentType=${cleanTournamentType}; entryFee=${cleanEntryFee}; prizePool=${cleanPrizePool}; theme=${cleanTheme}; mood=${cleanMood}.`;
+Respond ONLY with a JSON object matching this schema:
+{
+  "subtitle": "Short punchy tagline (under 60 chars)",
+  "motif": "One or two design elements to illustrate (e.g., 'CROSSED_SWORDS', 'SKULL', 'TROPHY', 'LIGHTNING')",
+  "headline": "Bold text headline (under 30 chars)",
+  "accentColor": "#hex color",
+  "secondaryColor": "#hex color",
+  "backgroundColor": "#hex color (dark)",
+  "glowColor": "#hex color (bright neon)"
+}`;
 
     let aiResult: any = null;
     try {
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        contents: prompt,
         config: {
           responseMimeType: "application/json",
           responseSchema: {
             type: Type.OBJECT,
-            required: ["headline", "subtitle", "motif", "accentColor", "secondaryColor", "backgroundColor", "glowColor"],
             properties: {
-              headline: { type: Type.STRING }, subtitle: { type: Type.STRING }, motif: { type: Type.STRING },
-              accentColor: { type: Type.STRING }, secondaryColor: { type: Type.STRING },
-              backgroundColor: { type: Type.STRING }, glowColor: { type: Type.STRING }
-            }
-          }
-        }
+              subtitle: { type: Type.STRING },
+              motif: { type: Type.STRING },
+              headline: { type: Type.STRING },
+              accentColor: { type: Type.STRING },
+              secondaryColor: { type: Type.STRING },
+              backgroundColor: { type: Type.STRING },
+              glowColor: { type: Type.STRING },
+            },
+            required: ["accentColor", "secondaryColor", "backgroundColor", "glowColor"],
+          },
+        },
       });
-      aiResult = JSON.parse(response.text || "{}");
-    } catch (aiError: any) {
-      console.warn("[Banner Generator] Gemini generation failed, using deterministic fallback:", aiError.message);
+
+      aiResult = response.text ? JSON.parse(response.text) : null;
+    } catch (aiErr) {
+      console.warn("[Banner Generator] Gemini API failed, using intelligent algorithmic defaults:", aiErr);
     }
 
     const bannerConfig = {
@@ -76,13 +92,14 @@ Context: title=${cleanTitle}; game=${cleanGame}; type=${cleanType}; tournamentTy
 
     const svg = buildTournamentBannerSvg(bannerConfig);
     const base64Svg = Buffer.from(svg, "utf-8").toString("base64");
-    const result = await uploadBase64ToCloudinary(`data:image/svg+xml;base64,${base64Svg}`, "tournaments");
+    const result = await uploadBase64ToImgBB(`data:image/svg+xml;base64,${base64Svg}`);
 
-    const publicUrl = result.secure_url || result.url;
-    const publicId = result.public_id || "";
+    const publicUrl = result.url;
+    const publicId = result.deleteUrl || "";
     const mediaRef = db.collection("media").doc();
     const mediaData = {
       id: mediaRef.id, userId: req.user.userId, url: publicUrl, publicId,
+      thumbUrl: result.thumbUrl, mediumUrl: result.mediumUrl, provider: "imgbb",
       fileName: `${cleanTitle.replace(/[^a-zA-Z0-9]/g, "_") || "tournament"}_banner.svg`,
       fileSize: Buffer.byteLength(svg, "utf-8"), mimeType: "image/svg+xml",
       category: "TOURNAMENT_BANNER", createdAt: admin.firestore.FieldValue.serverTimestamp(),

@@ -28,7 +28,7 @@ export const TournamentsTab: React.FC<AdminPanelTabProps> = (props) => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {allTournaments
-                            .filter(t => t.title.toLowerCase().includes(searchQuery.toLowerCase()))
+                            .filter(t => (t.title || '').toLowerCase().includes((searchQuery || '').toLowerCase()))
                             .map(t => (
                                 <div key={t.id} className="bg-dark p-4 rounded-xl border border-slate-800 space-y-3">
                                     <img src={t.bannerUrl || undefined} onError={(e) => { e.currentTarget.src = DEFAULT_BANNER; }} className="w-full aspect-video object-cover rounded-lg" alt={t.title} loading="lazy" />

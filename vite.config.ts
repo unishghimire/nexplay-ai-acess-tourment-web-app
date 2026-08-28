@@ -34,7 +34,6 @@ export default defineConfig({
           if (normalizedId.includes('/react-google-recaptcha') || normalizedId.includes('/recaptcha')) return 'recaptcha-vendor';
           if (normalizedId.includes('/@firebase/firestore') || normalizedId.includes('/firebase/firestore')) return 'firebase-firestore';
           if (normalizedId.includes('/@firebase/auth') || normalizedId.includes('/firebase/auth')) return 'firebase-auth';
-          if (normalizedId.includes('/@firebase/storage') || normalizedId.includes('/firebase/storage')) return 'firebase-storage';
           if (normalizedId.includes('/@firebase/analytics') || normalizedId.includes('/firebase/analytics')) return 'firebase-analytics';
           if (normalizedId.includes('/@firebase') || normalizedId.includes('/firebase/')) return 'firebase-core';
           if (normalizedId.includes('/recharts') || normalizedId.includes('/d3-') || normalizedId.includes('/victory-vendor')) return 'charts-vendor';

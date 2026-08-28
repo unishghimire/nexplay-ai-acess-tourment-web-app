@@ -106,8 +106,8 @@ export const UsersTab: React.FC<AdminPanelTabProps> = (props) => {
                             </tbody>
                         </table>
                         {users.filter(u => 
-                            u.username.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                            u.email.toLowerCase().includes(searchQuery.toLowerCase())
+                            (u.username || '').toLowerCase().includes((searchQuery || '').toLowerCase()) || 
+                            (u.email || '').toLowerCase().includes((searchQuery || '').toLowerCase())
                         ).length === 0 && (
                             <div className="py-12 text-center">
                                 <Users className="w-10 h-10 text-gray-700 mx-auto mb-3" />

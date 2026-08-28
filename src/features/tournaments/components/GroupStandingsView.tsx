@@ -446,12 +446,17 @@ function GroupCard({ group, participants, currentTeamId, isHighlighted, label }:
             </div>
 
             {/* Tab switcher */}
-            <div className="flex border-b border-gray-800/80 bg-dark/40 px-6 pt-2">
+            <div role="tablist" aria-label={`${group.name} views`} className="flex border-b border-gray-800/80 bg-dark/40 px-6 pt-2">
                 {(['standings', 'matches', 'teams'] as const).map(tab => (
                     <button
                         key={tab}
+                        type="button"
+                        role="tab"
+                        id={`tab-${group.id}-${tab}`}
+                        aria-selected={activeView === tab}
+                        aria-controls={`tabpanel-${group.id}-${tab}`}
                         onClick={() => setActiveView(tab)}
-                        className={`pb-3 px-4 font-black text-xs uppercase tracking-widest border-b-2 transition -mb-px ${
+                        className={`pb-3 px-4 font-black text-xs uppercase tracking-widest border-b-2 transition -mb-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-t-lg ${
                             activeView === tab
                                 ? 'border-brand-500 text-brand-400'
                                 : 'border-transparent text-gray-500 hover:text-gray-300'

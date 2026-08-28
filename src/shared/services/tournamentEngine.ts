@@ -185,12 +185,15 @@ export function generateGroups(params: {
     }
 
     // Convert participants to Team objects
-    const teams: Team[] = participants.map(p => ({
-        id: p.teamId || p.userId,
-        name: p.teamName || p.username,
-        players: p.teammates ? [p.username, ...p.teammates] : [p.username],
-        logoUrl: p.logoUrl,
-    }));
+    const teams: Team[] = participants.map(p => {
+        const t: Team = {
+            id: p.teamId || p.userId,
+            name: p.teamName || p.username,
+            players: p.teammates ? [p.username, ...p.teammates] : [p.username],
+        };
+        if (p.logoUrl) t.logoUrl = p.logoUrl;
+        return t;
+    });
 
     // Apply distribution method
     let orderedTeams: Team[];
@@ -506,11 +509,12 @@ export function getQualifiedTeams(preview: QualificationPreview): Team[] {
     for (const group of preview.groups) {
         for (const standing of group.standings) {
             if (standing.qualificationStatus === 'qualified') {
-                teams.push({
+                const t: Team = {
                     id: standing.teamId,
                     name: standing.teamName,
-                    logoUrl: standing.logoUrl,
-                });
+                };
+                if (standing.logoUrl) t.logoUrl = standing.logoUrl;
+                teams.push(t);
             }
         }
     }

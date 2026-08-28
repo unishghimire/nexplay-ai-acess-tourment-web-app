@@ -46,12 +46,6 @@ router.get("/api/health", async (req, res) => {
     message: hasImgBB ? "IMGBB_API_KEY is configured" : "IMGBB_API_KEY is missing from environment. Add it in .env or Vercel Environment Variables."
   };
 
-  // 5. Cloudinary check
-  const hasCloudinary = Boolean(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);
-  checks.cloudinary = {
-    status: hasCloudinary ? "ok" : "missing",
-    message: hasCloudinary ? "Cloudinary credentials configured (fallback ready)" : "Cloudinary credentials missing (optional fallback)"
-  };
 
   // 6. Gemini AI check
   const hasGemini = Boolean(process.env.GEMINI_API_KEY?.trim());

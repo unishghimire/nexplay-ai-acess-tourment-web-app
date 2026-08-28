@@ -14,56 +14,76 @@ interface ModalProps {
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, maxWidth = "sm:max-w-lg", role = "dialog" }) => {
     const dialogRef = useRef<HTMLDivElement>(null);
     const previouslyFocused = useRef<HTMLElement | null>(null);
+    const onCloseRef = useRef(onClose);
 
-    // Focus trap + Escape + body scroll lock
+    useEffect(() => {
+        onCloseRef.current = onClose;
+    }, [onClose]);
+
+    // Handle open/close lifecycle (Escape, body scroll lock, initial focus & restore)
     useEffect(() => {
         if (!isOpen) return;
-        const handleEscape = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-        document.addEventListener('keydown', handleEscape);
+
+        // Store currently focused element before modal opened to restore on close
+        previouslyFocused.current = document.activeElement as HTMLElement;
         document.body.style.overflow = 'hidden';
 
-        // Store currently focused element to restore on close
-        previouslyFocused.current = document.activeElement as HTMLElement;
+        // Initial focus only once on open, if focus is not already inside dialog
+        const timeoutId = setTimeout(() => {
+            if (dialogRef.current && !dialogRef.current.contains(document.activeElement)) {
+                const focusable = dialogRef.current.querySelector<HTMLElement>(
+                    '[data-modal-close], button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+                );
+                focusable?.focus();
+            }
+        }, 50);
 
-        // Focus the dialog container (or close button) on open
-        const focusable = dialogRef.current?.querySelector<HTMLElement>('[data-modal-close], button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-        focusable?.focus();
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                onCloseRef.current?.();
+                return;
+            }
 
-        // Focus trap: keep Tab within the dialog
-        const handleTab = (e: KeyboardEvent) => {
-            if (e.key !== 'Tab') return;
-            const nodes = dialogRef.current?.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-            if (!nodes || nodes.length === 0) return;
-            const first = nodes[0];
-            const last = nodes[nodes.length - 1];
-            if (e.shiftKey && document.activeElement === first) {
-                e.preventDefault();
-                last.focus();
-            } else if (!e.shiftKey && document.activeElement === last) {
-                e.preventDefault();
-                first.focus();
+            // Focus trap: keep Tab within the dialog
+            if (e.key === 'Tab' && dialogRef.current) {
+                const nodes = dialogRef.current.querySelectorAll<HTMLElement>(
+                    'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+                );
+                if (!nodes || nodes.length === 0) return;
+                const first = nodes[0];
+                const last = nodes[nodes.length - 1];
+
+                if (e.shiftKey && document.activeElement === first) {
+                    e.preventDefault();
+                    last.focus();
+                } else if (!e.shiftKey && document.activeElement === last) {
+                    e.preventDefault();
+                    first.focus();
+                }
             }
         };
-        document.addEventListener('keydown', handleTab);
+
+        document.addEventListener('keydown', handleKeyDown);
 
         return () => {
-            document.removeEventListener('keydown', handleEscape);
-            document.removeEventListener('keydown', handleTab);
+            clearTimeout(timeoutId);
+            document.removeEventListener('keydown', handleKeyDown);
             document.body.style.overflow = '';
             // Restore focus to the element that opened the modal
-            previouslyFocused.current?.focus();
+            if (previouslyFocused.current && typeof previouslyFocused.current.focus === 'function') {
+                previouslyFocused.current.focus();
+            }
         };
-    }, [isOpen, onClose]);
+    }, [isOpen]);
 
     const location = useLocation();
-    // ponytail: only close on actual route path change, not on mount.
     const prevPath = useRef(location.pathname);
     useEffect(() => {
         if (isOpen && prevPath.current !== location.pathname) {
-            onClose();
+            onCloseRef.current?.();
             prevPath.current = location.pathname;
         }
-    }, [location.pathname, isOpen, onClose]);
+    }, [location.pathname, isOpen]);
 
     if (!isOpen) return null;
 

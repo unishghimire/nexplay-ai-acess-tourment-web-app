@@ -1,7 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { getFirestore, enableNetwork, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
 import { getAnalytics, isSupported } from 'firebase/analytics';
 import firebaseConfig from '../../../firebase-applet-config.json';
 
@@ -33,7 +32,6 @@ if (typeof window !== 'undefined' && typeof window.indexedDB !== 'undefined') {
     db = (firebaseConfig as any).firestoreDatabaseId ? getFirestore(app, (firebaseConfig as any).firestoreDatabaseId) : getFirestore(app);
 }
 export { db };
-export const storage = getStorage(app);
 
 export let analytics: any = null;
 if (typeof window !== 'undefined') {

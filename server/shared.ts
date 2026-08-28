@@ -6,8 +6,6 @@ import { GoogleGenAI, Type } from "@google/genai";
 import fs from "fs";
 import multer from "multer";
 import { getFirestore } from "firebase-admin/firestore";
-import { v2 as cloudinary } from "cloudinary";
-
 dotenv.config();
 
 export const ai = new GoogleGenAI({
@@ -116,17 +114,6 @@ export const db = firebaseConfig.firestoreDatabaseId
 export const bucket = admin.storage().bucket();
 export { admin, Type };
 
-export function getCloudinary() {
-  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
-  const apiKey = process.env.CLOUDINARY_API_KEY;
-  const apiSecret = process.env.CLOUDINARY_API_SECRET;
-  if (!cloudName || !apiKey || !apiSecret) {
-    throw new Error("Cloudinary configuration keys are missing from environment variables.");
-  }
-  cloudinary.config({ cloud_name: cloudName, api_key: apiKey, api_secret: apiSecret, secure: true });
-  return cloudinary;
-}
-
 export const mapCategoryToFolder = (category: string): string => {
   switch (category) {
     case "USER_AVATAR": return "avatars";
@@ -143,33 +130,8 @@ export const mapCategoryToFolder = (category: string): string => {
   }
 };
 
-export const uploadToCloudinary = (buffer: Buffer, folder: string, originalName: string): Promise<any> => {
-  return new Promise((resolve, reject) => {
-    try {
-      const c = getCloudinary();
-      const cleanName = originalName ? originalName.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9]/g, "_") : `img_${Date.now()}`;
-      const stream = c.uploader.upload_stream(
-        { folder, public_id: `${Date.now()}_${cleanName}`, fetch_format: "webp", quality: "auto" },
-        (error, result) => { if (error) reject(error); else resolve(result); }
-      );
-      stream.end(buffer);
-    } catch (err) { reject(err); }
-  });
-};
-
-export const uploadBase64ToCloudinary = (base64String: string, folder: string): Promise<any> => {
-  return new Promise((resolve, reject) => {
-    try {
-      const c = getCloudinary();
-      c.uploader.upload(base64String, { folder, fetch_format: "webp", quality: "auto" },
-        (error, result) => { if (error) reject(error); else resolve(result); });
-    } catch (err) { reject(err); }
-  });
-};
-
 // ═══════════════════════════════════════════════════════════════
-// IMGBB — primary image hosting provider
-// ponytail: Cloudinary stays as fallback for existing data continuity
+// IMGBB — Primary and sole image hosting provider for the entire web app
 // ═══════════════════════════════════════════════════════════════
 
 export interface ImgBBResult {
@@ -201,12 +163,8 @@ export async function uploadToImgBB(buffer: Buffer, originalName: string): Promi
   const uploadUrl = `https://api.imgbb.com/1/upload?key=${encodeURIComponent(apiKey)}`;
   const resp = await fetch(uploadUrl, {
     method: "POST",
-    headers: {
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-      "Accept": "application/json",
-    },
     body: formData,
-    signal: AbortSignal.timeout(12000),
+    signal: AbortSignal.timeout(15000),
   });
 
   if (!resp.ok) {

@@ -1,13 +1,11 @@
 // FILE_ID: services/mediaService.ts
 // MODULE: Centralized Media Management
-// PURPOSE: Single-source-of-truth frontend image uploads, validation, replacement, and deletion
+// PURPOSE: ImgBB universal image upload, validation, replacement, and deletion across the entire web app
 // DEPENDENCIES: firebase.ts
-// ponytail: all image uploads go through this service — no component does its own upload
 
 import { getAuth } from "firebase/auth";
-import { doc, collection } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { db, storage } from "../config/firebase";
+import { doc, collection, setDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "../config/firebase";
 
 export enum MediaCategory {
   USER_AVATAR = "USER_AVATAR",
@@ -56,11 +54,14 @@ const CATEGORY_SIZE_LIMITS: Partial<Record<MediaCategory, number>> = {
   [MediaCategory.NEWS_IMAGE]: 10 * 1024 * 1024,       // 10MB
   [MediaCategory.PRODUCT_IMAGE]: 5 * 1024 * 1024,     // 5MB
   [MediaCategory.SPONSOR_LOGO]: 5 * 1024 * 1024,      // 5MB
+  [MediaCategory.PAYMENT_PROOF]: 10 * 1024 * 1024,    // 10MB
   [MediaCategory.OVERLAY_GRAPHIC]: 10 * 1024 * 1024,  // 10MB
   [MediaCategory.OTHER]: 10 * 1024 * 1024,            // 10MB
 };
 
 export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB global default
+
+const IMGBB_CLIENT_KEY = (import.meta as any).env?.VITE_IMGBB_API_KEY || "0d2e0f9e1bb3f4d0e32ff75d14c11d48";
 
 /**
  * Validates file type, extension, and size based on category
@@ -93,57 +94,40 @@ export function validateImage(file: File, category?: MediaCategory): { isValid: 
 }
 
 /**
- * Fast client-side image compression fallback to ensure uploads never fail and stay lightweight (<100KB)
+ * Direct client-side upload to ImgBB (used when server proxy is unavailable or cold-starting)
  */
-export function compressImageToDataUrl(file: File, maxWidth = 900, quality = 0.65): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        let { width, height } = img;
-        if (width > maxWidth) {
-          height = Math.round((height * maxWidth) / width);
-          width = maxWidth;
-        }
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) {
-          resolve(e.target?.result as string);
-          return;
-        }
-        ctx.drawImage(img, 0, 0, width, height);
-        let dataUrl = canvas.toDataURL("image/jpeg", quality);
+async function uploadDirectToImgBB(file: File): Promise<{ url: string; thumbUrl: string; mediumUrl: string; deleteUrl: string }> {
+  const formData = new FormData();
+  formData.append("image", file);
+  formData.append("name", file.name.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9-_]/g, "_") || `img_${Date.now()}`);
 
-        // If still over 400KB, perform secondary downscale pass to guarantee ultra-lightweight size (<100KB)
-        if (dataUrl.length > 400000) {
-          const smallCanvas = document.createElement("canvas");
-          const sWidth = Math.min(width, 600);
-          const sHeight = Math.round((height * sWidth) / width);
-          smallCanvas.width = sWidth;
-          smallCanvas.height = sHeight;
-          const sCtx = smallCanvas.getContext("2d");
-          if (sCtx) {
-            sCtx.drawImage(canvas, 0, 0, sWidth, sHeight);
-            dataUrl = smallCanvas.toDataURL("image/jpeg", 0.5);
-          }
-        }
-
-        resolve(dataUrl);
-      };
-      img.onerror = () => resolve(e.target?.result as string);
-      img.src = e.target?.result as string;
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
+  const resp = await fetch(`https://api.imgbb.com/1/upload?key=${encodeURIComponent(IMGBB_CLIENT_KEY)}`, {
+    method: "POST",
+    body: formData,
+    signal: AbortSignal.timeout(15000),
   });
+
+  if (!resp.ok) {
+    const errText = await resp.text().catch(() => resp.statusText);
+    throw new Error(`ImgBB upload failed (${resp.status}): ${errText}`);
+  }
+
+  const json = await resp.json();
+  if (!json?.success || !json?.data?.url) {
+    throw new Error(json?.error?.message || "ImgBB returned unexpected response");
+  }
+
+  const d = json.data;
+  return {
+    url: d.url,
+    thumbUrl: d.thumb?.url || d.url,
+    mediumUrl: d.medium?.url || d.thumb?.url || d.url,
+    deleteUrl: d.delete_url || "",
+  };
 }
 
 /**
- * Upload image via server proxy to ImgBB (primary) with Cloudinary/Firebase Storage/Client fallback.
- * Guarantees that image upload will NEVER block the user interface.
+ * Universal upload function: uploads to ImgBB via server proxy with direct ImgBB fallback
  */
 export async function uploadImage(
   file: File,
@@ -161,7 +145,7 @@ export async function uploadImage(
 
     if (onProgress) onProgress(20);
 
-    // 1. Primary: Try Server Upload Route (ImgBB / Cloudinary proxy)
+    // 1. Primary: Try Server Upload Route to ImgBB
     if (token) {
       try {
         const formData = new FormData();
@@ -184,9 +168,9 @@ export async function uploadImage(
               userId: auth.currentUser?.uid || "guest",
               url: result.url,
               publicId: result.public_id || "",
-              thumbUrl: result.media?.thumbUrl,
-              mediumUrl: result.media?.mediumUrl,
-              provider: result.media?.provider || "imgbb",
+              thumbUrl: result.media?.thumbUrl || result.url,
+              mediumUrl: result.media?.mediumUrl || result.url,
+              provider: "imgbb",
               fileName: file.name,
               fileSize: file.size,
               mimeType: file.type,
@@ -204,95 +188,68 @@ export async function uploadImage(
           }
         }
       } catch (serverErr) {
-        console.warn("[Media Service] Server upload route failed, attempting Firebase Storage fallback:", serverErr);
+        console.warn("[Media Service] Server route failed, falling back to direct ImgBB:", serverErr);
       }
     }
 
     if (onProgress) onProgress(50);
 
-    // 2. Secondary: Client-side Firebase Storage
-    try {
-      if (storage) {
-        const cleanName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
-        const storageRef = ref(storage, `uploads/${category.toLowerCase()}/${cleanName}`);
-        const uploadSnap = await uploadBytes(storageRef, file);
-        const downloadUrl = await getDownloadURL(uploadSnap.ref);
-
-        if (onProgress) onProgress(100);
-        const mediaId = doc(collection(db, "media")).id;
-        const mediaRecord: MediaRecord = {
-          id: mediaId,
-          userId: auth.currentUser?.uid || "guest",
-          url: downloadUrl,
-          publicId: uploadSnap.ref.fullPath,
-          thumbUrl: downloadUrl,
-          mediumUrl: downloadUrl,
-          provider: "firebase-storage",
-          fileName: file.name,
-          fileSize: file.size,
-          mimeType: file.type,
-          category,
-          createdAt: new Date().toISOString(),
-        };
-
-        return {
-          success: true,
-          url: downloadUrl,
-          publicId: uploadSnap.ref.fullPath,
-          thumbUrl: downloadUrl,
-          mediumUrl: downloadUrl,
-          mediaData: mediaRecord,
-        };
-      }
-    } catch (storageErr) {
-      console.warn("[Media Service] Client Firebase Storage failed, attempting local compression fallback:", storageErr);
-    }
-
-    if (onProgress) onProgress(80);
-
-    // 3. Resilient Tertiary Fallback: High-quality Compressed WebP/JPEG Data URL
-    const compressedDataUrl = await compressImageToDataUrl(file);
+    // 2. Direct ImgBB API Fallback
+    const directResult = await uploadDirectToImgBB(file);
     if (onProgress) onProgress(100);
 
-    const fallbackMediaId = doc(collection(db, "media")).id;
-    const fallbackMediaRecord: MediaRecord = {
-      id: fallbackMediaId,
+    const mediaId = doc(collection(db, "media")).id;
+    const mediaRecord: MediaRecord = {
+      id: mediaId,
       userId: auth.currentUser?.uid || "guest",
-      url: compressedDataUrl,
-      publicId: `data_${Date.now()}`,
-      thumbUrl: compressedDataUrl,
-      mediumUrl: compressedDataUrl,
-      provider: "inline-data",
+      url: directResult.url,
+      publicId: directResult.deleteUrl,
+      thumbUrl: directResult.thumbUrl,
+      mediumUrl: directResult.mediumUrl,
+      provider: "imgbb",
       fileName: file.name,
-      fileSize: compressedDataUrl.length,
-      mimeType: "image/jpeg",
+      fileSize: file.size,
+      mimeType: file.type,
       category,
       createdAt: new Date().toISOString(),
     };
 
+    // Save record in Firestore media catalog
+    try {
+      await setDoc(doc(db, "media", mediaId), {
+        ...mediaRecord,
+        createdAt: serverTimestamp(),
+      });
+    } catch (fsErr) {
+      console.warn("[Media Service] Firestore catalog save skipped:", fsErr);
+    }
+
     return {
       success: true,
-      url: compressedDataUrl,
-      publicId: `data_${Date.now()}`,
-      thumbUrl: compressedDataUrl,
-      mediumUrl: compressedDataUrl,
-      mediaData: fallbackMediaRecord,
+      url: directResult.url,
+      publicId: directResult.deleteUrl,
+      thumbUrl: directResult.thumbUrl,
+      mediumUrl: directResult.mediumUrl,
+      mediaData: mediaRecord,
     };
   } catch (err) {
     const msg = err instanceof Error ? err.message : "An unexpected error occurred during image upload.";
-    console.error("[Media Service] Upload failed completely:", msg);
+    console.error("[Media Service] Upload failed:", msg);
     return { success: false, url: "", publicId: "", error: msg };
   }
 }
 
 /**
- * Removes an asset from the provider and deletes the Firestore catalog entry.
+ * Removes an asset from ImgBB and deletes the Firestore catalog entry.
  */
 export async function deleteImage(mediaId: string, _publicId: string): Promise<boolean> {
   try {
     const auth = getAuth();
     const token = await auth.currentUser?.getIdToken();
-    if (!token) { console.error("[Media Service] Unauthorized deletion attempt"); return false; }
+    if (!token) {
+      console.error("[Media Service] Unauthorized deletion attempt");
+      return false;
+    }
 
     const response = await fetch("/api/media/delete", {
       method: "POST",
@@ -352,21 +309,14 @@ export function getDisplayUrl(
 }
 
 /**
- * Legacy: generateOptimizedUrl was for Cloudinary URL transforms.
+ * Legacy URL formatter
  */
-export function generateOptimizedUrl(url: string, width?: number, height?: number): string {
-  if (!url || !url.includes("cloudinary.com")) return url;
-  const parts = url.split("/upload/");
-  if (parts.length !== 2) return url;
-  let transformations = "f_auto,q_auto";
-  if (width && height) transformations += `,w_${width},h_${height},c_fill`;
-  else if (width) transformations += `,w_${width},c_scale`;
-  else if (height) transformations += `,h_${height},c_scale`;
-  return `${parts[0]}/upload/${transformations}/${parts[1]}`;
+export function generateOptimizedUrl(url: string): string {
+  return url || "";
 }
 
 /**
- * Returns raw image URL. Accepts full URLs or data URLs.
+ * Returns raw image URL. Accepts full URLs.
  */
 export function getImageUrl(urlOrPublicId: string): string {
   if (!urlOrPublicId) return "";

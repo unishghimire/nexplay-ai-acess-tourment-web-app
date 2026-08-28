@@ -13,6 +13,7 @@ import { doc, updateDoc, collection, query, where, getDocs, writeBatch } from 'f
 import { db, auth } from '../../../shared/config/firebase';
 import { calculateTeamScore, validateResult } from '../../../shared/services/scoringEngine';
 import { GameScoringConfig, FREE_FIRE_DEFAULT_SCORING, TournamentScoringSnapshot } from '../../../shared/types/scoring';
+import { uploadImage, MediaCategory } from '../../../shared/services/mediaService';
 
 interface ResultUploaderProps {
     isOpen: boolean;
@@ -174,40 +175,14 @@ export const ResultUploader: React.FC<ResultUploaderProps> = ({ isOpen, onClose,
             let screenshotUrl = '';
             if (screenshot) {
                 try {
-                    const base64Data = await new Promise<string>((resolve, reject) => {
-                        const reader = new FileReader();
-                        reader.readAsDataURL(screenshot);
-                        reader.onload = () => resolve(reader.result as string);
-                        reader.onerror = error => reject(error);
-                    });
-
-                    const currentUser = auth.currentUser;
-                    if (!currentUser) {
-                        console.error('No authenticated user for screenshot upload');
-                        return;
-                    }
-                    const token = await currentUser.getIdToken();
-                    const response = await fetch('/api/process-image', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                        },
-                        body: JSON.stringify({
-                            base64: base64Data,
-                            folder: `matches/${match.id}`
-                        })
-                    });
-
-                    if (response.ok) {
-                        const json = await response.json();
-                        screenshotUrl = json.url || base64Data;
+                    const uploadRes = await uploadImage(screenshot, MediaCategory.OTHER);
+                    if (uploadRes.success && uploadRes.url) {
+                        screenshotUrl = uploadRes.url;
                     } else {
-                        console.warn("Server image processing fallback to local data URI");
-                        screenshotUrl = base64Data;
+                        console.warn("Screenshot upload warning:", uploadRes.error);
                     }
                 } catch (err) {
-                    console.error("Error processing screenshot file upload:", err);
+                    console.error("Error uploading screenshot to ImgBB:", err);
                 }
             }
 

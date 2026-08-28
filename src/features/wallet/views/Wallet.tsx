@@ -4,7 +4,7 @@ import { collection, query, where, getDocs, orderBy, limit, addDoc, serverTimest
 import { db, auth } from '../../../shared/config/firebase';
 import { Transaction } from '../../../shared/types/types';
 import { formatCurrency, formatDate } from '../../../shared/utils/utils';
-import { ArrowUpRight, ArrowDownRight, CheckCircle2, Wallet as WalletIcon, Gift, AlertTriangle, X, ShieldCheck, Download, TrendingUp, ChevronRight } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, CheckCircle2, Wallet as WalletIcon, Gift, AlertTriangle, X, ShieldCheck, Download, TrendingUp, ChevronRight, Medal, Trophy } from 'lucide-react';
 import WalletModal from '../components/WalletModal';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { useInView } from '../../../shared/hooks/useInView';
@@ -344,17 +344,28 @@ const Wallet: React.FC = () => {
                                             <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 border border-gray-800 ${
                                                 tx.type === 'deposit' ? 'bg-green-500/10 text-green-500' : 
                                                 (tx.type === 'withdrawal' || tx.type === 'withdraw') ? 'bg-red-500/10 text-red-500' : 
+                                                tx.type === 'entry_fee' ? 'bg-amber-500/10 text-amber-400' :
+                                                tx.type === 'refund' ? 'bg-emerald-500/10 text-emerald-400' :
+                                                tx.type === 'prize' ? 'bg-yellow-500/10 text-yellow-400' :
                                                 tx.type === 'promo' ? 'bg-brand-500/10 text-brand-500' :
                                                 'bg-blue-500/10 text-blue-500'
                                             }`}>
                                                 {tx.type === 'deposit' ? <ArrowDownRight className="w-6 h-6" /> : 
                                                 (tx.type === 'withdrawal' || tx.type === 'withdraw') ? <ArrowUpRight className="w-6 h-6" /> : 
                                                 tx.type === 'promo' ? <Gift className="w-6 h-6" /> :
+                                                tx.type === 'entry_fee' ? <Medal className="w-6 h-6" /> :
+                                                tx.type === 'refund' ? <ArrowDownRight className="w-6 h-6" /> :
+                                                tx.type === 'prize' ? <Trophy className="w-6 h-6" /> :
                                                 <WalletIcon className="w-6 h-6" />}
                                             </div>
                                             <div>
                                                 <h4 className="font-black text-white uppercase tracking-widest text-sm">
-                                                    {tx.type === 'deposit' ? 'Added Funds' : (tx.type === 'withdrawal' || tx.type === 'withdraw') ? 'Withdrawal' : tx.type === 'promo' ? 'Promo Code' : 'Transfer'}
+                                                    {tx.type === 'deposit' ? 'Added Funds' : 
+                                                    (tx.type === 'withdrawal' || tx.type === 'withdraw') ? 'Withdrawal' : 
+                                                    tx.type === 'entry_fee' ? 'Tournament Entry' :
+                                                    tx.type === 'refund' ? 'Tournament Refund' :
+                                                    tx.type === 'prize' ? 'Prize Winnings' :
+                                                    tx.type === 'promo' ? 'Promo Code' : 'Transfer'}
                                                 </h4>
                                                 <div className="flex items-center gap-3 mt-1">
                                                     <span className="text-xs text-gray-500 font-bold uppercase">{formatDate(tx.timestamp)}</span>
@@ -366,11 +377,11 @@ const Wallet: React.FC = () => {
                                         <div className="flex items-center justify-between sm:justify-end gap-6 sm:w-auto w-full">
                                             <div className="text-left sm:text-right">
                                                 <p className={`font-black text-lg font-mono ${
-                                                    tx.type === 'deposit' || tx.type === 'promo' ? 'text-green-400' : 
-                                                    (tx.type === 'withdrawal' || tx.type === 'withdraw') ? 'text-white' : 
+                                                    tx.type === 'deposit' || tx.type === 'promo' || tx.type === 'refund' || tx.type === 'prize' ? 'text-green-400' : 
+                                                    (tx.type === 'withdrawal' || tx.type === 'withdraw' || tx.type === 'entry_fee') ? 'text-rose-400' : 
                                                     'text-white'
                                                 }`}>
-                                                    {tx.type === 'deposit' || tx.type === 'promo' ? '+' : ''}{formatCurrency(tx.amount)}
+                                                    {(tx.type === 'deposit' || tx.type === 'promo' || tx.type === 'refund' || tx.type === 'prize') ? '+' : (tx.type === 'entry_fee' || Number(tx.amount) < 0) ? '-' : ''}{formatCurrency(Math.abs(Number(tx.amount || 0)))}
                                                 </p>
                                                 <div className="flex items-center justify-start sm:justify-end gap-1.5 mt-1">
                                                     <span className={`text-xs font-black px-3 py-1 rounded-full uppercase tracking-widest ${
