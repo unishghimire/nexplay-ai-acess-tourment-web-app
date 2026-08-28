@@ -318,6 +318,35 @@ export default function GroupStandingsView({ tournament, participants }: GroupSt
         );
     }
 
+    // ── Privacy Gate 1: Unauthenticated visitors cannot view private match groups ──
+    if (!profile) {
+        return (
+            <div className="text-center py-16 bg-card/50 rounded-3xl border border-dashed border-gray-800 p-8">
+                <Lock className="w-12 h-12 text-brand-500 mx-auto mb-4" />
+                <h3 className="text-white font-black text-lg uppercase tracking-tighter mb-2">Match Groups Are Private</h3>
+                <p className="text-gray-400 font-bold text-sm max-w-sm mx-auto mb-6">
+                    Tournament group allocations, match schedules, and brackets are private. Sign in with your registered account to view your assigned group.
+                </p>
+                <a href="/login" className="inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white text-xs font-black uppercase tracking-wider px-6 py-3 rounded-full transition shadow-lg shadow-brand-500/20">
+                    Log In to View Your Group
+                </a>
+            </div>
+        );
+    }
+
+    // ── Privacy Gate 2: Non-participants cannot view groups ──
+    if (!myGroup && !isOrganizer) {
+        return (
+            <div className="text-center py-16 bg-card/50 rounded-3xl border border-dashed border-gray-800 p-8">
+                <Shield className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                <h3 className="text-white font-black text-lg uppercase tracking-tighter mb-2">Private Group Allocation</h3>
+                <p className="text-gray-400 font-bold text-sm max-w-sm mx-auto">
+                    Only registered players and teams in this tournament can view their assigned group. If you recently registered, your group assignment will appear here once published by the organizer.
+                </p>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-8">
             {/* ── Room credentials strip (live + joined players only) ── */}
@@ -330,7 +359,7 @@ export default function GroupStandingsView({ tournament, participants }: GroupSt
                         {groupRoomId && (
                             <div className="bg-black/50 p-4 rounded-2xl border border-white/5 flex justify-between items-center">
                                 <div>
-                                    <div className="text-[9px] text-gray-500 uppercase font-black tracking-widest mb-1">Room ID</div>
+                                     <div className="text-[9px] text-gray-500 uppercase font-black tracking-widest mb-1">Room ID</div>
                                     <div className="text-white font-mono font-black text-xl">{groupRoomId}</div>
                                 </div>
                                 <button type="button" onClick={() => copy(groupRoomId!, 'roomId')} aria-label="Copy Room ID" className="p-2 hover:bg-white/10 rounded-xl transition">
@@ -360,37 +389,28 @@ export default function GroupStandingsView({ tournament, participants }: GroupSt
                 </div>
             )}
 
-            {/* ── My group highlighted first ── */}
+            {/* ── My group (Registered player's assigned group) ── */}
             {myGroup && (
                 <GroupCard
                     group={myGroup}
                     participants={participants}
                     currentTeamId={currentTeamId}
                     isHighlighted
-                    label="Your Group"
+                    label="Your Assigned Group"
                 />
             )}
 
-            {/* ── Not registered message ── */}
-            {!myGroup && !isOrganizer && (
-                <div className="rounded-2xl border border-dashed border-gray-800 bg-card/50 p-6 text-center">
-                    <Shield className="w-8 h-8 text-gray-600 mx-auto mb-3" />
-                    <p className="text-gray-400 text-sm font-bold">You haven't been assigned to a group yet</p>
-                    <p className="text-gray-600 text-xs mt-1">Group details will appear here once the organizer publishes your group assignment</p>
-                </div>
-            )}
-
-            {/* ── Other groups ── */}
-            <div>
-                <div className="text-xs font-black text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-3">
-                    <span className="inline-block w-6 h-px bg-surface" />
-                    {canSeeAllGroups ? 'All Groups' : 'Other Groups'}
-                </div>
-                <div className="space-y-6">
-                    {groups
-                        .filter(g => g.id !== myGroup?.id) // Don't duplicate my group
-                        .map(group => (
-                            canSeeAllGroups ? (
+            {/* ── Organizer / Admin View: All other groups ── */}
+            {isOrganizer && groups.filter(g => g.id !== myGroup?.id).length > 0 && (
+                <div>
+                    <div className="text-xs font-black text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-3">
+                        <span className="inline-block w-6 h-px bg-surface" />
+                        All Tournament Groups (Organizer View)
+                    </div>
+                    <div className="space-y-6">
+                        {groups
+                            .filter(g => g.id !== myGroup?.id)
+                            .map(group => (
                                 <GroupCard
                                     key={group.id}
                                     group={group}
@@ -398,12 +418,10 @@ export default function GroupStandingsView({ tournament, participants }: GroupSt
                                     currentTeamId={currentTeamId}
                                     isHighlighted={false}
                                 />
-                            ) : (
-                                <LockedGroupCard key={group.id} group={group} />
-                            )
-                        ))}
+                            ))}
+                    </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 }
