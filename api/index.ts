@@ -112,11 +112,14 @@ app.post("/api/admin/bootstrap", rateLimit(3, 60 * 60 * 1000), async (req, res) 
 // Protected by super-admin email check.
 // ═══════════════════════════════════════════════════════════════
 // ponytail: one-time seed endpoint — secret key auth instead of Firebase token (no client SDK needed)
-const SEED_SECRET = process.env.SEED_GAME_KEY || "nexplay-seed-2026";
+const SEED_SECRET = process.env.SEED_GAME_KEY;
 app.post("/api/admin/seed-game", rateLimit(5, 15 * 60 * 1000), async (req: any, res) => {
   try {
     const { secretKey } = req.body;
-    if (secretKey !== SEED_SECRET) {
+    if (!SEED_SECRET) {
+      return res.status(503).json({ success: false, message: "SEED_GAME_KEY not configured in env" });
+    }
+    if (!secretKey || secretKey !== SEED_SECRET) {
       return res.status(403).json({ success: false, message: "Invalid seed key" });
     }
 

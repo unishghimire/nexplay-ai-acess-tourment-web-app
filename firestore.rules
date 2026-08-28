@@ -294,9 +294,9 @@ service cloud.firestore {
         incoming().orgId == request.auth.uid ||
         isAdmin()
       ) && !(('roomId' in incoming()) || ('roomPassword' in incoming()) || ('roomPass' in incoming()));
-      allow update: if isAdmin() || (isOrganizer() && (existing().hostUid == request.auth.uid || existing().orgId == request.auth.uid))
+      allow update: if isAdmin() || ((isOrganizer() && (existing().hostUid == request.auth.uid || existing().orgId == request.auth.uid))
         // Reject any update that tries to write credential fields to the public doc
-        && !(request.resource.data.roomId.exists() || request.resource.data.roomPassword.exists() || request.resource.data.roomPass.exists());
+        && !(('roomId' in incoming()) || ('roomPassword' in incoming()) || ('roomPass' in incoming())));
       allow delete: if isAdmin() || (isOrganizer() && (existing().hostUid == request.auth.uid || existing().orgId == request.auth.uid));
     }
 
@@ -461,6 +461,14 @@ service cloud.firestore {
       allow list: if isAdmin() || (isSignedIn() && resource.data.orgId == request.auth.uid);
       // Writes are server-only — created by /api/wallet/distribute-prizes and
       // released by /api/admin/earnings/release (BUG-031). Admin SDK bypasses rules.
+      allow create, update, delete: if false;
+    }
+
+    match /tournament_funding/{fundingId} {
+      // Financial reserve record — organizer can read their own, admin reads all
+      allow get:  if isAdmin() || (isSignedIn() && existing().organizationId == request.auth.uid);
+      allow list: if isAdmin() || (isSignedIn() && resource.data.organizationId == request.auth.uid);
+      // Writes are strictly server-side (Admin SDK bypasses rules)
       allow create, update, delete: if false;
     }
 

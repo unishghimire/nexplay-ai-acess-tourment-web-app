@@ -249,6 +249,8 @@ router.post("/api/admin/earnings/release",
 
         const orgShare = Number(earningData.orgShare || 0);
         const orgRef = db.collection("users").doc(earningData.orgId);
+        const orgDoc = await tx.get(orgRef);
+        if (!orgDoc.exists) throw new Error("Organization user account not found");
 
         tx.update(earningRef, {
           status: "released",

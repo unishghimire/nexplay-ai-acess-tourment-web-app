@@ -61,7 +61,7 @@ const CATEGORY_SIZE_LIMITS: Partial<Record<MediaCategory, number>> = {
 
 export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB global default
 
-const IMGBB_CLIENT_KEY = (import.meta as any).env?.VITE_IMGBB_API_KEY || "0d2e0f9e1bb3f4d0e32ff75d14c11d48";
+const IMGBB_CLIENT_KEY = (import.meta as any).env?.VITE_IMGBB_API_KEY || "";
 
 /**
  * Validates file type, extension, and size based on category
@@ -97,6 +97,10 @@ export function validateImage(file: File, category?: MediaCategory): { isValid: 
  * Direct client-side upload to ImgBB (used when server proxy is unavailable or cold-starting)
  */
 async function uploadDirectToImgBB(file: File): Promise<{ url: string; thumbUrl: string; mediumUrl: string; deleteUrl: string }> {
+  if (!IMGBB_CLIENT_KEY) {
+    throw new Error("Client direct upload unavailable (VITE_IMGBB_API_KEY is not configured).");
+  }
+
   const formData = new FormData();
   formData.append("image", file);
   formData.append("name", file.name.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9-_]/g, "_") || `img_${Date.now()}`);

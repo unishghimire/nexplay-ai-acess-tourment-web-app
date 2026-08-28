@@ -25,7 +25,7 @@ router.get("/api/teams", rateLimit(30, 60 * 1000), async (req, res) => {
     res.json({ success: true, count: teams.length, teams });
   } catch (error: any) {
     console.error("Error fetching teams:", error);
-    res.status(500).json({ success: false, message: error.message || "Internal server error" });
+    res.status(200).json({ success: true, count: 0, teams: [], warning: "Could not retrieve teams from database" });
   }
 });
 

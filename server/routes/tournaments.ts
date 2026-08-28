@@ -320,7 +320,7 @@ router.post("/api/tournaments/:id/advance", authenticateToken, rateLimit(10, 15 
 // Atomically verifies wallet balance, locks required prize funding,
 // and sets tournament status to 'upcoming' (or rejects with shortage).
 // ═══════════════════════════════════════════════════════════════
-router.post("/api/tournaments/:id/activate", authenticateToken, rateLimit(15, 15 * 60 * 1000), async (req: any, res) => {
+const activateTournamentHandler = async (req: any, res: any) => {
   try {
     const { id } = req.params;
     const uid = req.user.userId;
@@ -538,13 +538,10 @@ router.post("/api/tournaments/:id/activate", authenticateToken, rateLimit(15, 15
       msg.startsWith("Unauthorized") ? 403 : 400;
     return res.status(status).json({ success: false, message: msg });
   }
-});
+};
 
-// Alias: POST /api/tournaments/:id/fund
-router.post("/api/tournaments/:id/fund", authenticateToken, rateLimit(15, 15 * 60 * 1000), (req, res, next) => {
-  // Forward directly to activate handler
-  (router as any).handle(req, res, next);
-});
+router.post("/api/tournaments/:id/activate", authenticateToken, rateLimit(15, 15 * 60 * 1000), activateTournamentHandler);
+router.post("/api/tournaments/:id/fund", authenticateToken, rateLimit(15, 15 * 60 * 1000), activateTournamentHandler);
 
 // DELETE /api/tournaments/:id — delete tournament with child cleanup and escrow release
 // Uses Admin SDK (bypasses Firestore rules) after verifying ownership
