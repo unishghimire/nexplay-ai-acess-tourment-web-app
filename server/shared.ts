@@ -106,7 +106,7 @@ if (credential) {
   appOptions.credential = credential;
 }
 
-export const firebaseApp = admin.initializeApp(appOptions);
+export const firebaseApp = admin.apps.length > 0 ? admin.app() : admin.initializeApp(appOptions);
 
 export const db = firebaseConfig.firestoreDatabaseId
   ? getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId)
