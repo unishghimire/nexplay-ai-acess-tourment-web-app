@@ -1,9 +1,15 @@
 import { admin, db } from '../server/shared.js';
 
 async function createAdminUser() {
-  const email = 'admin@nexplay.gg';
-  const password = 'AdminPassword123!';
-  const username = 'AdminNexPlay';
+  const email = process.env.ADMIN_EMAIL || 'admin@nexplay.gg';
+  const password = process.env.ADMIN_PASSWORD;
+
+  if (!password) {
+    console.error('❌ ADMIN_PASSWORD environment variable is required to create/update the admin user.');
+    process.exit(1);
+  }
+
+  const username = process.env.ADMIN_USERNAME || 'AdminNexPlay';
   const inGameName = 'NexAdmin';
   const inGameId = '999888777';
   const phone = '9800000000';
@@ -39,7 +45,7 @@ async function createAdminUser() {
   await admin.auth().setCustomUserClaims(uid, { role: 'admin' });
   console.log(`Set custom claim: role='admin' for UID: ${uid}`);
 
-  // Create or Update /users document
+  // Create or Update /users document with clean zero balance
   const userDocRef = db.collection('users').doc(uid);
   await userDocRef.set({
     uid,
@@ -49,7 +55,9 @@ async function createAdminUser() {
     inGameId,
     phone,
     role: 'admin',
-    walletBalance: 25000,
+    balance: 0,
+    orgWalletBalance: 0,
+    reservedBalance: 0,
     status: 'online',
     isBanned: false,
     createdAt: new Date().toISOString(),
@@ -67,9 +75,8 @@ async function createAdminUser() {
   }, { merge: true });
 
   console.log(`\n========================================`);
-  console.log(`ADMIN USER READY:`);
+  console.log(`ADMIN USER CONFIGURED SECURELY:`);
   console.log(`Email: ${email}`);
-  console.log(`Password: ${password}`);
   console.log(`Role: admin`);
   console.log(`UID: ${uid}`);
   console.log(`========================================\n`);
@@ -81,3 +88,4 @@ createAdminUser()
     console.error('Error creating admin user:', err);
     process.exit(1);
   });
+

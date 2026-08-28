@@ -112,7 +112,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
 }) => {
   return (
     <div className="space-y-6 text-sm p-2 sm:p-4">
-      {/* Top Bar with Demo Mode Badge */}
+      {/* Overview Header */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-bold text-white tracking-tight">Overview</h2>

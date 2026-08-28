@@ -66,7 +66,7 @@ export type AdminPanelTabProps = Record<string, any> & {
     mediaLoading?: any;
     mediaSearch?: any;
     minWithdrawal?: any;
-    mockUploadUrl?: any;
+    directUploadUrl?: any;
     notice?: any;
     openEditGame?: any;
     orgApplications?: any;
@@ -117,7 +117,7 @@ export type AdminPanelTabProps = Record<string, any> & {
     setMediaFilter?: any;
     setMediaSearch?: any;
     setMinWithdrawal?: any;
-    setMockUploadUrl?: any;
+    setDirectUploadUrl?: any;
     setNotice?: any;
     setOrgDiscord?: any;
     setOrgEmail?: any;

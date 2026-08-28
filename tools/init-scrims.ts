@@ -32,7 +32,7 @@ async function initScrims() {
       teamSize: 4,
       platform: 'mobile',
     },
-    prizePool: 1000,
+    prizePool: 0,
     bannerUrl: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80',
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),

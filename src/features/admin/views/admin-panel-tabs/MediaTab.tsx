@@ -6,7 +6,7 @@ import {MediaCategory} from '../../../../shared/services/mediaService';
 import { AdminPanelTabProps } from './types';
 
 export const MediaTab: React.FC<AdminPanelTabProps> = (props) => {
-    const { ImageUploader,  MediaCategory, fetchMedia, getRelativeTime, handleDeleteMedia, mediaFilter, mediaItems, mediaLoading, mediaSearch, mockUploadUrl, selectedMediaCategory, setMediaFilter, setMediaSearch, setMockUploadUrl, setSelectedMediaCategory, showToast } = props;
+    const { ImageUploader,  MediaCategory, fetchMedia, getRelativeTime, handleDeleteMedia, mediaFilter, mediaItems, mediaLoading, mediaSearch, directUploadUrl, selectedMediaCategory, setMediaFilter, setMediaSearch, setDirectUploadUrl, setSelectedMediaCategory, showToast } = props;
     return (
                 <div className="bg-card p-6 rounded-xl border border-gray-800 space-y-8 animate-fade-in">
                     <div className="border-b border-gray-700 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -47,13 +47,13 @@ export const MediaTab: React.FC<AdminPanelTabProps> = (props) => {
                             <div className="md:col-span-2">
                                 <ImageUploader
                                     category={selectedMediaCategory}
-                                    value={mockUploadUrl}
+                                    value={directUploadUrl}
                                     onChange={(url) => {
-                                        setMockUploadUrl(url);
+                                        setDirectUploadUrl(url);
                                         if (url) {
                                             showToast("Asset successfully uploaded and registered in library!", "success");
                                             fetchMedia();
-                                            setMockUploadUrl(""); // reset uploader slot
+                                            setDirectUploadUrl(""); // reset uploader slot
                                         }
                                     }}
                                     aspectRatio="video"
