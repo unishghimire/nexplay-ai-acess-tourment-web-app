@@ -576,7 +576,9 @@ export function useTournamentAdmin(
         team1Id: '', 
         team2Id: '', 
         round: 1, 
-        map: '',
+        map: 'Bermuda',
+        matchCount: 1,
+        scheduledTime: '',
         status: 'scheduled' as const
     });
 
@@ -584,20 +586,40 @@ export function useTournamentAdmin(
         if (!tournament || !selectedGroup) return;
         
         try {
-            const match: Match = {
-                id: `match-${Date.now()}`,
-                team1Id: newMatchData.team1Id,
-                team2Id: newMatchData.team2Id,
-                round: newMatchData.round,
-                map: newMatchData.map,
-                status: newMatchData.status,
-                score1: 0,
-                score2: 0
-            };
+            const isBR = isBRTournament(tournament);
+            const currentMatchCount = selectedGroup.matches?.length || 0;
+            const newMatches: Match[] = [];
+
+            if (isBR) {
+                const count = Math.max(1, Math.min(10, newMatchData.matchCount || 1));
+                for (let i = 0; i < count; i++) {
+                    const matchNum = currentMatchCount + i + 1;
+                    newMatches.push({
+                        id: `match-${Date.now()}-${i}`,
+                        round: newMatchData.round || tournament.currentRound || 1,
+                        map: newMatchData.map || 'Bermuda',
+                        status: newMatchData.status,
+                        score1: 0,
+                        score2: 0,
+                        results: []
+                    });
+                }
+            } else {
+                newMatches.push({
+                    id: `match-${Date.now()}`,
+                    team1Id: newMatchData.team1Id,
+                    team2Id: newMatchData.team2Id,
+                    round: newMatchData.round || tournament.currentRound || 1,
+                    map: newMatchData.map,
+                    status: newMatchData.status,
+                    score1: 0,
+                    score2: 0
+                });
+            }
 
             const updatedGroups = tournament.groups?.map(g => {
                 if (g.id === selectedGroup.id) {
-                    return { ...g, matches: [...(g.matches || []), match] };
+                    return { ...g, matches: [...(g.matches || []), ...newMatches] };
                 }
                 return g;
             }) || [];
@@ -607,8 +629,8 @@ export function useTournamentAdmin(
             });
 
             setIsAddMatchModalOpen(false);
-            setNewMatchData({ team1Id: '', team2Id: '', round: 1, map: '', status: 'scheduled' });
-            showToast('Match added successfully', 'success');
+            setNewMatchData({ team1Id: '', team2Id: '', round: tournament.currentRound || 1, map: 'Bermuda', matchCount: 1, scheduledTime: '', status: 'scheduled' });
+            showToast(`${newMatches.length} match(es) added to ${selectedGroup.name}`, 'success');
         } catch (error) {
             console.error("Error adding match:", error);
             showToast('Failed to add match', 'error');

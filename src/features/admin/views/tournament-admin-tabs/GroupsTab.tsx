@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { TournamentAdminTabProps } from './types';
 import Modal from '../../../../shared/components/Modal';
+import { isBRTournament } from '../../../../shared/services/tournamentEngine';
 
 export const GroupsTab: React.FC<TournamentAdminTabProps> = (props) => {
     const {
@@ -66,6 +67,7 @@ export const GroupsTab: React.FC<TournamentAdminTabProps> = (props) => {
                                         <GroupCard
                                             key={group.id}
                                             group={group}
+                                            isBR={isBRTournament(tournament)}
                                             onDelete={handleDeleteGroup}
                                             onSetRoom={handleSetGroupRoom}
                                             onAddMatch={() => { setSelectedGroup(group); setIsAddMatchModalOpen(true); }}
@@ -250,6 +252,7 @@ export const GroupsTab: React.FC<TournamentAdminTabProps> = (props) => {
 // ─── GroupCard with per-group room credentials ────────────────────────
 interface GroupCardProps {
     group: import('../../../../shared/types/types').TournamentGroup;
+    isBR?: boolean;
     onDelete: (groupId: string) => void;
     onSetRoom: (groupId: string, field: 'roomId' | 'roomPass', value: string) => void;
     onAddMatch: () => void;
@@ -257,7 +260,7 @@ interface GroupCardProps {
     onGenerateMatches: (mode: 'round-robin' | 'single') => void;
 }
 
-function GroupCard({ group, onDelete, onSetRoom, onAddMatch, onManageTeams, onGenerateMatches }: GroupCardProps) {
+function GroupCard({ group, isBR, onDelete, onSetRoom, onAddMatch, onManageTeams, onGenerateMatches }: GroupCardProps) {
     const [showRoom, setShowRoom] = useState(false);
     const [roomId, setRoomId] = useState(group.roomId || '');
     const [roomPass, setRoomPass] = useState(group.roomPass || '');
@@ -351,7 +354,7 @@ function GroupCard({ group, onDelete, onSetRoom, onAddMatch, onManageTeams, onGe
                     onClick={onAddMatch}
                     className="flex-1 min-w-[80px] min-h-[44px] flex items-center justify-center bg-purple-600/10 hover:bg-purple-600/20 text-purple-500 py-2.5 rounded-lg text-[10px] sm:text-[10px] font-black uppercase tracking-widest transition-colors border border-purple-500/10"
                 >
-                    Match
+                    + Match
                 </button>
                 <button type="button" 
                     onClick={onManageTeams}
@@ -361,16 +364,18 @@ function GroupCard({ group, onDelete, onSetRoom, onAddMatch, onManageTeams, onGe
                 </button>
                 <button type="button" 
                     onClick={() => {
-                        if (window.confirm("Generate a single Match for ALL teams in this group? (BR Style)")) {
+                        if (isBR) {
                             onGenerateMatches('single');
-                        } else if (window.confirm("Generate Round Robin matches? (1v1 for every pair)")) {
-                            onGenerateMatches('round-robin');
+                        } else {
+                            if (window.confirm("Generate Round Robin matches? (1v1 for every pair)")) {
+                                onGenerateMatches('round-robin');
+                            }
                         }
                     }}
                     disabled={group.teams.length < 2}
                     className="w-full min-h-[44px] flex items-center justify-center bg-blue-600/10 hover:bg-blue-600/20 text-blue-500 disabled:opacity-50 disabled:cursor-not-allowed py-2.5 rounded-lg text-[10px] sm:text-[10px] font-black uppercase tracking-widest transition-colors border border-blue-500/10"
                 >
-                    GENERATE MATCHES
+                    {isBR ? 'GENERATE BR LOBBY MATCH' : 'GENERATE 1v1 MATCHES'}
                 </button>
             </div>
         </div>

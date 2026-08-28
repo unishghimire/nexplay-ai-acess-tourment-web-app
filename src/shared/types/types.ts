@@ -132,6 +132,7 @@ export interface Match {
     tournamentId?: string;
     groupId?: string;
     round: number;
+    matchNumber?: number;
     team1Id?: string;
     team2Id?: string;
     score1?: number;
