@@ -61,6 +61,13 @@ router.get("/api/health", async (req, res) => {
     message: hasDiscord ? "Discord webhooks configured" : "Discord webhooks not set (optional)"
   };
 
+  // 8. PostgreSQL / Firebase SQL Connect check
+  const hasDbUrl = Boolean(process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.FIREBASE_SQL_CONNECT_URL);
+  checks.postgresql = {
+    status: hasDbUrl ? "ok" : "degraded",
+    message: hasDbUrl ? "PostgreSQL / Firebase SQL Connect configured" : "DATABASE_URL not set in environment (using hybrid/fallback configuration)"
+  };
+
   const isHealthy = checks.firestore?.status === "ok" && checks.firebaseAdmin?.status !== "error";
   const overallLatency = Date.now() - startTime;
 
