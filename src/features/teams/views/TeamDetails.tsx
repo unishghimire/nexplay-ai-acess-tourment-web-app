@@ -5,7 +5,7 @@ import { db } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { Team, TeamMember, UserProfile, TeamInvite, TeamActivity } from '../../../shared/types/types';
-import {Users, UserPlus, Settings, LogOut, X, ArrowLeft, Crown, Activity, Globe, Calendar, Trophy, Zap, ChevronRight, Star, Camera, AlertCircle} from 'lucide-react';
+import {Users, UserPlus, Settings, LogOut, X, ArrowLeft, Crown, Activity, Globe, Calendar, Trophy, Zap, ChevronRight, Star, Camera, AlertCircle, Check, UserCheck} from 'lucide-react';
 import { useInvisibleImage } from '../../../shared/hooks/useInvisibleImage';
 import { MediaCategory } from '../../../shared/services/mediaService';
 import { timeAgo, formatDate, formatCurrency } from '../../../shared/utils/utils';
@@ -67,6 +67,7 @@ const TeamDetails: React.FC = () => {
 
     const [inviteUserId, setInviteUserId] = useState('');
     const [inviting, setInviting] = useState(false);
+    const [respondingInvite, setRespondingInvite] = useState(false);
 
     useEffect(() => {
         if (id) {
@@ -250,6 +251,111 @@ const TeamDetails: React.FC = () => {
         }
     };
 
+    const handleAcceptInvite = async (invite: TeamInvite) => {
+        if (!team || !user || !profile) return;
+
+        // Guard: check if user already belongs to ANY team (query team_members, not just local profile)
+        if (profile.teamId && profile.teamId !== team.id) {
+            showToast('You must leave your current team before joining another', 'warning');
+            return;
+        }
+        setRespondingInvite(true);
+        try {
+            // Double-check membership in Firestore (handles stale profile / race conditions)
+            const existingMembershipQ = query(
+                collection(db, 'team_members'),
+                where('userId', '==', user.uid)
+            );
+            const existingMembershipSnap = await getDocs(existingMembershipQ);
+            if (!existingMembershipSnap.empty) {
+                const existingTeamId = existingMembershipSnap.docs[0].data().teamId;
+                if (existingTeamId === team.id) {
+                    showToast('You are already a member of this team', 'warning');
+                } else {
+                    showToast('You must leave your current team before joining another', 'warning');
+                }
+                setRespondingInvite(false);
+                return;
+            }
+
+            // Check team is not full (re-fetch to avoid stale count)
+            const currentMembersQ = query(collection(db, 'team_members'), where('teamId', '==', team.id));
+            const currentMembersSnap = await getDocs(currentMembersQ);
+            if (currentMembersSnap.size >= 6) {
+                showToast('Team is full (max 6 players)', 'error');
+                setRespondingInvite(false);
+                return;
+            }
+            // 1. Mark invite as accepted
+            await updateDoc(doc(db, 'team_invites', invite.id), { status: 'accepted' });
+
+            // 2. Create team_members doc (inviteId required by Firestore rules canJoinTeam())
+            await addDoc(collection(db, 'team_members'), {
+                teamId: team.id,
+                userId: user.uid,
+                username: profile.username || '',
+                inGameName: profile.inGameName || '',
+                role: 'member',
+                inviteId: invite.id,
+                joinedAt: serverTimestamp()
+            });
+
+            // 3. Update user profile with team info
+            await updateDoc(doc(db, 'users', user.uid), {
+                teamName: team.name,
+                teamId: team.id
+            });
+            await setDoc(doc(db, 'users_public', user.uid), {
+                teamName: team.name,
+                teamId: team.id
+            }, { merge: true });
+
+            // 4. Log activity
+            await addDoc(collection(db, 'team_activity'), {
+                teamId: team.id,
+                userId: user.uid,
+                userName: profile.username || 'User',
+                action: 'joined_team',
+                details: 'Joined the team via invite',
+                createdAt: serverTimestamp()
+            });
+
+            // 5. Notify team owner
+            await addDoc(collection(db, 'notifications'), {
+                userId: team.ownerId,
+                title: 'New Team Member',
+                message: `${profile.username || 'A player'} has accepted your invite and joined ${team.name}!`,
+                type: 'success',
+                read: false,
+                link: `/team/${team.id}`,
+                timestamp: serverTimestamp()
+            });
+
+            showToast(`You have joined ${team.name}!`, 'success');
+            fetchTeamData();
+        } catch (error: any) {
+            console.error('Error accepting invite:', error);
+            showToast('Failed to accept invite', 'error');
+        } finally {
+            setRespondingInvite(false);
+        }
+    };
+
+    const handleDeclineInvite = async (invite: TeamInvite) => {
+        if (!team || !user) return;
+        setRespondingInvite(true);
+        try {
+            await updateDoc(doc(db, 'team_invites', invite.id), { status: 'declined' });
+            showToast('Invite declined', 'info');
+            fetchTeamData();
+        } catch (error: any) {
+            console.error('Error declining invite:', error);
+            showToast('Failed to decline invite', 'error');
+        } finally {
+            setRespondingInvite(false);
+        }
+    };
+
     const handleLeaveTeam = () => {
         if (!team || !user || !currentUserMember) return;
         setConfirmModal({
@@ -402,6 +508,7 @@ const TeamDetails: React.FC = () => {
     const currentUserMember = members.find(m => m.userId === user?.uid);
     const isAdmin = isOwner || currentUserMember?.role === 'admin';
     const isMember = !!currentUserMember;
+    const pendingInviteForCurrentUser = !isMember ? invites.find(i => i.inviteeId === user?.uid && i.status === 'pending') : undefined;
 
     return (
         <div className="max-w-6xl mx-auto animate-fade-in pb-20 px-4">
@@ -500,6 +607,39 @@ const TeamDetails: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Invite Banner for Invited Users */}
+            {pendingInviteForCurrentUser && (
+                <div className="bg-gradient-to-r from-brand-900/60 via-purple-900/40 to-brand-900/60 rounded-3xl border border-brand-500/30 p-6 mb-8 shadow-2xl animate-fade-in">
+                    <div className="flex flex-col sm:flex-row items-center gap-6">
+                        <div className="w-16 h-16 rounded-2xl bg-brand-500/20 flex items-center justify-center border border-brand-500/30 shrink-0">
+                            <UserCheck className="w-8 h-8 text-brand-400" />
+                        </div>
+                        <div className="flex-grow text-center sm:text-left">
+                            <h3 className="text-xl font-black text-white uppercase tracking-wider mb-1">You're Invited!</h3>
+                            <p className="text-gray-300 font-medium">You've been invited to join <span className="text-brand-400 font-black">{team.name}</span>. Accept to become a team member.</p>
+                        </div>
+                        <div className="flex items-center gap-3 shrink-0">
+                            <button
+                                type="button"
+                                onClick={() => handleDeclineInvite(pendingInviteForCurrentUser)}
+                                disabled={respondingInvite}
+                                className="bg-red-600/20 hover:bg-red-600/30 text-red-400 px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-xs transition flex items-center gap-2 border border-red-500/20 disabled:opacity-50"
+                            >
+                                <X className="w-4 h-4" /> Decline
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => handleAcceptInvite(pendingInviteForCurrentUser)}
+                                disabled={respondingInvite}
+                                className="bg-brand-600 hover:bg-brand-500 text-white px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-xs transition flex items-center gap-2 shadow-lg shadow-brand-500/25 disabled:opacity-50"
+                            >
+                                <Check className="w-4 h-4" /> {respondingInvite ? 'Joining...' : 'Accept & Join'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Team Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -647,7 +787,28 @@ const TeamDetails: React.FC = () => {
                                             {invites.map(invite => (
                                                 <div key={invite.id} className="flex items-center justify-between bg-dark p-3 rounded-xl border border-gray-800">
                                                     <span className="text-xs font-bold text-white truncate max-w-[120px]">{invite.inviteeId}</span>
-                                                    <span className="text-[10px] font-black uppercase tracking-widest bg-yellow-500/20 text-yellow-500 px-2 py-0.5 rounded">Pending</span>
+                                                    {invite.inviteeId === user?.uid ? (
+                                                        <div className="flex items-center gap-2">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleDeclineInvite(invite)}
+                                                                disabled={respondingInvite}
+                                                                className="text-[10px] font-black uppercase tracking-widest bg-red-500/20 text-red-400 px-2 py-0.5 rounded hover:bg-red-500/30 transition disabled:opacity-50"
+                                                            >
+                                                                Decline
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleAcceptInvite(invite)}
+                                                                disabled={respondingInvite}
+                                                                className="text-[10px] font-black uppercase tracking-widest bg-brand-500/20 text-brand-400 px-2 py-0.5 rounded hover:bg-brand-500/30 transition disabled:opacity-50"
+                                                            >
+                                                                {respondingInvite ? '...' : 'Accept'}
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-[10px] font-black uppercase tracking-widest bg-yellow-500/20 text-yellow-500 px-2 py-0.5 rounded">Pending</span>
+                                                    )}
                                                 </div>
                                             ))}
                                         </div>

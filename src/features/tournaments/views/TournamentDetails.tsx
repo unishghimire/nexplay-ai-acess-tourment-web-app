@@ -334,18 +334,10 @@ export default function TournamentDetails() {
             return;
         }
 
-        // Requirement: Team Name is compulsory for all tournaments
-        if (!profile.teamName) {
-            showToast("Team Name is required for all tournaments!", "warning");
+        // Requirement: Team Name is compulsory for solo tournaments (duo/squad use the JoinTournamentModal which has fallbacks)
+        if (tournament.teamType === 'solo' && !profile.teamName) {
+            showToast("Team Name is required for solo tournaments!", "warning");
             navigate('/profile');
-            return;
-        }
-
-        // Requirement: Team ID is compulsory for official team tournaments (scrims allow pick-up teams)
-        const isScrim = tournament.matchType === 'scrims' || (tournament as any).isScrim === true;
-        if (!isScrim && (tournament.teamType === 'duo' || tournament.teamType === 'squad') && !profile.teamId) {
-            showToast("You must be in a team to join team tournaments!", "warning");
-            navigate('/teams');
             return;
         }
 

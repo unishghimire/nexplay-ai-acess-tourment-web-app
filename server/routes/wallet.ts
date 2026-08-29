@@ -274,6 +274,16 @@ router.post("/api/wallet/join-tournament",
 
         if (!['upcoming', 'published', 'live'].includes(tData.status)) throw new Error("Tournament is not open for registration");
         
+        // Validate teammate count matches tournament team type
+        const teamType = tData.teamType || 'solo';
+        const teammateArr = Array.isArray(teammates) ? teammates : [];
+        if (teamType === 'duo' && teammateArr.length !== 1) {
+          throw new Error("Duo tournaments require exactly 1 teammate");
+        }
+        if (teamType === 'squad' && teammateArr.length !== 3) {
+          throw new Error("Squad tournaments require exactly 3 teammates");
+        }
+        
         // Registration Protection: If tournament has a monetary prize pool, funding must be secured
         const prizePool = Math.max(0, Math.round(Number(tData.prizePool || 0)));
         if (prizePool > 0 && tData.fundingStatus !== 'RESERVED') {
