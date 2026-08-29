@@ -13,7 +13,7 @@ import Modal from '../../../shared/components/Modal';
 import { useInvisibleImage } from '../../../shared/hooks/useInvisibleImage';
 import { ImageUploader } from '../../../shared/components/ImageUploader';
 import { MediaCategory } from '../../../shared/services/mediaService';
-import { PRESET_TOURNAMENT_BANNERS } from '../../../shared/constants/constants';
+import { PRESET_TOURNAMENT_BANNERS, getMapsForGame } from '../../../shared/constants/constants';
 import { withStaticCache } from '../../../shared/utils/staticCache';
 import { 
   Trophy, 
@@ -636,13 +636,25 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Map (Optional)</label>
-                <input 
-                  type="text" 
+                <select
                   value={formData.map}
                   onChange={(e) => setFormData({...formData, map: e.target.value})}
-                  placeholder="e.g. Erangel"
                   className="w-full bg-dark border border-gray-800 rounded-lg p-3 text-white focus:border-brand-500 focus-visible:outline-none transition"
-                />
+                >
+                  <option value="">Default ({getMapsForGame(formData.game)[0] || 'Bermuda'})</option>
+                  {getMapsForGame(formData.game).map((mapName) => (
+                    <option key={mapName} value={mapName}>{mapName}</option>
+                  ))}
+                  <option value="Custom">Custom Map...</option>
+                </select>
+                {formData.map === 'Custom' && (
+                  <input 
+                    type="text" 
+                    placeholder={`e.g. ${getMapsForGame(formData.game)[0] || 'Bermuda'}`}
+                    onChange={(e) => setFormData({...formData, map: e.target.value})}
+                    className="w-full bg-dark border border-gray-800 rounded-lg p-3 mt-2 text-white focus:border-brand-500 focus-visible:outline-none transition"
+                  />
+                )}
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Start Date & Time</label>

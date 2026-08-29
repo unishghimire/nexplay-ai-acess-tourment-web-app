@@ -1,17 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Calendar, Clock, Users, MapPin, Layers, Info } from 'lucide-react';
+import { Calendar, Clock, Users, MapPin, Layers, Loader2 } from 'lucide-react';
 import { TournamentAdminTabProps } from './types';
 import Modal from '../../../../shared/components/Modal';
 import ResultUploader from '../../../results/components/ResultUploader';
 import PerKillResultUploader from '../../../tournaments/components/PerKillResultUploader';
 import { isBRTournament } from '../../../../shared/services/tournamentEngine';
-
-const GAME_MAP_OPTIONS: Record<string, string[]> = {
-    'Free Fire': ['Bermuda', 'Purgatory', 'Kalahari', 'Alpine', 'NeXTerra'],
-    'PUBG Mobile': ['Erangel', 'Miramar', 'Sanhok', 'Vikendi', 'Livik'],
-    'BGMI': ['Erangel', 'Miramar', 'Sanhok', 'Vikendi', 'Livik'],
-};
+import { getMapsForGame } from '../../../../shared/constants/constants';
 
 export const MatchesTab: React.FC<TournamentAdminTabProps> = (props) => {
     const {
@@ -22,8 +17,19 @@ export const MatchesTab: React.FC<TournamentAdminTabProps> = (props) => {
         handleAddMatch, handleUpdateScore, getTeamName,
     } = props;
 
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const isBR = isBRTournament(tournament);
-    const availableMaps = GAME_MAP_OPTIONS[tournament.game] || ['Bermuda', 'Erangel', 'Purgatory', 'Kalahari', 'Miramar'];
+    const availableMaps = getMapsForGame(tournament.game);
+
+    const onAddMatchClick = async () => {
+        if (isSubmitting) return;
+        setIsSubmitting(true);
+        try {
+            await handleAddMatch();
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     return (
         <>
@@ -200,7 +206,7 @@ export const MatchesTab: React.FC<TournamentAdminTabProps> = (props) => {
                                 type="text"
                                 value={matchScore.map || ''}
                                 onChange={(e) => setMatchScore({...matchScore, map: e.target.value})}
-                                placeholder="e.g., Bermuda, Purgatory, Erangel"
+                                placeholder={`e.g., ${availableMaps[0] || 'Bermuda'}`}
                                 className="w-full bg-dark border border-gray-800 text-white rounded-xl p-3 focus:border-brand-500 focus-visible:outline-none transition"
                             />
                         </div>
@@ -260,7 +266,7 @@ export const MatchesTab: React.FC<TournamentAdminTabProps> = (props) => {
             )}
 
             {/* Add Match Modal */}
-            <Modal isOpen={isAddMatchModalOpen} onClose={() => setIsAddMatchModalOpen(false)} title={`Add Match to ${selectedGroup?.name}`}>
+            <Modal isOpen={isAddMatchModalOpen} onClose={() => !isSubmitting && setIsAddMatchModalOpen(false)} title={`Add Match to ${selectedGroup?.name}`}>
                 {selectedGroup && (
                     <div className="space-y-4">
                         {isBR ? (
@@ -390,7 +396,7 @@ export const MatchesTab: React.FC<TournamentAdminTabProps> = (props) => {
                                             type="text"
                                             value={newMatchData.map}
                                             onChange={(e) => setNewMatchData({...newMatchData, map: e.target.value})}
-                                            placeholder="e.g., Erangel"
+                                            placeholder={`e.g., ${availableMaps[0] || 'Bermuda'}`}
                                             className="w-full bg-dark border border-gray-800 text-white rounded-xl p-3 focus:border-brand-500 focus-visible:outline-none transition"
                                         />
                                     </div>
@@ -400,17 +406,27 @@ export const MatchesTab: React.FC<TournamentAdminTabProps> = (props) => {
 
                         <div className="pt-4 flex gap-3">
                             <button
+                                type="button"
+                                disabled={isSubmitting}
                                 onClick={() => setIsAddMatchModalOpen(false)}
-                                className="flex-1 bg-dark hover:bg-surface text-white py-3 rounded-xl font-bold transition border border-gray-800"
+                                className="flex-1 bg-dark hover:bg-surface text-white py-3 rounded-xl font-bold transition border border-gray-800 disabled:opacity-50"
                             >
                                 Cancel
                             </button>
                             <button
-                                onClick={handleAddMatch}
-                                disabled={!isBR && (!newMatchData.team1Id || !newMatchData.team2Id)}
-                                className="flex-1 bg-brand-600 hover:bg-brand-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3 rounded-xl font-bold transition"
+                                type="button"
+                                onClick={onAddMatchClick}
+                                disabled={isSubmitting || (!isBR && (!newMatchData.team1Id || !newMatchData.team2Id))}
+                                className="flex-1 bg-brand-600 hover:bg-brand-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3 rounded-xl font-bold transition flex items-center justify-center gap-2"
                             >
-                                {isBR ? `Create Match${(newMatchData.matchCount || 1) > 1 ? 'es' : ''}` : 'Create Match'}
+                                {isSubmitting ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        <span>Adding...</span>
+                                    </>
+                                ) : (
+                                    <span>{isBR ? `Create Match${(newMatchData.matchCount || 1) > 1 ? 'es' : ''}` : 'Create Match'}</span>
+                                )}
                             </button>
                         </div>
                     </div>

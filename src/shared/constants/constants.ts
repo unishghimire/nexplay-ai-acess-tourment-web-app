@@ -53,3 +53,46 @@ export const PRESET_TOURNAMENT_BANNERS = [
     'https://images.unsplash.com/photo-1614850523296-d8c1af93d400?q=80&w=2070&auto=format&fit=crop', // Abstract Purple
     'https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?q=80&w=2187&auto=format&fit=crop' // Abstract Dark
 ];
+
+export const GAME_MAPS: Record<string, string[]> = {
+    'free fire': ['Bermuda', 'Purgatory', 'Kalahari', 'Alpine', 'NeXTerra'],
+    'free fire max': ['Bermuda', 'Purgatory', 'Kalahari', 'Alpine', 'NeXTerra'],
+    'pubg mobile': ['Erangel', 'Miramar', 'Sanhok', 'Vikendi', 'Livik', 'Nusa'],
+    'pubg': ['Erangel', 'Miramar', 'Sanhok', 'Vikendi', 'Taego', 'Deston', 'Rondo'],
+    'bgmi': ['Erangel', 'Miramar', 'Sanhok', 'Vikendi', 'Livik', 'Nusa'],
+    'cod mobile': ['Crash', 'Crossfire', 'Killhouse', 'Nuketown', 'Firing Range', 'Isolated', 'Blackout'],
+    'valorant': ['Ascent', 'Bind', 'Haven', 'Split', 'Icebox', 'Breeze', 'Fracture', 'Pearl', 'Lotus', 'Sunset', 'Abyss'],
+    'mobile legends': ['Imperial Sanctuary', 'Celestial Palace', 'Western Expanse'],
+};
+
+/**
+ * Returns the official maps for any supported game safely with fuzzy/case-insensitive fallback.
+ */
+export function getMapsForGame(gameName?: string): string[] {
+    if (!gameName) return GAME_MAPS['free fire'];
+    const norm = gameName.trim().toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ');
+    
+    if (GAME_MAPS[norm]) return GAME_MAPS[norm];
+
+    if (norm.includes('free fire') || norm.includes('freefire') || norm.includes('ff')) {
+        return GAME_MAPS['free fire'];
+    }
+    if (norm.includes('bgmi')) {
+        return GAME_MAPS['bgmi'];
+    }
+    if (norm.includes('pubg')) {
+        return GAME_MAPS['pubg mobile'];
+    }
+    if (norm.includes('cod') || norm.includes('call of duty')) {
+        return GAME_MAPS['cod mobile'];
+    }
+    if (norm.includes('val') || norm.includes('valorant')) {
+        return GAME_MAPS['valorant'];
+    }
+    if (norm.includes('mlbb') || norm.includes('mobile legend')) {
+        return GAME_MAPS['mobile legends'];
+    }
+
+    // Default fallback to Free Fire maps for esports on this platform
+    return GAME_MAPS['free fire'];
+}

@@ -4,6 +4,7 @@ import { db, auth } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { Tournament, TournamentGroup, Match, Team, TournamentEarning } from '../../../shared/types/types';
 import { formatDate } from '../../../shared/utils/utils';
+import { getMapsForGame } from '../../../shared/constants/constants';
 import {
     announceNewTournament,
     announceTournamentLive,
@@ -570,17 +571,29 @@ export function useTournamentAdmin(
     const [selectedMatch, setSelectedMatch] = useState<{ groupId: string, match: Match } | null>(null);
     const [matchScore, setMatchScore] = useState({ score1: 0, score2: 0, status: 'scheduled' as 'scheduled' | 'live' | 'completed', map: '' });
 
-    // Manual Match State
     const [isAddMatchModalOpen, setIsAddMatchModalOpen] = useState(false);
+    const defaultMap = getMapsForGame(tournament?.game)[0] || 'Bermuda';
     const [newMatchData, setNewMatchData] = useState({ 
         team1Id: '', 
         team2Id: '', 
         round: 1, 
-        map: 'Bermuda',
+        map: defaultMap,
         matchCount: 1,
         scheduledTime: '',
         status: 'scheduled' as const
     });
+
+    // Keep default map synced when tournament loads
+    useEffect(() => {
+        if (tournament?.game) {
+            const maps = getMapsForGame(tournament.game);
+            setNewMatchData(prev => ({
+                ...prev,
+                map: prev.map && maps.includes(prev.map) ? prev.map : maps[0] || 'Bermuda',
+                round: tournament.currentRound || 1
+            }));
+        }
+    }, [tournament?.game, tournament?.currentRound]);
 
     const handleAddMatch = async () => {
         if (!tournament || !selectedGroup) return;
@@ -589,15 +602,20 @@ export function useTournamentAdmin(
             const isBR = isBRTournament(tournament);
             const currentMatchCount = selectedGroup.matches?.length || 0;
             const newMatches: Match[] = [];
+            const activeMaps = getMapsForGame(tournament.game);
+            const resolvedMap = newMatchData.map || activeMaps[0] || 'Bermuda';
 
             if (isBR) {
                 const count = Math.max(1, Math.min(10, newMatchData.matchCount || 1));
                 for (let i = 0; i < count; i++) {
                     const matchNum = currentMatchCount + i + 1;
+                    const mapForThisMatch = (count > 1 && i < activeMaps.length) ? activeMaps[i % activeMaps.length] : resolvedMap;
                     newMatches.push({
                         id: `match-${Date.now()}-${i}`,
                         round: newMatchData.round || tournament.currentRound || 1,
-                        map: newMatchData.map || 'Bermuda',
+                        matchNumber: matchNum,
+                        map: mapForThisMatch,
+                        scheduledTime: newMatchData.scheduledTime || undefined,
                         status: newMatchData.status,
                         score1: 0,
                         score2: 0,
@@ -610,7 +628,7 @@ export function useTournamentAdmin(
                     team1Id: newMatchData.team1Id,
                     team2Id: newMatchData.team2Id,
                     round: newMatchData.round || tournament.currentRound || 1,
-                    map: newMatchData.map,
+                    map: resolvedMap,
                     status: newMatchData.status,
                     score1: 0,
                     score2: 0
@@ -624,13 +642,16 @@ export function useTournamentAdmin(
                 return g;
             }) || [];
 
+            // Optimistic UI update: instantly update local state so zero lag is experienced
+            setTournament({ ...tournament, groups: updatedGroups });
+            setIsAddMatchModalOpen(false);
+            setNewMatchData({ team1Id: '', team2Id: '', round: tournament.currentRound || 1, map: resolvedMap, matchCount: 1, scheduledTime: '', status: 'scheduled' });
+            showToast(`${newMatches.length} match(es) added to ${selectedGroup.name}`, 'success');
+
+            // Async background Firestore persistence
             await updateDoc(doc(db, 'tournaments', tournament.id), {
                 groups: updatedGroups
             });
-
-            setIsAddMatchModalOpen(false);
-            setNewMatchData({ team1Id: '', team2Id: '', round: tournament.currentRound || 1, map: 'Bermuda', matchCount: 1, scheduledTime: '', status: 'scheduled' });
-            showToast(`${newMatches.length} match(es) added to ${selectedGroup.name}`, 'success');
         } catch (error) {
             console.error("Error adding match:", error);
             showToast('Failed to add match', 'error');
@@ -812,7 +833,10 @@ export function useTournamentAdmin(
             const isBR = isBRTournament(tournament);
             const roundConfig = tournament.roadmap?.[((tournament.currentRound || 1) - 1)];
             const matchesPerGroup = roundConfig?.matchesPerGroup || (isBR ? (mode === 'single' ? 1 : 3) : 0);
-            const maps = roundConfig?.maps || (tournament.map ? [tournament.map] : []);
+            const defaultGameMaps = getMapsForGame(tournament.game);
+            const maps = (roundConfig?.maps && roundConfig.maps.length > 0)
+                ? roundConfig.maps
+                : (tournament.map ? [tournament.map] : defaultGameMaps);
 
             const matches = generateMatchesForRound({
                 groups: [group],
@@ -828,6 +852,10 @@ export function useTournamentAdmin(
                 }
                 return g;
             }) || [];
+
+            // Optimistic update for 0ms lag
+            setTournament({ ...tournament, groups: updatedGroups });
+            showToast(`${matches.length} ${isBR ? 'lobby' : 'round-robin'} match(es) generated`, 'success');
 
             await updateDoc(doc(db, 'tournaments', tournament.id), {
                 groups: updatedGroups
