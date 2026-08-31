@@ -95,7 +95,9 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
   console.error('Firestore Error:', errorMessage);
   
   // Custom event for global UI error handling
-  window.dispatchEvent(new CustomEvent('app-error', { detail: errInfo }));
+  if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
+    window.dispatchEvent(new CustomEvent('app-error', { detail: errInfo }));
+  }
   
   throw new Error(errorMessage);
 }

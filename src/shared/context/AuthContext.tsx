@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import { doc, onSnapshot, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
-import { onAuthStateChanged, signOut, getRedirectResult, User as FirebaseUser } from 'firebase/auth';
+import { onAuthStateChanged, signOut, User as FirebaseUser } from 'firebase/auth';
 import { db, auth } from '../config/firebase';
 import { UserProfile } from '../types/types';
 import { ensureUserDocument, ensurePublicProfile } from '../services/userProfileService';

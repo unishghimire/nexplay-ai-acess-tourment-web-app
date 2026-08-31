@@ -47,14 +47,14 @@ router.get("/api/health", async (req, res) => {
   };
 
 
-  // 6. Gemini AI check
+  // 5. Gemini AI check
   const hasGemini = Boolean(process.env.GEMINI_API_KEY?.trim());
   checks.geminiAi = {
     status: hasGemini ? "ok" : "missing",
     message: hasGemini ? "GEMINI_API_KEY is configured" : "GEMINI_API_KEY is missing from environment"
   };
 
-  // 7. Discord Webhook check
+  // 6. Discord Webhook check
   const hasDiscord = Boolean(process.env.DISCORD_WEBHOOK_TOURNAMENTS || process.env.DISCORD_WEBHOOK_SCRIMS);
   checks.discord = {
     status: hasDiscord ? "ok" : "missing",
