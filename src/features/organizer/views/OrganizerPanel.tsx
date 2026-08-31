@@ -8,7 +8,7 @@ import TournamentCreateModal from '../../tournaments/components/TournamentCreate
 import ScrimCreateModal from '../../scrims/components/ScrimCreateModal';
 import {
   LayoutDashboard, Trophy, Gamepad2, Radio, Users,
-  Wallet, Settings as SettingsIcon, Menu, X,
+  Wallet, Settings as SettingsIcon, Menu, X, ShieldAlert
 } from 'lucide-react';
 import { useOrgData } from '../hooks/useOrgData';
 import { OrgOverlayManager, OverlayType } from '../components/OrgOverlayManager';
@@ -22,6 +22,7 @@ const OverviewTab = React.lazy(() => import('../components/OverviewTab'));
 const TournamentsTab = React.lazy(() => import('../components/TournamentsTab'));
 const ScrimsHubTab = React.lazy(() => import('../components/ScrimsHubTab'));
 const MatchRoomsTab = React.lazy(() => import('../components/MatchRoomsTab'));
+const DisputesTab = React.lazy(() => import('../components/DisputesTab'));
 const TeamsRostersTab = React.lazy(() => import('../components/TeamsRostersTab'));
 const WalletPayoutsTab = React.lazy(() => import('../components/WalletPayoutsTab'));
 const SettingsStreamTab = React.lazy(() => import('../components/SettingsStreamTab'));
@@ -31,6 +32,7 @@ const NAV_ITEMS = [
   { id: 'tournaments', label: 'Tournaments', icon: Trophy },
   { id: 'scrims', label: 'Scrims Hub', icon: Gamepad2 },
   { id: 'rooms', label: 'Match Rooms', icon: Radio },
+  { id: 'disputes', label: 'Disputes', icon: ShieldAlert },
   { id: 'teams', label: 'Teams & Rosters', icon: Users },
   { id: 'wallet', label: 'Wallet & Payouts', icon: Wallet },
   { id: 'settings', label: 'Settings & Stream', icon: SettingsIcon },
@@ -364,6 +366,16 @@ const OrganizerPanel: React.FC = () => {
             />
           </TabErrorBoundary>
         );
+      case 'disputes':
+        return (
+          <TabErrorBoundary tabName="Disputes Tab" resetKey={activeTab}>
+            <DisputesTab
+              disputes={org.disputes}
+              onResolveDispute={handleResolveDispute}
+              onOpenDisputeOverlay={handleOpenDisputeOverlay}
+            />
+          </TabErrorBoundary>
+        );
       case 'teams':
         return (
           <TabErrorBoundary tabName="Teams & Rosters Tab" resetKey={activeTab}>
@@ -443,20 +455,30 @@ const OrganizerPanel: React.FC = () => {
         {/* Sidebar Navigation */}
         <aside className={`w-full lg:w-60 flex-shrink-0 ${mobileNavOpen ? 'block' : 'hidden lg:block'}`}>
           <nav aria-label="Organizer panel navigation" className="space-y-2 bg-card p-4 rounded-2xl border border-gray-800 h-fit lg:sticky lg:top-24">
-            {NAV_ITEMS.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => handleTabChange(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-colors shrink-0 min-h-[44px] ${
-                  activeTab === item.id
-                    ? 'bg-brand-500 text-white shadow-xl shadow-brand-500/20'
-                    : 'text-gray-400 hover:bg-surface/50 hover:text-white'
-                }`}
-              >
-                <item.icon className={`w-4 h-4 flex-shrink-0 ${activeTab === item.id ? 'text-white' : 'text-gray-500'}`} />
-                <span className="whitespace-nowrap">{item.label}</span>
-              </button>
-            ))}
+            {NAV_ITEMS.map((item) => {
+              const pendingCount = item.id === 'disputes' ? org.disputes.filter(d => (d.status || 'pending') === 'pending').length : 0;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleTabChange(item.id)}
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-colors shrink-0 min-h-[44px] ${
+                    activeTab === item.id
+                      ? 'bg-brand-500 text-white shadow-xl shadow-brand-500/20'
+                      : 'text-gray-400 hover:bg-surface/50 hover:text-white'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <item.icon className={`w-4 h-4 flex-shrink-0 ${activeTab === item.id ? 'text-white' : 'text-gray-500'}`} />
+                    <span className="whitespace-nowrap">{item.label}</span>
+                  </div>
+                  {pendingCount > 0 && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-red-600 text-white animate-pulse">
+                      {pendingCount}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </nav>
         </aside>
 

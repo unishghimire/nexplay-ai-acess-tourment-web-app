@@ -227,28 +227,37 @@ export function useOrgData() {
     }
   }, [user]);
 
-  // Fetch disputes for tournaments owned by this organizer
+  // Fetch disputes for tournaments and scrims owned by this organizer
   const fetchDisputes = useCallback(async () => {
-    if (!user || hostedTournaments.length === 0) {
+    if (!user) {
       setDisputes([]);
       return;
     }
     try {
+      const disputesMap = new Map<string, any>();
+      // 1. Query by organizerId
+      const orgSnap = await getDocs(query(collection(db, 'disputes'), where('organizerId', '==', user.uid)));
+      orgSnap.docs.forEach(d => disputesMap.set(d.id, { id: d.id, ...d.data() }));
+
+      // 2. Query by tournamentIds
       const tournamentIds = hostedTournaments.map(t => t.id).filter(Boolean);
-      if (tournamentIds.length === 0) {
-        setDisputes([]);
-        return;
+      if (tournamentIds.length > 0) {
+        const batches = Array.from({ length: Math.ceil(tournamentIds.length / 10) }, (_, index) =>
+          tournamentIds.slice(index * 10, (index + 1) * 10)
+        );
+        const snapshots = await Promise.all(
+          batches.map(ids => getDocs(query(collection(db, 'disputes'), where('tournamentId', 'in', ids))))
+        );
+        snapshots.forEach(snap => snap.docs.forEach(d => disputesMap.set(d.id, { id: d.id, ...d.data() })));
       }
 
-      // Firestore permits at most ten values in an `in` query. Query every
-      // organizer tournament batch rather than silently dropping older disputes.
-      const batches = Array.from({ length: Math.ceil(tournamentIds.length / 10) }, (_, index) =>
-        tournamentIds.slice(index * 10, (index + 1) * 10)
-      );
-      const snapshots = await Promise.all(
-        batches.map(ids => getDocs(query(collection(db, 'disputes'), where('tournamentId', 'in', ids))))
-      );
-      setDisputes(snapshots.flatMap(snap => snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+      const list = Array.from(disputesMap.values());
+      list.sort((a, b) => {
+        const aTime = toDateSafe(a.createdAt || a.filedAt)?.getTime() || 0;
+        const bTime = toDateSafe(b.createdAt || b.filedAt)?.getTime() || 0;
+        return bTime - aTime;
+      });
+      setDisputes(list);
     } catch (err) {
       console.error("Error fetching disputes:", err);
     }
@@ -510,9 +519,7 @@ export function useOrgData() {
   }, [hostedTournaments, fetchParticipants]);
 
   useEffect(() => {
-    if (hostedTournaments.length > 0) {
-      fetchDisputes();
-    }
+    fetchDisputes();
   }, [fetchDisputes]);
 
   return {

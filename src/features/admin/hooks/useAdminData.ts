@@ -111,6 +111,7 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
             scrims: true,
         },
     });
+    const [allDisputes, setAllDisputes] = useState<any[]>([]);
 
     // New UX State
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -416,6 +417,24 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
             const failures = results
                 .map((r, i) => ({ index: i, result: r }))
                 .filter(item => item.result.status === 'rejected');
+
+            if (failures.length > 0) {
+                console.warn("[AdminPanel] Some queries failed:", failures);
+            }
+
+            // Fetch all disputes
+            try {
+                const dSnap = await getDocs(query(collection(db, 'disputes'), limit(200)));
+                const dList = dSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+                dList.sort((a: any, b: any) => {
+                    const aTime = toDateSafe(a.createdAt || a.filedAt)?.getTime() || 0;
+                    const bTime = toDateSafe(b.createdAt || b.filedAt)?.getTime() || 0;
+                    return bTime - aTime;
+                });
+                setAllDisputes(dList);
+            } catch (err) {
+                console.error("Error fetching admin disputes:", err);
+            }
 
             if (failures.length > 0) {
                 console.warn(`Admin data: ${failures.length} of ${results.length} queries failed`, failures.map(f => ({
@@ -1224,7 +1243,235 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
         const pendingWithdrawalsCount = pendingTransactions.filter(t => t.type === 'withdrawal').length;
         const pendingOrgCount = orgApplications.length;
 
-        const tabProps = { paymentQr, processAndUploadPayment, handleDragOverPayment, handleDropPayment, handlePastePayment, processAndUploadGame, handleDragOverGame, handleDropGame, handlePasteGame, processAndUploadSlide, handleDragOverSlide, handleDropSlide, handlePasteSlide, setPaymentType, setEditingOrg, setSelectedUser, setSelectedTx, setConfirmModal, DEFAULT_BANNER, ImageUploader, MediaCategory, NEXPLAY_LOGO, activeTab, activityLogs, allTournaments, allTransactions, categoryActive, categoryDescription, categoryName, closeConfirmModal, editingCategory, editingGame, editingPayment, editingPromo, editingSlide, executeRejectTx, handleRejectTx, handleRefundTx, fetchMedia, fetchOrgTournaments, formatCurrency, formatDate, formatGameName, gameLogo, gameModes, gameName, games, getRelativeTime, handleApproveOrg, handleApproveTx, handleCancelTournament, handleDeleteCategory, handleDeleteGame, handleDeleteMedia, handleDeletePayment, handleDeletePromo, handleDeleteSlide, handleEditTournament, handleRejectOrg, handleReleaseEarnings, handleSaveCategory, handleSaveGame, handleSaveScoring, handleSaveOrgDetails, handleSavePayment, handleSavePromo, handleSaveSettings, handleSaveSlide, handleSuspendOrg, handleToggleFeatured, handleUpdateUserRole, handleViewParticipants, isCategoryModalOpen, isGameModalOpen, isScoringModalOpen, isNoticeActive, isOrgEditModalOpen, isPaymentModalOpen, isPromoModalOpen, isPublished, isSlideModalOpen, maintenanceMode, mediaFilter, mediaItems, mediaLoading, mediaSearch, minWithdrawal, directUploadUrl, notice, openEditGame, orgApplications, orgDiscord, orgEmail, orgFormDescription, orgNameEdit, orgTournaments, orgWhatsapp, orgYoutube, organizers, paymentActive, paymentCategories, paymentCategoryId, paymentInstructions, paymentMethods, paymentName, pendingTransactions, promoActive, promoAmount, promoCode, promoCodes, promoMaxUses, searchQuery, selectedMediaCategory, selectedOrgId, setCategoryActive, setCategoryDescription, setCategoryName, setEditingCategory, setEditingGame, setEditingPayment, setEditingPromo, setEditingSlide, setGameLogo, setGameModes, setGameName, setIsCategoryModalOpen, setIsGameModalOpen, setIsScoringModalOpen, scoringModalGame, setScoringModalGame, setIsNoticeActive, setIsOrgEditModalOpen, setIsPaymentModalOpen, setIsPromoModalOpen, setIsPublished, setIsSlideModalOpen, setMaintenanceMode, setMediaFilter, setMediaSearch, setMinWithdrawal, setDirectUploadUrl, setNotice, setOrgDiscord, setOrgEmail, setOrgFormDescription, setOrgNameEdit, setOrgWhatsapp, setOrgYoutube, setPaymentActive, setPaymentCategoryId, setPaymentInstructions, setPaymentName, setPaymentQr, setPromoActive, setPromoAmount, setPromoCode, setPromoMaxUses, setSearchQuery, setSelectedMediaCategory, setSlideBtnText, setSlideDescription, setSlideImage, setSlideIsActive, setSlideLink, setSlideTitle, setSupportEmail, setSupportPhone, discordWebhooks, setDiscordWebhooks, discordWebhookTournaments, setDiscordWebhookTournaments, autoDiscordTournamentAnnouncements, setAutoDiscordTournamentAnnouncements, showToast, siteSettings, slideBtnText, slideDescription, slideImage, slideIsActive, slideLink, slideTitle, slides, stats, supportEmail, supportPhone, toggleOrgForm, togglePowerOrganizer, tournamentEarnings, uploading, users };
+        const handleResolveDispute = async (disputeId: string, action: 'warn' | 'ban' | 'dismiss') => {
+            try {
+                const user = auth.currentUser;
+                if (!user) return;
+                const token = await user.getIdToken();
+                const res = await fetch(`/api/disputes/${disputeId}/resolve`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ action })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showToast(`Dispute ${action === 'dismiss' ? 'dismissed' : 'resolved with action: ' + action}`, 'success');
+                    setAllDisputes(prev => prev.map(d => d.id === disputeId ? { ...d, status: action === 'dismiss' ? 'dismissed' : 'resolved', resolutionAction: action, resolvedAt: new Date().toISOString() } : d));
+                } else {
+                    showToast(data.message || 'Failed to resolve dispute', 'error');
+                }
+            } catch (err: any) {
+                showToast(err.message || 'Failed to resolve dispute', 'error');
+            }
+        };
+
+        const fetchDisputes = async () => {
+            try {
+                const dSnap = await getDocs(query(collection(db, 'disputes'), limit(200)));
+                const dList = dSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+                dList.sort((a: any, b: any) => {
+                    const aTime = toDateSafe(a.createdAt || a.filedAt)?.getTime() || 0;
+                    const bTime = toDateSafe(b.createdAt || b.filedAt)?.getTime() || 0;
+                    return bTime - aTime;
+                });
+                setAllDisputes(dList);
+            } catch (err) {
+                console.error("Error refreshing admin disputes:", err);
+            }
+        };
+
+        const tabProps = {
+            allDisputes,
+            fetchDisputes,
+            handleResolveDispute,
+            paymentQr,
+            processAndUploadPayment,
+            handleDragOverPayment,
+            handleDropPayment,
+            handlePastePayment,
+            processAndUploadGame,
+            handleDragOverGame,
+            handleDropGame,
+            handlePasteGame,
+            processAndUploadSlide,
+            handleDragOverSlide,
+            handleDropSlide,
+            handlePasteSlide,
+            setPaymentType,
+            setEditingOrg,
+            setSelectedUser,
+            setSelectedTx,
+            setConfirmModal,
+            DEFAULT_BANNER,
+            ImageUploader,
+            MediaCategory,
+            NEXPLAY_LOGO,
+            activeTab,
+            activityLogs,
+            allTournaments,
+            allTransactions,
+            categoryActive,
+            categoryDescription,
+            categoryName,
+            closeConfirmModal,
+            editingCategory,
+            editingGame,
+            editingPayment,
+            editingPromo,
+            editingSlide,
+            executeRejectTx,
+            handleRejectTx,
+            handleRefundTx,
+            fetchMedia,
+            fetchOrgTournaments,
+            formatCurrency,
+            formatDate,
+            formatGameName,
+            gameLogo,
+            gameModes,
+            gameName,
+            games,
+            getRelativeTime,
+            handleApproveOrg,
+            handleApproveTx,
+            handleCancelTournament,
+            handleDeleteCategory,
+            handleDeleteGame,
+            handleDeleteMedia,
+            handleDeletePayment,
+            handleDeletePromo,
+            handleDeleteSlide,
+            handleEditTournament,
+            handleRejectOrg,
+            handleReleaseEarnings,
+            handleSaveCategory,
+            handleSaveGame,
+            handleSaveScoring,
+            handleSaveOrgDetails,
+            handleSavePayment,
+            handleSavePromo,
+            handleSaveSettings,
+            handleSaveSlide,
+            handleSuspendOrg,
+            handleToggleFeatured,
+            handleUpdateUserRole,
+            handleViewParticipants,
+            isCategoryModalOpen,
+            isGameModalOpen,
+            isScoringModalOpen,
+            scoringModalGame,
+            setScoringModalGame,
+            setIsNoticeActive,
+            setIsOrgEditModalOpen,
+            setIsPaymentModalOpen,
+            setIsPromoModalOpen,
+            setIsPublished,
+            setIsSlideModalOpen,
+            maintenanceMode,
+            mediaFilter,
+            mediaItems,
+            mediaLoading,
+            mediaSearch,
+            minWithdrawal,
+            directUploadUrl,
+            notice,
+            openEditGame,
+            orgApplications,
+            orgDiscord,
+            orgEmail,
+            orgFormDescription,
+            orgNameEdit,
+            orgTournaments,
+            orgWhatsapp,
+            orgYoutube,
+            organizers,
+            paymentActive,
+            paymentCategories,
+            paymentCategoryId,
+            paymentInstructions,
+            paymentMethods,
+            paymentName,
+            pendingTransactions,
+            promoActive,
+            promoAmount,
+            promoCode,
+            promoCodes,
+            promoMaxUses,
+            searchQuery,
+            selectedMediaCategory,
+            selectedOrgId,
+            setCategoryActive,
+            setCategoryDescription,
+            setCategoryName,
+            setEditingCategory,
+            setEditingGame,
+            setEditingPayment,
+            setEditingPromo,
+            setEditingSlide,
+            setGameLogo,
+            setGameModes,
+            setGameName,
+            setIsCategoryModalOpen,
+            setIsGameModalOpen,
+            setIsScoringModalOpen,
+            setMaintenanceMode,
+            setMediaFilter,
+            setMediaSearch,
+            setMinWithdrawal,
+            setDirectUploadUrl,
+            setNotice,
+            setOrgDiscord,
+            setOrgEmail,
+            setOrgFormDescription,
+            setOrgNameEdit,
+            setOrgWhatsapp,
+            setOrgYoutube,
+            setPaymentActive,
+            setPaymentCategoryId,
+            setPaymentInstructions,
+            setPaymentName,
+            setPaymentQr,
+            setPromoActive,
+            setPromoAmount,
+            setPromoCode,
+            setPromoMaxUses,
+            setSearchQuery,
+            setSelectedMediaCategory,
+            setSlideBtnText,
+            setSlideDescription,
+            setSlideImage,
+            setSlideIsActive,
+            setSlideLink,
+            setSlideTitle,
+            setSupportEmail,
+            setSupportPhone,
+            discordWebhooks,
+            setDiscordWebhooks,
+            discordWebhookTournaments,
+            setDiscordWebhookTournaments,
+            autoDiscordTournamentAnnouncements,
+            setAutoDiscordTournamentAnnouncements,
+            showToast,
+            siteSettings,
+            slideBtnText,
+            slideDescription,
+            slideImage,
+            slideIsActive,
+            slideLink,
+            slideTitle,
+            slides,
+            stats,
+            supportEmail,
+            supportPhone,
+            toggleOrgForm,
+            togglePowerOrganizer,
+            tournamentEarnings,
+            uploading,
+            users
+        };
     return {
         activeTab,
         activityLogs,

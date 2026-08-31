@@ -5,8 +5,8 @@ import ConfirmModal from '../../../shared/components/ConfirmModal';
 import TournamentCreateModal from '../../tournaments/components/TournamentCreateModal';
 import TransactionDetailModal from '../components/TransactionDetailModal';
 import TransactionHistoryTab from '../components/TransactionHistoryTab';
-import {Users, ArrowDown, ArrowUp, Layout, Check, X, Image as ImageIcon, CreditCard, QrCode, Megaphone, Newspaper, Trophy, Gamepad2, Tag, Sliders, DollarSign} from 'lucide-react';
-import { DashboardTab, TournamentsTab, OrgApprovalsTab, OrgTournamentsTab, UsersTab, OrganizersTab, OrgEarningsTab, PendingDepositsTab, PendingWithdrawalsTab, GamesTab, PaymentsTab, PromoTab, MediaTab, NewsTab, SettingsTab } from './admin-panel-tabs';
+import {Users, ArrowDown, ArrowUp, Layout, Check, X, Image as ImageIcon, CreditCard, QrCode, Megaphone, Newspaper, Trophy, Gamepad2, Tag, Sliders, DollarSign, ShieldAlert} from 'lucide-react';
+import { DashboardTab, TournamentsTab, OrgApprovalsTab, OrgTournamentsTab, UsersTab, OrganizersTab, OrgEarningsTab, PendingDepositsTab, PendingWithdrawalsTab, GamesTab, PaymentsTab, PromoTab, MediaTab, NewsTab, SettingsTab, DisputesTab } from './admin-panel-tabs';
 import DiscordAdminPanel from '../components/DiscordAdminPanel';
 import { useAdminData } from '../hooks/useAdminData';
 import TabErrorBoundary from '../../../shared/components/TabErrorBoundary';
@@ -136,6 +136,7 @@ const AdminPanel: React.FC = () => {
                     <div className="text-xs font-black text-gray-500 uppercase tracking-[0.2em] mb-6 px-3">Management</div>
                     <div className="space-y-2">
                         {[
+                            { id: 'disputes', icon: ShieldAlert, label: 'Disputes & Reports', badge: tabProps.allDisputes?.filter((d: any) => (d.status || 'pending') === 'pending').length },
                             { id: 'tournaments', icon: Trophy, label: 'Tournaments' },
                             { id: 'users', icon: Users, label: 'Users' },
                             { id: 'games', icon: Gamepad2, label: 'Games' },
@@ -227,6 +228,7 @@ const AdminPanel: React.FC = () => {
                         />
                     </TabErrorBoundary>
                 )}
+                {activeTab === 'tab-disputes' && <TabErrorBoundary tabName="Disputes Tab"><DisputesTab {...tabProps} /></TabErrorBoundary>}
                 {activeTab === 'tab-games' && <TabErrorBoundary tabName="Games Tab"><GamesTab {...tabProps} /></TabErrorBoundary>}
                 {activeTab === 'tab-payments' && <TabErrorBoundary tabName="Payments Tab"><PaymentsTab {...tabProps} /></TabErrorBoundary>}
                 {activeTab === 'tab-promo' && <TabErrorBoundary tabName="Promo Codes Tab"><PromoTab {...tabProps} /></TabErrorBoundary>}

@@ -184,4 +184,7 @@ export type AdminPanelTabProps = Record<string, any> & {
     handleDropPayment?: any;
     handleDragOverPayment?: any;
     processAndUploadPayment?: any;
+    allDisputes?: any[];
+    fetchDisputes?: any;
+    handleResolveDispute?: any;
 };
