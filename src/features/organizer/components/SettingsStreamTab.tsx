@@ -192,18 +192,29 @@ export const SettingsStreamTab: React.FC<SettingsStreamTabProps> = ({
               />
             </div>
 
-            {/* Discord Webhook URL */}
+            {/* Discord Community Link */}
             <div>
               <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                <Link2 className="w-3.5 h-3.5 text-brand-400" /> Discord Webhook URL
+                <Link2 className="w-3.5 h-3.5 text-brand-400" /> Discord Server / Community Link
               </label>
               <input
-                type="url"
+                type="text"
                 value={discord}
                 onChange={(e) => setDiscord(e.target.value)}
-                placeholder="https://discord.com/api/webhooks/..."
-                className="w-full bg-black border border-slate-800 rounded-lg p-3 text-sm font-mono text-white placeholder-gray-600 focus-visible:outline-none focus:border-brand-500 transition-colors"
+                placeholder="https://discord.gg/your-community or username"
+                className="w-full bg-black border border-slate-800 rounded-lg p-3 text-sm text-white placeholder-gray-600 focus-visible:outline-none focus:border-brand-500 transition-colors"
               />
+            </div>
+
+            {/* Central Discord Webhook Automation Notice */}
+            <div className="p-4 bg-[#5865F2]/10 border border-[#5865F2]/20 rounded-xl space-y-1">
+              <div className="text-xs font-bold text-white flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                <span>Automated Official Discord Broadcasting</span>
+              </div>
+              <p className="text-[11px] text-gray-400 font-semibold leading-relaxed">
+                All your tournaments &amp; scrims automatically broadcast to the official NexPlay Discord channels (Announcements, Registrations, Groups, Match Schedules, Results, Champions) managed centrally by the Platform Admin.
+              </p>
             </div>
 
             {/* Save Button */}
