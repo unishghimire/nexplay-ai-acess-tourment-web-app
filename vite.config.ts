@@ -31,7 +31,6 @@ export default defineConfig({
           if (normalizedId.includes('/react-router') || normalizedId.includes('/@remix-run')) return 'router-vendor';
           if (normalizedId.includes('/lucide-react')) return 'icons-vendor';
           if (normalizedId.includes('/react-helmet-async')) return 'helmet-vendor';
-          if (normalizedId.includes('/react-google-recaptcha') || normalizedId.includes('/recaptcha')) return 'recaptcha-vendor';
           if (normalizedId.includes('/@firebase/firestore') || normalizedId.includes('/firebase/firestore')) return 'firebase-firestore';
           if (normalizedId.includes('/@firebase/auth') || normalizedId.includes('/firebase/auth')) return 'firebase-auth';
           if (normalizedId.includes('/@firebase/analytics') || normalizedId.includes('/firebase/analytics')) return 'firebase-analytics';
