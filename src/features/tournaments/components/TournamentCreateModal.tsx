@@ -347,6 +347,30 @@ const TournamentCreateModal: React.FC<TournamentCreateModalProps> = ({ isOpen, o
             });
         });
         await commitFirestoreBatches(db, notificationOperations);
+
+        // Automatically announce new tournament to main Discord server if configured by admin
+        try {
+          const { announceNewTournament } = await import('../../../shared/services/DiscordService');
+          announceNewTournament({
+            id: docRef.id,
+            title: formData.title,
+            game: formData.game,
+            teamType: formData.teamType as any,
+            type: formData.type as any,
+            map: formData.map,
+            startTime: formData.startTime,
+            prizePool: formData.prizePool,
+            entryFee: formData.entryFee,
+            currentPlayers: 0,
+            slots: formData.slots,
+            bannerUrl: formData.bannerUrl,
+            status: 'upcoming',
+            createdAt: new Date(),
+            hostUid: user.uid,
+          } as any).catch(err => console.warn('Auto Discord announcement deferred:', err));
+        } catch (discordErr) {
+          // ignore background discord notification error
+        }
       }
       
       onSuccess();

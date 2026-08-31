@@ -109,6 +109,8 @@ const DiscordAdminPanel: React.FC<DiscordAdminPanelProps> = ({ allTournaments, s
         }
     };
 
+    const tournamentList = allTournaments.filter(t => t.matchType !== 'scrims');
+
     const announcements = [
         { type: 'tournament_published', label: 'Publish',     color: 'text-[#5865F2] bg-[#5865F2]/10 border-[#5865F2]/20 hover:bg-[#5865F2]/20' },
         { type: 'tournament_live',      label: '🔴 Live',     color: 'text-red-400 bg-red-500/10 border-red-500/20 hover:bg-red-500/20' },
@@ -116,7 +118,6 @@ const DiscordAdminPanel: React.FC<DiscordAdminPanelProps> = ({ allTournaments, s
         { type: 'group_published',      label: 'Group Draw',  color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20 hover:bg-yellow-500/20' },
         { type: 'game_start',           label: 'Match Start', color: 'text-pink-400 bg-pink-500/10 border-pink-500/20 hover:bg-pink-500/20' },
         { type: 'game_time',            label: 'Reminder',    color: 'text-purple-400 bg-purple-500/10 border-purple-500/20 hover:bg-purple-500/20' },
-        { type: 'scrim_published',      label: 'Scrim Post',  color: 'text-brand-400 bg-brand-500/10 border-brand-500/20 hover:bg-brand-500/20' },
     ];
 
     return (
@@ -126,17 +127,26 @@ const DiscordAdminPanel: React.FC<DiscordAdminPanelProps> = ({ allTournaments, s
                     <div className="p-2 bg-[#5865F2]/10 border border-[#5865F2]/20 rounded-xl">
                         <Send className="w-5 h-5 text-[#5865F2]" />
                     </div>
-                    Discord Announcements
+                    Main Discord Tournament Announcements
                 </h2>
                 <p className="text-xs text-gray-500 font-bold uppercase tracking-widest mt-2">
-                    Send tournament updates directly to the Nexplay Discord server
+                    Automated & manual broadcasts to the official NexPlay Discord server
                 </p>
+            </div>
+
+            {/* Automation Status Banner */}
+            <div className="p-5 bg-[#5865F2]/10 border border-[#5865F2]/20 rounded-2xl flex items-center gap-4">
+                <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse shrink-0" />
+                <div className="text-xs text-gray-300 font-bold leading-relaxed">
+                    <span className="text-white font-black uppercase tracking-wider block mb-0.5">Automatic Dispatch Active</span>
+                    When configured by the Platform Admin in <span className="text-[#5865F2] font-mono">Settings &rarr; Site Configuration</span>, all new tournaments, status changes, group draws, and match starts are automatically broadcast to your Discord community.
+                </div>
             </div>
 
             {/* Tournament selector */}
             <div className="bg-card/50 p-6 rounded-3xl border border-gray-800 space-y-4">
                 <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest block">
-                    Select Tournament or Scrim
+                    Select Tournament
                 </label>
                 <select
                     value={selectedTournamentId}
@@ -145,9 +155,9 @@ const DiscordAdminPanel: React.FC<DiscordAdminPanelProps> = ({ allTournaments, s
                     className="w-full bg-black border border-gray-700 rounded-2xl px-5 py-4 text-white text-sm font-bold focus:border-[#5865F2] focus-visible:outline-none transition"
                 >
                     <option value="">— Choose a tournament —</option>
-                    {allTournaments.map(t => (
+                    {tournamentList.map(t => (
                         <option key={t.id} value={t.id}>
-                            [{t.status.toUpperCase()}] {t.title} ({t.matchType === 'scrims' ? '#scrims' : '#tournaments'})
+                            [{t.status.toUpperCase()}] {t.title} ({t.game})
                         </option>
                     ))}
                 </select>
@@ -162,7 +172,7 @@ const DiscordAdminPanel: React.FC<DiscordAdminPanelProps> = ({ allTournaments, s
                         <div className="min-w-0">
                             <div className="text-white font-black text-sm truncate">{selectedTournament.title}</div>
                             <div className="text-[10px] text-gray-500 font-black uppercase tracking-widest">
-                                {selectedTournament.game} · {selectedTournament.teamType} · Posting to #{selectedTournament.matchType === 'scrims' ? 'scrims' : 'tournaments'}
+                                {selectedTournament.game} · {selectedTournament.teamType} · Main Channel (#tournaments)
                             </div>
                         </div>
                         <span className={`ml-auto shrink-0 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
@@ -179,9 +189,9 @@ const DiscordAdminPanel: React.FC<DiscordAdminPanelProps> = ({ allTournaments, s
             {/* Announce buttons */}
             <div className="bg-card/50 p-6 rounded-3xl border border-gray-800">
                 <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">
-                    Announcement Type
+                    Manual Announcement Trigger
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                     {announcements.map(a => (
                         <button type="button"
                             key={a.type}
@@ -203,13 +213,13 @@ const DiscordAdminPanel: React.FC<DiscordAdminPanelProps> = ({ allTournaments, s
             {/* Setup guide */}
             <div className="bg-[#5865F2]/5 border border-[#5865F2]/15 p-6 rounded-3xl space-y-3">
                 <div className="text-[10px] font-black text-[#5865F2] uppercase tracking-widest flex items-center gap-2">
-                    <Info className="w-4 h-4" /> Setup Guide
+                    <Info className="w-4 h-4" /> Setup Instructions
                 </div>
                 <ol className="text-xs text-gray-400 font-bold space-y-2 list-decimal list-inside">
-                    <li>Go to your Discord Server Settings → Integrations → Webhooks</li>
-                    <li>Create a webhook for your <span className="text-white">#tournaments</span> channel → copy URL → set <span className="font-mono text-brand-400">DISCORD_WEBHOOK_TOURNAMENTS</span> in <span className="font-mono">.env</span></li>
-                    <li>Create a webhook for your <span className="text-white">#scrims</span> channel → copy URL → set <span className="font-mono text-brand-400">DISCORD_WEBHOOK_SCRIMS</span> in <span className="font-mono">.env</span></li>
-                    <li>Restart the server — webhooks activate immediately</li>
+                    <li>Go to your Discord Server Settings &rarr; Integrations &rarr; Webhooks.</li>
+                    <li>Create a webhook for your <span className="text-white">#tournaments</span> channel and copy the Webhook URL.</li>
+                    <li>Paste the URL into <span className="text-white font-mono">Admin Panel &rarr; Settings &rarr; Main Discord Server Integration</span> and click <span className="text-brand-400">Save All Settings</span>.</li>
+                    <li>Click <span className="text-white">"Test Ping"</span> to verify real-time delivery to your Discord channel.</li>
                 </ol>
             </div>
         </div>

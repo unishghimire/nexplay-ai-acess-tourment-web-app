@@ -481,6 +481,8 @@ export interface SiteSettings {
     isOrgFormOpen: boolean;
     orgFormDescription?: string;
     maintenanceMode?: boolean;
+    discordWebhookTournaments?: string;
+    autoDiscordTournamentAnnouncements?: boolean;
     updatedAt: Timestamp | any;
 }
 

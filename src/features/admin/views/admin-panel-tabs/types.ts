@@ -144,6 +144,10 @@ export type AdminPanelTabProps = Record<string, any> & {
     setSlideTitle?: any;
     setSupportEmail?: any;
     setSupportPhone?: any;
+    discordWebhookTournaments?: any;
+    setDiscordWebhookTournaments?: any;
+    autoDiscordTournamentAnnouncements?: any;
+    setAutoDiscordTournamentAnnouncements?: any;
     showToast?: any;
     siteSettings?: any;
     slideBtnText?: any;

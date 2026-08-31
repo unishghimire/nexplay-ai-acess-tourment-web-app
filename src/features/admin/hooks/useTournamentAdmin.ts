@@ -124,6 +124,17 @@ export function useTournamentAdmin(
             } else {
                 showToast(`Tournament status updated to ${status}`, 'success');
             }
+
+            // Automatic Discord broadcast to main Discord server if configured
+            try {
+                if (status === 'live') {
+                    announceTournamentLive(tournament).catch(() => {});
+                } else if (status === 'completed') {
+                    announceTournamentCompleted(tournament, tournament.winners?.[0]?.username).catch(() => {});
+                }
+            } catch (discordErr) {
+                // non-blocking
+            }
         } catch (error) {
             showToast('Failed to update status', 'error');
             console.error('Status update error:', error);
@@ -223,6 +234,13 @@ export function useTournamentAdmin(
             });
 
             showToast(`Groups generated: ${result.groups.length} groups, ${result.totalAssigned} teams assigned`, 'success');
+
+            // Automatic Discord announcement to main Discord server if configured
+            try {
+                announceGroupDraw({ ...tournament, groups: groupsWithMatches }, groupsWithMatches).catch(() => {});
+            } catch (discordErr) {
+                // non-blocking
+            }
         } catch (error) {
             console.error(error);
             showToast('Failed to generate groups', 'error');

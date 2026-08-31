@@ -115,6 +115,68 @@ export const SettingsTab: React.FC<AdminPanelTabProps> = (props) => {
                                     />
                                 </div>
                             </div>
+
+                            {/* Main Discord Server Integration */}
+                            <h3 className="text-sm font-bold text-[#5865F2] uppercase tracking-widest border-l-2 border-[#5865F2] pl-3 pt-4 flex items-center gap-2">
+                                Main Discord Server Integration
+                            </h3>
+                            <div className="bg-dark p-6 rounded-xl border border-gray-800 space-y-5">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <div className="text-sm text-white font-bold uppercase tracking-wide">Automatic Tournament Announcements</div>
+                                        <p className="text-[10px] text-gray-400 font-bold uppercase mt-0.5">Automatically broadcast tournament updates (Publish, Live, Group Draws, Match Starts, Results) to the main Discord server.</p>
+                                    </div>
+                                    <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-4">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={props.autoDiscordTournamentAnnouncements ?? true} 
+                                            onChange={e => props.setAutoDiscordTournamentAnnouncements?.(e.target.checked)} 
+                                            className="sr-only peer" 
+                                        />
+                                        <div className="w-11 h-6 bg-surface peer-focus:focus-visible:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-colors peer-checked:bg-[#5865F2]"></div>
+                                    </label>
+                                </div>
+
+                                <div>
+                                    <label htmlFor="discord-webhook-url" className="text-xs text-gray-400 uppercase font-bold mb-1.5 flex items-center justify-between">
+                                        <span>Main Discord Webhook URL (#tournaments)</span>
+                                        {props.discordWebhookTournaments?.trim() ? (
+                                            <span className="text-[10px] text-green-400 font-bold bg-green-950/60 border border-green-500/30 px-2 py-0.5 rounded">CONFIGURED</span>
+                                        ) : (
+                                            <span className="text-[10px] text-yellow-400 font-bold bg-yellow-950/60 border border-yellow-500/30 px-2 py-0.5 rounded">NOT SET</span>
+                                        )}
+                                    </label>
+                                    <div className="flex gap-2">
+                                        <input 
+                                            id="discord-webhook-url"
+                                            type="url" 
+                                            value={props.discordWebhookTournaments || ''}
+                                            onChange={e => props.setDiscordWebhookTournaments?.(e.target.value)}
+                                            placeholder="https://discord.com/api/webhooks/..."
+                                            className="w-full bg-surface border border-gray-700 rounded-lg p-3 text-white font-mono text-xs focus:border-[#5865F2] focus-visible:outline-none"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={async () => {
+                                                if (!props.discordWebhookTournaments?.trim()) {
+                                                    props.showToast?.('Please enter a Discord Webhook URL first', 'warning');
+                                                    return;
+                                                }
+                                                const { testDiscordWebhook } = await import('../../../../shared/services/DiscordService');
+                                                props.showToast?.('Sending test announcement to Discord...', 'info');
+                                                const res = await testDiscordWebhook(props.discordWebhookTournaments.trim());
+                                                props.showToast?.(res.message, res.success ? 'success' : 'error');
+                                            }}
+                                            className="px-4 py-3 bg-[#5865F2] hover:bg-[#4752c4] text-white text-xs font-bold uppercase tracking-wider rounded-lg transition shrink-0 shadow-md shadow-[#5865F2]/20"
+                                        >
+                                            Test Ping
+                                        </button>
+                                    </div>
+                                    <p className="text-[10px] text-gray-500 font-bold mt-1.5">
+                                        Paste the Discord channel webhook URL. Once saved, all tournament lifecycle events will be automatically announced to your main Discord community.
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

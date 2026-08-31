@@ -113,26 +113,71 @@ async function sendDiscordWebhook(webhookUrl: string, embed: object, content?: s
   }
 }
 
-router.post('/api/discord/announce', authenticateToken, rateLimit(10, 15 * 60 * 1000), async (req: any, res) => {
+async function getTournamentWebhookUrl(channel: 'tournaments' | 'scrims' = 'tournaments'): Promise<{ url: string | null; enabled: boolean }> {
   try {
-    const { type, data, channel } = req.body as {
+    const settingsSnap = await db.collection('settings').doc('site').get();
+    if (settingsSnap.exists) {
+      const data = settingsSnap.data();
+      if (data?.autoDiscordTournamentAnnouncements === false) {
+        return { url: null, enabled: false };
+      }
+      const url = data?.discordWebhookTournaments?.trim() || data?.discordWebhookUrl?.trim();
+      if (url && (url.startsWith('https://discord.com/api/webhooks/') || url.startsWith('https://discordapp.com/api/webhooks/'))) {
+        return { url, enabled: true };
+      }
+    }
+  } catch (err) {
+    console.warn('[Discord Webhook] Failed to fetch settings/site:', err);
+  }
+  const envUrl = channel === 'scrims' ? (process.env.DISCORD_WEBHOOK_SCRIMS || process.env.DISCORD_WEBHOOK_TOURNAMENTS) : process.env.DISCORD_WEBHOOK_TOURNAMENTS;
+  return { url: envUrl || null, enabled: true };
+}
+
+// POST /api/discord/test — Platform Admin webhook test verification
+router.post('/api/discord/test', authenticateToken, rateLimit(5, 5 * 60 * 1000), async (req: any, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ success: false, message: 'Admin access required.' });
+  }
+  const { webhookUrl } = req.body || {};
+  const config = await getTournamentWebhookUrl();
+  const targetUrl = webhookUrl?.trim() || config.url;
+
+  if (!targetUrl) {
+    return res.status(400).json({ success: false, message: 'No Discord webhook URL provided or configured in settings.' });
+  }
+
+  const testEmbed = {
+    title: '🎮  NexPlay Discord Integration Connected',
+    description: 'This is a test notification confirming that the **Main Discord Tournament Webhook** is configured and operational on NexPlay Esports!',
+    color: 0x5865f2,
+    footer: { text: 'NexPlay Esports Platform • Automatic Announcements Ready' },
+    timestamp: new Date().toISOString(),
+  };
+
+  const sent = await sendDiscordWebhook(targetUrl, testEmbed);
+  if (sent) {
+    return res.json({ success: true, message: 'Test message sent successfully to your Discord server!' });
+  }
+  return res.status(502).json({ success: false, message: 'Discord webhook delivery failed. Please check the Webhook URL permissions in Discord.' });
+});
+
+router.post('/api/discord/announce', authenticateToken, rateLimit(15, 15 * 60 * 1000), async (req: any, res) => {
+  try {
+    const { type, data, channel = 'tournaments' } = req.body as {
       type: DiscordAnnouncementType;
       data: Record<string, any>;
-      channel: 'tournaments' | 'scrims';
+      channel?: 'tournaments' | 'scrims';
     };
 
     if (req.user.role !== 'organizer' && req.user.role !== 'admin') {
       return res.status(403).json({ success: false, message: 'Only organizers and admins can send Discord announcements.' });
     }
-    if (!type || !data || !channel) {
-      return res.status(400).json({ success: false, message: 'type, data, and channel are required.' });
+    if (!type || !data) {
+      return res.status(400).json({ success: false, message: 'type and data are required.' });
     }
-    if (!ANNOUNCEMENT_TYPES.includes(type) || !['tournaments', 'scrims'].includes(channel) ||
+    if (!ANNOUNCEMENT_TYPES.includes(type) ||
         typeof data !== 'object' || Array.isArray(data) || typeof data.tournamentId !== 'string' || data.tournamentId.length > 128) {
       return res.status(400).json({ success: false, message: 'Invalid announcement payload.' });
-    }
-    if ((channel === 'scrims') !== type.startsWith('scrim_')) {
-      return res.status(400).json({ success: false, message: 'Announcement type does not match the requested channel.' });
     }
     if (typeof data.title !== 'string' || data.title.length === 0 || data.title.length > 200) {
       return res.status(400).json({ success: false, message: 'data.title is required and must be a string (max 200 chars).' });
@@ -149,9 +194,14 @@ router.post('/api/discord/announce', authenticateToken, rateLimit(10, 15 * 60 * 
       return res.status(403).json({ success: false, message: 'You can only announce your own tournaments.' });
     }
 
-    const webhookUrl = channel === 'scrims' ? process.env.DISCORD_WEBHOOK_SCRIMS : process.env.DISCORD_WEBHOOK_TOURNAMENTS;
+    const webhookConfig = await getTournamentWebhookUrl(channel);
+    if (!webhookConfig.enabled) {
+      return res.json({ success: true, message: 'Discord announcements are currently disabled in Admin Site Settings.' });
+    }
+
+    const webhookUrl = webhookConfig.url;
     if (!webhookUrl) {
-      return res.status(503).json({ success: false, message: `Discord webhook for #${channel} is not configured. Add DISCORD_WEBHOOK_${channel.toUpperCase()} to your .env file.` });
+      return res.status(503).json({ success: false, message: 'Main Discord tournament webhook is not configured. Please set it in Admin Panel -> Settings.' });
     }
 
     const embed = buildDiscordEmbed(type, data);
@@ -165,7 +215,7 @@ router.post('/api/discord/announce', authenticateToken, rateLimit(10, 15 * 60 * 
           sentBy: req.user.userId, sentAt: admin.firestore.FieldValue.serverTimestamp(),
         });
       } catch (logErr) { console.warn('[Discord Log] Firestore log failed:', logErr); }
-      return res.json({ success: true, message: `Announcement sent to #${channel}` });
+      return res.json({ success: true, message: 'Tournament update broadcast to main Discord server' });
     }
     return res.status(502).json({ success: false, message: 'Discord webhook delivery failed. Check webhook URL and Discord server settings.' });
   } catch (error: any) {

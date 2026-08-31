@@ -152,3 +152,24 @@ export const announceScrimCompleted = (t: Tournament) =>
         tournamentId: t.id,
         title: t.title,
     }, 'scrims');
+
+/** Test the Main Discord Webhook Connection */
+export const testDiscordWebhook = async (webhookUrl?: string): Promise<{ success: boolean; message: string }> => {
+    const token = await auth.currentUser?.getIdToken();
+    if (!token) return { success: false, message: 'Not authenticated.' };
+
+    try {
+        const res = await fetch('/api/discord/test', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({ webhookUrl }),
+        });
+        const json = await res.json();
+        return { success: json.success, message: json.message };
+    } catch (err: any) {
+        return { success: false, message: err.message || 'Failed to connect to backend test endpoint' };
+    }
+};
