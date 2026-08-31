@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, OAuthProvider, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { getFirestore, enableNetwork, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
 import { getDatabase, Database } from 'firebase/database';
 import { getAnalytics, isSupported } from 'firebase/analytics';
@@ -9,6 +9,10 @@ import firebaseConfig from '../../../firebase-applet-config.json';
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
+
+export const appleProvider = new OAuthProvider('apple.com');
+appleProvider.addScope('email');
+appleProvider.addScope('name');
 
 // Initialize Realtime Database (RTDB) Singleton
 const rtdbUrl = (firebaseConfig as any).databaseURL || `https://${(firebaseConfig as any).projectId || 'nexplayorg-app'}-default-rtdb.firebaseio.com`;

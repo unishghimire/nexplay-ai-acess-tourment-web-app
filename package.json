@@ -16,6 +16,8 @@
     "db:clean": "tsx tools/cleanup-legacy-data.ts --clean",
     "deploy:hosting": "npm run build && firebase deploy --only hosting",
     "deploy:firestore-rules": "firebase deploy --only firestore:rules",
+    "deploy:database": "firebase deploy --only database",
+    "deploy:database-rules": "firebase deploy --only database",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
     "type-check": "tsc --noEmit",

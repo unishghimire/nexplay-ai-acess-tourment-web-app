@@ -4,6 +4,7 @@ import { onAuthStateChanged, signOut, getRedirectResult, User as FirebaseUser } 
 import { db, auth } from '../config/firebase';
 import { UserProfile } from '../types/types';
 import { ensureUserDocument, ensurePublicProfile } from '../services/userProfileService';
+import { useUserPresence } from '../hooks/useUserPresence';
 
 export interface AuthUser {
     uid: string;
@@ -91,6 +92,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [authError, setAuthError] = useState<string | null>(null);
     const firebaseUserRef = useRef<FirebaseUser | null>(null);
     const initInFlightRef = useRef(false);
+
+    // Sync live user presence to Firebase Realtime Database
+    useUserPresence();
 
     const logout = async () => {
         if (user) {

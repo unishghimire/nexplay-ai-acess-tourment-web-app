@@ -7,7 +7,7 @@ import { motion } from 'motion/react';
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, CheckCircle, XCircle, ShieldCheck, Phone, Hash } from 'lucide-react';
 import { createUserWithEmailAndPassword, sendEmailVerification, signInWithRedirect, signInWithPopup, getRedirectResult, updateProfile } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, db, googleProvider } from '../../../shared/config/firebase';
+import { auth, db, googleProvider, appleProvider } from '../../../shared/config/firebase';
 import { isSafeInternalPath } from '../../../shared/utils/utils';
 import { buildUserDocument, buildPublicProfile } from '../../../shared/services/userProfileService';
 import { executeRecaptchaEnterprise } from '../../../shared/utils/recaptchaEnterprise';
@@ -24,6 +24,7 @@ const Register: React.FC = () => {
     const [agreeTerms, setAgreeTerms] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+    const [isAppleLoading, setIsAppleLoading] = useState(false);
     const [error, setError] = useState('');
     const [captchaValue, setCaptchaValue] = useState<string | null>(null);
     const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY?.trim();
@@ -61,24 +62,26 @@ const Register: React.FC = () => {
     // If profile initialization fails, release the loading state so the user can
     // retry instead of staring at an indefinite spinner.
     useEffect(() => {
-        if (authError && (isLoading || isGoogleLoading)) {
+        if (authError && (isLoading || isGoogleLoading || isAppleLoading)) {
             setIsLoading(false);
             setIsGoogleLoading(false);
+            setIsAppleLoading(false);
         }
-    }, [authError, isLoading, isGoogleLoading]);
+    }, [authError, isLoading, isGoogleLoading, isAppleLoading]);
 
     // Safety net: if registration succeeded but the auth state never settles,
     // unblock the form after a bounded wait instead of leaving it stuck in loading.
     useEffect(() => {
-        if ((!isLoading && !isGoogleLoading) || user || authLoading || authError) return;
+        if ((!isLoading && !isGoogleLoading && !isAppleLoading) || user || authLoading || authError) return;
         const timer = setTimeout(() => {
             submittingRef.current = false;
             setIsLoading(false);
             setIsGoogleLoading(false);
+            setIsAppleLoading(false);
             setError('Account creation could not be confirmed. Please try again.');
         }, 10000);
         return () => clearTimeout(timer);
-    }, [isLoading, isGoogleLoading, user, authLoading, authError]);
+    }, [isLoading, isGoogleLoading, isAppleLoading, user, authLoading, authError]);
 
     useEffect(() => {
         const feedback: string[] = [];
@@ -100,40 +103,42 @@ const Register: React.FC = () => {
         setPasswordFeedback(feedback);
     }, [password]);
 
-    // Handle the result of signInWithRedirect (fires after the page reloads from Google OAuth).
-    // Only set the loading state if we actually initiated a redirect (flag set in handleGoogleSignIn).
-    // ponytail: mirrors Login.tsx redirect handling — AuthContext handles profile provisioning.
+    // Handle the result of signInWithRedirect (fires after the page reloads from OAuth).
     useEffect(() => {
         let cancelled = false;
-        const pendingRedirect = sessionStorage.getItem('google-redirect-pending') === 'true';
-        if (pendingRedirect) {
-            setIsGoogleLoading(true);
-        }
+        const pendingGoogle = sessionStorage.getItem('google-redirect-pending') === 'true';
+        const pendingApple = sessionStorage.getItem('apple-redirect-pending') === 'true';
+        if (pendingGoogle) setIsGoogleLoading(true);
+        if (pendingApple) setIsAppleLoading(true);
+
         getRedirectResult(auth)
             .then((result) => {
                 if (cancelled) return;
                 sessionStorage.removeItem('google-redirect-pending');
+                sessionStorage.removeItem('apple-redirect-pending');
                 if (result) {
                     showToast('Welcome to Nexplay!', 'success');
                     setRedirectTarget(getRedirectTarget());
                     // Keep loading — the auth state change will navigate once settled.
                 } else {
                     setIsGoogleLoading(false);
+                    setIsAppleLoading(false);
                 }
             })
             .catch((err: any) => {
                 if (cancelled) return;
                 sessionStorage.removeItem('google-redirect-pending');
+                sessionStorage.removeItem('apple-redirect-pending');
                 setIsGoogleLoading(false);
-                console.error('Google redirect result error:', err?.code, err);
-                const googleErrMap: Record<string, string> = {
-                    'auth/unauthorized-domain': 'This domain is not authorised in Firebase. Add it to Firebase Console → Authentication → Authorized Domains.',
-                    'auth/operation-not-allowed': 'Google Sign-In is not enabled. Enable it in Firebase Console → Authentication → Sign-in method.',
-                    'auth/account-exists-with-different-credential': 'An account already exists with this email using a different sign-in method.',
+                setIsAppleLoading(false);
+                console.error('Social Sign-In redirect error:', err?.code, err);
+                const authErrMap: Record<string, string> = {
+                    'auth/unauthorized-domain': 'This domain is not authorised in Firebase. Add it in Firebase Console → Authentication → Authorized Domains.',
+                    'auth/operation-not-allowed': 'This sign-in method is not enabled in Firebase Console.',
                     'auth/network-request-failed': 'Network error. Check your connection and try again.',
                     'auth/internal-error': 'An internal error occurred. Please try again.',
                 };
-                const errMsg = googleErrMap[err?.code] || `Google Sign-In failed (${err?.code || 'unknown'}). Please try again.`;
+                const errMsg = authErrMap[err?.code] || `Sign-In failed (${err?.code || 'unknown'}). Please try again.`;
                 setError(errMsg);
                 showToast(errMsg, 'error');
             });
@@ -264,6 +269,42 @@ const Register: React.FC = () => {
                 'auth/internal-error': 'An internal error occurred. Please try again.',
             };
             const errMsg = googleErrMap[err?.code] || `Google Sign-In failed (${err?.code || 'unknown'}). Please try again.`;
+            setError(errMsg);
+            showToast(errMsg, 'error');
+        }
+    };
+
+    const handleAppleSignIn = async () => {
+        if (submittingRef.current || user) return;
+        setError('');
+        submittingRef.current = true;
+        setIsAppleLoading(true);
+
+        try {
+            try {
+                await signInWithPopup(auth, appleProvider);
+            } catch (popupErr: any) {
+                if (popupErr?.code === 'auth/popup-blocked' || popupErr?.code === 'auth/cancelled-popup-request') {
+                    sessionStorage.setItem('apple-redirect-pending', 'true');
+                    await signInWithRedirect(auth, appleProvider);
+                } else {
+                    throw popupErr;
+                }
+            }
+        } catch (err: any) {
+            submittingRef.current = false;
+            setIsAppleLoading(false);
+            if (err?.code === 'auth/popup-closed-by-user' || err?.code === 'auth/cancelled-popup-request') {
+                return;
+            }
+            console.error('Apple Sign-In redirect error:', err?.code, err);
+            const appleErrMap: Record<string, string> = {
+                'auth/unauthorized-domain': 'This domain is not authorised in Firebase. Add it in Firebase Console → Authentication → Authorized Domains.',
+                'auth/operation-not-allowed': 'Apple Sign-In is not enabled. Enable it in Firebase Console → Authentication → Sign-in method → Apple.',
+                'auth/network-request-failed': 'Network error. Check your connection and try again.',
+                'auth/internal-error': 'An internal error occurred. Please try again.',
+            };
+            const errMsg = appleErrMap[err?.code] || `Apple Sign-In failed (${err?.code || 'unknown'}). Please try again.`;
             setError(errMsg);
             showToast(errMsg, 'error');
         }
@@ -530,38 +571,58 @@ const Register: React.FC = () => {
                             <div className="flex-1 border-t border-gray-800"></div>
                         </div>
 
-                        <button
-                            type="button"
-                            onClick={handleGoogleSignIn}
-                            disabled={isLoading || isGoogleLoading || !!user}
-                            className="w-full flex items-center justify-center py-5 px-6 border border-gray-800 rounded-2xl bg-black text-sm font-black text-white hover:bg-card focus:focus-visible:outline-none transition disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-widest"
-                        >
-                            {isGoogleLoading ? (
-                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                            ) : (
-                                <>
-                                    <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
-                                        <path
-                                            fill="currentColor"
-                                            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                                        />
-                                        <path
-                                            fill="#34A853"
-                                            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                                        />
-                                        <path
-                                            fill="#FBBC05"
-                                            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                                        />
-                                        <path
-                                            fill="#EA4335"
-                                            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                                        />
-                                    </svg>
-                                    Google
-                                </>
-                            )}
-                        </button>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <button
+                                type="button"
+                                onClick={handleGoogleSignIn}
+                                disabled={isLoading || isGoogleLoading || isAppleLoading || !!user}
+                                className="w-full flex items-center justify-center py-4 px-4 border border-gray-800 rounded-2xl bg-black text-xs font-black text-white hover:bg-card focus:focus-visible:outline-none transition disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-widest"
+                            >
+                                {isGoogleLoading ? (
+                                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                ) : (
+                                    <>
+                                        <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
+                                            <path
+                                                fill="currentColor"
+                                                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                                            />
+                                            <path
+                                                fill="#34A853"
+                                                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                                            />
+                                            <path
+                                                fill="#FBBC05"
+                                                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                                            />
+                                            <path
+                                                fill="#EA4335"
+                                                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                                            />
+                                        </svg>
+                                        Google
+                                    </>
+                                )}
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={handleAppleSignIn}
+                                disabled={isLoading || isGoogleLoading || isAppleLoading || !!user}
+                                className="w-full flex items-center justify-center py-4 px-4 border border-gray-800 rounded-2xl bg-black text-xs font-black text-white hover:bg-card focus:focus-visible:outline-none transition disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-widest"
+                            >
+                                {isAppleLoading ? (
+                                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                ) : (
+                                    <>
+                                        <svg className="w-4 h-4 mr-2 fill-current" viewBox="0 0 24 24">
+                                            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.62-.75 1.04-1.8 0.92-2.85-.9.04-1.99.6-2.63 1.35-.57.65-1.07 1.72-.94 2.74 1 .08 2.03-.49 2.65-1.24z"/>
+                                        </svg>
+                                        Apple
+                                    </>
+                                )}
+                            </button>
+                        </div>
                     </div>
 
                     <div className="mt-10 pt-8 border-t border-gray-800 text-center">

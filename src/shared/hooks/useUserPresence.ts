@@ -14,43 +14,62 @@ export interface UserPresenceState {
  */
 export function useUserPresence(activeTournamentId?: string) {
   useEffect(() => {
-    const user = auth.currentUser;
-    if (!user) return;
+    let unsubscribeConnected: (() => void) | null = null;
+    let currentUid: string | null = null;
 
-    const userPresenceRef = ref(rtdb, `presence/${user.uid}`);
-    const connectedRef = ref(rtdb, '.info/connected');
+    const unsubscribeAuth = auth.onAuthStateChanged((user) => {
+      // Clean up previous user listener
+      if (unsubscribeConnected) {
+        unsubscribeConnected();
+        unsubscribeConnected = null;
+      }
 
-    const unsubscribe = onValue(connectedRef, (snapshot) => {
-      if (snapshot.val() === false) return;
+      if (!user) {
+        currentUid = null;
+        return;
+      }
 
-      // Queue offline status on disconnect on the Firebase server
-      onDisconnect(userPresenceRef)
-        .set({
-          status: 'offline',
-          lastSeen: serverTimestamp(),
-        })
-        .then(() => {
-          // Set current active online status
-          set(userPresenceRef, {
-            status: 'online',
-            activeTournamentId: activeTournamentId || null,
+      currentUid = user.uid;
+      const userPresenceRef = ref(rtdb, `presence/${user.uid}`);
+      const connectedRef = ref(rtdb, '.info/connected');
+
+      unsubscribeConnected = onValue(connectedRef, (snapshot) => {
+        if (snapshot.val() === false) return;
+
+        // Queue offline status on disconnect on the Firebase server
+        onDisconnect(userPresenceRef)
+          .set({
+            status: 'offline',
             lastSeen: serverTimestamp(),
+          })
+          .then(() => {
+            // Set current active online status
+            set(userPresenceRef, {
+              status: 'online',
+              activeTournamentId: activeTournamentId || null,
+              lastSeen: serverTimestamp(),
+            });
+          })
+          .catch((err) => {
+            console.warn('Could not establish onDisconnect presence hook:', err);
           });
-        })
-        .catch((err) => {
-          console.warn('Could not establish onDisconnect presence hook:', err);
-        });
+      });
     });
 
     return () => {
-      unsubscribe();
-      // On voluntary component unmount, mark as offline if needed
-      set(userPresenceRef, {
-        status: 'offline',
-        lastSeen: Date.now(),
-      }).catch(() => {
-        // Suppress background unmount disconnect errors
-      });
+      unsubscribeAuth();
+      if (unsubscribeConnected) {
+        unsubscribeConnected();
+      }
+      if (currentUid) {
+        const userPresenceRef = ref(rtdb, `presence/${currentUid}`);
+        set(userPresenceRef, {
+          status: 'offline',
+          lastSeen: Date.now(),
+        }).catch(() => {
+          // Suppress background unmount disconnect errors
+        });
+      }
     };
   }, [activeTournamentId]);
 }
