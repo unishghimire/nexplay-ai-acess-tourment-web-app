@@ -472,6 +472,33 @@ export interface Game {
     };
 }
 
+export interface TournamentWebhooks {
+    announcement?: string;    // Tournament Announcement Webhook
+    registration?: string;    // Registration Announcement Webhook
+    group?: string;           // Group Draw Webhook
+    matchSchedule?: string;   // Match Schedule & Room Details Webhook
+    result?: string;          // Match Results Webhook
+    champion?: string;        // Champion Announcement Webhook
+}
+
+export interface ScrimWebhooks {
+    announcement?: string;    // Scrim Announcement Webhook
+    registration?: string;    // Scrim Registration / Slot Booking Webhook
+    group?: string;           // Scrim Group / Lobby Webhook
+    matchSchedule?: string;   // Scrim Match Schedule & Room Details Webhook
+    result?: string;          // Scrim Results Webhook
+    champion?: string;        // Scrim Champion / Winner Webhook
+}
+
+export interface DiscordWebhooksConfig {
+    tournaments?: TournamentWebhooks;
+    scrims?: ScrimWebhooks;
+    autoAnnounce?: {
+        tournaments?: boolean;
+        scrims?: boolean;
+    };
+}
+
 export interface SiteSettings {
     minWithdrawal: number;
     supportEmail: string;
@@ -481,7 +508,9 @@ export interface SiteSettings {
     isOrgFormOpen: boolean;
     orgFormDescription?: string;
     maintenanceMode?: boolean;
+    discordWebhooks?: DiscordWebhooksConfig;
     discordWebhookTournaments?: string;
+    discordWebhookScrims?: string;
     autoDiscordTournamentAnnouncements?: boolean;
     updatedAt: Timestamp | any;
 }

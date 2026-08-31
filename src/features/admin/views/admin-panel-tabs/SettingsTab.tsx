@@ -118,65 +118,13 @@ export const SettingsTab: React.FC<AdminPanelTabProps> = (props) => {
 
                             {/* Main Discord Server Integration */}
                             <h3 className="text-sm font-bold text-[#5865F2] uppercase tracking-widest border-l-2 border-[#5865F2] pl-3 pt-4 flex items-center gap-2">
-                                Main Discord Server Integration
+                                Discord Server Multi-Webhook Automation
                             </h3>
-                            <div className="bg-dark p-6 rounded-xl border border-gray-800 space-y-5">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <div className="text-sm text-white font-bold uppercase tracking-wide">Automatic Tournament Announcements</div>
-                                        <p className="text-[10px] text-gray-400 font-bold uppercase mt-0.5">Automatically broadcast tournament updates (Publish, Live, Group Draws, Match Starts, Results) to the main Discord server.</p>
-                                    </div>
-                                    <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-4">
-                                        <input 
-                                            type="checkbox" 
-                                            checked={props.autoDiscordTournamentAnnouncements ?? true} 
-                                            onChange={e => props.setAutoDiscordTournamentAnnouncements?.(e.target.checked)} 
-                                            className="sr-only peer" 
-                                        />
-                                        <div className="w-11 h-6 bg-surface peer-focus:focus-visible:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-colors peer-checked:bg-[#5865F2]"></div>
-                                    </label>
-                                </div>
-
-                                <div>
-                                    <label htmlFor="discord-webhook-url" className="text-xs text-gray-400 uppercase font-bold mb-1.5 flex items-center justify-between">
-                                        <span>Main Discord Webhook URL (#tournaments)</span>
-                                        {props.discordWebhookTournaments?.trim() ? (
-                                            <span className="text-[10px] text-green-400 font-bold bg-green-950/60 border border-green-500/30 px-2 py-0.5 rounded">CONFIGURED</span>
-                                        ) : (
-                                            <span className="text-[10px] text-yellow-400 font-bold bg-yellow-950/60 border border-yellow-500/30 px-2 py-0.5 rounded">NOT SET</span>
-                                        )}
-                                    </label>
-                                    <div className="flex gap-2">
-                                        <input 
-                                            id="discord-webhook-url"
-                                            type="url" 
-                                            value={props.discordWebhookTournaments || ''}
-                                            onChange={e => props.setDiscordWebhookTournaments?.(e.target.value)}
-                                            placeholder="https://discord.com/api/webhooks/..."
-                                            className="w-full bg-surface border border-gray-700 rounded-lg p-3 text-white font-mono text-xs focus:border-[#5865F2] focus-visible:outline-none"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={async () => {
-                                                if (!props.discordWebhookTournaments?.trim()) {
-                                                    props.showToast?.('Please enter a Discord Webhook URL first', 'warning');
-                                                    return;
-                                                }
-                                                const { testDiscordWebhook } = await import('../../../../shared/services/DiscordService');
-                                                props.showToast?.('Sending test announcement to Discord...', 'info');
-                                                const res = await testDiscordWebhook(props.discordWebhookTournaments.trim());
-                                                props.showToast?.(res.message, res.success ? 'success' : 'error');
-                                            }}
-                                            className="px-4 py-3 bg-[#5865F2] hover:bg-[#4752c4] text-white text-xs font-bold uppercase tracking-wider rounded-lg transition shrink-0 shadow-md shadow-[#5865F2]/20"
-                                        >
-                                            Test Ping
-                                        </button>
-                                    </div>
-                                    <p className="text-[10px] text-gray-500 font-bold mt-1.5">
-                                        Paste the Discord channel webhook URL. Once saved, all tournament lifecycle events will be automatically announced to your main Discord community.
-                                    </p>
-                                </div>
-                            </div>
+                            <DiscordSettingsCard 
+                                discordWebhooks={props.discordWebhooks}
+                                setDiscordWebhooks={props.setDiscordWebhooks}
+                                showToast={props.showToast}
+                            />
                         </div>
                     </div>
 
@@ -189,5 +137,202 @@ export const SettingsTab: React.FC<AdminPanelTabProps> = (props) => {
                         </button>
                     </div>
                 </div>
+    );
+};
+
+interface DiscordSettingsCardProps {
+    discordWebhooks?: any;
+    setDiscordWebhooks?: any;
+    showToast?: (msg: string, type: 'success' | 'error' | 'info' | 'warning') => void;
+}
+
+const DiscordSettingsCard: React.FC<DiscordSettingsCardProps> = ({ discordWebhooks, setDiscordWebhooks, showToast }) => {
+    const [activeTab, setActiveTab] = React.useState<'tournaments' | 'scrims'>('tournaments');
+    const [testingCategory, setTestingCategory] = React.useState<string | null>(null);
+
+    const activeWebhooks = discordWebhooks?.[activeTab] || {};
+    const isAutoEnabled = discordWebhooks?.autoAnnounce?.[activeTab] ?? true;
+
+    const updateWebhook = (category: string, value: string) => {
+        setDiscordWebhooks?.((prev: any) => ({
+            ...(prev || {}),
+            [activeTab]: {
+                ...(prev?.[activeTab] || {}),
+                [category]: value,
+            }
+        }));
+    };
+
+    const toggleAutoAnnounce = (enabled: boolean) => {
+        setDiscordWebhooks?.((prev: any) => ({
+            ...(prev || {}),
+            autoAnnounce: {
+                ...(prev?.autoAnnounce || {}),
+                [activeTab]: enabled,
+            }
+        }));
+    };
+
+    const handleTest = async (category: string, url?: string) => {
+        const targetUrl = url?.trim() || activeWebhooks[category]?.trim();
+        if (!targetUrl) {
+            showToast?.(`Please enter a webhook URL for ${category} first.`, 'warning');
+            return;
+        }
+        setTestingCategory(category);
+        showToast?.(`Sending test ping to Discord [${category}]...`, 'info');
+        try {
+            const { testSpecificDiscordWebhook } = await import('../../../../shared/services/DiscordService');
+            const res = await testSpecificDiscordWebhook(activeTab, category as any, targetUrl);
+            showToast?.(res.message, res.success ? 'success' : 'error');
+        } catch (err: any) {
+            showToast?.(err.message || 'Test delivery failed', 'error');
+        } finally {
+            setTestingCategory(null);
+        }
+    };
+
+    const categories = [
+        {
+            key: 'announcement',
+            title: activeTab === 'tournaments' ? 'Tournament Announcement Webhook' : 'Scrim Announcement Webhook',
+            desc: activeTab === 'tournaments' ? 'Broadcasts when a new tournament is created & opened.' : 'Broadcasts new scrim lobby open for booking.',
+            icon: '📢',
+            placeholder: 'https://discord.com/api/webhooks/... (e.g. #tournament-announcements)'
+        },
+        {
+            key: 'registration',
+            title: activeTab === 'tournaments' ? 'Register Announcement Webhook' : 'Scrim Registration Webhook',
+            desc: 'Broadcasts player / squad registration alerts and live slot counts.',
+            icon: '📝',
+            placeholder: 'https://discord.com/api/webhooks/... (e.g. #registration-feed)'
+        },
+        {
+            key: 'group',
+            title: activeTab === 'tournaments' ? 'Group Draw Webhook' : 'Scrim Lobby / Group Webhook',
+            desc: activeTab === 'tournaments' ? 'Broadcasts group stage drawings and team allocations.' : 'Broadcasts confirmed slot list and player allocations.',
+            icon: '📋',
+            placeholder: 'https://discord.com/api/webhooks/... (e.g. #group-draws)'
+        },
+        {
+            key: 'matchSchedule',
+            title: activeTab === 'tournaments' ? 'Match Schedule & Room Webhook' : 'Scrim Match Schedule Webhook',
+            desc: 'Broadcasts match reminders, countdowns, and room credentials (ID & password).',
+            icon: '⏰',
+            placeholder: 'https://discord.com/api/webhooks/... (e.g. #match-schedule)'
+        },
+        {
+            key: 'result',
+            title: activeTab === 'tournaments' ? 'Result Webhook' : 'Scrim Result Webhook',
+            desc: 'Broadcasts match scoring, kill tallies, and updated round standings.',
+            icon: '📊',
+            placeholder: 'https://discord.com/api/webhooks/... (e.g. #match-results)'
+        },
+        {
+            key: 'champion',
+            title: activeTab === 'tournaments' ? 'Champion Announcement Webhook' : 'Scrim Champion / Winner Webhook',
+            desc: 'Broadcasts grand champions, final rankings, and prize distributions.',
+            icon: '👑',
+            placeholder: 'https://discord.com/api/webhooks/... (e.g. #hall-of-champions)'
+        },
+    ];
+
+    return (
+        <div className="bg-dark p-6 rounded-xl border border-gray-800 space-y-6">
+            {/* Format Switcher */}
+            <div className="flex bg-surface p-1.5 rounded-xl border border-gray-800 gap-1.5">
+                <button
+                    type="button"
+                    onClick={() => setActiveTab('tournaments')}
+                    className={`flex-1 py-2.5 px-4 rounded-lg text-xs font-black uppercase tracking-wider transition ${
+                        activeTab === 'tournaments'
+                            ? 'bg-[#5865F2] text-white shadow-md shadow-[#5865F2]/25'
+                            : 'text-gray-400 hover:text-white'
+                    }`}
+                >
+                    🏆 Tournaments Webhooks
+                </button>
+                <button
+                    type="button"
+                    onClick={() => setActiveTab('scrims')}
+                    className={`flex-1 py-2.5 px-4 rounded-lg text-xs font-black uppercase tracking-wider transition ${
+                        activeTab === 'scrims'
+                            ? 'bg-[#5865F2] text-white shadow-md shadow-[#5865F2]/25'
+                            : 'text-gray-400 hover:text-white'
+                    }`}
+                >
+                    🎯 Scrims Webhooks
+                </button>
+            </div>
+
+            {/* Master Toggle */}
+            <div className="flex items-center justify-between p-4 bg-surface rounded-xl border border-gray-800">
+                <div>
+                    <div className="text-xs text-white font-bold uppercase tracking-wide">
+                        Automatic {activeTab === 'tournaments' ? 'Tournament' : 'Scrim'} Broadcasts
+                    </div>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase mt-0.5">
+                        Automatically dispatch updates across the 6 channels below when lifecycle events occur.
+                    </p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-4">
+                    <input 
+                        type="checkbox" 
+                        checked={isAutoEnabled} 
+                        onChange={e => toggleAutoAnnounce(e.target.checked)} 
+                        className="sr-only peer" 
+                    />
+                    <div className="w-11 h-6 bg-dark peer-focus:focus-visible:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-colors peer-checked:bg-[#5865F2]"></div>
+                </label>
+            </div>
+
+            {/* 6 Granular Webhooks */}
+            <div className="space-y-4">
+                {categories.map(cat => {
+                    const val = activeWebhooks[cat.key] || '';
+                    const isConfigured = val.trim().length > 0;
+                    const isTesting = testingCategory === cat.key;
+
+                    return (
+                        <div key={cat.key} className="p-4 bg-surface rounded-xl border border-gray-800 space-y-2">
+                            <div className="flex items-center justify-between">
+                                <label htmlFor={`webhook-${activeTab}-${cat.key}`} className="text-xs text-white font-bold uppercase flex items-center gap-2">
+                                    <span>{cat.icon}</span>
+                                    <span>{cat.title}</span>
+                                </label>
+                                {isConfigured ? (
+                                    <span className="text-[9px] text-green-400 font-black bg-green-950/60 border border-green-500/30 px-2 py-0.5 rounded uppercase">CONFIGURED</span>
+                                ) : (
+                                    <span className="text-[9px] text-yellow-400 font-black bg-yellow-950/60 border border-yellow-500/30 px-2 py-0.5 rounded uppercase">NOT SET</span>
+                                )}
+                            </div>
+                            <p className="text-[10px] text-gray-400 font-bold">{cat.desc}</p>
+                            <div className="flex gap-2 pt-1">
+                                <input
+                                    id={`webhook-${activeTab}-${cat.key}`}
+                                    type="url"
+                                    value={val}
+                                    onChange={e => updateWebhook(cat.key, e.target.value)}
+                                    placeholder={cat.placeholder}
+                                    className="w-full bg-dark border border-gray-700 rounded-lg p-2.5 text-white font-mono text-xs focus:border-[#5865F2] focus-visible:outline-none"
+                                />
+                                <button
+                                    type="button"
+                                    disabled={isTesting}
+                                    onClick={() => handleTest(cat.key, val)}
+                                    className="px-4 py-2 bg-[#5865F2] hover:bg-[#4752c4] disabled:opacity-50 text-white text-[11px] font-bold uppercase tracking-wider rounded-lg transition shrink-0 flex items-center gap-1.5"
+                                >
+                                    {isTesting ? (
+                                        <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    ) : (
+                                        'Test Ping'
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
     );
 };
