@@ -79,6 +79,7 @@ export type AdminPanelTabProps = Record<string, any> & {
     orgYoutube?: any;
     organizers?: any;
     paymentActive?: any;
+    paymentType?: any;
     paymentCategories?: any;
     paymentCategoryId?: any;
     paymentInstructions?: any;
@@ -187,4 +188,5 @@ export type AdminPanelTabProps = Record<string, any> & {
     allDisputes?: any[];
     fetchDisputes?: any;
     handleResolveDispute?: any;
+    handleSeedDefaultPayments?: any;
 };

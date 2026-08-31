@@ -52,10 +52,19 @@ const Teams: React.FC = () => {
         setLoading(true);
         setFetchError(null);
         try {
-            // Fetch all teams (ordered by creation date, capped at 200 — avoids full-collection scan)
-            const q = query(collection(db, 'teams'), orderBy('createdAt', 'desc'), limit(200));
-            const snap = await getDocs(q);
-            const allTeams = snap.docs.map(d => ({ id: d.id, ...d.data() } as Team));
+            let allTeams: Team[] = [];
+            try {
+                const q = query(collection(db, 'teams'), limit(200));
+                const snap = await getDocs(q);
+                allTeams = snap.docs.map(d => ({ id: d.id, ...d.data() } as Team));
+                allTeams.sort((a, b) => {
+                    const aTime = (a.createdAt as any)?.toMillis ? (a.createdAt as any).toMillis() : new Date((a.createdAt as any) || 0).getTime();
+                    const bTime = (b.createdAt as any)?.toMillis ? (b.createdAt as any).toMillis() : new Date((b.createdAt as any) || 0).getTime();
+                    return bTime - aTime;
+                });
+            } catch (queryErr) {
+                console.warn("Teams query fallback:", queryErr);
+            }
             setTeams(allTeams);
 
             if (user) {

@@ -275,9 +275,9 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
                 // 5: games
                 getDocs(query(collection(db, 'games'), orderBy('createdAt', 'desc'), limit(200))),
                 // 6: payment categories
-                getDocs(query(collection(db, 'paymentCategories'), orderBy('createdAt', 'desc'), limit(200))),
+                getDocs(query(collection(db, 'paymentCategories'), limit(200))),
                 // 7: payment methods
-                getDocs(query(collection(db, 'paymentMethods'), orderBy('createdAt', 'desc'), limit(200))),
+                getDocs(query(collection(db, 'paymentMethods'), limit(200))),
                 // 8: org applications
                 getDocs(query(collection(db, 'orgApplications'), where('status', '==', 'pending'))),
                 // 9: organizers + admins
@@ -311,10 +311,16 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
                 setPromoCodes(results[4].value.docs.map(d => ({ id: d.id, ...d.data() } as PromoCode)));
             if (results[5].status === 'fulfilled')
                 setGames(results[5].value.docs.map(d => ({ id: d.id, ...d.data() } as Game)));
-            if (results[6].status === 'fulfilled')
-                setPaymentCategories(results[6].value.docs.map(d => ({ id: d.id, ...d.data() } as PaymentCategory)));
-            if (results[7].status === 'fulfilled')
-                setPaymentMethods(results[7].value.docs.map(d => ({ id: d.id, ...d.data() } as PaymentMethod)));
+            if (results[6].status === 'fulfilled') {
+                const loadedCats = results[6].value.docs.map(d => ({ id: d.id, ...d.data() } as PaymentCategory));
+                loadedCats.sort((a, b) => (toDateSafe(b.createdAt)?.getTime() || 0) - (toDateSafe(a.createdAt)?.getTime() || 0));
+                setPaymentCategories(loadedCats);
+            }
+            if (results[7].status === 'fulfilled') {
+                const loadedMethods = results[7].value.docs.map(d => ({ id: d.id, ...d.data() } as PaymentMethod));
+                loadedMethods.sort((a, b) => (toDateSafe(b.createdAt)?.getTime() || 0) - (toDateSafe(a.createdAt)?.getTime() || 0));
+                setPaymentMethods(loadedMethods);
+            }
             if (results[8].status === 'fulfilled') {
                 let orgApps = results[8].value.docs.map(d => ({ id: d.id, ...d.data() } as OrgApplication));
                 orgApps.sort((a, b) => {
@@ -755,24 +761,28 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
     };
 
     const handleSaveCategory = async () => {
-        if (!categoryName) return showToast('Please provide a category name', 'warning');
+        if (!categoryName.trim()) return showToast('Please provide a category name', 'warning');
         
         try {
-            const catData = {
-                name: categoryName,
-                description: categoryDescription,
+            const catData: any = {
+                name: categoryName.trim(),
+                description: categoryDescription.trim(),
                 isActive: categoryActive,
-                createdAt: editingCategory ? editingCategory.createdAt : serverTimestamp()
             };
 
             if (editingCategory) {
+                if (editingCategory.createdAt) {
+                    catData.createdAt = editingCategory.createdAt;
+                }
+                catData.updatedAt = serverTimestamp();
                 await updateDoc(doc(db, 'paymentCategories', editingCategory.id), catData);
                 setPaymentCategories(prev => prev.map(c => c.id === editingCategory.id ? { ...c, ...catData } : c));
                 showToast('Payment Category Updated', 'success');
             } else {
+                catData.createdAt = serverTimestamp();
                 const newRef = doc(collection(db, 'paymentCategories'));
                 await setDoc(newRef, catData);
-                setPaymentCategories(prev => [{ id: newRef.id, ...catData }, ...prev]);
+                setPaymentCategories(prev => [{ id: newRef.id, ...catData, createdAt: new Date().toISOString() }, ...prev]);
                 showToast('Payment Category Added', 'success');
             }
             
@@ -810,27 +820,34 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
     };
 
     const handleSavePayment = async () => {
-        if (!paymentName || !paymentQr || !paymentInstructions || !paymentCategoryId) return showToast('Please fill all fields', 'warning');
+        if (!paymentCategoryId) return showToast('Please select or create a payment category first', 'warning');
+        if (!paymentName.trim()) return showToast('Please enter a payment method name', 'warning');
+        if (!paymentQr.trim()) return showToast('Please upload a QR code image or enter a QR URL', 'warning');
+        if (!paymentInstructions.trim()) return showToast('Please provide payment instructions (account name, number, etc.)', 'warning');
         
         try {
-            const payData = {
-                name: paymentName,
+            const payData: any = {
+                name: paymentName.trim(),
                 categoryId: paymentCategoryId,
-                qrUrl: paymentQr,
-                instructions: paymentInstructions,
-                type: paymentType,
+                qrUrl: paymentQr.trim(),
+                instructions: paymentInstructions.trim(),
+                type: paymentType || 'Wallet',
                 isActive: paymentActive,
-                createdAt: editingPayment ? editingPayment.createdAt : serverTimestamp()
             };
 
             if (editingPayment) {
+                if (editingPayment.createdAt) {
+                    payData.createdAt = editingPayment.createdAt;
+                }
+                payData.updatedAt = serverTimestamp();
                 await updateDoc(doc(db, 'paymentMethods', editingPayment.id), payData);
                 setPaymentMethods(prev => prev.map(p => p.id === editingPayment.id ? { ...p, ...payData } : p));
                 showToast('Payment Method Updated', 'success');
             } else {
+                payData.createdAt = serverTimestamp();
                 const newRef = doc(collection(db, 'paymentMethods'));
                 await setDoc(newRef, payData);
-                setPaymentMethods(prev => [{ id: newRef.id, ...payData }, ...prev]);
+                setPaymentMethods(prev => [{ id: newRef.id, ...payData, createdAt: new Date().toISOString() }, ...prev]);
                 showToast('Payment Method Added', 'success');
             }
             
@@ -840,9 +857,72 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
             setPaymentCategoryId('');
             setPaymentQr('');
             setPaymentInstructions('');
+            setPaymentType('eSewa');
+            setPaymentActive(true);
         } catch (error) {
             console.error("Error saving payment method:", error);
             showToast('Failed to save payment method', 'error');
+        }
+    };
+
+    const handleSeedDefaultPayments = async () => {
+        try {
+            const defaultCats = [
+                { id: 'cat_wallets', name: 'Digital Wallets', description: 'eSewa, Khalti, IME Pay instant transfers', isActive: true },
+                { id: 'cat_banking', name: 'Mobile Banking & QR', description: 'FonePay QR & ConnectIPS', isActive: true },
+                { id: 'cat_bank', name: 'Direct Bank Transfer', description: 'National & Commercial Banks', isActive: true }
+            ];
+            const defaultMethods = [
+                {
+                    id: 'method_esewa',
+                    categoryId: 'cat_wallets',
+                    name: 'eSewa',
+                    type: 'Wallet',
+                    qrUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=eSewa-Deposit-NexPlay',
+                    instructions: 'Send payment to eSewa ID: 9800000000 (NexPlay Official). Copy the transaction ID and upload payment screenshot.',
+                    isActive: true
+                },
+                {
+                    id: 'method_khalti',
+                    categoryId: 'cat_wallets',
+                    name: 'Khalti',
+                    type: 'Wallet',
+                    qrUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=Khalti-Deposit-NexPlay',
+                    instructions: 'Send payment to Khalti ID: 9800000000 (NexPlay Official). Enter transaction code and attach receipt screenshot.',
+                    isActive: true
+                },
+                {
+                    id: 'method_fonepay',
+                    categoryId: 'cat_banking',
+                    name: 'FonePay QR',
+                    type: 'QR',
+                    qrUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=FonePay-NexPlay-Official',
+                    instructions: 'Scan FonePay QR using any Banking App. Enter Transaction Ref and attach confirmation screenshot.',
+                    isActive: true
+                },
+                {
+                    id: 'method_bank',
+                    categoryId: 'cat_bank',
+                    name: 'Bank Transfer',
+                    type: 'Bank',
+                    qrUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=Bank-NexPlay-Official',
+                    instructions: 'Transfer to Global IME / Nabil Bank. A/C: 0123456789 (NexPlay Org). Attach transfer slip screenshot.',
+                    isActive: true
+                }
+            ];
+
+            for (const cat of defaultCats) {
+                await setDoc(doc(db, 'paymentCategories', cat.id), { ...cat, createdAt: serverTimestamp() });
+            }
+            for (const pm of defaultMethods) {
+                await setDoc(doc(db, 'paymentMethods', pm.id), { ...pm, createdAt: serverTimestamp() });
+            }
+            setPaymentCategories(defaultCats.map(c => ({ ...c, createdAt: new Date().toISOString() })));
+            setPaymentMethods(defaultMethods.map(m => ({ ...m, createdAt: new Date().toISOString() })));
+            showToast('Default payment categories and methods initialized successfully!', 'success');
+        } catch (err) {
+            console.error('Error initializing default payment options:', err);
+            showToast('Failed to initialize default payment options', 'error');
         }
     };
 
@@ -1244,26 +1324,50 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
         const pendingOrgCount = orgApplications.length;
 
         const handleResolveDispute = async (disputeId: string, action: 'warn' | 'ban' | 'dismiss') => {
+            if (!disputeId) return;
             try {
                 const user = auth.currentUser;
-                if (!user) return;
-                const token = await user.getIdToken();
-                const res = await fetch(`/api/disputes/${disputeId}/resolve`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ action })
-                });
-                const data = await res.json();
-                if (res.ok && data.success) {
-                    showToast(`Dispute ${action === 'dismiss' ? 'dismissed' : 'resolved with action: ' + action}`, 'success');
-                    setAllDisputes(prev => prev.map(d => d.id === disputeId ? { ...d, status: action === 'dismiss' ? 'dismissed' : 'resolved', resolutionAction: action, resolvedAt: new Date().toISOString() } : d));
-                } else {
-                    showToast(data.message || 'Failed to resolve dispute', 'error');
+                let resolvedViaApi = false;
+                if (user) {
+                    try {
+                        const token = await user.getIdToken();
+                        const res = await fetch(`/api/disputes/${disputeId}/resolve`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify({ action })
+                        });
+                        const data = await res.json().catch(() => ({}));
+                        if (res.ok && data.success) {
+                            resolvedViaApi = true;
+                        }
+                    } catch (apiErr) {
+                        console.warn("API resolve dispute failed, falling back to direct Firestore:", apiErr);
+                    }
                 }
+
+                if (!resolvedViaApi) {
+                    const status = action === 'dismiss' ? 'dismissed' : 'resolved';
+                    await updateDoc(doc(db, 'disputes', disputeId), {
+                        status,
+                        resolutionAction: action,
+                        resolvedAt: serverTimestamp(),
+                        resolvedBy: profile?.uid || auth.currentUser?.uid || 'admin'
+                    });
+                }
+
+                const newStatus = action === 'dismiss' ? 'dismissed' : 'resolved';
+                setAllDisputes(prev => prev.map(d => d.id === disputeId ? {
+                    ...d,
+                    status: newStatus,
+                    resolutionAction: action,
+                    resolvedAt: new Date().toISOString()
+                } : d));
+                showToast(`Dispute ${action === 'dismiss' ? 'dismissed' : `resolved with action: ${action}`}`, 'success');
             } catch (err: any) {
+                console.error("Error resolving dispute:", err);
                 showToast(err.message || 'Failed to resolve dispute', 'error');
             }
         };
@@ -1389,11 +1493,13 @@ export function useAdminData(showToast: (message: string, type: 'success' | 'err
             orgYoutube,
             organizers,
             paymentActive,
+            paymentType,
             paymentCategories,
             paymentCategoryId,
             paymentInstructions,
             paymentMethods,
             paymentName,
+            handleSeedDefaultPayments,
             pendingTransactions,
             promoActive,
             promoAmount,

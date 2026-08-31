@@ -278,11 +278,12 @@ const MatchRoomsTab: React.FC<MatchRoomsTabProps> = ({
                   </div>
 
                   <button
+                    type="button"
                     onClick={() => {
                       if (onOpenDisputeOverlay) {
                         onOpenDisputeOverlay(dispute.id);
-                      } else {
-                        onResolveDispute(dispute.id, 'review');
+                      } else if (onResolveDispute) {
+                        onResolveDispute(dispute.id, 'warn');
                       }
                     }}
                     className="bg-surface hover:bg-surface text-white font-medium text-xs px-3.5 py-2 rounded-lg transition-colors border border-gray-700 flex items-center gap-1.5 min-h-[44px]"
