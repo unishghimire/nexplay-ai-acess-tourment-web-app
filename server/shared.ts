@@ -97,10 +97,13 @@ function getFirebaseCredential(): admin.credential.Credential | undefined {
 
 const credential = getFirebaseCredential();
 
+const databaseURL = process.env.FIREBASE_DATABASE_URL || firebaseConfig.databaseURL || `https://${firebaseConfig.projectId || 'nexplayorg-app'}-default-rtdb.firebaseio.com`;
+
 // Build app options — only include credential if we have one
 const appOptions: admin.AppOptions = {
   projectId: firebaseConfig.projectId,
   storageBucket: firebaseConfig.storageBucket,
+  databaseURL,
 };
 if (credential) {
   appOptions.credential = credential;
@@ -111,6 +114,9 @@ export const firebaseApp = admin.apps.length > 0 ? admin.app() : admin.initializ
 export const db = firebaseConfig.firestoreDatabaseId
   ? getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId)
   : getFirestore(firebaseApp);
+export const firestoreAdmin = db;
+export const rtdb = admin.database(firebaseApp);
+export const rtdbAdmin = rtdb;
 export const bucket = admin.storage().bucket();
 export { admin, Type };
 

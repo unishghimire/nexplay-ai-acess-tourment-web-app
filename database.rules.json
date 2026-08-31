@@ -1,0 +1,54 @@
+{
+  "rules": {
+    "presence": {
+      "$userId": {
+        ".read": "auth != null",
+        ".write": "auth != null && auth.uid === $userId",
+        ".validate": "newData.hasChildren(['status', 'lastSeen']) && (newData.child('status').val() === 'online' || newData.child('status').val() === 'offline')"
+      }
+    },
+    "liveTournaments": {
+      "$tournamentId": {
+        ".read": true,
+        ".write": "auth != null && (auth.token.role === 'admin' || auth.token.role === 'organizer')",
+        "groups": {
+          "$groupId": {
+            ".validate": "newData.hasChildren(['lobbyStatus'])"
+          }
+        }
+      }
+    },
+    "liveMatches": {
+      "$matchId": {
+        ".read": true,
+        ".write": "auth != null && (auth.token.role === 'admin' || auth.token.role === 'organizer')",
+        "liveScores": {
+          "$teamId": {
+            ".validate": "newData.hasChildren(['totalPoints', 'kills'])"
+          }
+        }
+      }
+    },
+    "liveLeaderboards": {
+      "$tournamentId": {
+        ".read": true,
+        ".write": "auth != null && (auth.token.role === 'admin' || auth.token.role === 'organizer')"
+      }
+    },
+    "liveEvents": {
+      "$eventId": {
+        ".read": true,
+        ".write": "auth != null && auth.token.role === 'admin'"
+      }
+    },
+    "room_chat": {
+      "$roomId": {
+        ".read": "auth != null",
+        "$messageId": {
+          ".write": "auth != null && newData.child('senderId').val() === auth.uid",
+          ".validate": "newData.hasChildren(['senderId', 'message', 'timestamp']) && newData.child('message').isString() && newData.child('message').val().length <= 500"
+        }
+      }
+    }
+  }
+}

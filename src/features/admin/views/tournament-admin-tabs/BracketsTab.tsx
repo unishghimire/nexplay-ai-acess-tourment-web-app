@@ -2,7 +2,6 @@ import React from 'react';
 import { motion } from 'motion/react';
 import {
     Trophy, } from 'lucide-react';
-import { } from '../../../../shared/config/firebase';
 import { TournamentAdminTabProps } from './types';
 
 export const BracketsTab: React.FC<TournamentAdminTabProps> = (props) => {

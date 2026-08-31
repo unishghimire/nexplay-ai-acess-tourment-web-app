@@ -10,7 +10,7 @@ import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db, googleProvider } from '../../../shared/config/firebase';
 import { isSafeInternalPath } from '../../../shared/utils/utils';
 import { buildUserDocument, buildPublicProfile } from '../../../shared/services/userProfileService';
-import ReCAPTCHA from 'react-google-recaptcha';
+import { executeRecaptchaEnterprise } from '../../../shared/utils/recaptchaEnterprise';
 
 const Register: React.FC = () => {
     const [username, setUsername] = useState('');
@@ -169,11 +169,6 @@ const Register: React.FC = () => {
             return;
         }
 
-        if (recaptchaSiteKey && !captchaValue) {
-            setError('Please complete the CAPTCHA');
-            return;
-        }
-
         if (!inGameId.trim() || !inGameName.trim() || !phone.trim()) {
             setError('In-Game ID, In-Game Name, and Phone Number are required');
             return;
@@ -183,6 +178,10 @@ const Register: React.FC = () => {
         setIsLoading(true);
 
         try {
+            // Invisible reCAPTCHA Enterprise background verification token
+            if (recaptchaSiteKey) {
+                await executeRecaptchaEnterprise('REGISTER');
+            }
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
 
@@ -504,12 +503,8 @@ const Register: React.FC = () => {
                         )}
 
                         {recaptchaSiteKey ? (
-                            <div className="flex justify-center">
-                                <ReCAPTCHA
-                                    sitekey={recaptchaSiteKey}
-                                    onChange={(val) => setCaptchaValue(val)}
-                                    theme="dark"
-                                />
+                            <div className="text-center text-[11px] text-slate-500">
+                                Protected by Google reCAPTCHA Enterprise. <a href="https://policies.google.com/privacy" target="_blank" rel="noreferrer" className="underline hover:text-slate-400">Privacy</a> & <a href="https://policies.google.com/terms" target="_blank" rel="noreferrer" className="underline hover:text-slate-400">Terms</a>.
                             </div>
                         ) : null}
 

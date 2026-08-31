@@ -1,6 +1,7 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { getFirestore, enableNetwork, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
+import { getDatabase, Database } from 'firebase/database';
 import { getAnalytics, isSupported } from 'firebase/analytics';
 import firebaseConfig from '../../../firebase-applet-config.json';
 
@@ -8,6 +9,10 @@ import firebaseConfig from '../../../firebase-applet-config.json';
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
+
+// Initialize Realtime Database (RTDB) Singleton
+const rtdbUrl = (firebaseConfig as any).databaseURL || `https://${(firebaseConfig as any).projectId || 'nexplayorg-app'}-default-rtdb.firebaseio.com`;
+export const rtdb: Database = getDatabase(app, rtdbUrl);
 
 // ponytail: explicitly set browserLocalPersistence (the default, but setting it
 // explicitly ensures the auth state survives popup/redirect round-trips and
