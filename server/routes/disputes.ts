@@ -4,56 +4,82 @@ import { requireAdmin, requireOrganizer } from "../authz.js";
 
 const router = Router();
 
-// POST /api/disputes — File a dispute for a match/room/tournament
+// POST /api/disputes — File a dispute for a match/room/tournament or wallet transaction
 router.post(
   "/api/disputes",
   authenticateToken,
   rateLimit(5, 15 * 60 * 1000),
   async (req: any, res) => {
     try {
-      const { tournamentId, matchRoom, reason, reportedTeamId, reportedTeamName } = req.body;
+      const { disputeType = "tournament", tournamentId, transactionId, matchRoom, reason, reportedTeamId, reportedTeamName, amount, type, refId } = req.body;
       const uid = req.user.userId;
 
-      if (!tournamentId || typeof tournamentId !== "string") {
-        return res.status(400).json({ success: false, message: "Valid tournamentId is required" });
-      }
       if (!reason || typeof reason !== "string" || reason.trim().length < 5) {
         return res.status(400).json({ success: false, message: "Dispute reason must be at least 5 characters" });
       }
 
-      // Check tournament existence
-      let tSnap = await db.collection("tournaments").doc(tournamentId).get();
-      if (!tSnap.exists) {
-        tSnap = await db.collection("scrims").doc(tournamentId).get();
-      }
-      if (!tSnap.exists) {
-        return res.status(404).json({ success: false, message: "Tournament/scrim not found" });
-      }
-
-      const tData = tSnap.data();
       const disputeRef = db.collection("disputes").doc();
-      const disputeData = {
-        id: disputeRef.id,
-        tournamentId,
-        tournamentName: tData?.title || "Tournament",
-        organizerId: tData?.hostUid || tData?.orgId || tData?.userId || null,
-        reportedBy: req.user.email || uid,
-        reporterUid: uid,
-        matchRoom: matchRoom || "1",
-        reason: reason.trim(),
-        reportedTeamId: reportedTeamId || null,
-        reportedTeamName: reportedTeamName || null,
-        status: "pending",
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        filedAt: new Date().toISOString(),
-      };
+      let disputeData: any;
+
+      if (disputeType === "payment" || transactionId) {
+        if (!transactionId && !refId) {
+          return res.status(400).json({ success: false, message: "Valid transactionId or refId is required for payment dispute" });
+        }
+        disputeData = {
+          id: disputeRef.id,
+          disputeType: "payment",
+          transactionId: transactionId || null,
+          refId: refId || transactionId || null,
+          amount: typeof amount === "number" ? amount : null,
+          paymentType: type || "transaction",
+          reason: reason.trim(),
+          reportedBy: req.user.email || uid,
+          reporterUid: uid,
+          status: "pending",
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          filedAt: new Date().toISOString(),
+        };
+      } else {
+        if (!tournamentId || typeof tournamentId !== "string") {
+          return res.status(400).json({ success: false, message: "Valid tournamentId is required" });
+        }
+
+        // Check tournament existence
+        let tSnap = await db.collection("tournaments").doc(tournamentId).get();
+        if (!tSnap.exists) {
+          tSnap = await db.collection("scrims").doc(tournamentId).get();
+        }
+        if (!tSnap.exists) {
+          return res.status(404).json({ success: false, message: "Tournament/scrim not found" });
+        }
+
+        const tData = tSnap.data();
+        const isScrim = tData?.matchType === "scrims" || tData?.isScrim === true;
+        disputeData = {
+          id: disputeRef.id,
+          disputeType: isScrim ? "scrim" : "tournament",
+          tournamentId,
+          tournamentName: tData?.title || "Tournament",
+          organizerId: tData?.hostUid || tData?.orgId || tData?.userId || null,
+          reportedBy: req.user.email || uid,
+          reporterUid: uid,
+          matchRoom: matchRoom || "1",
+          reason: reason.trim(),
+          reportedTeamId: reportedTeamId || null,
+          reportedTeamName: reportedTeamName || null,
+          status: "pending",
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          filedAt: new Date().toISOString(),
+        };
+      }
 
       await disputeRef.set(disputeData);
 
       res.status(201).json({
         success: true,
-        message: "Dispute report filed successfully",
+        message: `${disputeData.disputeType === 'payment' ? 'Payment' : 'Tournament'} dispute filed successfully`,
         disputeId: disputeRef.id,
+        disputeType: disputeData.disputeType,
       });
     } catch (error: any) {
       console.error("Error filing dispute:", error);
@@ -72,13 +98,18 @@ router.get(
     try {
       const uid = req.user.userId;
       const isAdmin = req.user.role === "admin";
-      const { tournamentId, status } = req.query;
+      const { tournamentId, status, disputeType } = req.query;
 
       let q: FirebaseFirestore.Query = db.collection("disputes");
+
+      if (disputeType && typeof disputeType === "string") {
+        q = q.where("disputeType", "==", disputeType);
+      }
 
       if (tournamentId && typeof tournamentId === "string") {
         q = q.where("tournamentId", "==", tournamentId);
       } else if (!isAdmin) {
+        // Organizers only see disputes for their own hosted tournaments (never payment disputes)
         q = q.where("organizerId", "==", uid);
       }
 
@@ -86,7 +117,7 @@ router.get(
         q = q.where("status", "==", status);
       }
 
-      const snap = await q.limit(50).get();
+      const snap = await q.limit(100).get();
       const disputes = snap.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
 
       res.json({ success: true, count: disputes.length, disputes });
@@ -121,6 +152,9 @@ router.post(
       }
 
       const dispute = disputeSnap.data()!;
+      if (dispute.disputeType === "payment" && !isAdmin) {
+        return res.status(403).json({ success: false, message: "Only platform administrators can resolve payment disputes" });
+      }
       if (!isAdmin && dispute.organizerId !== uid) {
         return res.status(403).json({ success: false, message: "Unauthorized — you do not own this tournament dispute" });
       }

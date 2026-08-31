@@ -51,6 +51,7 @@ export const TournamentDisputeModal: React.FC<TournamentDisputeModalProps> = ({
             const selectedCat = DISPUTE_CATEGORIES.find(c => c.id === category);
             const fullReason = `[${selectedCat?.label || 'Dispute'}] ${reason.trim()}`;
 
+            const isScrim = tournament.matchType === 'scrims' || (tournament as any).isScrim === true;
             const res = await fetch('/api/disputes', {
                 method: 'POST',
                 headers: {
@@ -58,6 +59,7 @@ export const TournamentDisputeModal: React.FC<TournamentDisputeModalProps> = ({
                     'Authorization': `Bearer ${token}`,
                 },
                 body: JSON.stringify({
+                    disputeType: isScrim ? 'scrim' : 'tournament',
                     tournamentId: tournament.id,
                     matchRoom,
                     reason: fullReason,

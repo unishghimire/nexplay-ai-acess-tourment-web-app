@@ -148,24 +148,29 @@ const Wallet: React.FC = () => {
         setIsSubmittingDispute(true);
         try {
             await addDoc(collection(db, 'disputes'), {
+                disputeType: 'payment',
                 transactionId: selectedTxForDispute.id,
+                refId: selectedTxForDispute.refId || selectedTxForDispute.id,
                 userId: user.uid,
+                reporterUid: user.uid,
+                reportedBy: profile?.username || user.email || 'User',
                 username: profile?.username || 'Unknown',
                 userEmail: user.email || '',
                 amount: selectedTxForDispute.amount,
+                paymentType: selectedTxForDispute.type,
                 type: selectedTxForDispute.type,
-                reason: disputeReason,
-                status: 'open',
+                reason: disputeReason.trim(),
+                status: 'pending',
                 tournamentId: selectedTxForDispute.tournamentId || null,
-                createdAt: serverTimestamp()
+                createdAt: serverTimestamp(),
+                filedAt: new Date().toISOString()
             });
-            showToast('Dispute reported successfully. Our team will review it.', 'success');
+            showToast('Payment dispute reported successfully. Our support team will review your transaction.', 'success');
             setDisputeModalOpen(false);
             setDisputeReason('');
             setSelectedTxForDispute(null);
         } catch (error: any) {
-            // Error reporting dispute
-            showToast('Failed to report dispute', 'error');
+            showToast(error.message || 'Failed to report payment dispute', 'error');
         } finally {
             setIsSubmittingDispute(false);
         }
