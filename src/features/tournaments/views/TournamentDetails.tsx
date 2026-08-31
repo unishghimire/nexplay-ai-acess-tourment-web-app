@@ -7,9 +7,10 @@ import { DEFAULT_BANNER } from '../../../shared/constants/constants';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { formatCurrency, formatDate, formatGameName, getYoutubeId, toDateSafe, sanitizeUrl } from '../../../shared/utils/utils';
 import { getSlotCount, getFilledSlotCount } from '../../../shared/utils/scrimSlots';
-import { Clock, Users, Trophy, Lock, Eye, EyeOff, Play, Share2, Calendar, MapPin, Info, Medal, ExternalLink, ChevronRight, AlertCircle, CheckCircle2, Search, Building2 , Target, Trash2, Settings2, AlertTriangle } from 'lucide-react';
+import { Clock, Users, Trophy, Lock, Eye, EyeOff, Play, Share2, Calendar, MapPin, Info, Medal, ExternalLink, ChevronRight, AlertCircle, CheckCircle2, Search, Building2 , Target, Trash2, Settings2, AlertTriangle, ShieldAlert } from 'lucide-react';
 import RegistrationModal from '../components/RegistrationModal';
 import JoinTournamentModal from '../components/JoinTournamentModal';
+import { TournamentDisputeModal } from '../components/TournamentDisputeModal';
 import Modal from '../../../shared/components/Modal';
 import { motion, AnimatePresence } from 'motion/react';
 import { NotificationService } from '../../../shared/services/NotificationService';
@@ -54,6 +55,7 @@ export default function TournamentDetails() {
     const [roomCreds, setRoomCreds] = useState<{ roomId?: string; roomPass?: string } | null>(null);
     const [hostProfile, setHostProfile] = useState<UserProfile | null>(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showDisputeModal, setShowDisputeModal] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
     const [eventCollection, setEventCollection] = useState<'tournaments' | 'scrims'>('tournaments');
@@ -534,6 +536,16 @@ export default function TournamentDetails() {
                     >
                         <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
+                    {user && (
+                        <button type="button"
+                            onClick={() => setShowDisputeModal(true)}
+                            aria-label="Report Dispute"
+                            className="p-2.5 sm:p-4 bg-red-500/10 backdrop-blur-md hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-full transition-colors border border-red-500/30 active:scale-95 shadow-xl flex items-center justify-center"
+                            title="Report Dispute / Issue"
+                        >
+                            <ShieldAlert className="w-4 h-4 sm:w-5 sm:h-5" />
+                        </button>
+                    )}
                     {isHostOrAdmin && (
                         <>
                             <button
@@ -1178,6 +1190,16 @@ export default function TournamentDetails() {
                         </div>
                     </div>
                 </Modal>
+            )}
+
+            {/* Tournament / Scrim Player Dispute Modal */}
+            {tournament && (
+                <TournamentDisputeModal
+                    isOpen={showDisputeModal}
+                    onClose={() => setShowDisputeModal(false)}
+                    tournament={tournament}
+                    showToast={showToast}
+                />
             )}
         </div>
     );
