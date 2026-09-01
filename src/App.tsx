@@ -1,4 +1,4 @@
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useParams, useLocation } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider, useAuth } from './shared/context/AuthContext';
@@ -32,7 +32,7 @@ const lazyWithRetry = (componentImport: () => Promise<any>) =>
     }
   });
 
-// Lazy load views
+// Lazy load player-facing views
 const Home = lazyWithRetry(() => import('./features/home/views/Home'));
 const Tournaments = lazyWithRetry(() => import('./features/tournaments/views/Tournaments'));
 const TournamentDetails = lazyWithRetry(() => import('./features/tournaments/views/TournamentDetails'));
@@ -41,10 +41,6 @@ const Profile = lazyWithRetry(() => import('./features/profile/views/Profile'));
 const Scrims = lazyWithRetry(() => import('./features/scrims/views/Scrims'));
 const Wallet = lazyWithRetry(() => import('./features/wallet/views/Wallet'));
 const Leaderboard = lazyWithRetry(() => import('./features/leaderboard/views/Leaderboard'));
-const AdminPanel = lazyWithRetry(() => import('./features/admin/views/AdminPanel'));
-const OrganizerPanel = lazyWithRetry(() => import('./features/organizer/views/OrganizerPanel'));
-const TournamentAdminPanel = lazyWithRetry(() => import('./features/admin/views/TournamentAdminPanel'));
-const ScrimDetailPage = lazyWithRetry(() => import('./features/organizer/views/ScrimDetailPage'));
 const About = lazyWithRetry(() => import('./features/home/views/About'));
 const Contact = lazyWithRetry(() => import('./features/home/views/Contact'));
 const Privacy = lazyWithRetry(() => import('./features/home/views/Privacy'));
@@ -69,6 +65,14 @@ const LoadingFallback = () => (
     <p className="text-xs text-gray-500 font-black uppercase tracking-widest">Loading...</p>
   </div>
 );
+
+const AdminPortalRedirect = ({ path }: { path: string }) => {
+  useEffect(() => {
+    const adminUrl = import.meta.env.VITE_ADMIN_APP_URL || (import.meta.env.DEV ? 'http://localhost:3001' : 'https://admin.nexplayorg.app');
+    window.location.href = `${adminUrl}${path}`;
+  }, [path]);
+  return <LoadingFallback />;
+};
 
 import { AlertTriangle } from 'lucide-react';
 
@@ -162,10 +166,10 @@ const AppContent = () => {
               <Route path="/teams" element={<Teams />} />
               <Route path="/team/:id" element={<TeamDetails />} />
               <Route path="/leaderboard" element={<Leaderboard />} />
-              <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminPanel /></ProtectedRoute>} />
-              <Route path="/organizer" element={<ProtectedRoute allowedRoles={['organizer', 'admin']}><OrganizerPanel /></ProtectedRoute>} />
-              <Route path="/tournament-admin/:id" element={<ProtectedRoute allowedRoles={['organizer', 'admin']}><TournamentAdminPanel /></ProtectedRoute>} />
-              <Route path="/organizer/scrim/:id" element={<ProtectedRoute allowedRoles={["organizer", "admin"]}><ScrimDetailPage /></ProtectedRoute>} />
+              <Route path="/admin" element={<AdminPortalRedirect path="/admin" />} />
+              <Route path="/organizer" element={<AdminPortalRedirect path="/organizer" />} />
+              <Route path="/tournament-admin/:id" element={<AdminPortalRedirect path="/organizer" />} />
+              <Route path="/organizer/scrim/:id" element={<AdminPortalRedirect path="/organizer" />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/about" element={<About />} />
