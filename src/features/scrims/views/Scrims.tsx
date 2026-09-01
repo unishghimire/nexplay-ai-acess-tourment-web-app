@@ -33,21 +33,68 @@ type ScrimRecord = Scrim & {
 
 const INACTIVE_SCRIM_STATUSES = new Set(['completed', 'cancelled', 'deleted']);
 
+export const normalizeGameKey = (g?: string) => {
+    if (!g) return '';
+    const clean = g.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (clean.includes('pubg') || clean.includes('bgmi')) return 'pubg';
+    if (clean.includes('freefire') || clean === 'ff') return 'freefire';
+    if (clean.includes('mlbb') || clean.includes('mobilelegend') || clean.includes('bangbang')) return 'mlbb';
+    if (clean.includes('valorant') || clean === 'val') return 'valorant';
+    return clean;
+};
+
+export const normalizeModeKey = (m?: string) => {
+    if (!m) return '';
+    const clean = m.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (clean.includes('battle') || clean.includes('royal') || clean === 'br' || clean.includes('classic')) return 'battleroyale';
+    if (clean.includes('clash') || clean.includes('squad') || clean === 'cs' || clean.includes('tdm') || clean.includes('deathmatch')) return 'clashsquad';
+    if (clean.includes('lone') || clean.includes('wolf') || clean.includes('1v1')) return 'lonewolf';
+    if (clean.includes('duo')) return 'duo';
+    if (clean.includes('solo')) return 'solo';
+    return clean;
+};
+
 const toScrimRecord = (id: string, data: Record<string, unknown>): ScrimRecord => ({
     id,
     ...data,
     matchType: 'scrims',
 } as ScrimRecord);
 
-const uniqueScrims = (scrims: ScrimRecord[]) =>
-    Array.from(new Map(scrims.map(scrim => [scrim.id, scrim])).values());
+const uniqueScrims = (scrims: ScrimRecord[]): ScrimRecord[] => {
+    const seen = new Set<string>();
+    const result: ScrimRecord[] = [];
+
+    for (const s of scrims) {
+        if (!s) continue;
+        const id1 = (s.tournamentId || '').trim();
+        const id2 = (s.id || '').trim();
+        
+        // Canonical content signature to catch identical events across collections
+        const titlePart = (s.title || '').trim().toLowerCase();
+        const gamePart = normalizeGameKey(s.game);
+        const timePart = (s.startTime || s.time || '').toString().trim();
+        const contentKey = titlePart && timePart ? `c_${titlePart}_${gamePart}_${timePart}` : '';
+
+        // If any identifier or content signature was already processed, skip duplicate
+        if (id1 && seen.has(`id_${id1}`)) continue;
+        if (id2 && seen.has(`id_${id2}`)) continue;
+        if (contentKey && seen.has(contentKey)) continue;
+
+        if (id1) seen.add(`id_${id1}`);
+        if (id2) seen.add(`id_${id2}`);
+        if (contentKey) seen.add(contentKey);
+
+        result.push(s);
+    }
+    return result;
+};
 
 const ScrimsContent: React.FC = () => {
     const [scrims, setScrims] = useState<ScrimRecord[]>([]);
     const [loading, setLoading] = useState(true);
     const [fetchError, setFetchError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
-    const [searchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
     const [filterGame, setFilterGame] = useState(searchParams.get('game') || 'All');
     const [filterMode, setFilterMode] = useState(searchParams.get('mode') || 'All');
     const navigate = useNavigate();
@@ -59,13 +106,29 @@ const ScrimsContent: React.FC = () => {
         if (mode && mode !== filterMode) setFilterMode(mode);
     }, [searchParams]);
 
+    const handleFilterGameChange = (newGame: string) => {
+        setFilterGame(newGame);
+        const nextParams = new URLSearchParams(searchParams);
+        if (newGame === 'All') nextParams.delete('game');
+        else nextParams.set('game', newGame);
+        setSearchParams(nextParams, { replace: true });
+    };
+
+    const handleFilterModeChange = (newMode: string) => {
+        setFilterMode(newMode);
+        const nextParams = new URLSearchParams(searchParams);
+        if (newMode === 'All') nextParams.delete('mode');
+        else nextParams.set('mode', newMode);
+        setSearchParams(nextParams, { replace: true });
+    };
+
     const fetchScrims = useCallback(async () => {
         setLoading(true);
         setFetchError(null);
         let list: ScrimRecord[] = [];
         let anySuccess = false;
 
-        // 1. Primary sources: tournaments with matchType=='scrims' or isScrim==true or type=='scrim'
+        // 1. Primary sources: tournaments with matchType=='scrims' or isScrim==true
         try {
             const primary = await getDocs(query(collection(db, 'tournaments'), where('matchType', '==', 'scrims')));
             list.push(...primary.docs.map(docSnap => toScrimRecord(docSnap.id, docSnap.data())));
@@ -135,33 +198,44 @@ const ScrimsContent: React.FC = () => {
         fetchDbGames();
     }, []);
 
-    // Extract dynamic unique games list strictly from database games + active scrims
+    // Extract dynamic canonical unique games list
     const availableGames = React.useMemo(() => {
-        const fromScrims = scrims.map(s => s.game).filter(Boolean);
-        const combined = Array.from(new Set([...dbGames, ...fromScrims]));
-        return combined.length > 0 ? ['All', ...combined] : ['All'];
+        const rawGames = [...dbGames, ...scrims.map(s => s.game).filter(Boolean) as string[]];
+        const canonicalMap = new Map<string, string>();
+        for (const g of rawGames) {
+            if (!g) continue;
+            const norm = normalizeGameKey(g);
+            const formatted = formatGameName(g);
+            if (!canonicalMap.has(norm)) {
+                canonicalMap.set(norm, formatted);
+            }
+        }
+        return ['All', ...Array.from(canonicalMap.values())];
     }, [dbGames, scrims]);
 
-    const normalizeGameStr = (g?: string) => {
-        if (!g) return '';
-        const lower = g.trim().toLowerCase();
-        if (lower === 'mlbb' || lower === 'mobile legends') return 'mlbb';
-        if (lower === 'pubg' || lower === 'pubg mobile') return 'pubg';
-        return lower;
-    };
+    const availableModes = ['All', 'Battle Royale', 'Clash Squad', 'Squad', 'Duo', 'Solo', 'Lone Wolf'];
 
-    const filteredScrims = scrims.filter(s => {
-        const titleMatch = s.title ? s.title.toLowerCase().includes(searchTerm.toLowerCase()) : false;
-        const gameMatch = s.game ? s.game.toLowerCase().includes(searchTerm.toLowerCase()) : false;
-        const matchesSearch = !searchTerm || titleMatch || gameMatch;
+    const filteredScrims = React.useMemo(() => {
+        return scrims.filter(s => {
+            const search = searchTerm.trim().toLowerCase();
+            const titleMatch = s.title ? s.title.toLowerCase().includes(search) : false;
+            const gameMatch = s.game ? s.game.toLowerCase().includes(search) : false;
+            const matchesSearch = !search || titleMatch || gameMatch;
 
-        const matchesGame = filterGame === 'All' || 
-            normalizeGameStr(s.game) === normalizeGameStr(filterGame) ||
-            s.game === filterGame;
+            const matchesGame = filterGame === 'All' || 
+                normalizeGameKey(s.game) === normalizeGameKey(filterGame) ||
+                s.game?.toLowerCase() === filterGame.toLowerCase();
 
-        const matchesMode = filterMode === 'All' || s.type === filterMode || s.type?.toLowerCase() === filterMode.toLowerCase() || (s as any).mode === filterMode || (s as any).mode?.toLowerCase() === filterMode.toLowerCase();
-        return matchesSearch && matchesGame && matchesMode;
-    });
+            const scrimMode = (s as any).mode || s.type || (s as any).format || (s as any).teamType || '';
+            const matchesMode = filterMode === 'All' || 
+                normalizeModeKey(scrimMode) === normalizeModeKey(filterMode) ||
+                normalizeModeKey(s.title) === normalizeModeKey(filterMode) ||
+                scrimMode.toLowerCase() === filterMode.toLowerCase() ||
+                (s as any).teamType?.toLowerCase() === filterMode.toLowerCase();
+
+            return matchesSearch && matchesGame && matchesMode;
+        });
+    }, [scrims, searchTerm, filterGame, filterMode]);
 
     return (
         <>
@@ -217,8 +291,8 @@ const ScrimsContent: React.FC = () => {
                 </header>
 
                 {/* Filters */}
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-12 bg-card/50 p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-800">
-                    <div className="md:col-span-8 relative">
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-4 mb-12 bg-card/50 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-gray-800">
+                    <div className="md:col-span-6 relative">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                         <input 
                             type="text" 
@@ -226,20 +300,35 @@ const ScrimsContent: React.FC = () => {
                             placeholder="Search by title or game..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full bg-black border border-gray-800 rounded-2xl py-4 pl-12 pr-6 text-white focus:border-brand-500 focus-visible:outline-none transition-colors shadow-xl font-bold"
+                            className="w-full bg-black border border-gray-800 rounded-2xl py-3.5 pl-12 pr-6 text-white focus:border-brand-500 focus-visible:outline-none transition-colors shadow-xl font-bold text-sm"
                         />
                     </div>
-                    <div className="md:col-span-4 relative">
-                        <Filter className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                    <div className="md:col-span-3 relative">
+                        <Filter className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                         <select 
                             aria-label="Filter scrims by game"
                             value={filterGame}
-                            onChange={(e) => setFilterGame(e.target.value)}
-                            className="w-full bg-black border border-gray-800 rounded-2xl py-4 pl-12 pr-6 text-white focus:border-brand-500 focus-visible:outline-none transition-colors shadow-xl font-bold appearance-none"
+                            onChange={(e) => handleFilterGameChange(e.target.value)}
+                            className="w-full bg-black border border-gray-800 rounded-2xl py-3.5 pl-11 pr-6 text-white focus:border-brand-500 focus-visible:outline-none transition-colors shadow-xl font-bold text-sm appearance-none"
                         >
                             {availableGames.map(game => (
                                 <option key={game} value={game}>
                                     {game === 'All' ? 'All Games' : game}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="md:col-span-3 relative">
+                        <Gamepad2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                        <select 
+                            aria-label="Filter scrims by format or mode"
+                            value={filterMode}
+                            onChange={(e) => handleFilterModeChange(e.target.value)}
+                            className="w-full bg-black border border-gray-800 rounded-2xl py-3.5 pl-11 pr-6 text-white focus:border-brand-500 focus-visible:outline-none transition-colors shadow-xl font-bold text-sm appearance-none"
+                        >
+                            {availableModes.map(mode => (
+                                <option key={mode} value={mode}>
+                                    {mode === 'All' ? 'All Formats' : mode}
                                 </option>
                             ))}
                         </select>
