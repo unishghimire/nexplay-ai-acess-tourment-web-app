@@ -31,11 +31,12 @@ type ScrimRecord = Scrim & {
     totalSlots?: number;
 };
 
-const ACTIVE_SCRIM_STATUSES = new Set(['open', 'upcoming', 'published', 'live']);
+const INACTIVE_SCRIM_STATUSES = new Set(['completed', 'cancelled', 'deleted']);
 
 const toScrimRecord = (id: string, data: Record<string, unknown>): ScrimRecord => ({
     id,
     ...data,
+    matchType: 'scrims',
 } as ScrimRecord);
 
 const uniqueScrims = (scrims: ScrimRecord[]) =>
@@ -61,65 +62,56 @@ const ScrimsContent: React.FC = () => {
     const fetchScrims = useCallback(async () => {
         setLoading(true);
         setFetchError(null);
-        // Scrims are public tournament records. Query their discriminating field directly
-        // instead of scanning every published tournament, which avoids unbounded reads and
-        // keeps this public page independent of privileged server credentials.
-        // Sources are tried in order — the primary source (tournaments/matchType == 'scrims')
-        // is authoritative; the legacy scans only run if it fails, so we never duplicate reads.
-        let successfulSources = 0;
         let list: ScrimRecord[] = [];
+        let anySuccess = false;
 
-        // Primary source: tournaments collection. Only reads the discriminating field.
+        // 1. Primary sources: tournaments with matchType=='scrims' or isScrim==true or type=='scrim'
         try {
             const primary = await getDocs(query(collection(db, 'tournaments'), where('matchType', '==', 'scrims')));
-            successfulSources += 1;
             list.push(...primary.docs.map(docSnap => toScrimRecord(docSnap.id, docSnap.data())));
+            anySuccess = true;
         } catch (err) {
-            console.warn('Primary scrim source failed:', err);
+            console.warn('Tournaments matchType scrims query failed:', err);
         }
 
-        // Legacy/flagged records only when the primary source returned nothing.
-        if (list.length === 0) {
-            try {
-                const flagged = await getDocs(query(collection(db, 'tournaments'), where('isScrim', '==', true)));
-                successfulSources += 1;
-                list.push(...flagged.docs.map(docSnap => toScrimRecord(docSnap.id, docSnap.data())));
-            } catch (err) {
-                console.warn('Legacy flagged-scrim source failed:', err);
-            }
-        }
-        if (list.length === 0) {
-            try {
-                const legacy = await getDocs(query(collection(db, 'scrims'), where('status', 'in', ['open', 'live'])));
-                successfulSources += 1;
-                list.push(...legacy.docs.map(docSnap => toScrimRecord(docSnap.id, docSnap.data())));
-            } catch (err) {
-                console.warn('Legacy scrims source failed:', err);
-            }
+        try {
+            const flagged = await getDocs(query(collection(db, 'tournaments'), where('isScrim', '==', true)));
+            list.push(...flagged.docs.map(docSnap => toScrimRecord(docSnap.id, docSnap.data())));
+            anySuccess = true;
+        } catch (err) {
+            console.warn('Tournaments isScrim query failed:', err);
         }
 
-        list = uniqueScrims(list.filter(scrim => ACTIVE_SCRIM_STATUSES.has(scrim.status)));
+        // 2. Dedicated 'scrims' collection
+        try {
+            const legacy = await getDocs(collection(db, 'scrims'));
+            list.push(...legacy.docs.map(docSnap => toScrimRecord(docSnap.id, docSnap.data())));
+            anySuccess = true;
+        } catch (err) {
+            console.warn('Scrims collection query failed:', err);
+        }
 
-        // Retain the API as a compatibility fallback only when both Firestore sources fail.
-        if (successfulSources === 0) {
+        let activeList = uniqueScrims(list.filter(scrim => !scrim.status || !INACTIVE_SCRIM_STATUSES.has(scrim.status)));
+
+        // 3. Fallback to /api/scrims if Firestore queries returned no scrims
+        if (activeList.length === 0) {
             try {
                 const response = await fetch('/api/scrims');
                 const result = await response.json().catch(() => null);
-                if (!response.ok || !result?.success || !Array.isArray(result.scrims)) {
-                    throw new Error(result?.message || `Scrims request failed (${response.status})`);
+                if (response.ok && result?.success && Array.isArray(result.scrims)) {
+                    activeList = uniqueScrims(result.scrims.map((s: any) => toScrimRecord(s.id, s)));
+                    anySuccess = true;
                 }
-                successfulSources += 1;
-                list = uniqueScrims(result.scrims as ScrimRecord[]);
             } catch (apiErr) {
-                console.warn('API scrim query fallback failed:', apiErr);
+                console.warn('API scrims fallback failed:', apiErr);
             }
         }
 
-        if (successfulSources === 0) {
+        if (!anySuccess && activeList.length === 0) {
             setFetchError('Scrims could not be loaded. Check your connection and try again.');
             setScrims([]);
         } else {
-            setScrims(list);
+            setScrims(activeList);
         }
         setLoading(false);
     }, []);

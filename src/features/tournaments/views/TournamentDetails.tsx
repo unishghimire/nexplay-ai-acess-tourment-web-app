@@ -336,13 +336,6 @@ export default function TournamentDetails() {
             return;
         }
 
-        // Requirement: Team Name is compulsory for solo tournaments (duo/squad use the JoinTournamentModal which has fallbacks)
-        if (tournament.teamType === 'solo' && !profile.teamName) {
-            showToast("Team Name is required for solo tournaments!", "warning");
-            navigate('/profile');
-            return;
-        }
-
         if (tournament.teamType === 'duo' || tournament.teamType === 'squad') {
             setShowJoinModal(true);
         } else {
@@ -1069,7 +1062,7 @@ export default function TournamentDetails() {
                             <button type="button" disabled className="w-full bg-red-900/20 text-red-500 border border-red-900/50 py-4 sm:py-5 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-widest cursor-not-allowed">
                                 Tournament Full
                             </button>
-                        ) : tournament.status !== 'upcoming' ? (
+                        ) : !['upcoming', 'open', 'published', 'active'].includes(tournament.status) ? (
                             <button type="button" disabled className="w-full bg-card text-gray-600 py-4 sm:py-5 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-widest cursor-not-allowed border border-gray-800">
                                 Registration Closed
                             </button>
@@ -1078,7 +1071,7 @@ export default function TournamentDetails() {
                                 onClick={handleJoinClick}
                                 className="w-full bg-brand-600 hover:bg-brand-500 text-white py-4 sm:py-5 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-widest shadow-xl shadow-brand-600/20 transition-colors active:scale-95 flex items-center justify-center gap-3 group"
                             >
-                                Join Tournament <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                {tournament.matchType === 'scrims' || (tournament as any).isScrim ? 'Join Scrim' : 'Join Tournament'} <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                             </button>
                         )}
                     </div>

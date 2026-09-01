@@ -259,20 +259,27 @@ router.post("/api/wallet/join-tournament",
 
       const result = await db.runTransaction(async (tx) => {
         const tRef = db.collection('tournaments').doc(tournamentId);
+        const sRef = db.collection('scrims').doc(tournamentId);
         const uRef = db.collection('users').doc(uid);
 
-        const tDoc = await tx.get(tRef);
+        let tDoc = await tx.get(tRef);
+        let targetRef = tRef;
+        if (!tDoc.exists) {
+          tDoc = await tx.get(sRef);
+          targetRef = sRef;
+        }
+
         const uDoc = await tx.get(uRef);
         const partDoc = await tx.get(partRef);
 
-        if (!tDoc.exists) throw new Error("Tournament does not exist");
+        if (!tDoc.exists) throw new Error("Tournament or scrim does not exist");
         if (!uDoc.exists) throw new Error("User not found");
-        if (partDoc.exists) throw new Error("Already registered for this tournament");
+        if (partDoc.exists) throw new Error("Already registered for this event");
 
         const tData = tDoc.data()!;
         const uData = uDoc.data()!;
 
-        if (!['upcoming', 'published', 'live'].includes(tData.status)) throw new Error("Tournament is not open for registration");
+        if (!['upcoming', 'published', 'live', 'open', 'active'].includes(tData.status)) throw new Error("Registration is not open for this event");
         
         // Validate teammate count matches tournament team type
         const teamType = tData.teamType || 'solo';
@@ -332,7 +339,7 @@ router.post("/api/wallet/join-tournament",
             tournamentUpdates.filledSlots = updatedSlots.filter((s: any) => s.status === 'filled').length;
           }
         }
-        tx.update(tRef, tournamentUpdates);
+        tx.update(targetRef, tournamentUpdates);
 
         const participantData: any = {
           userId: uid,
@@ -408,15 +415,22 @@ router.post("/api/wallet/leave-tournament",
 
       const result = await db.runTransaction(async (tx) => {
         const tRef = db.collection('tournaments').doc(tournamentId);
+        const sRef = db.collection('scrims').doc(tournamentId);
         const uRef = db.collection('users').doc(uid);
 
-        const tDoc = await tx.get(tRef);
+        let tDoc = await tx.get(tRef);
+        let targetRef = tRef;
+        if (!tDoc.exists) {
+          tDoc = await tx.get(sRef);
+          targetRef = sRef;
+        }
+
         const uDoc = await tx.get(uRef);
         const partDoc = await tx.get(partRef);
 
-        if (!tDoc.exists) throw new Error("Tournament does not exist");
+        if (!tDoc.exists) throw new Error("Tournament or scrim does not exist");
         if (!uDoc.exists) throw new Error("User not found");
-        if (!partDoc.exists) throw new Error("Not registered for this tournament");
+        if (!partDoc.exists) throw new Error("Not registered for this event");
 
         const tData = tDoc.data()!;
         const uData = uDoc.data()!;
@@ -447,7 +461,7 @@ router.post("/api/wallet/leave-tournament",
             tournamentUpdates.filledSlots = updatedSlots.filter((s: any) => s.status === 'filled').length;
           }
         }
-        tx.update(tRef, tournamentUpdates);
+        tx.update(targetRef, tournamentUpdates);
         tx.delete(partRef);
 
         if (refundAmount > 0) {
