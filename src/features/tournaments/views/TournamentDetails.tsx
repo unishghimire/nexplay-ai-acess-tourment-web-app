@@ -547,32 +547,20 @@ export default function TournamentDetails() {
                         </button>
                     )}
                     {isHostOrAdmin && (
-                        <>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    if (tournament.matchType === 'scrims' || (tournament as any).isScrim === true) {
-                                        navigate(`/organizer/scrim/${tournament.id}`);
-                                    } else {
-                                        navigate(`/tournament-admin/${tournament.id}`);
-                                    }
-                                }}
-                                aria-label="Manage Event"
-                                className="p-2.5 sm:p-4 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white rounded-full transition-colors border border-white/10 active:scale-95 shadow-xl flex items-center justify-center"
-                                title="Manage / Edit Details"
-                            >
-                                <Settings2 className="w-4 h-4 sm:w-5 sm:h-5" />
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setShowDeleteModal(true)}
-                                aria-label="Delete Event"
-                                className="p-2.5 sm:p-4 bg-red-600/30 backdrop-blur-md hover:bg-red-600/50 text-red-300 hover:text-white rounded-full transition-colors border border-red-500/40 active:scale-95 shadow-xl flex items-center justify-center"
-                                title={tournament.matchType === 'scrims' || (tournament as any).isScrim === true ? "Delete Scrim" : "Delete Tournament"}
-                            >
-                                <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
-                            </button>
-                        </>
+                        <a
+                            href={
+                                tournament.matchType === 'scrims' || (tournament as any).isScrim === true
+                                    ? `${import.meta.env.VITE_ADMIN_APP_URL || 'https://admin.nexplayorg.app'}/organizer/scrim/${tournament.id}`
+                                    : `${import.meta.env.VITE_ADMIN_APP_URL || 'https://admin.nexplayorg.app'}/tournament-admin/${tournament.id}`
+                            }
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label="Manage in NexAdmin"
+                            className="p-2.5 sm:p-4 bg-brand-600/20 backdrop-blur-md hover:bg-brand-600/40 text-brand-300 hover:text-white rounded-full transition-colors border border-brand-500/30 active:scale-95 shadow-xl flex items-center justify-center"
+                            title="Manage Event in NexAdmin ↗"
+                        >
+                            <Settings2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                        </a>
                     )}
                 </div>
 
