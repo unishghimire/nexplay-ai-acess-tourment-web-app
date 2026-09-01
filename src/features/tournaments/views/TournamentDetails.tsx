@@ -430,9 +430,9 @@ export default function TournamentDetails() {
             );
             setShowDeleteModal(false);
             if (isScrim) {
-                navigate('/organizer?tab=scrims');
+                navigate('/scrims');
             } else {
-                navigate('/organizer?tab=tournaments');
+                navigate('/tournaments');
             }
         } catch (err: any) {
             showToast(err.message || 'Failed to delete tournament', 'error');
