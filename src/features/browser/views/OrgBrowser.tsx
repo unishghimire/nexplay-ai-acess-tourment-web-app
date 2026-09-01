@@ -212,7 +212,7 @@ const OrgBrowser: React.FC = () => {
 
                                             <div className="flex gap-2">
                                                 <Link
-                                                    to={`/profile/${org.uid}`}
+                                                    to={`/user/${org.uid}`}
                                                     className="flex-1 bg-surface hover:bg-surface text-white py-2.5 rounded-xl text-center font-black text-xs uppercase tracking-widest transition flex items-center justify-center gap-2"
                                                 >
                                                     Profile <ChevronRight className="w-3 h-3" />
@@ -277,7 +277,7 @@ const OrgBrowser: React.FC = () => {
 
                                     <div className="flex items-center gap-3 shrink-0">
                                         <Link
-                                            to={`/profile/${org.uid}`}
+                                            to={`/user/${org.uid}`}
                                             className="flex items-center gap-2 bg-surface hover:bg-surface text-white px-5 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition"
                                         >
                                             View <ChevronRight className="w-3 h-3" />

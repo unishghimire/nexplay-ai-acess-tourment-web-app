@@ -124,6 +124,10 @@ const ScrimsContent: React.FC = () => {
         setLoading(false);
     }, []);
 
+    useEffect(() => {
+        fetchScrims();
+    }, [fetchScrims]);
+
     const [dbGames, setDbGames] = useState<string[]>([]);
 
     useEffect(() => {

@@ -557,7 +557,7 @@ export default function TournamentDetails() {
                         {tournament.title}
                     </motion.h1>
                     <div className="text-gray-300 font-bold text-xs sm:text-sm mb-2 sm:mb-4 lg:mb-6 uppercase tracking-widest flex items-center gap-2 truncate">
-                        Organized by: {tournament.hostUid ? <ProfileLink to={`/organization/${tournament.hostUid}`} name={tournament.hostName || 'Official Host'} /> : <span className="text-gray-500">Official Host</span>}
+                        Organized by: {tournament.hostUid ? <ProfileLink to={`/user/${tournament.hostUid}`} name={tournament.hostName || 'Official Host'} /> : <span className="text-gray-500">Official Host</span>}
                     </div>
                     
                     <div className="flex flex-wrap items-center gap-3 sm:gap-6 lg:gap-8 text-gray-200 font-bold text-xs sm:text-xs md:text-sm uppercase tracking-widest">
@@ -742,13 +742,13 @@ export default function TournamentDetails() {
                                             </div>
                                             <div className="min-w-0">
                                                 <div className="text-white font-black text-base sm:text-lg truncate">
-                                                    <ProfileLink to={`/organization/${tournament.hostUid}`} name={hostProfile.username} />
+                                                    <ProfileLink to={`/user/${tournament.hostUid}`} name={hostProfile.username} />
                                                 </div>
                                                 <p className="text-gray-400 text-xs sm:text-sm mt-1 line-clamp-2 [overflow-wrap:anywhere]">{hostProfile.bio || 'No bio available.'}</p>
                                             </div>
                                         </div>
                                     ) : (
-                                        <ProfileLink to={`/organization/${tournament.hostUid}`} name={tournament.hostName || 'Official Host'} />
+                                        <ProfileLink to={`/user/${tournament.hostUid}`} name={tournament.hostName || 'Official Host'} />
                                     )}
                                 </div>
                                 {tournament.prizeDistribution && tournament.prizeDistribution.length > 0 && (
@@ -803,7 +803,7 @@ export default function TournamentDetails() {
                                                 </div>
                                                 <div className="flex flex-col gap-2 min-w-0 flex-1">
                                                     <div className="text-white font-black text-base sm:text-lg leading-tight truncate">
-                                                        <ProfileLink to={`/profile/${p.userId}`} name={p.username} />
+                                                        <ProfileLink to={`/user/${p.userId}`} name={p.username} />
                                                     </div>
                                                     <div className="flex flex-wrap items-center gap-1.5">
                                                         <div className="flex items-center gap-1 bg-dark px-2 py-1 rounded-lg border border-gray-800 max-w-full">

@@ -19,7 +19,7 @@ const PostDetails: React.FC = () => {
     const [post, setPost] = useState<OrgPost | null>(null);
     const [loading, setLoading] = useState(true);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-    const [, setIsDeleting] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
         const fetchPost = async () => {
@@ -43,7 +43,7 @@ const PostDetails: React.FC = () => {
     }, [id]);
 
     const handleDelete = async () => {
-        if (!id || !post) return;
+        if (!id || !post || isDeleting) return;
         setIsDeleting(true);
         try {
             await deleteDoc(doc(db, 'org_posts', id));

@@ -247,34 +247,34 @@ const Home: React.FC = () => {
 
             {/* Value Highlights (Conversion Funnel Indicators) */}
             <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-                <div className="bg-card/50 p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-brand-500/50 transition-colors duration-300 hover:-translate-y-1 group">
+                <Link to="/tournaments" className="block bg-card/50 p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-brand-500/50 transition-colors duration-300 hover:-translate-y-1 group">
                     <div className="bg-brand-500/10 p-3 sm:p-4 rounded-xl sm:rounded-2xl text-brand-500 mb-4 sm:mb-6 inline-block group-hover:scale-110 transition-transform">
                         <Trophy className="w-6 h-6 sm:w-8 sm:h-8" />
                     </div>
-                    <h4 className="text-white font-black uppercase text-sm sm:text-base md:text-lg mb-1 sm:mb-2">Tournaments</h4>
+                    <h4 className="text-white font-black uppercase text-sm sm:text-base md:text-lg mb-1 sm:mb-2 group-hover:text-brand-400 transition-colors">Tournaments</h4>
                     <p className="text-xs sm:text-sm text-gray-500">Compete in verified, admin-refereed ladders.</p>
-                </div>
-                <div className="bg-card/50 p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-emerald-500/50 transition-colors duration-300 hover:-translate-y-1 group">
+                </Link>
+                <Link to="/scrims" className="block bg-card/50 p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-emerald-500/50 transition-colors duration-300 hover:-translate-y-1 group">
                     <div className="bg-emerald-500/10 p-3 sm:p-4 rounded-xl sm:rounded-2xl text-emerald-500 mb-4 sm:mb-6 inline-block group-hover:scale-110 transition-transform">
                         <Flame className="w-6 h-6 sm:w-8 sm:h-8" />
                     </div>
-                    <h4 className="text-white font-black uppercase text-sm sm:text-base md:text-lg mb-1 sm:mb-2">Daily Scrims</h4>
+                    <h4 className="text-white font-black uppercase text-sm sm:text-base md:text-lg mb-1 sm:mb-2 group-hover:text-emerald-400 transition-colors">Daily Scrims</h4>
                     <p className="text-xs sm:text-sm text-gray-500">Train with top competitive squads daily.</p>
-                </div>
-                <div className="bg-card/50 p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-yellow-500/50 transition-colors duration-300 hover:-translate-y-1 group">
+                </Link>
+                <Link to="/wallet" className="block bg-card/50 p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-yellow-500/50 transition-colors duration-300 hover:-translate-y-1 group">
                     <div className="bg-yellow-500/10 p-3 sm:p-4 rounded-xl sm:rounded-2xl text-yellow-500 mb-4 sm:mb-6 inline-block group-hover:scale-110 transition-transform">
                         <Wallet className="w-6 h-6 sm:w-8 sm:h-8" />
                     </div>
-                    <h4 className="text-white font-black uppercase text-sm sm:text-base md:text-lg mb-1 sm:mb-2">Secure Wallet</h4>
+                    <h4 className="text-white font-black uppercase text-sm sm:text-base md:text-lg mb-1 sm:mb-2 group-hover:text-yellow-400 transition-colors">Secure Wallet</h4>
                     <p className="text-xs sm:text-sm text-gray-500">Double-guarded entry escrows and fast logs.</p>
-                </div>
-                <div className="bg-card/50 p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-purple-500/50 transition-colors duration-300 hover:-translate-y-1 group">
+                </Link>
+                <Link to="/organizations" className="block bg-card/50 p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-purple-500/50 transition-colors duration-300 hover:-translate-y-1 group">
                     <div className="bg-purple-500/10 p-3 sm:p-4 rounded-xl sm:rounded-2xl text-purple-500 mb-4 sm:mb-6 inline-block group-hover:scale-110 transition-transform">
                         <Users className="w-6 h-6 sm:w-8 sm:h-8" />
                     </div>
-                    <h4 className="text-white font-black uppercase text-sm sm:text-base md:text-lg mb-1 sm:mb-2">Organizations</h4>
+                    <h4 className="text-white font-black uppercase text-sm sm:text-base md:text-lg mb-1 sm:mb-2 group-hover:text-purple-400 transition-colors">Organizations</h4>
                     <p className="text-xs sm:text-sm text-gray-500">Join gaming teams or host custom matches.</p>
-                </div>
+                </Link>
             </section>
 
             {/* Featured Tournaments Container */}

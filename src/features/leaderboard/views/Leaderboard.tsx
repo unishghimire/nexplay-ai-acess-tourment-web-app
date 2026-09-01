@@ -309,7 +309,7 @@ const Leaderboard: React.FC = () => {
 
                                         <div>
                                             <div className="flex items-center gap-3">
-                                                <h4 className={`font-black text-lg truncate max-w-[100px] sm:max-w-[140px] sm:max-w-[240px] ${isUser ? 'text-brand-400' : 'text-white'} group-hover:text-brand-400 transition`}>
+                                                <h4 className={`font-black text-lg truncate max-w-[100px] sm:max-w-[240px] ${isUser ? 'text-brand-400' : 'text-white'} group-hover:text-brand-400 transition`}>
                                                     {displayName}
                                                 </h4>
                                                 {isUser && (
