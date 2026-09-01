@@ -66,14 +66,6 @@ const LoadingFallback = () => (
   </div>
 );
 
-const AdminPortalRedirect = ({ path }: { path: string }) => {
-  useEffect(() => {
-    const adminUrl = import.meta.env.VITE_ADMIN_APP_URL || (import.meta.env.DEV ? 'http://localhost:3001' : 'https://admin.nexplayorg.app');
-    window.location.href = `${adminUrl}${path}`;
-  }, [path]);
-  return <LoadingFallback />;
-};
-
 import { AlertTriangle } from 'lucide-react';
 
 const hasLocalMaintenanceBypass = () => {
@@ -166,10 +158,6 @@ const AppContent = () => {
               <Route path="/teams" element={<Teams />} />
               <Route path="/team/:id" element={<TeamDetails />} />
               <Route path="/leaderboard" element={<Leaderboard />} />
-              <Route path="/admin" element={<AdminPortalRedirect path="/admin" />} />
-              <Route path="/organizer" element={<AdminPortalRedirect path="/organizer" />} />
-              <Route path="/tournament-admin/:id" element={<AdminPortalRedirect path="/organizer" />} />
-              <Route path="/organizer/scrim/:id" element={<AdminPortalRedirect path="/organizer" />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/about" element={<About />} />

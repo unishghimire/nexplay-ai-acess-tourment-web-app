@@ -65,33 +65,7 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ username, avatarUrl, 
             <User className="w-4 h-4" aria-hidden="true" /> View Profile
           </Link>
 
-          {(profile?.role === 'organizer' || profile?.role === 'admin') && (
-            <a 
-              href={import.meta.env.VITE_ADMIN_APP_URL ? `${import.meta.env.VITE_ADMIN_APP_URL}/organizer` : '/organizer'} 
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => setIsOpen(false)} 
-              role="menuitem" 
-              className="flex items-center gap-2 px-4 py-3 text-sm text-brand-400 hover:bg-surface hover:text-brand-300 transition"
-            >
-              <Plus className="w-4 h-4" aria-hidden="true" /> Organizer Portal ↗
-            </a>
-          )}
-
-          {profile?.role === 'admin' && (
-            <a 
-              href={import.meta.env.VITE_ADMIN_APP_URL ? `${import.meta.env.VITE_ADMIN_APP_URL}/admin` : '/admin'} 
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => setIsOpen(false)} 
-              role="menuitem" 
-              className="flex items-center gap-2 px-4 py-3 text-sm text-purple-400 hover:bg-surface hover:text-purple-300 transition border-b border-gray-800"
-            >
-              <Settings className="w-4 h-4" aria-hidden="true" /> NexAdmin Control Center ↗
-            </a>
-          )}
-
-          <button type="button" onClick={() => { onLogout(); setIsOpen(false); }} role="menuitem" className="flex w-full items-center gap-2 px-4 py-3 text-sm text-red-400 hover:bg-surface hover:text-red-300 transition">
+          <button type="button" onClick={() => { onLogout(); setIsOpen(false); }} role="menuitem" className="flex w-full items-center gap-2 px-4 py-3 text-sm text-red-400 hover:bg-surface hover:text-red-300 transition border-t border-gray-800">
             <LogOut className="w-4 h-4" aria-hidden="true" /> Logout
           </button>
         </div>

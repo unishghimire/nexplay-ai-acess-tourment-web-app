@@ -546,22 +546,6 @@ export default function TournamentDetails() {
                             <ShieldAlert className="w-4 h-4 sm:w-5 sm:h-5" />
                         </button>
                     )}
-                    {isHostOrAdmin && (
-                        <a
-                            href={
-                                tournament.matchType === 'scrims' || (tournament as any).isScrim === true
-                                    ? `${import.meta.env.VITE_ADMIN_APP_URL || 'https://admin.nexplayorg.app'}/organizer/scrim/${tournament.id}`
-                                    : `${import.meta.env.VITE_ADMIN_APP_URL || 'https://admin.nexplayorg.app'}/tournament-admin/${tournament.id}`
-                            }
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            aria-label="Manage in NexAdmin"
-                            className="p-2.5 sm:p-4 bg-brand-600/20 backdrop-blur-md hover:bg-brand-600/40 text-brand-300 hover:text-white rounded-full transition-colors border border-brand-500/30 active:scale-95 shadow-xl flex items-center justify-center"
-                            title="Manage Event in NexAdmin ↗"
-                        >
-                            <Settings2 className="w-4 h-4 sm:w-5 sm:h-5" />
-                        </a>
-                    )}
                 </div>
 
                 <div className="absolute bottom-3 left-3 right-3 sm:bottom-8 sm:left-8 sm:right-8 lg:bottom-12 lg:left-12 lg:right-12 z-10">
