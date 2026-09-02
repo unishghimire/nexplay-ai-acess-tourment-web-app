@@ -24,7 +24,39 @@ export const toDateSafe = (ts: TimestampInput): Date | null => {
 
 export const formatDate = (ts: TimestampInput): string => {
     const date = toDateSafe(ts);
-    return date ? date.toLocaleString('en-NP') : 'N/A';
+    if (!date) return 'N/A';
+    return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+    }) + ', ' + date.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+    });
+};
+
+export const formatDateShort = (ts: TimestampInput): string => {
+    const date = toDateSafe(ts);
+    if (!date) return 'TBD';
+    return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric'
+    }) + ' • ' + date.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+    });
+};
+
+export const formatTime = (ts: TimestampInput): string => {
+    const date = toDateSafe(ts);
+    if (!date) return 'TBD';
+    return date.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+    });
 };
 
 export const timeAgo = (ts: TimestampInput): string => {

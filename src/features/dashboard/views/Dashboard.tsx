@@ -3,9 +3,9 @@ import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { Tournament } from '../../../shared/types/types';
-import { formatCurrency, formatGameName, toDateSafe } from '../../../shared/utils/utils';
+import { formatCurrency, formatDateShort, formatGameName, toDateSafe } from '../../../shared/utils/utils';
 import { useNavigate } from 'react-router-dom';
-import { Trophy, Eye, Upload, BarChart, User, Shield, Users, AlertCircle } from 'lucide-react';
+import { Trophy, Eye, Upload, BarChart, User, Shield, Users, AlertCircle, Calendar, Clock } from 'lucide-react';
 import ResultUploadModal from '../../results/components/ResultUploadModal';
 import TournamentResultModal from '../../tournaments/components/TournamentResultModal';
 import { Seo } from '../../../shared/components/Seo';
@@ -236,8 +236,19 @@ const Dashboard: React.FC = () => {
                                                 </div>
                                             </div>
                                         )}
-                                        <div className={`text-xs font-black uppercase tracking-widest mt-4 ${isLive ? 'text-emerald-400 animate-pulse' : isCompleted ? 'text-gray-500' : 'text-blue-400'}`}>
-                                            Status: {t.status}
+                                        <div className="flex flex-wrap items-center gap-4 mt-4 pt-3 border-t border-gray-900">
+                                            <div className={`text-xs font-black uppercase tracking-widest flex items-center gap-1.5 ${
+                                                isLive ? 'text-emerald-400 animate-pulse' : isCompleted ? 'text-gray-500' : 'text-blue-400'
+                                            }`}>
+                                                <span className={`w-2 h-2 rounded-full ${isLive ? 'bg-emerald-400' : isCompleted ? 'bg-gray-500' : 'bg-blue-400'}`}></span>
+                                                {isLive ? 'LIVE NOW' : isCompleted ? 'ENDED' : 'UPCOMING'}
+                                            </div>
+                                            {t.startTime && (
+                                                <div className="text-xs text-gray-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                                                    <Clock className="w-3.5 h-3.5 text-brand-500" />
+                                                    <span>{formatDateShort(t.startTime)}</span>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="text-right">

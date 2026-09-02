@@ -2,9 +2,9 @@ import Seo from '../../../shared/components/Seo';
 import Faq from '../../../shared/components/Faq';
 import React, { useEffect, useState, useCallback } from 'react';
 import { Scrim } from '../../../shared/types/types';
-import { Trophy, Search, Filter, Calendar, Gamepad2, AlertCircle } from 'lucide-react';
+import { Trophy, Search, Filter, Calendar, Clock, Gamepad2, AlertCircle } from 'lucide-react';
 import { motion } from 'motion/react';
-import { formatCurrency, formatDate, formatGameName } from '../../../shared/utils/utils';
+import { formatCurrency, formatDate, formatDateShort, formatGameName } from '../../../shared/utils/utils';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
@@ -385,20 +385,32 @@ const ScrimsContent: React.FC = () => {
                                             alt={scrim.title || 'Scrim match'}
                                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy"
                                         />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/20 to-transparent"></div>
-                                        <div className="absolute top-4 left-4 right-4 flex flex-wrap gap-2">
-                                            <span className="bg-brand-500/10 px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest text-brand-300 border border-brand-500/20">
-                                                {formatGameName(scrim.game || 'Esports')}
-                                            </span>
-                                            <span className="bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest text-white border border-white/10">
-                                                {scrim.type || 'BR'}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/40 to-transparent"></div>
+                                        <div className="absolute top-4 left-4 right-4 flex flex-wrap items-center justify-between gap-2 z-10">
+                                            <div className="flex flex-wrap gap-2">
+                                                <span className="bg-brand-500/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest text-brand-300 border border-brand-500/30">
+                                                    {formatGameName(scrim.game || 'Esports')}
+                                                </span>
+                                                <span className="bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest text-white border border-white/10">
+                                                    {scrim.type || 'BR'}
+                                                </span>
+                                            </div>
+                                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border backdrop-blur-md ${
+                                                scrim.status === 'live'
+                                                    ? 'bg-red-600/90 border-red-500/30 text-white animate-pulse'
+                                                    : currentSlots >= totalSlots
+                                                        ? 'bg-amber-600/90 border-amber-500/30 text-white'
+                                                        : 'bg-green-600/90 border-green-500/30 text-white'
+                                            }`}>
+                                                {scrim.status === 'live' ? 'LIVE NOW' : currentSlots >= totalSlots ? 'FULL' : 'OPEN'}
                                             </span>
                                         </div>
-                                        <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
-                                            <div className="text-xs text-brand-400 font-black uppercase tracking-widest mb-1 flex items-center gap-1">
-                                                <Calendar className="w-3 h-3" /> {formatDate(scrim.time || scrim.startTime || new Date().toISOString())}
+                                        <div className="absolute bottom-4 left-4 right-4 z-10">
+                                            <h3 className="text-lg font-black text-white uppercase tracking-tight line-clamp-1 mb-1">{scrim.title || 'Official Scrim'}</h3>
+                                            <div className="text-xs text-brand-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                                                <Clock className="w-3.5 h-3.5 shrink-0" />
+                                                <span className="truncate">{(scrim.time || scrim.startTime) ? formatDateShort(scrim.time || scrim.startTime) : 'Schedule TBA'}</span>
                                             </div>
-                                            <h3 className="text-lg font-black text-white uppercase tracking-tight line-clamp-1">{scrim.title || 'Official Scrim'}</h3>
                                         </div>
                                     </div>
 

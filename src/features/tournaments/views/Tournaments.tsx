@@ -95,7 +95,10 @@ const Tournaments: React.FC = () => {
     const filteredTournaments = tournaments.filter(t => {
         const matchesGame = gameFilter === 'all' || t.game === gameFilter || t.game?.toLowerCase() === gameFilter.toLowerCase();
         const matchesMode = modeFilter === 'all' || t.type === modeFilter || t.type?.toLowerCase() === modeFilter.toLowerCase();
-        const matchesStatus = statusFilter === 'all' || t.status === statusFilter;
+        const matchesStatus = statusFilter === 'all' || 
+            (statusFilter === 'upcoming' 
+                ? (t.status === 'upcoming' || t.status === 'published')
+                : t.status === statusFilter);
         const matchesEntry = entryFilter === 'all' || (entryFilter === 'free' ? t.entryFee === 0 : t.entryFee > 0);
         const matchesTeamType = teamTypeFilter === 'all' || t.teamType === teamTypeFilter || t.teamType?.toLowerCase() === teamTypeFilter.toLowerCase();
         
@@ -104,7 +107,7 @@ const Tournaments: React.FC = () => {
 
     const statusTabs = [
         { id: 'all',       label: 'All',      count: tournaments.length },
-        { id: 'upcoming',  label: 'Upcoming', count: tournaments.filter(t => t.status === 'upcoming').length },
+        { id: 'upcoming',  label: 'Upcoming', count: tournaments.filter(t => t.status === 'upcoming' || t.status === 'published').length },
         { id: 'live',      label: 'Live Now', count: tournaments.filter(t => t.status === 'live').length },
         { id: 'completed', label: 'Ended',    count: tournaments.filter(t => t.status === 'completed').length }
     ];

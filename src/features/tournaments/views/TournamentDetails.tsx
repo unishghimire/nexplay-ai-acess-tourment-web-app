@@ -246,23 +246,26 @@ export default function TournamentDetails() {
     }, [profile?.teamId, user?.uid]);
 
     useEffect(() => {
-        if (!tournament?.startTime) return;
+        if (!tournament?.startTime || tournament.status === 'completed') {
+            setTimeLeft(null);
+            return;
+        }
 
         const startDate = toDateSafe(tournament.startTime);
         if (!startDate) {
+            setTimeLeft(null);
             return;
         }
 
         const start = startDate.getTime();
 
-        const timer = setInterval(() => {
+        const updateTimer = () => {
             const now = new Date().getTime();
             const diff = start - now;
 
             if (diff <= 0) {
                 setTimeLeft(null);
-                clearInterval(timer);
-                return;
+                return false;
             }
 
             setTimeLeft({
@@ -271,10 +274,20 @@ export default function TournamentDetails() {
                 m: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
                 s: Math.floor((diff % (1000 * 60)) / 1000)
             });
+            return true;
+        };
+
+        // Run immediately on render so timing displays without 1s initial lag
+        if (!updateTimer()) return;
+
+        const timer = setInterval(() => {
+            if (!updateTimer()) {
+                clearInterval(timer);
+            }
         }, 1000);
 
         return () => clearInterval(timer);
-    }, [tournament?.startTime]);
+    }, [tournament?.startTime, tournament?.status]);
 
     const filteredParticipants = participants.filter(p => 
         (p.username && p.username.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -936,9 +949,9 @@ export default function TournamentDetails() {
                 <div className="lg:col-span-4 space-y-6">
                     {/* Join Card */}
                     <div className="bg-surface p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 shadow-2xl lg:sticky lg:top-24">
-                        {timeLeft && (
+                        {timeLeft ? (
                             <div className="mb-6 sm:mb-8 text-center">
-                                <div className="text-xs text-gray-500 uppercase font-black tracking-widest mb-3 flex items-center justify-center gap-2">
+                                <div className="text-xs text-brand-400 uppercase font-black tracking-widest mb-3 flex items-center justify-center gap-2">
                                     <Clock className="w-3.5 h-3.5" /> Starts In
                                 </div>
                                 <div className="flex justify-center gap-2 sm:gap-3">
@@ -952,9 +965,30 @@ export default function TournamentDetails() {
                                             <div className="w-10 h-10 sm:w-12 sm:h-12 bg-dark rounded-xl border border-gray-800 flex items-center justify-center text-base sm:text-xl font-black text-white shadow-inner">
                                                 {t.value.toString().padStart(2, '0')}
                                             </div>
-                                            <span className="text-[10px] sm:text-xs text-gray-600 font-black mt-1">{t.label}</span>
+                                            <span className="text-[10px] sm:text-xs text-gray-500 font-black mt-1">{t.label}</span>
                                         </div>
                                     ))}
+                                </div>
+                            </div>
+                        ) : tournament.status === 'live' ? (
+                            <div className="mb-6 sm:mb-8 text-center p-3.5 bg-red-500/10 border border-red-500/30 rounded-2xl animate-pulse">
+                                <div className="text-xs text-red-400 uppercase font-black tracking-widest flex items-center justify-center gap-2">
+                                    <span className="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+                                    MATCH IN PROGRESS
+                                </div>
+                            </div>
+                        ) : tournament.status === 'completed' ? (
+                            <div className="mb-6 sm:mb-8 text-center p-3.5 bg-blue-500/10 border border-blue-500/30 rounded-2xl">
+                                <div className="text-xs text-blue-400 uppercase font-black tracking-widest flex items-center justify-center gap-2">
+                                    <Trophy className="w-3.5 h-3.5 text-yellow-500" />
+                                    CONCLUDED
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="mb-6 sm:mb-8 text-center p-3.5 bg-brand-500/10 border border-brand-500/30 rounded-2xl">
+                                <div className="text-xs text-brand-300 uppercase font-black tracking-widest flex items-center justify-center gap-2">
+                                    <Clock className="w-3.5 h-3.5 text-brand-400" />
+                                    STARTING SOON
                                 </div>
                             </div>
                         )}
