@@ -18,6 +18,18 @@
         }
       }
     },
+    "live_rooms": {
+      "$tournamentId": {
+        ".read": "auth != null",
+        ".write": "auth != null && (auth.token.role === 'admin' || auth.token.role === 'organizer')"
+      }
+    },
+    "live_matches": {
+      "$tournamentId": {
+        ".read": true,
+        ".write": "auth != null && (auth.token.role === 'admin' || auth.token.role === 'organizer')"
+      }
+    },
     "liveMatches": {
       "$matchId": {
         ".read": true,
