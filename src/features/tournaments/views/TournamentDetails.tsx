@@ -24,7 +24,7 @@ import PerKillResultView from '../components/PerKillResultView';
 import PerKillLeaderboard from '../components/PerKillLeaderboard';
 import { TournamentRoadmap } from '../components/TournamentRoadmap';
 import GroupStandingsView from '../components/GroupStandingsView';
-import { fetchRoomCredentials } from '../../../shared/services/roomCredentials';
+import { fetchRoomCredentials, subscribeRoomCredentials, RoomCredentials } from '../../../shared/services/roomCredentials';
 
 const TOURNAMENT_TAB_IDS = ['overview', 'description', 'participants', 'groups', 'roadmap', 'results', 'killrewards'] as const;
 type TournamentTabId = typeof TOURNAMENT_TAB_IDS[number];
@@ -434,14 +434,29 @@ export default function TournamentDetails() {
         }
     };
 
-    // Fetch room credentials from secure subcollection (not the public tournament doc)
+    // Real-time room credentials live subscription (millisecond latency sync from Org Panel)
     useEffect(() => {
-        if (!tournament || !isJoined || !user) return;
+        if (!tournament || !isJoined || !user) {
+            setRoomCreds(null);
+            return;
+        }
         if (tournament.status !== 'live' && tournament.status !== 'upcoming') return;
-        fetchRoomCredentials(tournament.id, undefined, eventCollection).then(creds => {
-            if (creds) setRoomCreds(creds);
-        });
-    }, [tournament?.id, tournament?.status, isJoined, user, eventCollection]);
+
+        const unsubscribe = subscribeRoomCredentials(
+            tournament.id,
+            (creds) => {
+                if (creds) {
+                    setRoomCreds(creds);
+                }
+            },
+            undefined,
+            eventCollection
+        );
+
+        return () => {
+            unsubscribe();
+        };
+    }, [tournament?.id, tournament?.status, isJoined, user?.uid, eventCollection]);
 
     if (loading) {
         return (

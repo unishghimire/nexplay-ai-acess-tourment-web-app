@@ -5,7 +5,7 @@ import { Tournament, TournamentGroup, Participant } from '../../../shared/types/
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { aggregateStandings } from '../../../shared/services/scoringEngine';
-import { fetchRoomCredentials } from '../../../shared/services/roomCredentials';
+import { fetchRoomCredentials, subscribeRoomCredentials } from '../../../shared/services/roomCredentials';
 import { useEffect } from 'react';
 
 // ═══════════════════════════════════════════════════════════════
@@ -286,9 +286,16 @@ export default function GroupStandingsView({ tournament, participants }: GroupSt
     const [secureCreds, setSecureCreds] = useState<{ roomId?: string; roomPass?: string } | null>(null);
     useEffect(() => {
         if (!tournament.id || !myGroup) return;
-        fetchRoomCredentials(tournament.id, myGroup.id).then(creds => {
-            if (creds) setSecureCreds(creds);
-        });
+        const unsubscribe = subscribeRoomCredentials(
+            tournament.id,
+            (creds) => {
+                if (creds) setSecureCreds(creds);
+            },
+            myGroup.id
+        );
+        return () => {
+            unsubscribe();
+        };
     }, [tournament.id, myGroup?.id]);
 
     const groupRoomId = secureCreds?.roomId;
