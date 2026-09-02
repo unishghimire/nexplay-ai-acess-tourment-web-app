@@ -72,6 +72,19 @@ const Profile: React.FC = () => {
 
     useEffect(() => {
         if (profile) {
+            setInGameId(profile.inGameId || '');
+            setInGameName(profile.inGameName || '');
+            setTeamName(profile.teamName || '');
+            setPhone(profile.phone || '');
+            setBio(profile.bio || '');
+            setSkills(profile.skills?.join(', ') || '');
+            setStatus(profile.status || 'online');
+            setCustomActivity(profile.customActivity || '');
+            setOrgName(profile.orgName || '');
+            setOrgWhatsapp(profile.whatsapp || '');
+            setOrgDiscord(profile.discord || '');
+            setOrgYoutube(profile.youtube || '');
+            setOrgEmail(profile.email || '');
         }
     }, [profile]);
 

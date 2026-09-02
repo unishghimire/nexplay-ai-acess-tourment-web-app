@@ -148,11 +148,11 @@ const Leaderboard: React.FC = () => {
     };
 
     const filteredPlayers = players.filter(p => 
-        p.username.toLowerCase().includes(searchQuery.toLowerCase())
+        (p.username || '').toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     const filteredTeams = teams.filter(t => 
-        t.name.toLowerCase().includes(searchQuery.toLowerCase())
+        (t.name || '').toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     const currentList = view === 'players' ? filteredPlayers : filteredTeams;

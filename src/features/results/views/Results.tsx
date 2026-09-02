@@ -223,7 +223,7 @@ const Results: React.FC = () => {
                                             </div>
                                             <div className="text-right">
                                                 <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-1">Prize pool</p>
-                                                <p className="text-lg font-black text-brand-500">{(t.prizePool).toLocaleString()} {t.currency || 'Rs.'}</p>
+                                                <p className="text-lg font-black text-brand-500">{(Number(t.prizePool) || 0).toLocaleString()} {t.currency || 'Rs.'}</p>
                                             </div>
                                         </div>
 

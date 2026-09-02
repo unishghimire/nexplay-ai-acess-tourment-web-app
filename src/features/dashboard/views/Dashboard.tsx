@@ -50,6 +50,7 @@ const Dashboard: React.FC = () => {
                 for (const chunk of chunks) {
                     const q = query(collection(db, 'tournaments'), where('__name__', 'in', chunk));
                     const tSnap = await getDocs(q);
+                    const foundIds = new Set(tSnap.docs.map(d => d.id));
                     
                     tSnap.docs.forEach(tDoc => {
                         // Find the corresponding participant record
@@ -63,6 +64,27 @@ const Dashboard: React.FC = () => {
                              } as Tournament & { role: 'participant' | 'organizer'; registration?: any });
                         }
                     });
+
+                    const missingIds = chunk.filter(id => !foundIds.has(id));
+                    if (missingIds.length > 0) {
+                        try {
+                            const scrimsQ = query(collection(db, 'scrims'), where('__name__', 'in', missingIds));
+                            const sSnap = await getDocs(scrimsQ);
+                            sSnap.docs.forEach(sDoc => {
+                                const pDoc = partSnap.docs.find(p => p.data().tournamentId === sDoc.id);
+                                if (pDoc) {
+                                    joinedTours.push({
+                                        id: sDoc.id,
+                                        ...sDoc.data(),
+                                        role: 'participant',
+                                        registration: pDoc.data()
+                                    } as Tournament & { role: 'participant' | 'organizer'; registration?: any });
+                                }
+                            });
+                        } catch (scrimErr) {
+                            console.warn("Scrims collection query fallback:", scrimErr);
+                        }
+                    }
                 }
             }
 

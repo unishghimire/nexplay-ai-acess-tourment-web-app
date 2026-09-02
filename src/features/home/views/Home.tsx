@@ -387,7 +387,7 @@ const Home: React.FC = () => {
                                             ))}
                                             <div className="flex flex-col">
                                                 <p className="text-xs text-gray-500 font-black uppercase tracking-widest">Prize Pool</p>
-                                                <p className="text-xs font-black text-brand-500">{(t.prizePool).toLocaleString()} {t.currency || 'Rs.'}</p>
+                                                <p className="text-xs font-black text-brand-500">{(Number(t.prizePool) || 0).toLocaleString()} {t.currency || 'Rs.'}</p>
                                             </div>
                                         </div>
                                     </div>
