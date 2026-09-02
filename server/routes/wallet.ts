@@ -24,7 +24,7 @@ router.post("/api/wallet/deposit",
   rateLimit(30, 15 * 60 * 1000),
   async (req: any, res) => {
     try {
-      const { amount, method, senderNumber, transactionCode, proofUrl } = req.body;
+      const { amount, method, senderNumber, senderName, transactionCode, proofUrl } = req.body;
       const uid = req.user.userId;
 
       const numAmount = Number(amount);
@@ -83,7 +83,8 @@ router.post("/api/wallet/deposit",
         method,
         status: 'pending',
         timestamp: admin.firestore.FieldValue.serverTimestamp(),
-        accountDetails: `Sender Number: ${senderNumber}\nTransaction Code/Name: ${transactionCode}`,
+        accountDetails: `Sender Name: ${typeof senderName === 'string' && senderName.trim() ? senderName.trim() : 'N/A'}\nSender Number: ${senderNumber}\nTransaction Code/Name: ${transactionCode}`,
+        senderName: typeof senderName === 'string' ? senderName.trim() : '',
         transactionCode,
         proofUrl: finalProofUrl,
         refId: `DEP-${Date.now()}`,

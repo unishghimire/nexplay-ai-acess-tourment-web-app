@@ -370,6 +370,8 @@ export interface PaymentMethod {
     id: string;
     categoryId: string; // Reference to PaymentCategory
     name: string;
+    accountName?: string;
+    accountNumber?: string;
     qrUrl: string;
     instructions: string;
     type: string; // Kept for backwards compatibility or specific provider name
