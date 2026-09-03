@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { doc, getDoc, collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
 import { db, auth } from '../../../shared/config/firebase';
@@ -6,11 +6,12 @@ import { Tournament, UserProfile } from '../../../shared/types/types';
 import { DEFAULT_BANNER } from '../../../shared/constants/constants';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { formatCurrency, formatDate, formatGameName, getYoutubeId, toDateSafe, sanitizeUrl } from '../../../shared/utils/utils';
-import { getSlotCount, getFilledSlotCount } from '../../../shared/utils/scrimSlots';
-import { Clock, Users, Trophy, Lock, Eye, EyeOff, Play, Share2, Calendar, MapPin, Info, Medal, ExternalLink, ChevronRight, AlertCircle, CheckCircle2, Search, Building2 , Target, Trash2, Settings2, AlertTriangle, ShieldAlert } from 'lucide-react';
+import { getSlotCount, getFilledSlotCount, normalizeScrimSlots } from '../../../shared/utils/scrimSlots';
+import { Clock, Users, Trophy, Lock, Eye, EyeOff, Play, Share2, Calendar, MapPin, Info, Medal, ExternalLink, ChevronRight, AlertCircle, CheckCircle2, Search, Building2 , Target, Trash2, Settings2, AlertTriangle, ShieldAlert, Shield } from 'lucide-react';
 import RegistrationModal from '../components/RegistrationModal';
 import JoinTournamentModal from '../components/JoinTournamentModal';
 import { TournamentDisputeModal } from '../components/TournamentDisputeModal';
+import { SlotGrid } from '../components/SlotGrid';
 import Modal from '../../../shared/components/Modal';
 import { motion, AnimatePresence } from 'motion/react';
 import { NotificationService } from '../../../shared/services/NotificationService';
@@ -26,7 +27,7 @@ import { TournamentRoadmap } from '../components/TournamentRoadmap';
 import GroupStandingsView from '../components/GroupStandingsView';
 import { fetchRoomCredentials, subscribeRoomCredentials, RoomCredentials } from '../../../shared/services/roomCredentials';
 
-const TOURNAMENT_TAB_IDS = ['overview', 'description', 'participants', 'groups', 'roadmap', 'results', 'killrewards'] as const;
+const TOURNAMENT_TAB_IDS = ['overview', 'slots', 'description', 'participants', 'groups', 'roadmap', 'results', 'killrewards'] as const;
 type TournamentTabId = typeof TOURNAMENT_TAB_IDS[number];
 
 const getTournamentTab = (value: string | null): TournamentTabId =>
@@ -57,8 +58,15 @@ export default function TournamentDetails() {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [showDisputeModal, setShowDisputeModal] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [mySlotNumber, setMySlotNumber] = useState<number | null>(null);
+    const [selectedSlotForBooking, setSelectedSlotForBooking] = useState<number | null>(null);
 
     const [eventCollection, setEventCollection] = useState<'tournaments' | 'scrims'>('tournaments');
+
+    const normalizedSlots = useMemo(() => {
+        if (!tournament) return [];
+        return normalizeScrimSlots(tournament.slots, getSlotCount(tournament), getFilledSlotCount(tournament));
+    }, [tournament]);
 
     const isHostOrAdmin = Boolean(
         (user && tournament && (
@@ -204,6 +212,12 @@ export default function TournamentDetails() {
             where('userId', '==', user.uid)
         ), async (snapshot) => {
             let joined = !snapshot.empty;
+            let mySlot: number | null = null;
+            if (!snapshot.empty) {
+                const partData = snapshot.docs[0].data();
+                if (partData.slotNumber) mySlot = partData.slotNumber;
+            }
+
             // Team-registration fallback (BUG-037): the team query may be
             // filtered to self for non-hosts — treat a failure as "not joined"
             // rather than throwing into the listener.
@@ -214,16 +228,40 @@ export default function TournamentDetails() {
                         where('tournamentId', '==', id),
                         where('teamId', '==', profile.teamId)
                     ));
-                    if (!teamSnap.empty) joined = true;
+                    if (!teamSnap.empty) {
+                        joined = true;
+                        if (teamSnap.docs[0].data()?.slotNumber) {
+                            mySlot = teamSnap.docs[0].data().slotNumber;
+                        }
+                    }
                 } catch (err) {
                     console.warn('Team join-status fallback failed:', err);
                 }
             }
             setIsJoined(joined);
+            if (mySlot) setMySlotNumber(mySlot);
         }, (err) => console.warn('Join status subscription failed:', err));
 
         return () => unsubJoin();
     }, [id, user, profile?.teamId]);
+
+    // Synchronize user slot number directly from tournament slots array
+    useEffect(() => {
+        if (!user || !tournament) return;
+        const slotMatch = normalizedSlots.find(s => 
+            s.userId === user.uid || 
+            s.captainUid === user.uid || 
+            (profile?.teamId && s.teamId === profile.teamId)
+        );
+        if (slotMatch?.slotNumber) {
+            setMySlotNumber(slotMatch.slotNumber);
+            return;
+        }
+        const partMatch = participants.find(p => p.userId === user.uid);
+        if (partMatch?.slotNumber) {
+            setMySlotNumber(partMatch.slotNumber);
+        }
+    }, [user, tournament, normalizedSlots, participants, profile?.teamId]);
 
     useEffect(() => {
         if (!loading && tournament && searchParams.get('tab') === 'results') {
@@ -339,6 +377,20 @@ export default function TournamentDetails() {
         }
     };
 
+    const handleClaimSlot = (slotNum: number) => {
+        if (!user) {
+            showToast("Please login to join and book a slot!", "warning");
+            navigate('/profile');
+            return;
+        }
+        if (isJoined) {
+            showToast(`You are already registered in Slot #${mySlotNumber || 'Confirmed'}`, "info");
+            return;
+        }
+        setSelectedSlotForBooking(slotNum);
+        handleJoinClick();
+    };
+
     const handleJoinClick = () => {
         if (!user) {
             showToast("Please login to join!", "warning");
@@ -372,8 +424,18 @@ export default function TournamentDetails() {
         }
     };
 
-    const handleJoinSuccess = () => {
+    const handleJoinSuccess = (slotNum?: number) => {
         setIsJoined(true);
+        if (slotNum) {
+            setMySlotNumber(slotNum);
+        }
+        if (id) {
+            getDoc(doc(db, eventCollection, id)).then((snap) => {
+                if (snap.exists()) {
+                    setTournament({ id: snap.id, ...snap.data() } as Tournament);
+                }
+            });
+        }
     };
 
     const handleLeaveTournament = async () => {
@@ -621,6 +683,7 @@ export default function TournamentDetails() {
                     <div className="flex p-1.5 sm:p-2 bg-card/50 rounded-2xl sm:rounded-full border border-gray-800 sticky top-16 sm:top-24 z-10 backdrop-blur-xl overflow-x-auto custom-scrollbar gap-2 max-w-full">
                         {[
                             { id: 'overview', label: 'Overview', icon: Info },
+                            { id: 'slots', label: `Slots (${getFilledSlotCount(tournament)}/${getSlotCount(tournament)})`, icon: Users },
                             { id: 'description', label: 'Description', icon: Info },
                             { id: 'participants', label: 'Players', icon: Users },
                             { id: 'roadmap', label: 'Roadmap', icon: Calendar },
@@ -753,6 +816,34 @@ export default function TournamentDetails() {
                                         </div>
                                     </div>
                                 )}
+
+                                <div className="mt-6">
+                                    <SlotGrid 
+                                        slots={normalizedSlots} 
+                                        totalSlots={getSlotCount(tournament)} 
+                                        mySlotNumber={mySlotNumber} 
+                                        isJoined={isJoined} 
+                                        onSelectSlot={handleClaimSlot} 
+                                    />
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {activeTab === 'slots' && (
+                            <motion.div 
+                                key="slots"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                className="space-y-6 sm:space-y-8"
+                            >
+                                <SlotGrid 
+                                    slots={normalizedSlots} 
+                                    totalSlots={getSlotCount(tournament)} 
+                                    mySlotNumber={mySlotNumber} 
+                                    isJoined={isJoined} 
+                                    onSelectSlot={handleClaimSlot} 
+                                />
                             </motion.div>
                         )}
 
@@ -1052,9 +1143,16 @@ export default function TournamentDetails() {
                                     const myParticipant = participants.find(p => p.userId === user?.uid);
                                     const status = myParticipant?.status;
                                     if (!status || status === 'approved') return (
-                                        <div className="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/20 rounded-2xl">
-                                            <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" />
-                                            <span className="text-xs font-black text-green-400 uppercase tracking-widest">Registration Confirmed</span>
+                                        <div className="flex items-center justify-between p-3 bg-green-500/10 border border-green-500/20 rounded-2xl">
+                                            <div className="flex items-center gap-2">
+                                                <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" />
+                                                <span className="text-xs font-black text-green-400 uppercase tracking-widest">Registration Confirmed</span>
+                                            </div>
+                                            {mySlotNumber && (
+                                                <span className="text-xs font-black text-white font-mono bg-green-500/20 px-2 py-0.5 rounded-lg border border-green-500/30">
+                                                    SLOT #{mySlotNumber}
+                                                </span>
+                                            )}
                                         </div>
                                     );
                                     if (status === 'pending') return (
@@ -1071,6 +1169,25 @@ export default function TournamentDetails() {
                                     );
                                     return null;
                                 })()}
+
+                                {/* Allocated Slot Banner in Join Card */}
+                                {mySlotNumber && (
+                                    <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl flex items-center justify-between">
+                                        <div className="flex items-center gap-2.5">
+                                            <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0">
+                                                <Shield className="w-4 h-4 text-emerald-400" />
+                                            </div>
+                                            <div>
+                                                <div className="text-[10px] text-emerald-400 font-black uppercase tracking-wider">Assigned Slot</div>
+                                                <div className="text-xs text-white font-black">Room Slot #{mySlotNumber}</div>
+                                            </div>
+                                        </div>
+                                        <span className="text-xs bg-emerald-500/20 text-emerald-300 font-mono px-2.5 py-1 rounded-lg border border-emerald-500/40 font-black">
+                                            SLOT {mySlotNumber < 10 ? `0${mySlotNumber}` : mySlotNumber}
+                                        </span>
+                                    </div>
+                                )}
+
                                 <div className="grid grid-cols-2 gap-2">
                                     <button type="button" 
                                         onClick={() => setActiveTab('overview')}
@@ -1146,10 +1263,14 @@ export default function TournamentDetails() {
             {showJoinModal && tournament && profile && (
                 <JoinTournamentModal 
                     isOpen={showJoinModal}
-                    onClose={() => setShowJoinModal(false)}
+                    onClose={() => {
+                        setShowJoinModal(false);
+                        setSelectedSlotForBooking(null);
+                    }}
                     tournament={tournament}
                     profile={profile}
                     teamMembers={teamMembers}
+                    initialSlotNumber={selectedSlotForBooking}
                     onSuccess={handleJoinSuccess}
                 />
             )}
@@ -1157,9 +1278,13 @@ export default function TournamentDetails() {
             {showRegistrationModal && tournament && profile && (
                 <RegistrationModal 
                     isOpen={showRegistrationModal}
-                    onClose={() => setShowRegistrationModal(false)}
+                    onClose={() => {
+                        setShowRegistrationModal(false);
+                        setSelectedSlotForBooking(null);
+                    }}
                     tournament={tournament}
                     profile={profile}
+                    initialSlotNumber={selectedSlotForBooking}
                     onSuccess={handleJoinSuccess}
                 />
             )}

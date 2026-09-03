@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db, auth } from '../../../shared/config/firebase';
 import { Tournament, UserProfile, Team, TeamMember } from '../../../shared/types/types';
 import Modal from '../../../shared/components/Modal';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { NotificationService } from '../../../shared/services/NotificationService';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { ShieldCheck, Users, Trophy, DollarSign } from 'lucide-react';
 import { formatCurrency, formatGameName } from '../../../shared/utils/utils';
+import { normalizeScrimSlots, getSlotCount } from '../../../shared/utils/scrimSlots';
 
 interface JoinTournamentModalProps {
     isOpen: boolean;
@@ -16,7 +16,8 @@ interface JoinTournamentModalProps {
     tournament: Tournament;
     profile: UserProfile;
     teamMembers?: any[];
-    onSuccess: () => void;
+    initialSlotNumber?: number | null;
+    onSuccess: (slotNumber?: number) => void;
 }
 
 const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
@@ -25,16 +26,26 @@ const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
     tournament,
     profile,
     teamMembers: initialTeamMembers = [],
+    initialSlotNumber,
     onSuccess
 }) => {
     const { user } = useAuth();
     const { showToast } = useNotification();
-    const navigate = useNavigate();
 
     const [userTeams, setUserTeams] = useState<Team[]>([]);
     const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
     const [availableMembers, setAvailableMembers] = useState<TeamMember[]>([]);
     const [loadingTeams, setLoadingTeams] = useState(false);
+    const [selectedSlot, setSelectedSlot] = useState<number | ''>(initialSlotNumber || '');
+
+    const normalizedSlots = useMemo(() => {
+        const total = getSlotCount(tournament);
+        return normalizeScrimSlots(tournament.slots, total);
+    }, [tournament]);
+
+    const openSlots = useMemo(() => {
+        return normalizedSlots.filter(s => s.status === 'open');
+    }, [normalizedSlots]);
 
     const [teammate1, setTeammate1] = useState('');
     const [teammate2, setTeammate2] = useState('');
@@ -150,6 +161,7 @@ const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({
                     tournamentId: tournament.id,
+                    slotNumber: selectedSlot ? Number(selectedSlot) : undefined,
                     teammates,
                     teamId: selectedTeam?.id || profile.teamId || user.uid,
                     teamName: selectedTeam?.name || profile.teamName || profile.username || 'Registered Team',
@@ -159,18 +171,19 @@ const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || 'Failed to join tournament');
 
+            const confirmedSlot = data.slotNumber || (selectedSlot ? Number(selectedSlot) : undefined);
+
             await NotificationService.create(
                 user.uid,
                 'Tournament Joined!',
-                `You have successfully joined ${tournament.title}. Good luck!`,
+                `You have successfully joined ${tournament.title}${confirmedSlot ? ` in Slot #${confirmedSlot}` : ''}. Good luck!`,
                 'success',
                 `/tournaments/${tournament.id}`
             );
             
-            showToast('Joined Successfully!', 'success');
-            onSuccess();
+            showToast(`Joined Successfully in Slot #${confirmedSlot || 'Confirmed'}!`, 'success');
+            onSuccess(confirmedSlot);
             onClose();
-            navigate('/dashboard');
         } catch (e: any) {
             showToast(e.message, 'error');
         } finally {
@@ -203,6 +216,31 @@ const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
                             </div>
                         </div>
                     </div>
+                </div>
+
+                {/* Slot Selection */}
+                <div className="space-y-1.5">
+                    <div className="flex justify-between items-center ml-1">
+                        <label className="text-[10px] text-gray-500 uppercase font-black tracking-wider">
+                            Select Slot Booking
+                        </label>
+                        <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">
+                            {openSlots.length} Slots Available
+                        </span>
+                    </div>
+                    <select
+                        aria-label="Select Slot"
+                        value={selectedSlot}
+                        onChange={(e) => setSelectedSlot(e.target.value ? Number(e.target.value) : '')}
+                        className="w-full bg-dark border border-gray-700 rounded-xl p-3 text-white focus:border-brand-500 focus-visible:outline-none font-bold text-sm"
+                    >
+                        <option value="">⚡ Auto-assign next open slot</option>
+                        {openSlots.map(s => (
+                            <option key={s.slotNumber} value={s.slotNumber}>
+                                Slot #{s.slotNumber < 10 ? `0${s.slotNumber}` : s.slotNumber} (Available)
+                            </option>
+                        ))}
+                    </select>
                 </div>
 
                 {tournament.teamType !== 'solo' && userTeams.length > 0 && (

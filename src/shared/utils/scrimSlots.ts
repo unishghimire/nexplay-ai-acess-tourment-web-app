@@ -3,6 +3,11 @@ export interface ScrimSlot {
   status: 'open' | 'filled';
   teamName?: string | null;
   teamId?: string | null;
+  userId?: string | null;
+  captainUid?: string | null;
+  inGameId?: string | null;
+  inGameName?: string | null;
+  joinedAt?: string | null;
 }
 
 export const SCRIM_FORMAT_SLOTS = {
@@ -31,7 +36,7 @@ export const normalizeScrimSlots = (
   totalSlots?: unknown,
   filledSlots?: unknown,
 ): ScrimSlot[] => {
-  if (Array.isArray(slots)) {
+  if (Array.isArray(slots) && slots.length > 0) {
     return slots.map((slot, index) => {
       const record = slot && typeof slot === 'object' ? slot as Record<string, unknown> : {};
       return {
@@ -39,6 +44,11 @@ export const normalizeScrimSlots = (
         status: record.status === 'filled' ? 'filled' : 'open',
         teamName: typeof record.teamName === 'string' ? record.teamName : null,
         teamId: typeof record.teamId === 'string' ? record.teamId : null,
+        userId: typeof record.userId === 'string' ? record.userId : (typeof record.captainUid === 'string' ? record.captainUid : null),
+        captainUid: typeof record.captainUid === 'string' ? record.captainUid : (typeof record.userId === 'string' ? record.userId : null),
+        inGameId: typeof record.inGameId === 'string' ? record.inGameId : null,
+        inGameName: typeof record.inGameName === 'string' ? record.inGameName : null,
+        joinedAt: typeof record.joinedAt === 'string' ? record.joinedAt : null,
       };
     });
   }
@@ -50,6 +60,11 @@ export const normalizeScrimSlots = (
     status: index < filled ? 'filled' : 'open',
     teamName: index < filled ? `Team ${index + 1}` : null,
     teamId: null,
+    userId: null,
+    captainUid: null,
+    inGameId: null,
+    inGameName: null,
+    joinedAt: null,
   }));
 };
 

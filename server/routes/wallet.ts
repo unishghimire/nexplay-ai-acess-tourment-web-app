@@ -247,7 +247,7 @@ router.post("/api/wallet/join-tournament",
   rateLimit(10, 15 * 60 * 1000),
   async (req: any, res) => {
     try {
-      const { tournamentId, teammates, teamId, teamName, selectedPlayers } = req.body;
+      const { tournamentId, slotNumber, teammates, teamId, teamName, selectedPlayers } = req.body;
       const uid = req.user.userId;
 
       if (!tournamentId || typeof tournamentId !== 'string' || tournamentId.length > 128) {
@@ -336,30 +336,92 @@ router.post("/api/wallet/join-tournament",
         const effectiveTeamName = teamName || uData.teamName || uData.username || 'Registered Player';
         const effectiveTeamId = teamId || uData.teamId || uid;
 
-        const tournamentUpdates: any = {
-          currentPlayers: (tData.currentPlayers || 0) + 1,
-        };
+        // Build or normalize slots array
+        const formatTotalSlots = isScrim 
+          ? (tData.format === 'Solo' ? 48 : tData.format === 'Duo' ? 25 : 12)
+          : (totalSlotsCount > 0 ? totalSlotsCount : 12);
+        const resolvedTotalSlots = totalSlotsCount > 0 ? totalSlotsCount : formatTotalSlots;
 
+        let currentSlots: any[] = [];
         if (Array.isArray(tData.slots) && tData.slots.length > 0) {
-          const slotIdx = tData.slots.findIndex((s: any) => s.status === 'open');
-          if (slotIdx !== -1) {
-            const updatedSlots = [...tData.slots];
-            updatedSlots[slotIdx] = {
-              ...updatedSlots[slotIdx],
-              status: 'filled',
-              teamName: effectiveTeamName,
-              teamId: effectiveTeamId,
-              inGameId: uData.inGameId || '',
-            };
-            tournamentUpdates.slots = updatedSlots;
-            tournamentUpdates.filledSlots = updatedSlots.filter((s: any) => s.status === 'filled').length;
+          currentSlots = tData.slots.map((s: any, idx: number) => ({
+            slotNumber: typeof s.slotNumber === 'number' ? s.slotNumber : idx + 1,
+            status: s.status === 'filled' ? 'filled' : 'open',
+            teamName: s.teamName || null,
+            teamId: s.teamId || null,
+            userId: s.userId || s.captainUid || null,
+            captainUid: s.captainUid || s.userId || null,
+            inGameId: s.inGameId || null,
+            inGameName: s.inGameName || null,
+            joinedAt: s.joinedAt || null,
+          }));
+        } else {
+          currentSlots = Array.from({ length: resolvedTotalSlots }, (_, i) => ({
+            slotNumber: i + 1,
+            status: 'open',
+            teamName: null,
+            teamId: null,
+            userId: null,
+            captainUid: null,
+            inGameId: null,
+            inGameName: null,
+            joinedAt: null,
+          }));
+        }
+
+        let assignedSlotIdx = -1;
+        const requestedSlotNum = Number(slotNumber);
+
+        // If user requested a specific valid slot number
+        if (Number.isInteger(requestedSlotNum) && requestedSlotNum >= 1 && requestedSlotNum <= currentSlots.length) {
+          const targetIdx = currentSlots.findIndex((s: any) => s.slotNumber === requestedSlotNum);
+          if (targetIdx !== -1 && currentSlots[targetIdx].status === 'open') {
+            assignedSlotIdx = targetIdx;
+          } else if (targetIdx !== -1 && currentSlots[targetIdx].status === 'filled') {
+            throw new Error(`Slot #${requestedSlotNum} is already taken. Please choose another slot.`);
           }
         }
+
+        // Auto-assign first available slot
+        if (assignedSlotIdx === -1) {
+          assignedSlotIdx = currentSlots.findIndex((s: any) => s.status === 'open');
+        }
+
+        if (assignedSlotIdx === -1) {
+          throw new Error("Tournament is full");
+        }
+
+        const assignedSlotNumber = currentSlots[assignedSlotIdx].slotNumber || (assignedSlotIdx + 1);
+
+        currentSlots[assignedSlotIdx] = {
+          slotNumber: assignedSlotNumber,
+          status: 'filled',
+          teamName: effectiveTeamName,
+          teamId: effectiveTeamId,
+          userId: uid,
+          captainUid: uid,
+          inGameId: uData.inGameId || '',
+          inGameName: uData.inGameName || '',
+          joinedAt: new Date().toISOString(),
+        };
+
+        const filledCount = currentSlots.filter((s: any) => s.status === 'filled').length;
+        const tournamentUpdates: any = {
+          slots: currentSlots,
+          filledSlots: filledCount,
+          currentPlayers: filledCount,
+        };
+
+        if (resolvedTotalSlots > 0 && filledCount >= resolvedTotalSlots) {
+          tournamentUpdates.status = 'full';
+        }
+
         tx.update(targetRef, tournamentUpdates);
 
         const participantData: any = {
           userId: uid,
           tournamentId,
+          slotNumber: assignedSlotNumber,
           inGameId: uData.inGameId || '',
           inGameName: uData.inGameName || '',
           teamName: effectiveTeamName,
@@ -397,17 +459,22 @@ router.post("/api/wallet/join-tournament",
           });
         }
 
-        return { newBalance: balanceAfter, participantId: partRef.id };
+        return { 
+          newBalance: balanceAfter,
+          slotNumber: assignedSlotNumber,
+          participantId: partRef.id 
+        };
       });
 
       return res.status(200).json({
         success: true,
-        message: "Joined tournament successfully",
+        message: `Joined tournament successfully in Slot #${result.slotNumber}`,
+        slotNumber: result.slotNumber,
         newBalance: result.newBalance
       });
     } catch (error: any) {
       const msg = error.message || "Failed to join tournament";
-      const code = ["Insufficient balance", "Tournament is full", "Already registered"].includes(msg) ? 400 : 500;
+      const code = ["Insufficient balance", "Tournament is full", "Already registered"].some(m => msg.includes(m)) || msg.includes("Slot") ? 400 : 500;
       return res.status(code).json({ success: false, message: msg });
     }
   }
@@ -464,17 +531,34 @@ router.post("/api/wallet/leave-tournament",
         };
 
         if (Array.isArray(tData.slots) && tData.slots.length > 0) {
-          const slotIdx = tData.slots.findIndex((s: any) => s.teamId === uid || (uData.teamId && s.teamId === uData.teamId));
+          const mySlotNum = partDoc.data()?.slotNumber;
+          const slotIdx = tData.slots.findIndex((s: any) => 
+            (mySlotNum && s.slotNumber === mySlotNum) ||
+            s.userId === uid ||
+            s.captainUid === uid ||
+            s.teamId === uid ||
+            (uData.teamId && s.teamId === uData.teamId)
+          );
           if (slotIdx !== -1) {
             const updatedSlots = [...tData.slots];
             updatedSlots[slotIdx] = {
-              slotNumber: updatedSlots[slotIdx].slotNumber,
+              slotNumber: updatedSlots[slotIdx].slotNumber || (slotIdx + 1),
               status: 'open',
               teamName: null,
               teamId: null,
+              userId: null,
+              captainUid: null,
+              inGameId: null,
+              inGameName: null,
+              joinedAt: null,
             };
             tournamentUpdates.slots = updatedSlots;
-            tournamentUpdates.filledSlots = updatedSlots.filter((s: any) => s.status === 'filled').length;
+            const remainingFilled = updatedSlots.filter((s: any) => s.status === 'filled').length;
+            tournamentUpdates.filledSlots = remainingFilled;
+            tournamentUpdates.currentPlayers = remainingFilled;
+            if (tData.status === 'full') {
+              tournamentUpdates.status = 'upcoming';
+            }
           }
         }
         tx.update(targetRef, tournamentUpdates);
