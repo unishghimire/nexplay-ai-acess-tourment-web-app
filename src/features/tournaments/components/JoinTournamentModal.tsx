@@ -17,7 +17,7 @@ interface JoinTournamentModalProps {
     profile: UserProfile;
     teamMembers?: any[];
     initialSlotNumber?: number | null;
-    onSuccess: (slotNumber?: number) => void;
+    onSuccess: (slotNumber?: number, joinData?: any) => void;
 }
 
 const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
@@ -182,7 +182,7 @@ const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
             );
             
             showToast(`Joined Successfully in Slot #${confirmedSlot || 'Confirmed'}!`, 'success');
-            onSuccess(confirmedSlot);
+            onSuccess(confirmedSlot, data);
             onClose();
         } catch (e: any) {
             showToast(e.message, 'error');

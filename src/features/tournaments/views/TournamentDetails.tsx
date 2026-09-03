@@ -65,8 +65,23 @@ export default function TournamentDetails() {
 
     const normalizedSlots = useMemo(() => {
         if (!tournament) return [];
-        return normalizeScrimSlots(tournament.slots, getSlotCount(tournament), getFilledSlotCount(tournament));
-    }, [tournament]);
+        return normalizeScrimSlots(
+            tournament.slots, 
+            getSlotCount(tournament), 
+            getFilledSlotCount(tournament, participants.length),
+            {
+                mySlotNumber,
+                myUserId: user?.uid,
+                myUserName: profile?.username || profile?.teamName || 'Registered Player',
+                myInGameId: profile?.inGameId,
+                myInGameName: profile?.inGameName,
+                participants,
+            }
+        );
+    }, [tournament, mySlotNumber, user?.uid, profile?.username, profile?.teamName, profile?.inGameId, profile?.inGameName, participants]);
+
+    const filledCount = useMemo(() => getFilledSlotCount(tournament, participants.length), [tournament, participants.length]);
+    const totalCount = useMemo(() => getSlotCount(tournament), [tournament]);
 
     const isHostOrAdmin = Boolean(
         (user && tournament && (
@@ -430,15 +445,31 @@ export default function TournamentDetails() {
         }
     };
 
-    const handleJoinSuccess = (slotNum?: number) => {
+    const handleJoinSuccess = (slotNum?: number, joinData?: any) => {
         setIsJoined(true);
         if (slotNum) {
             setMySlotNumber(slotNum);
+        }
+        if (joinData?.slots) {
+            setTournament(prev => prev ? {
+                ...prev,
+                slots: joinData.slots,
+                filledSlots: joinData.filledSlots ?? (((prev as any).filledSlots || 0) + 1),
+                currentPlayers: joinData.filledSlots ?? ((prev.currentPlayers || 0) + 1),
+            } : null);
         }
         if (id) {
             getDoc(doc(db, eventCollection, id)).then((snap) => {
                 if (snap.exists()) {
                     setTournament({ id: snap.id, ...snap.data() } as Tournament);
+                } else {
+                    const alt = eventCollection === 'tournaments' ? 'scrims' : 'tournaments';
+                    getDoc(doc(db, alt, id)).then((altSnap) => {
+                        if (altSnap.exists()) {
+                            setTournament({ id: altSnap.id, ...altSnap.data() } as Tournament);
+                            setEventCollection(alt);
+                        }
+                    });
                 }
             });
         }
@@ -699,7 +730,7 @@ export default function TournamentDetails() {
                     <div className="flex p-1.5 sm:p-2 bg-card/50 rounded-2xl sm:rounded-full border border-gray-800 sticky top-16 sm:top-24 z-10 backdrop-blur-xl overflow-x-auto custom-scrollbar gap-2 max-w-full">
                         {[
                             { id: 'overview', label: 'Overview', icon: Info },
-                            { id: 'slots', label: `Slots (${getFilledSlotCount(tournament)}/${getSlotCount(tournament)})`, icon: Users },
+                            { id: 'slots', label: `Slots (${filledCount}/${totalCount})`, icon: Users },
                             { id: 'description', label: 'Description', icon: Info },
                             { id: 'participants', label: 'Players', icon: Users },
                             !isEventScrim ? { id: 'roadmap', label: 'Roadmap', icon: Calendar } : null,
@@ -749,7 +780,16 @@ export default function TournamentDetails() {
                                     </div>
                                 )}
                                 {tournament.ytLink && (
-                                    <div className="flex justify-center">
+                                    <div className="bg-card/50 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-gray-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-xl bg-red-600/10 flex items-center justify-center text-red-500 shrink-0">
+                                                <Play className="w-5 h-5 fill-current" />
+                                            </div>
+                                            <div>
+                                                <h4 className="text-white font-bold text-sm sm:text-base">Live Stream Available</h4>
+                                                <p className="text-gray-400 text-xs mt-0.5">Watch this tournament live on YouTube</p>
+                                            </div>
+                                        </div>
                                         <a 
                                             href={sanitizeUrl(tournament.ytLink)} 
                                             target="_blank" 
@@ -765,7 +805,7 @@ export default function TournamentDetails() {
                                     {[
                                         { label: 'Prize Pool', value: formatCurrency(tournament.prizePool), icon: Trophy, color: 'text-yellow-500' },
                                         { label: 'Entry Fee', value: tournament.entryFee > 0 ? formatCurrency(tournament.entryFee) : 'FREE', icon: Medal, color: 'text-brand-500' },
-                                        { label: 'Slots', value: `${getFilledSlotCount(tournament)}/${getSlotCount(tournament)}`, icon: Users, color: 'text-blue-500' },
+                                        { label: 'Slots', value: `${filledCount}/${totalCount}`, icon: Users, color: 'text-blue-500' },
                                         { label: 'Game Mode', value: tournament.type, icon: Play, color: 'text-red-500' },
                                     ].map((stat, i) => (
                                         <div key={i} className="bg-card/50 p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-gray-700 transition-colors hover:bg-surface/50 min-w-0">
@@ -859,7 +899,7 @@ export default function TournamentDetails() {
                                 <div className="mt-6">
                                     <SlotGrid 
                                         slots={normalizedSlots} 
-                                        totalSlots={getSlotCount(tournament)} 
+                                        totalSlots={totalCount} 
                                         mySlotNumber={mySlotNumber} 
                                         isJoined={isJoined} 
                                         onSelectSlot={handleClaimSlot} 
@@ -878,7 +918,7 @@ export default function TournamentDetails() {
                             >
                                 <SlotGrid 
                                     slots={normalizedSlots} 
-                                    totalSlots={getSlotCount(tournament)} 
+                                    totalSlots={totalCount} 
                                     mySlotNumber={mySlotNumber} 
                                     isJoined={isJoined} 
                                     onSelectSlot={handleClaimSlot} 
@@ -1149,12 +1189,12 @@ export default function TournamentDetails() {
                             <div className="p-3 sm:p-4 bg-dark rounded-2xl border border-gray-800">
                                 <div className="flex justify-between items-center mb-2">
                                     <span className="text-xs text-gray-500 font-black uppercase tracking-widest">Slots Filled</span>
-                                    <span className="text-xs text-white font-black">{getFilledSlotCount(tournament)} / {getSlotCount(tournament)}</span>
+                                    <span className="text-xs text-white font-black">{filledCount} / {totalCount}</span>
                                 </div>
                                 <div className="w-full bg-card rounded-full h-2.5 overflow-hidden">
                                     <motion.div 
                                         initial={{ width: 0 }}
-                                        animate={{ width: `${(getFilledSlotCount(tournament) / (getSlotCount(tournament) || 1)) * 100}%` }}
+                                        animate={{ width: `${(filledCount / (totalCount || 1)) * 100}%` }}
                                         className="bg-brand-600 h-full rounded-full shadow-[0_0_10px_rgba(var(--brand-primary-rgb),0.5)]"
                                     ></motion.div>
                                 </div>
@@ -1348,7 +1388,7 @@ export default function TournamentDetails() {
                                     </button>
                                 </div>
                             )
-                        ) : getFilledSlotCount(tournament) >= getSlotCount(tournament) ? (
+                        ) : filledCount >= totalCount ? (
                             <button type="button" disabled className="w-full bg-red-900/20 text-red-500 border border-red-900/50 py-4 sm:py-5 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-widest cursor-not-allowed">
                                 Tournament Full
                             </button>

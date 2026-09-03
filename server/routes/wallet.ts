@@ -344,17 +344,21 @@ router.post("/api/wallet/join-tournament",
 
         let currentSlots: any[] = [];
         if (Array.isArray(tData.slots) && tData.slots.length > 0) {
-          currentSlots = tData.slots.map((s: any, idx: number) => ({
-            slotNumber: typeof s.slotNumber === 'number' ? s.slotNumber : idx + 1,
-            status: s.status === 'filled' ? 'filled' : 'open',
-            teamName: s.teamName || null,
-            teamId: s.teamId || null,
-            userId: s.userId || s.captainUid || null,
-            captainUid: s.captainUid || s.userId || null,
-            inGameId: s.inGameId || null,
-            inGameName: s.inGameName || null,
-            joinedAt: s.joinedAt || null,
-          }));
+          currentSlots = tData.slots.map((s: any, idx: number) => {
+            const isFilled = s.status === 'filled' || s.status === 'reserved' || s.status === 'booked' || Boolean(s.userId) || Boolean(s.reservedBy) || Boolean(s.captainUid);
+            return {
+              slotNumber: typeof s.slotNumber === 'number' ? s.slotNumber : idx + 1,
+              status: isFilled ? 'filled' : 'open',
+              teamName: s.teamName || null,
+              teamId: s.teamId || null,
+              userId: s.userId || s.captainUid || s.reservedBy || null,
+              captainUid: s.captainUid || s.userId || s.reservedBy || null,
+              reservedBy: s.reservedBy || s.userId || s.captainUid || null,
+              inGameId: s.inGameId || null,
+              inGameName: s.inGameName || null,
+              joinedAt: s.joinedAt || null,
+            };
+          });
         } else {
           currentSlots = Array.from({ length: resolvedTotalSlots }, (_, i) => ({
             slotNumber: i + 1,
@@ -363,6 +367,7 @@ router.post("/api/wallet/join-tournament",
             teamId: null,
             userId: null,
             captainUid: null,
+            reservedBy: null,
             inGameId: null,
             inGameName: null,
             joinedAt: null,
@@ -400,6 +405,7 @@ router.post("/api/wallet/join-tournament",
           teamId: effectiveTeamId,
           userId: uid,
           captainUid: uid,
+          reservedBy: uid,
           inGameId: uData.inGameId || '',
           inGameName: uData.inGameName || '',
           joinedAt: new Date().toISOString(),
@@ -417,6 +423,17 @@ router.post("/api/wallet/join-tournament",
         }
 
         tx.update(targetRef, tournamentUpdates);
+        if (targetRef === tRef) {
+          const sDoc = await tx.get(sRef);
+          if (sDoc.exists) {
+            tx.update(sRef, tournamentUpdates);
+          }
+        } else {
+          const tDocCheck = await tx.get(tRef);
+          if (tDocCheck.exists) {
+            tx.update(tRef, tournamentUpdates);
+          }
+        }
 
         const participantData: any = {
           userId: uid,
@@ -536,6 +553,7 @@ router.post("/api/wallet/leave-tournament",
             (mySlotNum && s.slotNumber === mySlotNum) ||
             s.userId === uid ||
             s.captainUid === uid ||
+            s.reservedBy === uid ||
             s.teamId === uid ||
             (uData.teamId && s.teamId === uData.teamId)
           );
@@ -548,6 +566,7 @@ router.post("/api/wallet/leave-tournament",
               teamId: null,
               userId: null,
               captainUid: null,
+              reservedBy: null,
               inGameId: null,
               inGameName: null,
               joinedAt: null,
@@ -562,6 +581,17 @@ router.post("/api/wallet/leave-tournament",
           }
         }
         tx.update(targetRef, tournamentUpdates);
+        if (targetRef === tRef) {
+          const sDoc = await tx.get(sRef);
+          if (sDoc.exists) {
+            tx.update(sRef, tournamentUpdates);
+          }
+        } else {
+          const tDocCheck = await tx.get(tRef);
+          if (tDocCheck.exists) {
+            tx.update(tRef, tournamentUpdates);
+          }
+        }
         tx.delete(partRef);
 
         if (refundAmount > 0) {

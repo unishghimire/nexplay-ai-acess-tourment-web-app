@@ -7,7 +7,7 @@ import { NotificationService } from '../../../shared/services/NotificationServic
 import { useAuth } from '../../../shared/context/AuthContext';
 import { Trophy, Users, DollarSign, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { formatCurrency, formatGameName } from '../../../shared/utils/utils';
-import { normalizeScrimSlots, getSlotCount } from '../../../shared/utils/scrimSlots';
+import { normalizeScrimSlots, getSlotCount, getFilledSlotCount } from '../../../shared/utils/scrimSlots';
 
 interface RegistrationModalProps {
     isOpen: boolean;
@@ -15,7 +15,7 @@ interface RegistrationModalProps {
     tournament: Tournament;
     profile: UserProfile;
     initialSlotNumber?: number | null;
-    onSuccess: (slotNumber?: number) => void;
+    onSuccess: (slotNumber?: number, joinData?: any) => void;
 }
 
 const RegistrationModal: React.FC<RegistrationModalProps> = ({
@@ -33,7 +33,8 @@ const RegistrationModal: React.FC<RegistrationModalProps> = ({
 
     const normalizedSlots = useMemo(() => {
         const total = getSlotCount(tournament);
-        return normalizeScrimSlots(tournament.slots, total);
+        const filled = getFilledSlotCount(tournament);
+        return normalizeScrimSlots(tournament.slots, total, filled);
     }, [tournament]);
 
     const openSlots = useMemo(() => {
@@ -70,7 +71,7 @@ const RegistrationModal: React.FC<RegistrationModalProps> = ({
             );
             
             showToast(`Joined Successfully in Slot #${confirmedSlot || 'Confirmed'}!`, 'success');
-            onSuccess(confirmedSlot);
+            onSuccess(confirmedSlot, data);
             onClose();
         } catch (e: any) {
             showToast(e.message, 'error');
