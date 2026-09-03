@@ -292,10 +292,25 @@ router.post("/api/wallet/join-tournament",
           throw new Error("Squad tournaments require exactly 3 teammates");
         }
         
-        // Registration Protection: If tournament has a monetary prize pool, funding must be secured
-        const prizePool = Math.max(0, Math.round(Number(tData.prizePool || 0)));
-        if (prizePool > 0 && tData.fundingStatus !== 'RESERVED') {
-          throw new Error("Tournament is currently awaiting organizer funding. Registration will open once funding is secured.");
+        const isScrim = targetRef.path.startsWith('scrims') || 
+                        tData.matchType === 'scrims' || 
+                        tData.isScrim === true || 
+                        tData.type === 'scrim' || 
+                        tData.type === 'scrims';
+
+        // Registration Protection:
+        // 1. Scrims: Practice matches and daily scrim lobbies do not use the formal tournament escrow pipeline.
+        // 2. Paid Tournaments with entryFee (entryFee > 0): Funded via participant entry fees as players register.
+        // 3. Free Tournaments with cash prize (entryFee === 0 && prizePool > 0): Host must secure prize funds in escrow before opening.
+        if (!isScrim) {
+          const prizePool = Math.max(0, Math.round(Number(tData.prizePool || 0)));
+          const entryFee = Math.max(0, Math.round(Number(tData.entryFee || 0)));
+          const isExplicitlyPending = tData.status === 'pending_funding' || tData.fundingStatus === 'PENDING_FUNDING';
+          const isUnfundedFreePrize = prizePool > 0 && entryFee === 0 && tData.fundingStatus !== 'RESERVED';
+
+          if (isExplicitlyPending || isUnfundedFreePrize) {
+            throw new Error("Tournament is currently awaiting organizer funding. Registration will open once funding is secured.");
+          }
         }
 
         const totalSlotsCount = typeof tData.totalSlots === 'number' && !isNaN(tData.totalSlots) && tData.totalSlots > 0

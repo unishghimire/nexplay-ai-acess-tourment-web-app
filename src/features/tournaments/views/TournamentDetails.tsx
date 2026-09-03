@@ -72,6 +72,22 @@ export default function TournamentDetails() {
         user?.role === 'admin'
     );
 
+    const isEventScrim = Boolean(
+        eventCollection === 'scrims' ||
+        tournament?.matchType === 'scrims' ||
+        (tournament as any)?.isScrim === true ||
+        (tournament as any)?.type === 'scrim' ||
+        (tournament as any)?.type === 'scrims'
+    );
+
+    const isAwaitingFunding = Boolean(
+        !isEventScrim && tournament && (
+            tournament.status === 'pending_funding' ||
+            tournament.fundingStatus === 'PENDING_FUNDING' ||
+            ((tournament.prizePool || 0) > 0 && (tournament.entryFee || 0) === 0 && tournament.fundingStatus !== 'RESERVED')
+        )
+    );
+
     useEffect(() => {
         if (!id) return;
         setLoading(true);
@@ -330,7 +346,7 @@ export default function TournamentDetails() {
         }
         if (!tournament || !profile) return;
 
-        if ((tournament.status as string) === 'pending_funding' || ((tournament.prizePool || 0) > 0 && tournament.fundingStatus === 'PENDING_FUNDING')) {
+        if (isAwaitingFunding) {
             showToast("Tournament is currently awaiting organizer prize funding. Registration is locked until funds are secured.", "warning");
             return;
         }
@@ -1080,7 +1096,7 @@ export default function TournamentDetails() {
                                     </div>
                                 )}
                             </div>
-                        ) : (tournament.status === 'pending_funding' || ((tournament.prizePool || 0) > 0 && tournament.fundingStatus === 'PENDING_FUNDING')) ? (
+                        ) : isAwaitingFunding ? (
                             tournament.hostUid === profile?.uid ? (
                                 <div className="space-y-3 p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl text-center">
                                     <AlertTriangle className="w-6 h-6 text-amber-400 mx-auto" />
