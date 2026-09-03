@@ -273,6 +273,12 @@ export default function TournamentDetails() {
     }, [searchParams, tournament, loading, navigate]);
 
     useEffect(() => {
+        if (isEventScrim && (activeTab === 'groups' || activeTab === 'roadmap')) {
+            setActiveTab('overview');
+        }
+    }, [isEventScrim, activeTab]);
+
+    useEffect(() => {
         const fetchTeamMembers = async () => {
             if (profile?.teamId) {
                 try {
@@ -525,14 +531,15 @@ export default function TournamentDetails() {
         }
     };
 
-    // Real-time room credentials live subscription (millisecond latency sync from Org Panel)
+    // Real-time room credentials live subscription (millisecond latency sync from Org Panel / RTDB)
     useEffect(() => {
-        if (!tournament || !isJoined || !user) {
+        if (!tournament || (!isJoined && !isHostOrAdmin) || !user) {
             setRoomCreds(null);
             return;
         }
-        if (tournament.status !== 'live' && tournament.status !== 'upcoming') return;
+        if (['completed', 'cancelled', 'draft', 'pending_funding'].includes(tournament.status)) return;
 
+        const targetCollection = isEventScrim ? 'scrims' : eventCollection;
         const unsubscribe = subscribeRoomCredentials(
             tournament.id,
             (creds) => {
@@ -541,13 +548,13 @@ export default function TournamentDetails() {
                 }
             },
             undefined,
-            eventCollection
+            targetCollection
         );
 
         return () => {
             unsubscribe();
         };
-    }, [tournament?.id, tournament?.status, isJoined, user?.uid, eventCollection]);
+    }, [tournament?.id, tournament?.status, isJoined, isHostOrAdmin, user?.uid, isEventScrim, eventCollection]);
 
     if (loading) {
         return (
@@ -562,7 +569,16 @@ export default function TournamentDetails() {
 
     const bannerUrl = tournament.bannerUrl || DEFAULT_BANNER;
     const bannerStyle = { backgroundImage: `url('${bannerUrl}')`, backgroundSize: 'cover', backgroundPosition: 'center' };
-    const showRoom = tournament.matchType === 'scrims' && isJoined && (tournament.status === 'live' || (roomCreds?.roomId && tournament.status === 'upcoming'));
+
+    const effectiveRoomId = roomCreds?.roomId || (tournament as any)?.roomId || (tournament as any)?.roomDetails?.roomId;
+    const effectiveRoomPass = roomCreds?.roomPass || (tournament as any)?.roomPass || (tournament as any)?.roomPassword || (tournament as any)?.roomDetails?.roomPass || (tournament as any)?.roomDetails?.roomPassword;
+    const hasRoomCreds = Boolean(effectiveRoomId || effectiveRoomPass);
+    const showRoom = (isJoined || isHostOrAdmin) && (
+        hasRoomCreds || 
+        tournament.status === 'live' ||
+        tournament.status === 'upcoming' ||
+        tournament.status === 'published'
+    );
     const ytId = getYoutubeId(tournament.ytLink);
 
     return (
@@ -686,8 +702,8 @@ export default function TournamentDetails() {
                             { id: 'slots', label: `Slots (${getFilledSlotCount(tournament)}/${getSlotCount(tournament)})`, icon: Users },
                             { id: 'description', label: 'Description', icon: Info },
                             { id: 'participants', label: 'Players', icon: Users },
-                            { id: 'roadmap', label: 'Roadmap', icon: Calendar },
-                            { id: 'groups', label: 'Match Groups', icon: Trophy },
+                            !isEventScrim ? { id: 'roadmap', label: 'Roadmap', icon: Calendar } : null,
+                            !isEventScrim ? { id: 'groups', label: 'Match Groups', icon: Trophy } : null,
                             tournament.status === 'completed' ? { id: 'results', label: 'Results', icon: Trophy } : null,
                             (tournament as any).tournamentMode === 'PER_KILL_REWARD' && (tournament as any).killRewards?.length > 0 ? { id: 'killrewards', label: 'Kill Rewards', icon: Target } : null
                         ].filter((tab): tab is {id: string, label: string, icon: any} => tab !== null).map((tab) => (
@@ -770,49 +786,72 @@ export default function TournamentDetails() {
                                         </div>
                                         <div className="relative z-10">
                                             <div className="flex items-center gap-2 mb-4 sm:mb-6">
-                                                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
-                                                <span className="text-emerald-400 text-xs font-black uppercase tracking-widest">Match Room Live</span>
+                                                <span className={`w-2.5 h-2.5 rounded-full ${hasRoomCreds ? 'bg-emerald-500 animate-ping' : 'bg-amber-400 animate-pulse'}`} />
+                                                <span className={`text-xs font-black uppercase tracking-widest ${hasRoomCreds ? 'text-emerald-400' : 'text-amber-400'}`}>
+                                                    {hasRoomCreds ? 'Match Room Live' : 'Room Credentials Releasing Soon'}
+                                                </span>
                                             </div>
                                             
-                                            <h3 className="text-lg sm:text-2xl font-black text-white mb-4 sm:mb-6 tracking-tight">Room Information</h3>
+                                            <h3 className="text-lg sm:text-2xl font-black text-white mb-2 sm:mb-4 tracking-tight">Room Information</h3>
+                                            <p className="text-xs text-gray-400 mb-4 sm:mb-6 font-medium">
+                                                {hasRoomCreds 
+                                                    ? 'Custom room is open. Copy the Room ID & Password below and join the custom lobby in-game.' 
+                                                    : 'The organizer will broadcast the Room ID and Password here shortly before match start. Real-time updates are active.'}
+                                            </p>
 
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                 <div className="bg-card/80 p-4 rounded-2xl border border-gray-800">
                                                     <div className="text-xs text-gray-500 uppercase font-black tracking-widest mb-1">Room ID</div>
                                                     <div className="flex items-center justify-between">
-                                                        <span className="text-lg sm:text-xl font-mono font-bold text-white tracking-wider">{roomCreds?.roomId || 'Waiting...'}</span>
-                                                        <button type="button" onClick={() => {
-                                                            navigator.clipboard.writeText(roomCreds?.roomId || '');
-                                                            showToast("Copied!", "success");
-                                                        }} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
-                                                            <ExternalLink className="w-5 h-5 text-gray-500" />
-                                                        </button>
+                                                        <span className={`text-lg sm:text-xl font-mono font-bold tracking-wider ${effectiveRoomId ? 'text-white' : 'text-gray-500'}`}>
+                                                            {effectiveRoomId || 'Waiting for host...'}
+                                                        </span>
+                                                        {effectiveRoomId && (
+                                                            <button type="button" onClick={() => {
+                                                                navigator.clipboard.writeText(effectiveRoomId);
+                                                                showToast("Room ID copied to clipboard!", "success");
+                                                            }} className="p-2 hover:bg-white/10 rounded-xl transition-colors text-gray-400 hover:text-white" title="Copy Room ID">
+                                                                <ExternalLink className="w-5 h-5" />
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 </div>
 
                                                 <div className="bg-card/80 p-4 rounded-2xl border border-gray-800">
                                                     <div className="text-xs text-gray-500 uppercase font-black tracking-widest mb-1">Password</div>
                                                     <div className="flex items-center justify-between">
-                                                        <span className="text-lg sm:text-xl font-mono font-bold text-white tracking-wider">
-                                                            {showPassword ? (roomCreds?.roomPass || 'None') : '••••••••'}
+                                                        <span className={`text-lg sm:text-xl font-mono font-bold tracking-wider ${effectiveRoomPass ? 'text-white' : 'text-gray-500'}`}>
+                                                            {effectiveRoomPass ? (showPassword ? effectiveRoomPass : '••••••••') : 'Waiting for host...'}
                                                         </span>
-                                                        <div className="flex items-center gap-1">
-                                                            <button type="button" 
-                                                                onClick={() => setShowPassword(!showPassword)} 
-                                                                className="p-2 hover:bg-white/10 rounded-xl transition-colors relative z-20"
-                                                            >
-                                                                {showPassword ? <EyeOff className="w-5 h-5 text-gray-500" /> : <Eye className="w-5 h-5 text-gray-500" />}
-                                                            </button>
-                                                            <button type="button" onClick={() => {
-                                                                navigator.clipboard.writeText(roomCreds?.roomPass || '');
-                                                                showToast("Copied!", "success");
-                                                            }} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
-                                                                <ExternalLink className="w-5 h-5 text-gray-500" />
-                                                            </button>
-                                                        </div>
+                                                        {effectiveRoomPass && (
+                                                            <div className="flex items-center gap-1">
+                                                                <button type="button" 
+                                                                    onClick={() => setShowPassword(!showPassword)} 
+                                                                    className="p-2 hover:bg-white/10 rounded-xl transition-colors relative z-20 text-gray-400 hover:text-white"
+                                                                    title={showPassword ? "Hide Password" : "Show Password"}
+                                                                >
+                                                                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                                                </button>
+                                                                <button type="button" onClick={() => {
+                                                                    navigator.clipboard.writeText(effectiveRoomPass);
+                                                                    showToast("Password copied to clipboard!", "success");
+                                                                }} className="p-2 hover:bg-white/10 rounded-xl transition-colors text-gray-400 hover:text-white" title="Copy Password">
+                                                                    <ExternalLink className="w-5 h-5" />
+                                                                </button>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
+
+                                            {mySlotNumber && (
+                                                <div className="mt-4 p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-center gap-2.5">
+                                                    <Shield className="w-4 h-4 text-emerald-400 shrink-0" />
+                                                    <span className="text-xs text-emerald-300 font-medium">
+                                                        Important Rule: Sit strictly in <strong className="font-mono text-white">Slot #{mySlotNumber}</strong> in the custom match room. Sitting in another slot may result in removal by match referee.
+                                                    </span>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 )}
@@ -970,7 +1009,7 @@ export default function TournamentDetails() {
                             </motion.div>
                         )}
 
-                        {activeTab === 'roadmap' && (
+                        {!isEventScrim && activeTab === 'roadmap' && (
                             <motion.div 
                                 key="roadmap"
                                 initial={{ opacity: 0, y: 10 }}
@@ -980,7 +1019,7 @@ export default function TournamentDetails() {
                                 <TournamentRoadmap tournament={tournament} />
                             </motion.div>
                         )}
-                        {activeTab === 'groups' && (
+                        {!isEventScrim && activeTab === 'groups' && (
                             <motion.div
                                 key="groups"
                                 initial={{ opacity: 0, y: 10 }}
@@ -1185,6 +1224,75 @@ export default function TournamentDetails() {
                                         <span className="text-xs bg-emerald-500/20 text-emerald-300 font-mono px-2.5 py-1 rounded-lg border border-emerald-500/40 font-black">
                                             SLOT {mySlotNumber < 10 ? `0${mySlotNumber}` : mySlotNumber}
                                         </span>
+                                    </div>
+                                )}
+
+                                {/* Quick Room Credentials Box in Sidebar */}
+                                {hasRoomCreds ? (
+                                    <div className="p-3 bg-brand-500/10 border border-brand-500/30 rounded-2xl space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-[10px] text-brand-400 font-black uppercase tracking-wider flex items-center gap-1.5">
+                                                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> Room Live
+                                            </span>
+                                            <span className="text-[10px] text-gray-400 font-bold">Custom Room</span>
+                                        </div>
+                                        <div className="flex items-center justify-between bg-dark/80 px-3 py-2 rounded-xl border border-gray-800">
+                                            <div className="min-w-0">
+                                                <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest block">Room ID</span>
+                                                <span className="text-xs font-mono font-bold text-white truncate block">{effectiveRoomId || 'None'}</span>
+                                            </div>
+                                            {effectiveRoomId && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        navigator.clipboard.writeText(effectiveRoomId);
+                                                        showToast("Room ID copied to clipboard!", "success");
+                                                    }}
+                                                    className="p-1.5 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition"
+                                                    title="Copy Room ID"
+                                                >
+                                                    <ExternalLink className="w-4 h-4" />
+                                                </button>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center justify-between bg-dark/80 px-3 py-2 rounded-xl border border-gray-800">
+                                            <div className="min-w-0">
+                                                <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest block">Password</span>
+                                                <span className="text-xs font-mono font-bold text-white truncate block">
+                                                    {showPassword ? (effectiveRoomPass || 'None') : '••••••••'}
+                                                </span>
+                                            </div>
+                                            {effectiveRoomPass && (
+                                                <div className="flex items-center gap-1">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowPassword(!showPassword)}
+                                                        className="p-1.5 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition"
+                                                        title={showPassword ? "Hide Password" : "Show Password"}
+                                                    >
+                                                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            navigator.clipboard.writeText(effectiveRoomPass);
+                                                            showToast("Password copied to clipboard!", "success");
+                                                        }}
+                                                        className="p-1.5 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition"
+                                                        title="Copy Password"
+                                                    >
+                                                        <ExternalLink className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="p-3 bg-dark/60 border border-gray-800 rounded-2xl text-center">
+                                        <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider flex items-center justify-center gap-1.5">
+                                            <Clock className="w-3.5 h-3.5 text-brand-400" /> Room ID Releasing Soon
+                                        </div>
+                                        <p className="text-[10px] text-gray-500 mt-1">Host will broadcast room credentials before match start.</p>
                                     </div>
                                 )}
 
