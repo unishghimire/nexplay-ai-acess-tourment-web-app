@@ -44,7 +44,7 @@ router.get("/api/teams/:id", rateLimit(60, 60 * 1000), async (req, res) => {
     // Fetch members and activities in parallel
     const [membersSnap, activitiesSnap] = await Promise.all([
       db.collection("team_members").where("teamId", "==", id).limit(50).get(),
-      db.collection("team_activities").where("teamId", "==", id).orderBy("createdAt", "desc").limit(20).get().catch(() => ({ docs: [] })),
+      db.collection("team_activity").where("teamId", "==", id).orderBy("createdAt", "desc").limit(20).get().catch(() => ({ docs: [] })),
     ]);
 
     const members = membersSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
