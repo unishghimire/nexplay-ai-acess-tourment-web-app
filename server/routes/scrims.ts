@@ -450,6 +450,38 @@ router.post("/api/scrims/:id/payout", authenticateToken, rateLimit(5, 15 * 60 * 
         })),
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
       });
+
+      // 3. Revenue split calculation for paid scrims (85% Organizer / 15% Platform Commission)
+      const entryFee = Number(scrim.entryFee || scrim.requirements?.entryFee || scrim.price || 0);
+      const slots = Array.isArray(scrim.slots) ? scrim.slots : [];
+      const filledSlotsCount = slots.filter((s: any) => s.status === 'filled' || s.status === 'reserved' || Boolean(s.userId)).length;
+      const participantCount = filledSlotsCount || Number(scrim.currentPlayers) || Number(scrim.filledSlots) || winners.length || 0;
+      const entryFeeTotal = participantCount * entryFee;
+      const prizePoolTotal = Number(scrim.prizePool) || totalAllocated || 0;
+      const profit = entryFeeTotal - prizePoolTotal;
+
+      if (profit > 0) {
+        const REVENUE_SPLIT = { ORGANIZER: 0.85, PLATFORM: 0.15 } as const;
+        const orgShare = Math.round(profit * REVENUE_SPLIT.ORGANIZER);
+        const nexplayShare = Math.round(profit * REVENUE_SPLIT.PLATFORM);
+
+        const earnRef = db.collection("tournamentEarnings").doc();
+        transaction.set(earnRef, {
+          tournamentId: id,
+          tournamentName: scrim.title || 'Scrim',
+          orgId: scrim.hostUid || scrim.orgId || req.user.userId,
+          orgName: scrim.hostName || req.user.username || 'Organizer',
+          entryFeeTotal,
+          prizePoolTotal,
+          profit,
+          orgShare,
+          nexplayShare,
+          status: 'pending',
+          isScrim: true,
+          type: 'scrim',
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+      }
     });
 
     return res.json({ success: true, message: `Multi-tier prizes successfully distributed (Total: NPR ${totalAllocated}).`, winners });
