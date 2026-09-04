@@ -251,7 +251,13 @@ export default function TournamentDetails() {
                 // Fallback to legacy 'scrims' collection
                 unsubScrims = onSnapshot(doc(db, 'scrims', id), (scrimSnap) => {
                     if (scrimSnap.exists()) {
-                        const sData = { id: scrimSnap.id, ...scrimSnap.data(), matchType: 'scrims' } as Tournament;
+                        const raw = scrimSnap.data() || {};
+                        const sData = {
+                            id: scrimSnap.id,
+                            ...raw,
+                            entryFee: raw.entryFee ?? raw.requirements?.entryFee ?? 0,
+                            matchType: 'scrims'
+                        } as Tournament;
                         setTournament(sData);
                         setEventCollection('scrims');
                         setLoading(false);
@@ -274,7 +280,13 @@ export default function TournamentDetails() {
                 } else {
                     getDoc(doc(db, 'scrims', id)).then(scrimSnap => {
                         if (scrimSnap.exists()) {
-                            setTournament({ id: scrimSnap.id, ...scrimSnap.data(), matchType: 'scrims' } as Tournament);
+                            const raw = scrimSnap.data() || {};
+                            setTournament({
+                                id: scrimSnap.id,
+                                ...raw,
+                                entryFee: raw.entryFee ?? raw.requirements?.entryFee ?? 0,
+                                matchType: 'scrims'
+                            } as Tournament);
                             setEventCollection('scrims');
                         }
                     });

@@ -300,15 +300,19 @@ router.post("/api/wallet/join-tournament",
                         tData.type === 'scrim' || 
                         tData.type === 'scrims';
 
+        const effectiveEntryFee = Math.max(
+          0,
+          Math.round(Number(tData.entryFee ?? tData.requirements?.entryFee ?? tData.fee ?? 0))
+        );
+
         // Registration Protection:
         // 1. Scrims: Practice matches and daily scrim lobbies do not use the formal tournament escrow pipeline.
         // 2. Paid Tournaments with entryFee (entryFee > 0): Funded via participant entry fees as players register.
         // 3. Free Tournaments with cash prize (entryFee === 0 && prizePool > 0): Host must secure prize funds in escrow before opening.
         if (!isScrim) {
           const prizePool = Math.max(0, Math.round(Number(tData.prizePool || 0)));
-          const entryFee = Math.max(0, Math.round(Number(tData.entryFee || 0)));
           const isExplicitlyPending = tData.status === 'pending_funding' || tData.fundingStatus === 'PENDING_FUNDING';
-          const isUnfundedFreePrize = prizePool > 0 && entryFee === 0 && tData.fundingStatus !== 'RESERVED';
+          const isUnfundedFreePrize = prizePool > 0 && effectiveEntryFee === 0 && tData.fundingStatus !== 'RESERVED';
 
           if (isExplicitlyPending || isUnfundedFreePrize) {
             throw new Error("Tournament is currently awaiting organizer funding. Registration will open once funding is secured.");
@@ -324,9 +328,9 @@ router.post("/api/wallet/join-tournament",
           : 0;
 
         if (totalSlotsCount > 0 && (tData.currentPlayers || 0) >= totalSlotsCount) throw new Error("Tournament is full");
-        if (uData.balance < (tData.entryFee || 0)) throw new Error("Insufficient balance");
+        if (uData.balance < effectiveEntryFee) throw new Error("Insufficient balance");
 
-        const entryFee = tData.entryFee || 0;
+        const entryFee = effectiveEntryFee;
         const balanceBefore = uData.balance;
         const balanceAfter = balanceBefore - entryFee;
         const currentXP = uData.xp || 0;
@@ -442,6 +446,7 @@ router.post("/api/wallet/join-tournament",
           username: uData.username || '',
           logoUrl: uData.profilePicUrl || '',
           status: tData.registrationType === 'manual' ? 'pending' : 'approved',
+          entryFeePaid: entryFee,
           timestamp: admin.firestore.FieldValue.serverTimestamp()
         };
         if (Array.isArray(teammates) && teammates.length > 0) {
@@ -533,7 +538,17 @@ router.post("/api/wallet/leave-tournament",
 
         if (partDoc.data().status === 'refunded') throw new Error("Already refunded");
         if (['live', 'paused', 'completed', 'cancelled'].includes(tData.status)) throw new Error("Cannot leave a tournament that has already started");
-        const refundAmount = tData.entryFee || 0;
+        const partData = partDoc.data();
+        const refundAmount = Math.max(
+          0,
+          Number(
+            partData?.entryFeePaid ??
+            tData.entryFee ??
+            tData.requirements?.entryFee ??
+            tData.fee ??
+            0
+          )
+        );
         const balanceBefore = uData.balance;
         const balanceAfter = balanceBefore + refundAmount;
 
@@ -659,20 +674,48 @@ router.post("/api/wallet/release-slot",
         if (slotIdx === -1) throw new Error("Slot not found");
 
         const targetSlot = slots[slotIdx];
-        const occupantUid = userId || targetSlot.userId || targetSlot.captainUid || targetSlot.reservedBy;
+        let occupantUid = userId || targetSlot.userId || targetSlot.captainUid || targetSlot.reservedBy;
 
         let occupantUserSnap: any = null;
         let partDocSnap: any = null;
         let uRef: any = null;
 
+        // If occupantUid is missing from targetSlot, look up from participants collection
+        if (!occupantUid) {
+          const partQuerySnap = await tx.get(
+            db.collection('participants')
+              .where('tournamentId', '==', tournamentId)
+              .where('slotNumber', '==', slotNum)
+              .limit(1)
+          );
+          if (!partQuerySnap.empty) {
+            partDocSnap = partQuerySnap.docs[0];
+            occupantUid = partDocSnap.data().userId;
+          }
+        }
+
         if (occupantUid) {
           uRef = db.collection('users').doc(occupantUid);
           const partRef = db.collection('participants').doc(`${tournamentId}_${occupantUid}`);
-          [occupantUserSnap, partDocSnap] = await Promise.all([tx.get(uRef), tx.get(partRef)]);
+          if (!partDocSnap) {
+            [occupantUserSnap, partDocSnap] = await Promise.all([tx.get(uRef), tx.get(partRef)]);
+          } else {
+            occupantUserSnap = await tx.get(uRef);
+          }
         }
 
         // 2. ALL WRITES AFTER
-        const entryFee = Math.max(0, Number(tData.entryFee || 0));
+        const partData = partDocSnap && partDocSnap.exists ? partDocSnap.data() : null;
+        const entryFee = Math.max(
+          0,
+          Number(
+            partData?.entryFeePaid ??
+            tData.entryFee ??
+            tData.requirements?.entryFee ??
+            tData.fee ??
+            0
+          )
+        );
         let refundProcessed = false;
         let refundAmount = 0;
 
@@ -1121,7 +1164,7 @@ router.post("/api/wallet/cancel-tournament",
       const participants = await participantQuery.get();
       let refunded = 0;
       let alreadyRefunded = 0;
-      const entryFee = Number(tournament.entryFee || 0);
+      const entryFee = Number(tournament.entryFee ?? tournament.requirements?.entryFee ?? tournament.fee ?? 0);
       const refundAmount = Number.isFinite(entryFee) && entryFee > 0 ? entryFee : 0;
 
       for (const participant of participants.docs) {
