@@ -1003,18 +1003,42 @@ export default function TournamentDetails() {
                                     </div>
                                 )}
 
-                                <div className="mt-6">
-                                    <SlotGrid 
-                                        slots={normalizedSlots} 
-                                        totalSlots={totalCount} 
-                                        mySlotNumber={mySlotNumber} 
-                                        isJoined={isJoined} 
-                                        onSelectSlot={handleClaimSlot} 
-                                    />
+                                {/* Quick Navigation Cards to Dedicated Tabs */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                                    <button 
+                                        type="button"
+                                        onClick={() => setActiveTab('slots')}
+                                        className="bg-card/50 hover:bg-surface/80 border border-gray-800 hover:border-brand-500/40 p-4 sm:p-5 rounded-2xl text-left transition group"
+                                    >
+                                        <div className="flex items-center justify-between mb-1.5">
+                                            <span className="text-xs font-black uppercase tracking-wider text-gray-300 group-hover:text-brand-400 transition-colors flex items-center gap-2">
+                                                <Users className="w-4 h-4 text-brand-500" /> Room Slots ({filledCount}/{totalCount})
+                                            </span>
+                                            <ChevronRight className="w-4 h-4 text-gray-500 group-hover:text-brand-400 group-hover:translate-x-1 transition-all" />
+                                        </div>
+                                        <p className="text-xs text-gray-500">View live slot grid and select your custom room slot.</p>
+                                    </button>
+
+                                    <button 
+                                        type="button"
+                                        onClick={() => setActiveTab('participants')}
+                                        className="bg-card/50 hover:bg-surface/80 border border-gray-800 hover:border-brand-500/40 p-4 sm:p-5 rounded-2xl text-left transition group"
+                                    >
+                                        <div className="flex items-center justify-between mb-1.5">
+                                            <span className="text-xs font-black uppercase tracking-wider text-gray-300 group-hover:text-brand-400 transition-colors flex items-center gap-2">
+                                                <Shield className="w-4 h-4 text-brand-500" /> {isTeamEvent ? 'Registered Teams' : 'Registered Players'} ({effectiveParticipants.length})
+                                            </span>
+                                            <ChevronRight className="w-4 h-4 text-gray-500 group-hover:text-brand-400 group-hover:translate-x-1 transition-all" />
+                                        </div>
+                                        <p className="text-xs text-gray-500">
+                                            {isTeamEvent ? 'View registered squads and lineups.' : 'View registered players and IGNs.'}
+                                        </p>
+                                    </button>
                                 </div>
                             </motion.div>
                         )}
 
+                        {/* Dedicated Slots Tab */}
                         {activeTab === 'slots' && (
                             <motion.div 
                                 key="slots"
@@ -1023,6 +1047,34 @@ export default function TournamentDetails() {
                                 exit={{ opacity: 0, y: -10 }}
                                 className="space-y-6 sm:space-y-8"
                             >
+                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-card/40 p-4 sm:p-6 rounded-2xl border border-gray-800">
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <Users className="w-5 h-5 text-brand-500" />
+                                            <h3 className="text-white font-black text-lg sm:text-xl uppercase tracking-tighter">
+                                                Custom Room Slots
+                                            </h3>
+                                        </div>
+                                        <p className="text-xs text-gray-400 font-medium">
+                                            {isJoined 
+                                                ? `You are allocated to Slot #${mySlotNumber || 'TBD'}. Sit strictly in your slot in-game.` 
+                                                : 'Click an available slot to claim and reserve your spot in the custom match room.'}
+                                        </p>
+                                    </div>
+                                    <div className="flex items-center gap-3 shrink-0">
+                                        <div className="bg-dark px-3 py-1.5 rounded-xl border border-gray-800 text-center">
+                                            <span className="text-[10px] text-gray-500 uppercase font-black tracking-wider block">Booked</span>
+                                            <span className="text-sm font-mono font-bold text-white">{filledCount}/{totalCount}</span>
+                                        </div>
+                                        {mySlotNumber && (
+                                            <div className="bg-emerald-500/10 border border-emerald-500/30 px-3 py-1.5 rounded-xl text-center">
+                                                <span className="text-[10px] text-emerald-400 uppercase font-black tracking-wider block">Your Slot</span>
+                                                <span className="text-sm font-mono font-bold text-emerald-300">#{mySlotNumber}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
                                 <SlotGrid 
                                     slots={normalizedSlots} 
                                     totalSlots={totalCount} 
@@ -1041,6 +1093,19 @@ export default function TournamentDetails() {
                                 exit={{ opacity: 0, y: -10 }}
                                 className="space-y-6 sm:space-y-8"
                             >
+                                {((tournament as any).description || (tournament as any).about) && (
+                                    <div className="bg-card/50 p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-800">
+                                        <h3 className="text-white font-black text-xs uppercase tracking-widest mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
+                                            <Info className="w-4 h-4 sm:w-5 sm:h-5 text-brand-500 shrink-0" /> About Event
+                                        </h3>
+                                        <div className="prose prose-invert max-w-none">
+                                            <div className="text-gray-300 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap font-medium [overflow-wrap:anywhere]">
+                                                {(tournament as any).description || (tournament as any).about}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div className="bg-card/50 p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-800">
                                     <h3 className="text-white font-black text-xs uppercase tracking-widest mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
                                         <Building2 className="w-4 h-4 sm:w-5 sm:h-5 text-brand-500 shrink-0" /> Organization
