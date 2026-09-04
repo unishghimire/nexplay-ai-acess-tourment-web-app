@@ -283,7 +283,9 @@ router.post("/api/wallet/join-tournament",
         if (!['upcoming', 'published', 'live', 'open', 'active'].includes(tData.status)) throw new Error("Registration is not open for this event");
         
         // Validate teammate count matches tournament team type
-        const teamType = tData.teamType || 'solo';
+        const rawTeamType = tData.teamType || tData.format || (tData.requirements && tData.requirements.teamSize === 2 ? 'duo' : tData.requirements && tData.requirements.teamSize > 2 ? 'squad' : 'solo');
+        const teamType = typeof rawTeamType === 'string' ? rawTeamType.toLowerCase() : 'solo';
+        const isTeamEvent = teamType === 'duo' || teamType === 'squad';
         const teammateArr = Array.isArray(teammates) ? teammates : [];
         if (teamType === 'duo' && teammateArr.length !== 1) {
           throw new Error("Duo tournaments require exactly 1 teammate");
@@ -331,7 +333,7 @@ router.post("/api/wallet/join-tournament",
         const newXP = currentXP + 50;
         const newLevel = Math.floor(newXP / 500) + 1;
 
-        const effectiveTeamName = teamName || uData.teamName || uData.username || 'Registered Player';
+        const effectiveTeamName = teamName || uData.teamName || (isTeamEvent ? (uData.username ? `${uData.username}'s Team` : 'Registered Team') : (uData.username || 'Registered Player'));
         const effectiveTeamId = teamId || uData.teamId || uid;
 
         // Build or normalize slots array

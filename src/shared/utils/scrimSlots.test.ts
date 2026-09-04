@@ -28,4 +28,42 @@ assert(getScrimSlotCount('Squad') === 12, 'getScrimSlotCount(Squad) must return 
 assert(getScrimSlotCount('Duo') === 25, 'getScrimSlotCount(Duo) must return 25');
 assert(getScrimSlotCount('Solo') === 48, 'getScrimSlotCount(Solo) must return 48');
 
-console.log('Scrim slot normalization tests: 13 passed, 0 failed');
+// Team event slot normalization assertions
+const teamSlots = normalizeScrimSlots(
+  [
+    { slotNumber: 1, status: 'filled', teamName: 'Phoenix Esports', inGameName: 'PhoenixCap' },
+    { slotNumber: 2, status: 'filled', teamName: '', inGameName: 'ShadowNinja' },
+    { slotNumber: 3, status: 'open' },
+  ],
+  12,
+  2,
+  {
+    isTeamEvent: true,
+    mySlotNumber: 3,
+    myTeamName: 'GodLike Esports',
+    myUserName: 'GodPlayer',
+    myInGameName: 'GodIGN',
+  }
+);
+assert(teamSlots[0].teamName === 'Phoenix Esports', 'Explicit team name must be preserved in team events');
+assert(teamSlots[1].teamName === "ShadowNinja's Team", 'Filled slot without explicit teamName must format as Team');
+assert(teamSlots[2].teamName === 'GodLike Esports', 'User slot in team event must prioritize dedicated myTeamName');
+
+// Solo event slot normalization assertions
+const soloSlots = normalizeScrimSlots(
+  [
+    { slotNumber: 1, status: 'filled', teamName: '', inGameName: 'SoloSniper' },
+  ],
+  48,
+  1,
+  {
+    isTeamEvent: false,
+    mySlotNumber: 1,
+    myUserName: 'SoloPlayer',
+    myInGameName: 'SoloIGN',
+  }
+);
+assert(soloSlots[0].teamName === 'SoloPlayer', 'Solo slot must use player username/IGN');
+
+console.log('Scrim slot normalization tests: 18 passed, 0 failed');
+

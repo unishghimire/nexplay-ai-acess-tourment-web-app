@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { doc, getDoc, collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, onSnapshot, limit } from 'firebase/firestore';
 import { db, auth } from '../../../shared/config/firebase';
 import { Tournament, UserProfile } from '../../../shared/types/types';
 import { DEFAULT_BANNER } from '../../../shared/constants/constants';
@@ -62,6 +62,68 @@ export default function TournamentDetails() {
     const [selectedSlotForBooking, setSelectedSlotForBooking] = useState<number | null>(null);
 
     const [eventCollection, setEventCollection] = useState<'tournaments' | 'scrims'>('tournaments');
+    const [userTeam, setUserTeam] = useState<any | null>(null);
+
+    // Fetch user's dedicated permanent team if available
+    useEffect(() => {
+        if (!user) {
+            setUserTeam(null);
+            return;
+        }
+        let isMounted = true;
+        (async () => {
+            try {
+                if (profile?.teamId) {
+                    const tDoc = await getDoc(doc(db, 'teams', profile.teamId));
+                    if (tDoc.exists() && isMounted) {
+                        setUserTeam({ id: tDoc.id, ...tDoc.data() });
+                        return;
+                    }
+                }
+                const ownerQ = query(collection(db, 'teams'), where('ownerId', '==', user.uid), limit(1));
+                const ownerSnap = await getDocs(ownerQ);
+                if (!ownerSnap.empty && isMounted) {
+                    setUserTeam({ id: ownerSnap.docs[0].id, ...ownerSnap.docs[0].data() });
+                    return;
+                }
+                const memberQ = query(collection(db, 'team_members'), where('userId', '==', user.uid), limit(1));
+                const memberSnap = await getDocs(memberQ);
+                if (!memberSnap.empty && isMounted) {
+                    const tid = memberSnap.docs[0].data().teamId;
+                    if (tid) {
+                        const tDoc = await getDoc(doc(db, 'teams', tid));
+                        if (tDoc.exists() && isMounted) {
+                            setUserTeam({ id: tDoc.id, ...tDoc.data() });
+                        }
+                    }
+                }
+            } catch (err) {
+                console.warn('Could not fetch user team for tournament details:', err);
+            }
+        })();
+        return () => { isMounted = false; };
+    }, [user, profile?.teamId]);
+
+    const isEventScrim = Boolean(
+        eventCollection === 'scrims' ||
+        tournament?.matchType === 'scrims' ||
+        (tournament as any)?.isScrim === true ||
+        (tournament as any)?.type === 'scrim' ||
+        (tournament as any)?.type === 'scrims'
+    );
+
+    const isTeamEvent = Boolean(
+        tournament?.teamType === 'duo' ||
+        tournament?.teamType === 'squad' ||
+        (tournament as any)?.format === 'Duo' ||
+        (tournament as any)?.format === 'Squad' ||
+        ((tournament as any)?.format?.toLowerCase?.() === 'duo') ||
+        ((tournament as any)?.format?.toLowerCase?.() === 'squad') ||
+        ((tournament as any)?.mode?.toLowerCase?.() === 'duo') ||
+        ((tournament as any)?.mode?.toLowerCase?.() === 'squad') ||
+        ((tournament as any)?.teamSize && (tournament as any).teamSize > 1) ||
+        ((tournament as any)?.requirements?.teamSize && (tournament as any).requirements.teamSize > 1)
+    );
 
     // Merge participants collection with tournament.slots so registered players ALWAYS display
     const effectiveParticipants = useMemo(() => {
@@ -95,11 +157,16 @@ export default function TournamentDetails() {
                     return;
                 }
 
+                const resolvedTeamName = s.teamName || (isTeamEvent ? (s.inGameName ? `${s.inGameName}'s Team` : `Team #${slotNum}`) : '');
+                const displayName = isTeamEvent 
+                    ? resolvedTeamName
+                    : (s.inGameName || s.teamName || `Slot #${slotNum} Player`);
+
                 list.push({
                     id: uid ? `${id}_${uid}` : `slot_${slotNum}`,
                     userId: uid || `slot_user_${slotNum}`,
-                    username: s.teamName || s.inGameName || `Slot #${slotNum} Player`,
-                    teamName: s.teamName || '',
+                    username: displayName,
+                    teamName: resolvedTeamName,
                     teamId: s.teamId || '',
                     inGameId: s.inGameId || '',
                     inGameName: s.inGameName || '',
@@ -121,7 +188,9 @@ export default function TournamentDetails() {
         });
 
         return list;
-    }, [participants, tournament?.slots, id]);
+    }, [participants, tournament?.slots, id, isTeamEvent]);
+
+    const activeTeamName = profile?.teamName || userTeam?.name || null;
 
     const normalizedSlots = useMemo(() => {
         if (!tournament) return [];
@@ -132,13 +201,15 @@ export default function TournamentDetails() {
             {
                 mySlotNumber,
                 myUserId: user?.uid,
-                myUserName: profile?.username || profile?.teamName || 'Registered Player',
+                myUserName: profile?.username || 'Player',
+                myTeamName: activeTeamName,
+                isTeamEvent,
                 myInGameId: profile?.inGameId,
                 myInGameName: profile?.inGameName,
                 participants: effectiveParticipants,
             }
         );
-    }, [tournament, mySlotNumber, user?.uid, profile?.username, profile?.teamName, profile?.inGameId, profile?.inGameName, effectiveParticipants]);
+    }, [tournament, mySlotNumber, user?.uid, profile?.username, activeTeamName, isTeamEvent, profile?.inGameId, profile?.inGameName, effectiveParticipants]);
 
     const filledCount = useMemo(() => getFilledSlotCount(tournament, effectiveParticipants.length), [tournament, effectiveParticipants.length]);
     const totalCount = useMemo(() => getSlotCount(tournament), [tournament]);
@@ -153,22 +224,6 @@ export default function TournamentDetails() {
         )) ||
         profile?.role === 'admin' ||
         user?.role === 'admin'
-    );
-
-    const isEventScrim = Boolean(
-        eventCollection === 'scrims' ||
-        tournament?.matchType === 'scrims' ||
-        (tournament as any)?.isScrim === true ||
-        (tournament as any)?.type === 'scrim' ||
-        (tournament as any)?.type === 'scrims'
-    );
-
-    const isTeamEvent = Boolean(
-        tournament?.teamType === 'duo' ||
-        tournament?.teamType === 'squad' ||
-        (tournament as any)?.format === 'Duo' ||
-        (tournament as any)?.format === 'Squad' ||
-        ((tournament as any)?.teamSize && (tournament as any).teamSize > 1)
     );
 
     const isAwaitingFunding = Boolean(
@@ -541,7 +596,7 @@ export default function TournamentDetails() {
             return;
         }
 
-        if (tournament.teamType === 'duo' || tournament.teamType === 'squad') {
+        if (isTeamEvent) {
             setShowJoinModal(true);
         } else {
             setShowRegistrationModal(true);
@@ -1081,6 +1136,7 @@ export default function TournamentDetails() {
                                     mySlotNumber={mySlotNumber} 
                                     isJoined={isJoined} 
                                     onSelectSlot={handleClaimSlot} 
+                                    isTeamEvent={isTeamEvent}
                                 />
                             </motion.div>
                         )}

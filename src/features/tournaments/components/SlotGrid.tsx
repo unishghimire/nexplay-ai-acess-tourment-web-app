@@ -10,6 +10,7 @@ interface SlotGridProps {
   onSelectSlot?: (slotNumber: number) => void;
   selectedSlotNumber?: number | null;
   showTitle?: boolean;
+  isTeamEvent?: boolean;
 }
 
 export const SlotGrid: React.FC<SlotGridProps> = ({
@@ -20,6 +21,7 @@ export const SlotGrid: React.FC<SlotGridProps> = ({
   onSelectSlot,
   selectedSlotNumber,
   showTitle = true,
+  isTeamEvent = false,
 }) => {
   const filledCount = slots.filter(s => s.status === 'filled').length;
   const percentage = Math.min(100, Math.round((filledCount / (totalSlots || 1)) * 100));
@@ -139,20 +141,41 @@ export const SlotGrid: React.FC<SlotGridProps> = ({
               <div className="my-2">
                 {isFilled ? (
                   <div className="space-y-0.5">
-                    <div className="text-xs font-black text-white truncate flex items-center gap-1">
-                      {isMySlot ? <Shield className="w-3 h-3 text-emerald-400 shrink-0" /> : <User className="w-3 h-3 text-gray-500 shrink-0" />}
-                      <span className="truncate">{slot.teamName || slot.inGameName || 'Player'}</span>
+                    <div className="text-xs font-black text-white truncate flex items-center gap-1.5">
+                      {isTeamEvent ? (
+                        <Shield className={`w-3.5 h-3.5 shrink-0 ${isMySlot ? 'text-emerald-400' : 'text-brand-400'}`} />
+                      ) : isMySlot ? (
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                      ) : (
+                        <User className="w-3.5 h-3.5 text-gray-500 shrink-0" />
+                      )}
+                      <span className="truncate font-bold">
+                        {isTeamEvent
+                          ? (slot.teamName || (slot.inGameName ? `${slot.inGameName}'s Team` : `Team #${slot.slotNumber}`))
+                          : (slot.inGameName || slot.teamName || 'Player')}
+                      </span>
                     </div>
-                    {slot.inGameId && (
-                      <div className="text-[9px] text-gray-500 font-mono truncate">
-                        ID: {slot.inGameId}
+
+                    {isTeamEvent ? (
+                      <div className="text-[9px] text-gray-400 truncate flex items-center gap-1 font-medium pl-0.5">
+                        <span className="text-[9px] text-yellow-400 font-bold shrink-0">👑</span>
+                        <span className="truncate text-gray-300">{slot.inGameName || slot.userId || 'Captain'}</span>
+                        {slot.inGameId && (
+                          <span className="text-[8px] text-gray-500 font-mono shrink-0">({slot.inGameId})</span>
+                        )}
                       </div>
+                    ) : (
+                      slot.inGameId && (
+                        <div className="text-[9px] text-gray-500 font-mono truncate">
+                          ID: {slot.inGameId}
+                        </div>
+                      )
                     )}
                   </div>
                 ) : (
                   <div className="text-center py-1">
                     <span className="text-[10px] font-bold text-gray-500 group-hover:text-brand-400 transition-colors uppercase tracking-widest">
-                      {canClick ? 'Choose Slot' : 'Available'}
+                      {canClick ? (isTeamEvent ? 'Claim for Team' : 'Choose Slot') : 'Available'}
                     </span>
                   </div>
                 )}

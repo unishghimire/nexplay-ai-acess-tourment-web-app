@@ -32,6 +32,8 @@ export interface NormalizeSlotExtra {
   mySlotNumber?: number | null;
   myUserId?: string | null;
   myUserName?: string | null;
+  myTeamName?: string | null;
+  isTeamEvent?: boolean;
   myInGameId?: string | null;
   myInGameName?: string | null;
   participants?: any[];
@@ -70,8 +72,19 @@ export const normalizeScrimSlots = (
         (typeof record.reservedBy === 'string' ? record.reservedBy : 
         (isMySlot ? extra?.myUserId || null : null)));
 
-      const teamName = typeof record.teamName === 'string' ? record.teamName : 
-        (isMySlot ? extra?.myUserName || 'Registered Player' : (isFilled ? (typeof record.inGameName === 'string' ? record.inGameName : 'Reserved Team') : null));
+      const rawTeamName = typeof record.teamName === 'string' && record.teamName.trim() ? record.teamName.trim() : null;
+
+      const teamName = rawTeamName 
+        ? rawTeamName 
+        : (isMySlot 
+            ? (extra?.isTeamEvent 
+                ? (extra?.myTeamName || (extra?.myUserName ? `${extra.myUserName}'s Team` : 'Registered Team'))
+                : (extra?.myUserName || 'Registered Player'))
+            : (isFilled 
+                ? (extra?.isTeamEvent 
+                    ? (typeof record.inGameName === 'string' && record.inGameName.trim() ? `${record.inGameName.trim()}'s Team` : `Team #${slotNum}`)
+                    : (typeof record.inGameName === 'string' && record.inGameName.trim() ? record.inGameName.trim() : 'Player'))
+                : null));
 
       return {
         slotNumber: slotNum,
@@ -97,7 +110,11 @@ export const normalizeScrimSlots = (
       return {
         slotNumber: slotNum,
         status: isFilled ? 'filled' : 'open',
-        teamName: isMySlot ? extra?.myUserName || 'Registered Player' : (index < filled ? `Team ${slotNum}` : null),
+        teamName: isMySlot 
+          ? (extra?.isTeamEvent 
+              ? (extra?.myTeamName || (extra?.myUserName ? `${extra.myUserName}'s Team` : 'Registered Team'))
+              : (extra?.myUserName || 'Registered Player'))
+          : (index < filled ? `Team ${slotNum}` : null),
         teamId: null,
         userId: isMySlot ? extra?.myUserId || null : null,
         captainUid: isMySlot ? extra?.myUserId || null : null,
@@ -121,10 +138,17 @@ export const normalizeScrimSlots = (
       }
 
       if (targetSlotIdx !== -1) {
+        const pTeamName = typeof p.teamName === 'string' && p.teamName.trim() ? p.teamName.trim() : null;
+        const resolvedTeamName = pTeamName 
+          ? pTeamName 
+          : (extra?.isTeamEvent
+              ? (p.username ? `${p.username}'s Team` : result[targetSlotIdx].teamName || `Team #${result[targetSlotIdx].slotNumber}`)
+              : (p.username || result[targetSlotIdx].teamName || 'Registered Player'));
+
         result[targetSlotIdx] = {
           ...result[targetSlotIdx],
           status: 'filled',
-          teamName: p.teamName || p.username || result[targetSlotIdx].teamName || 'Registered Player',
+          teamName: resolvedTeamName,
           teamId: p.teamId || result[targetSlotIdx].teamId || null,
           userId: p.userId || result[targetSlotIdx].userId || null,
           captainUid: p.userId || result[targetSlotIdx].captainUid || null,
