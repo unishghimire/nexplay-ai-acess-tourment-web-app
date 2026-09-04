@@ -263,21 +263,21 @@ router.post("/api/wallet/join-tournament",
         const sRef = db.collection('scrims').doc(tournamentId);
         const uRef = db.collection('users').doc(uid);
 
-        let tDoc = await tx.get(tRef);
-        let targetRef = tRef;
-        if (!tDoc.exists) {
-          tDoc = await tx.get(sRef);
-          targetRef = sRef;
-        }
+        // 1. ALL READS FIRST (Firestore rule: all reads must precede all writes)
+        const [tDoc, sDoc, uDoc, partDoc] = await Promise.all([
+          tx.get(tRef),
+          tx.get(sRef),
+          tx.get(uRef),
+          tx.get(partRef),
+        ]);
 
-        const uDoc = await tx.get(uRef);
-        const partDoc = await tx.get(partRef);
-
-        if (!tDoc.exists) throw new Error("Tournament or scrim does not exist");
+        if (!tDoc.exists && !sDoc.exists) throw new Error("Tournament or scrim does not exist");
         if (!uDoc.exists) throw new Error("User not found");
         if (partDoc.exists) throw new Error("Already registered for this event");
 
-        const tData = tDoc.data()!;
+        const primaryDoc = tDoc.exists ? tDoc : sDoc;
+        const targetRef = tDoc.exists ? tRef : sRef;
+        const tData = primaryDoc.data()!;
         const uData = uDoc.data()!;
 
         if (!['upcoming', 'published', 'live', 'open', 'active'].includes(tData.status)) throw new Error("Registration is not open for this event");
@@ -330,8 +330,6 @@ router.post("/api/wallet/join-tournament",
         const currentXP = uData.xp || 0;
         const newXP = currentXP + 50;
         const newLevel = Math.floor(newXP / 500) + 1;
-
-        tx.update(uRef, { balance: balanceAfter, xp: newXP, level: newLevel });
 
         const effectiveTeamName = teamName || uData.teamName || uData.username || 'Registered Player';
         const effectiveTeamId = teamId || uData.teamId || uid;
@@ -422,17 +420,13 @@ router.post("/api/wallet/join-tournament",
           tournamentUpdates.status = 'full';
         }
 
+        // 2. ALL WRITES AFTER (No tx.get calls allowed past this point)
+        tx.update(uRef, { balance: balanceAfter, xp: newXP, level: newLevel });
         tx.update(targetRef, tournamentUpdates);
-        if (targetRef === tRef) {
-          const sDoc = await tx.get(sRef);
-          if (sDoc.exists) {
-            tx.update(sRef, tournamentUpdates);
-          }
-        } else {
-          const tDocCheck = await tx.get(tRef);
-          if (tDocCheck.exists) {
-            tx.update(tRef, tournamentUpdates);
-          }
+        if (targetRef === tRef && sDoc.exists) {
+          tx.update(sRef, tournamentUpdates);
+        } else if (targetRef === sRef && tDoc.exists) {
+          tx.update(tRef, tournamentUpdates);
         }
 
         const participantData: any = {
@@ -518,21 +512,21 @@ router.post("/api/wallet/leave-tournament",
         const sRef = db.collection('scrims').doc(tournamentId);
         const uRef = db.collection('users').doc(uid);
 
-        let tDoc = await tx.get(tRef);
-        let targetRef = tRef;
-        if (!tDoc.exists) {
-          tDoc = await tx.get(sRef);
-          targetRef = sRef;
-        }
+        // 1. ALL READS FIRST (Firestore rule: all reads must precede all writes)
+        const [tDoc, sDoc, uDoc, partDoc] = await Promise.all([
+          tx.get(tRef),
+          tx.get(sRef),
+          tx.get(uRef),
+          tx.get(partRef),
+        ]);
 
-        const uDoc = await tx.get(uRef);
-        const partDoc = await tx.get(partRef);
-
-        if (!tDoc.exists) throw new Error("Tournament or scrim does not exist");
+        if (!tDoc.exists && !sDoc.exists) throw new Error("Tournament or scrim does not exist");
         if (!uDoc.exists) throw new Error("User not found");
         if (!partDoc.exists) throw new Error("Not registered for this event");
 
-        const tData = tDoc.data()!;
+        const primaryDoc = tDoc.exists ? tDoc : sDoc;
+        const targetRef = tDoc.exists ? tRef : sRef;
+        const tData = primaryDoc.data()!;
         const uData = uDoc.data()!;
 
         if (partDoc.data().status === 'refunded') throw new Error("Already refunded");
@@ -540,8 +534,6 @@ router.post("/api/wallet/leave-tournament",
         const refundAmount = tData.entryFee || 0;
         const balanceBefore = uData.balance;
         const balanceAfter = balanceBefore + refundAmount;
-
-        tx.update(uRef, { balance: balanceAfter });
 
         const tournamentUpdates: any = {
           currentPlayers: Math.max(0, (tData.currentPlayers || 0) - 1),
@@ -580,17 +572,14 @@ router.post("/api/wallet/leave-tournament",
             }
           }
         }
+
+        // 2. ALL WRITES AFTER (No tx.get calls allowed past this point)
+        tx.update(uRef, { balance: balanceAfter });
         tx.update(targetRef, tournamentUpdates);
-        if (targetRef === tRef) {
-          const sDoc = await tx.get(sRef);
-          if (sDoc.exists) {
-            tx.update(sRef, tournamentUpdates);
-          }
-        } else {
-          const tDocCheck = await tx.get(tRef);
-          if (tDocCheck.exists) {
-            tx.update(tRef, tournamentUpdates);
-          }
+        if (targetRef === tRef && sDoc.exists) {
+          tx.update(sRef, tournamentUpdates);
+        } else if (targetRef === sRef && tDoc.exists) {
+          tx.update(tRef, tournamentUpdates);
         }
         tx.delete(partRef);
 

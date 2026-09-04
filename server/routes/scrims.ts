@@ -130,13 +130,24 @@ router.post("/api/scrims/:id/join", authenticateToken, rateLimit(15, 60 * 1000),
   try {
     const result = await db.runTransaction(async (transaction) => {
       const scrimRef = db.collection("scrims").doc(id);
-      const scrimSnap = await transaction.get(scrimRef);
+      const tourneyRef = db.collection("tournaments").doc(id);
+      const userRef = db.collection("users").doc(userId);
 
-      if (!scrimSnap.exists) {
+      // 1. ALL READS FIRST (Firestore rule: all reads must precede all writes)
+      const [scrimSnap, tourneySnap, userSnap] = await Promise.all([
+        transaction.get(scrimRef),
+        transaction.get(tourneyRef),
+        transaction.get(userRef)
+      ]);
+
+      if (!scrimSnap.exists && !tourneySnap.exists) {
         throw new Error("Scrim not found");
       }
 
-      const scrim = scrimSnap.data()!;
+      const activeDoc = scrimSnap.exists ? scrimSnap : tourneySnap;
+      const targetRef = scrimSnap.exists ? scrimRef : tourneyRef;
+      const scrim = activeDoc.data()!;
+
       if (scrim.status !== "open") {
         throw new Error(`Scrim is currently ${scrim.status} and not open for registration.`);
       }
@@ -148,7 +159,7 @@ router.post("/api/scrims/:id/join", authenticateToken, rateLimit(15, 60 * 1000),
         throw new Error(`Invalid slot number. Must be between 1 and ${totalSlots}.`);
       }
 
-      const slots = Array.isArray(scrim.slots) ? scrim.slots : [];
+      const slots = Array.isArray(scrim.slots) ? [...scrim.slots] : [];
       const slotIndex = slots.findIndex((s: any) => s.slotNumber === targetSlot);
 
       if (slotIndex === -1) {
@@ -165,32 +176,12 @@ router.post("/api/scrims/:id/join", authenticateToken, rateLimit(15, 60 * 1000),
         throw new Error("You or your team are already registered in this scrim.");
       }
 
-      // Deduct entry fee if required
-      if (scrim.entryFee > 0) {
-        const userRef = db.collection("users").doc(userId);
-        const userSnap = await transaction.get(userRef);
+      const entryFee = Number(scrim.entryFee) || 0;
+      if (entryFee > 0) {
         const userBalance = Number(userSnap.data()?.balance) || 0;
-
-        if (userBalance < scrim.entryFee) {
-          throw new Error(`Insufficient wallet balance (Required: NPR ${scrim.entryFee}, Available: NPR ${userBalance}).`);
+        if (userBalance < entryFee) {
+          throw new Error(`Insufficient wallet balance (Required: NPR ${entryFee}, Available: NPR ${userBalance}).`);
         }
-
-        transaction.update(userRef, {
-          balance: admin.firestore.FieldValue.increment(-scrim.entryFee),
-          updatedAt: admin.firestore.FieldValue.serverTimestamp()
-        });
-
-        // Record ledger entry
-        const txRef = db.collection("transactions").doc();
-        transaction.set(txRef, {
-          id: txRef.id,
-          userId,
-          type: "scrim_entry",
-          amount: scrim.entryFee,
-          scrimId: id,
-          status: "completed",
-          createdAt: admin.firestore.FieldValue.serverTimestamp()
-        });
       }
 
       // Update slot reservation
@@ -207,6 +198,25 @@ router.post("/api/scrims/:id/join", authenticateToken, rateLimit(15, 60 * 1000),
       const filledSlots = slots.filter((s: any) => s.status === 'filled').length;
       const isNowFull = filledSlots >= totalSlots;
 
+      // 2. ALL WRITES AFTER (Strictly no transaction.get allowed past this point)
+      if (entryFee > 0) {
+        transaction.update(userRef, {
+          balance: admin.firestore.FieldValue.increment(-entryFee),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        const txRef = db.collection("transactions").doc();
+        transaction.set(txRef, {
+          id: txRef.id,
+          userId,
+          type: "scrim_entry",
+          amount: entryFee,
+          scrimId: id,
+          status: "completed",
+          createdAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+      }
+
       // Register participant record
       const partRef = db.collection("participants").doc(`${id}_${userId}`);
       transaction.set(partRef, {
@@ -221,13 +231,20 @@ router.post("/api/scrims/:id/join", authenticateToken, rateLimit(15, 60 * 1000),
         createdAt: admin.firestore.FieldValue.serverTimestamp()
       });
 
-      transaction.update(scrimRef, {
+      const scrimUpdates = {
         slots,
         filledSlots,
         currentPlayers: filledSlots,
         status: isNowFull ? "full" : "open",
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
-      });
+      };
+
+      transaction.update(targetRef, scrimUpdates);
+      if (targetRef === scrimRef && tourneySnap.exists) {
+        transaction.update(tourneyRef, scrimUpdates);
+      } else if (targetRef === tourneyRef && scrimSnap.exists) {
+        transaction.update(scrimRef, scrimUpdates);
+      }
 
       return { success: true, slotNumber: targetSlot, filledSlots, totalSlots, isFull: isNowFull };
     });
@@ -370,35 +387,52 @@ router.post("/api/scrims/:id/payout", authenticateToken, rateLimit(5, 15 * 60 * 
     }
 
     await db.runTransaction(async (transaction) => {
+      // 1. ALL READS FIRST (Firestore rule: all reads must precede all writes)
+      const payoutTargets: Array<{
+        winner: any;
+        targetUserId: string;
+        prizeAmount: number;
+        userRef: FirebaseFirestore.DocumentReference;
+      }> = [];
+
       for (const winner of winners) {
         const targetUserId = winner.userId || winner.captainId || winner.leaderId;
         const prizeAmount = Number(winner.prize) || 0;
 
         if (targetUserId && prizeAmount > 0) {
           const userRef = db.collection("users").doc(targetUserId);
-          const userDoc = await transaction.get(userRef);
-          if (userDoc.exists) {
-            transaction.update(userRef, {
-              balance: admin.firestore.FieldValue.increment(prizeAmount),
-              totalEarnings: admin.firestore.FieldValue.increment(prizeAmount),
-              updatedAt: admin.firestore.FieldValue.serverTimestamp()
-            });
-          }
+          payoutTargets.push({ winner, targetUserId, prizeAmount, userRef });
+        }
+      }
 
-          const txRef = db.collection("transactions").doc();
-          transaction.set(txRef, {
-            id: txRef.id,
-            userId: targetUserId,
-            username: winner.teamName || winner.username || "Winner",
-            type: "prize_payout",
-            amount: prizeAmount,
-            scrimId: id,
-            rank: winner.rank || 1,
-            desc: `Prize payout for Rank #${winner.rank || 1} in ${scrim.title || 'Scrim'}`,
-            status: "completed",
-            createdAt: admin.firestore.FieldValue.serverTimestamp()
+      // Fetch all winner user profiles upfront before ANY writes
+      const userSnaps = await Promise.all(payoutTargets.map(t => transaction.get(t.userRef)));
+
+      // 2. ALL WRITES AFTER (No transaction.get allowed after this point)
+      for (let i = 0; i < payoutTargets.length; i++) {
+        const { winner, targetUserId, prizeAmount, userRef } = payoutTargets[i];
+        const userDoc = userSnaps[i];
+        if (userDoc.exists) {
+          transaction.update(userRef, {
+            balance: admin.firestore.FieldValue.increment(prizeAmount),
+            totalEarnings: admin.firestore.FieldValue.increment(prizeAmount),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
           });
         }
+
+        const txRef = db.collection("transactions").doc();
+        transaction.set(txRef, {
+          id: txRef.id,
+          userId: targetUserId,
+          username: winner.teamName || winner.username || "Winner",
+          type: "prize_payout",
+          amount: prizeAmount,
+          scrimId: id,
+          rank: winner.rank || 1,
+          desc: `Prize payout for Rank #${winner.rank || 1} in ${scrim.title || 'Scrim'}`,
+          status: "completed",
+          createdAt: admin.firestore.FieldValue.serverTimestamp()
+        });
       }
 
       transaction.update(scrimRef, {
