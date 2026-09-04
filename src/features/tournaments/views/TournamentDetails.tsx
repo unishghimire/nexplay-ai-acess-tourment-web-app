@@ -63,24 +63,73 @@ export default function TournamentDetails() {
 
     const [eventCollection, setEventCollection] = useState<'tournaments' | 'scrims'>('tournaments');
 
+    // Merge participants collection with tournament.slots so registered players ALWAYS display
+    const effectiveParticipants = useMemo(() => {
+        const list: any[] = [...participants];
+        const knownUserIds = new Set(list.map(p => p.userId).filter(Boolean));
+        const knownSlotNumbers = new Set(list.map(p => p.slotNumber).filter(Boolean));
+
+        if (Array.isArray(tournament?.slots)) {
+            tournament.slots.forEach((s: any, idx: number) => {
+                if (!s) return;
+                const isFilled = s.status === 'filled' || s.status === 'reserved' || s.status === 'booked' || Boolean(s.userId) || Boolean(s.captainUid) || Boolean(s.reservedBy);
+                if (!isFilled) return;
+
+                const slotNum = typeof s.slotNumber === 'number' ? s.slotNumber : idx + 1;
+                const uid = s.userId || s.captainUid || s.reservedBy;
+
+                if ((uid && knownUserIds.has(uid)) || knownSlotNumbers.has(slotNum)) {
+                    const existingIdx = list.findIndex(p => (uid && p.userId === uid) || p.slotNumber === slotNum);
+                    if (existingIdx !== -1) {
+                        list[existingIdx] = {
+                            ...list[existingIdx],
+                            slotNumber: list[existingIdx].slotNumber || slotNum,
+                            teamName: list[existingIdx].teamName || s.teamName,
+                            teamId: list[existingIdx].teamId || s.teamId,
+                            inGameId: list[existingIdx].inGameId || s.inGameId,
+                            inGameName: list[existingIdx].inGameName || s.inGameName,
+                        };
+                    }
+                    return;
+                }
+
+                list.push({
+                    id: uid ? `${id}_${uid}` : `slot_${slotNum}`,
+                    userId: uid || `slot_user_${slotNum}`,
+                    username: s.teamName || s.inGameName || `Slot #${slotNum} Player`,
+                    teamName: s.teamName || '',
+                    teamId: s.teamId || '',
+                    inGameId: s.inGameId || '',
+                    inGameName: s.inGameName || '',
+                    slotNumber: slotNum,
+                    status: 'approved',
+                    joinedAt: s.joinedAt || null,
+                });
+                if (uid) knownUserIds.add(uid);
+                knownSlotNumbers.add(slotNum);
+            });
+        }
+        return list;
+    }, [participants, tournament?.slots, id]);
+
     const normalizedSlots = useMemo(() => {
         if (!tournament) return [];
         return normalizeScrimSlots(
             tournament.slots, 
             getSlotCount(tournament), 
-            getFilledSlotCount(tournament, participants.length),
+            getFilledSlotCount(tournament, effectiveParticipants.length),
             {
                 mySlotNumber,
                 myUserId: user?.uid,
                 myUserName: profile?.username || profile?.teamName || 'Registered Player',
                 myInGameId: profile?.inGameId,
                 myInGameName: profile?.inGameName,
-                participants,
+                participants: effectiveParticipants,
             }
         );
-    }, [tournament, mySlotNumber, user?.uid, profile?.username, profile?.teamName, profile?.inGameId, profile?.inGameName, participants]);
+    }, [tournament, mySlotNumber, user?.uid, profile?.username, profile?.teamName, profile?.inGameId, profile?.inGameName, effectiveParticipants]);
 
-    const filledCount = useMemo(() => getFilledSlotCount(tournament, participants.length), [tournament, participants.length]);
+    const filledCount = useMemo(() => getFilledSlotCount(tournament, effectiveParticipants.length), [tournament, effectiveParticipants.length]);
     const totalCount = useMemo(() => getSlotCount(tournament), [tournament]);
 
     const isHostOrAdmin = Boolean(
@@ -201,18 +250,39 @@ export default function TournamentDetails() {
         };
     }, [id, navigate, showToast]);
 
-    // Participants roster subscription — full roster is only readable by the
-    // tournament host or an admin (BUG-037). Non-hosts get their own
-    // registration only, so the full list is not subscribed for them.
+    // Participants roster subscription — subscribe for all tournament/scrim viewers
     useEffect(() => {
         if (!id) return;
-        const isHostOrAdmin = tournament?.hostUid === user?.uid || user?.role === 'admin';
-        if (!isHostOrAdmin) return;
-        const unsubParticipants = onSnapshot(query(collection(db, 'participants'), where('tournamentId', '==', id)), (snapshot) => {
-            setParticipants(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
-        }, (err) => console.warn('Participants subscription failed:', err));
-        return () => unsubParticipants();
-    }, [id, tournament, user]);
+        const q1 = query(collection(db, 'participants'), where('tournamentId', '==', id));
+        const unsub1 = onSnapshot(q1, (snapshot) => {
+            const docs1 = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+            setParticipants(prev => {
+                const map = new Map();
+                prev.forEach(p => map.set(p.id, p));
+                docs1.forEach(p => map.set(p.id, p));
+                return Array.from(map.values());
+            });
+        }, (err) => console.warn('Participants subscription by tournamentId failed:', err));
+
+        let unsub2: (() => void) | null = null;
+        if (isEventScrim) {
+            const q2 = query(collection(db, 'participants'), where('scrimId', '==', id));
+            unsub2 = onSnapshot(q2, (snapshot) => {
+                const docs2 = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                setParticipants(prev => {
+                    const map = new Map();
+                    prev.forEach(p => map.set(p.id, p));
+                    docs2.forEach(p => map.set(p.id, p));
+                    return Array.from(map.values());
+                });
+            }, (err) => console.warn('Participants subscription by scrimId failed:', err));
+        }
+
+        return () => {
+            unsub1();
+            if (unsub2) unsub2();
+        };
+    }, [id, isEventScrim]);
 
     // Independent effect for join status (depends on user/profile which might resolve later)
     useEffect(() => {
@@ -233,9 +303,7 @@ export default function TournamentDetails() {
                 if (partData.slotNumber) mySlot = partData.slotNumber;
             }
 
-            // Team-registration fallback (BUG-037): the team query may be
-            // filtered to self for non-hosts — treat a failure as "not joined"
-            // rather than throwing into the listener.
+            // Team-registration fallback
             if (!joined && profile?.teamId) {
                 try {
                     const teamSnap = await getDocs(query(
@@ -260,23 +328,26 @@ export default function TournamentDetails() {
         return () => unsubJoin();
     }, [id, user, profile?.teamId]);
 
-    // Synchronize user slot number directly from tournament slots array
+    // Synchronize user slot number and joined status directly from tournament slots array & effectiveParticipants
     useEffect(() => {
         if (!user || !tournament) return;
         const slotMatch = normalizedSlots.find(s => 
             s.userId === user.uid || 
             s.captainUid === user.uid || 
+            s.reservedBy === user.uid ||
             (profile?.teamId && s.teamId === profile.teamId)
         );
         if (slotMatch?.slotNumber) {
             setMySlotNumber(slotMatch.slotNumber);
+            setIsJoined(true);
             return;
         }
-        const partMatch = participants.find(p => p.userId === user.uid);
+        const partMatch = effectiveParticipants.find(p => p.userId === user.uid);
         if (partMatch?.slotNumber) {
             setMySlotNumber(partMatch.slotNumber);
+            setIsJoined(true);
         }
-    }, [user, tournament, normalizedSlots, participants, profile?.teamId]);
+    }, [user, tournament, normalizedSlots, effectiveParticipants, profile?.teamId]);
 
     useEffect(() => {
         if (!loading && tournament && searchParams.get('tab') === 'results') {
@@ -364,12 +435,15 @@ export default function TournamentDetails() {
         return () => clearInterval(timer);
     }, [tournament?.startTime, tournament?.status]);
 
-    const filteredParticipants = participants.filter(p => 
-        (p.username && p.username.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (p.inGameId && p.inGameId.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (p.teamName && p.teamName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (p.teammates && Array.isArray(p.teammates) && p.teammates.some((tm: string) => typeof tm === 'string' && tm.toLowerCase().includes(searchTerm.toLowerCase())))
-    );
+    const filteredParticipants = useMemo(() => {
+        return effectiveParticipants.filter(p => 
+            (p.username && p.username.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (p.inGameId && p.inGameId.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (p.inGameName && p.inGameName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (p.teamName && p.teamName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+            (p.teammates && Array.isArray(p.teammates) && p.teammates.some((tm: string) => typeof tm === 'string' && tm.toLowerCase().includes(searchTerm.toLowerCase())))
+        );
+    }, [effectiveParticipants, searchTerm]);
 
     const handleActivateFunding = async () => {
         if (!tournament || !id) return;
@@ -1006,16 +1080,16 @@ export default function TournamentDetails() {
                                         <div key={i} className="bg-surface p-4 sm:p-5 rounded-2xl border border-gray-800 flex flex-col justify-between gap-4 group hover:border-brand-500/30 transition-colors shadow-lg hover:shadow-brand-500/5 min-w-0">
                                             <div className="flex items-start gap-3">
                                                 <div className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 bg-brand-600/10 rounded-2xl flex items-center justify-center text-brand-500 font-black border border-brand-500/20 text-sm sm:text-base">
-                                                    {i + 1}
+                                                    {p.slotNumber ? `#${p.slotNumber}` : i + 1}
                                                 </div>
                                                 <div className="flex flex-col gap-2 min-w-0 flex-1">
                                                     <div className="text-white font-black text-base sm:text-lg leading-tight truncate">
-                                                        <ProfileLink to={`/user/${p.userId}`} name={p.username} />
+                                                        <ProfileLink to={p.userId && !p.userId.startsWith('slot_') ? `/user/${p.userId}` : '#'} name={p.username || p.inGameName || p.teamName || 'Player'} />
                                                     </div>
                                                     <div className="flex flex-wrap items-center gap-1.5">
                                                         <div className="flex items-center gap-1 bg-dark px-2 py-1 rounded-lg border border-gray-800 max-w-full">
                                                             <span className="text-[10px] text-gray-500 font-black uppercase tracking-widest shrink-0">UID:</span>
-                                                            <span className="text-xs text-brand-400 font-mono font-bold truncate">{p.inGameId}</span>
+                                                            <span className="text-xs text-brand-400 font-mono font-bold truncate">{p.inGameId || 'N/A'}</span>
                                                         </div>
                                                         {p.inGameName && (
                                                             <div className="flex items-center gap-1 bg-dark px-2 py-1 rounded-lg border border-gray-800 max-w-full">
@@ -1069,10 +1143,10 @@ export default function TournamentDetails() {
                                 {(tournament as any).tournamentMode === 'PER_KILL_REWARD' ? (
                                     <div className="space-y-6">
                                         <PerKillLeaderboard tournament={tournament} />
-                                        <GroupStandingsView tournament={tournament} participants={participants} />
+                                        <GroupStandingsView tournament={tournament} participants={effectiveParticipants} />
                                     </div>
                                 ) : (
-                                    <GroupStandingsView tournament={tournament} participants={participants} />
+                                    <GroupStandingsView tournament={tournament} participants={effectiveParticipants} />
                                 )}
                             </motion.div>
                         )}
@@ -1222,16 +1296,9 @@ export default function TournamentDetails() {
                                     const myParticipant = participants.find(p => p.userId === user?.uid);
                                     const status = myParticipant?.status;
                                     if (!status || status === 'approved') return (
-                                        <div className="flex items-center justify-between p-3 bg-green-500/10 border border-green-500/20 rounded-2xl">
-                                            <div className="flex items-center gap-2">
-                                                <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" />
-                                                <span className="text-xs font-black text-green-400 uppercase tracking-widest">Registration Confirmed</span>
-                                            </div>
-                                            {mySlotNumber && (
-                                                <span className="text-xs font-black text-white font-mono bg-green-500/20 px-2 py-0.5 rounded-lg border border-green-500/30">
-                                                    SLOT #{mySlotNumber}
-                                                </span>
-                                            )}
+                                        <div className="flex items-center gap-2 p-3 bg-green-500/10 border border-green-500/20 rounded-2xl">
+                                            <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" />
+                                            <span className="text-xs font-black text-green-400 uppercase tracking-widest">Registration Confirmed</span>
                                         </div>
                                     );
                                     if (status === 'pending') return (
@@ -1267,73 +1334,85 @@ export default function TournamentDetails() {
                                     </div>
                                 )}
 
-                                {/* Quick Room Credentials Box in Sidebar */}
+                                {/* Quick Room Credentials Box in Sidebar - Only rendered when NOT on Overview tab to prevent duplicate ID & Pass */}
                                 {hasRoomCreds ? (
-                                    <div className="p-3 bg-brand-500/10 border border-brand-500/30 rounded-2xl space-y-2">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-[10px] text-brand-400 font-black uppercase tracking-wider flex items-center gap-1.5">
-                                                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> Room Live
-                                            </span>
-                                            <span className="text-[10px] text-gray-400 font-bold">Custom Room</span>
-                                        </div>
-                                        <div className="flex items-center justify-between bg-dark/80 px-3 py-2 rounded-xl border border-gray-800">
-                                            <div className="min-w-0">
-                                                <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest block">Room ID</span>
-                                                <span className="text-xs font-mono font-bold text-white truncate block">{effectiveRoomId || 'None'}</span>
+                                    activeTab === 'overview' ? (
+                                        <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                                                <span className="text-xs font-bold text-emerald-400">Match Room Live</span>
                                             </div>
-                                            {effectiveRoomId && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        navigator.clipboard.writeText(effectiveRoomId);
-                                                        showToast("Room ID copied to clipboard!", "success");
-                                                    }}
-                                                    className="p-1.5 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition"
-                                                    title="Copy Room ID"
-                                                >
-                                                    <ExternalLink className="w-4 h-4" />
-                                                </button>
-                                            )}
+                                            <span className="text-[10px] text-gray-400 font-medium">Details in Overview</span>
                                         </div>
-                                        <div className="flex items-center justify-between bg-dark/80 px-3 py-2 rounded-xl border border-gray-800">
-                                            <div className="min-w-0">
-                                                <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest block">Password</span>
-                                                <span className="text-xs font-mono font-bold text-white truncate block">
-                                                    {showPassword ? (effectiveRoomPass || 'None') : '••••••••'}
+                                    ) : (
+                                        <div className="p-3 bg-brand-500/10 border border-brand-500/30 rounded-2xl space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-[10px] text-brand-400 font-black uppercase tracking-wider flex items-center gap-1.5">
+                                                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> Room Live
                                                 </span>
+                                                <span className="text-[10px] text-gray-400 font-bold">Custom Room</span>
                                             </div>
-                                            {effectiveRoomPass && (
-                                                <div className="flex items-center gap-1">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setShowPassword(!showPassword)}
-                                                        className="p-1.5 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition"
-                                                        title={showPassword ? "Hide Password" : "Show Password"}
-                                                    >
-                                                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                                    </button>
+                                            <div className="flex items-center justify-between bg-dark/80 px-3 py-2 rounded-xl border border-gray-800">
+                                                <div className="min-w-0">
+                                                    <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest block">Room ID</span>
+                                                    <span className="text-xs font-mono font-bold text-white truncate block">{effectiveRoomId || 'None'}</span>
+                                                </div>
+                                                {effectiveRoomId && (
                                                     <button
                                                         type="button"
                                                         onClick={() => {
-                                                            navigator.clipboard.writeText(effectiveRoomPass);
-                                                            showToast("Password copied to clipboard!", "success");
+                                                            navigator.clipboard.writeText(effectiveRoomId);
+                                                            showToast("Room ID copied to clipboard!", "success");
                                                         }}
                                                         className="p-1.5 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition"
-                                                        title="Copy Password"
+                                                        title="Copy Room ID"
                                                     >
                                                         <ExternalLink className="w-4 h-4" />
                                                     </button>
+                                                )}
+                                            </div>
+                                            <div className="flex items-center justify-between bg-dark/80 px-3 py-2 rounded-xl border border-gray-800">
+                                                <div className="min-w-0">
+                                                    <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest block">Password</span>
+                                                    <span className="text-xs font-mono font-bold text-white truncate block">
+                                                        {showPassword ? (effectiveRoomPass || 'None') : '••••••••'}
+                                                    </span>
                                                 </div>
-                                            )}
+                                                {effectiveRoomPass && (
+                                                    <div className="flex items-center gap-1">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setShowPassword(!showPassword)}
+                                                            className="p-1.5 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition"
+                                                            title={showPassword ? "Hide Password" : "Show Password"}
+                                                        >
+                                                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                navigator.clipboard.writeText(effectiveRoomPass);
+                                                                showToast("Password copied to clipboard!", "success");
+                                                            }}
+                                                            className="p-1.5 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition"
+                                                            title="Copy Password"
+                                                        >
+                                                            <ExternalLink className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
-                                    </div>
+                                    )
                                 ) : (
-                                    <div className="p-3 bg-dark/60 border border-gray-800 rounded-2xl text-center">
-                                        <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider flex items-center justify-center gap-1.5">
-                                            <Clock className="w-3.5 h-3.5 text-brand-400" /> Room ID Releasing Soon
+                                    activeTab !== 'overview' && (
+                                        <div className="p-3 bg-dark/60 border border-gray-800 rounded-2xl text-center">
+                                            <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider flex items-center justify-center gap-1.5">
+                                                <Clock className="w-3.5 h-3.5 text-brand-400" /> Room ID Releasing Soon
+                                            </div>
+                                            <p className="text-[10px] text-gray-500 mt-1">Host will broadcast room credentials before match start.</p>
                                         </div>
-                                        <p className="text-[10px] text-gray-500 mt-1">Host will broadcast room credentials before match start.</p>
-                                    </div>
+                                    )
                                 )}
 
                                 <div className="grid grid-cols-2 gap-2">

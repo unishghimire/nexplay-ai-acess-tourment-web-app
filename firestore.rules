@@ -250,19 +250,11 @@ service cloud.firestore {
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // PARTICIPANTS — players self-register, organizer can approve.
-    // Reads scoped (BUG-037): a participant doc is only readable by the
-    // registered player, the tournament host, or an admin. LIST stays
-    // signed-in so host/admin roster queries and self/team join-status
-    // queries work; list results are filtered per-doc by the get rule.
+    // PARTICIPANTS — tournament/scrim registered players roster
+    // Signed-in users can read participants to view tournament rosters and slot allocation.
     // ═══════════════════════════════════════════════════════════════
     match /participants/{participantId} {
-      allow get: if isSignedIn() && (
-        isAdmin() ||
-        existing().userId == request.auth.uid ||
-        isTournamentHost(existing().tournamentId)
-      );
-      allow list: if isSignedIn();
+      allow read: if isSignedIn();
 
       // Client-side creation blocked — all joins go through /api/wallet/join-tournament
       // (Admin SDK bypasses rules, enforces atomic balance/overbooking/duplicate checks)
