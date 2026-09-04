@@ -88,6 +88,8 @@ export default function TournamentDetails() {
                             teamId: list[existingIdx].teamId || s.teamId,
                             inGameId: list[existingIdx].inGameId || s.inGameId,
                             inGameName: list[existingIdx].inGameName || s.inGameName,
+                            teammates: list[existingIdx].teammates || s.teammates,
+                            selectedPlayers: list[existingIdx].selectedPlayers || s.selectedPlayers,
                         };
                     }
                     return;
@@ -104,11 +106,20 @@ export default function TournamentDetails() {
                     slotNumber: slotNum,
                     status: 'approved',
                     joinedAt: s.joinedAt || null,
+                    teammates: s.teammates || [],
+                    selectedPlayers: s.selectedPlayers || [],
                 });
                 if (uid) knownUserIds.add(uid);
                 knownSlotNumbers.add(slotNum);
             });
         }
+
+        list.sort((a, b) => {
+            const slotA = typeof a.slotNumber === 'number' ? a.slotNumber : 999;
+            const slotB = typeof b.slotNumber === 'number' ? b.slotNumber : 999;
+            return slotA - slotB;
+        });
+
         return list;
     }, [participants, tournament?.slots, id]);
 
@@ -150,6 +161,14 @@ export default function TournamentDetails() {
         (tournament as any)?.isScrim === true ||
         (tournament as any)?.type === 'scrim' ||
         (tournament as any)?.type === 'scrims'
+    );
+
+    const isTeamEvent = Boolean(
+        tournament?.teamType === 'duo' ||
+        tournament?.teamType === 'squad' ||
+        (tournament as any)?.format === 'Duo' ||
+        (tournament as any)?.format === 'Squad' ||
+        ((tournament as any)?.teamSize && (tournament as any).teamSize > 1)
     );
 
     const isAwaitingFunding = Boolean(
@@ -253,36 +272,34 @@ export default function TournamentDetails() {
     // Participants roster subscription — subscribe for all tournament/scrim viewers
     useEffect(() => {
         if (!id) return;
+
+        let docs1: any[] = [];
+        let docs2: any[] = [];
+
+        const updateParticipants = () => {
+            const map = new Map<string, any>();
+            docs1.forEach(p => map.set(p.id, p));
+            docs2.forEach(p => map.set(p.id, p));
+            setParticipants(Array.from(map.values()));
+        };
+
         const q1 = query(collection(db, 'participants'), where('tournamentId', '==', id));
         const unsub1 = onSnapshot(q1, (snapshot) => {
-            const docs1 = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-            setParticipants(prev => {
-                const map = new Map();
-                prev.forEach(p => map.set(p.id, p));
-                docs1.forEach(p => map.set(p.id, p));
-                return Array.from(map.values());
-            });
+            docs1 = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+            updateParticipants();
         }, (err) => console.warn('Participants subscription by tournamentId failed:', err));
 
-        let unsub2: (() => void) | null = null;
-        if (isEventScrim) {
-            const q2 = query(collection(db, 'participants'), where('scrimId', '==', id));
-            unsub2 = onSnapshot(q2, (snapshot) => {
-                const docs2 = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-                setParticipants(prev => {
-                    const map = new Map();
-                    prev.forEach(p => map.set(p.id, p));
-                    docs2.forEach(p => map.set(p.id, p));
-                    return Array.from(map.values());
-                });
-            }, (err) => console.warn('Participants subscription by scrimId failed:', err));
-        }
+        const q2 = query(collection(db, 'participants'), where('scrimId', '==', id));
+        const unsub2 = onSnapshot(q2, (snapshot) => {
+            docs2 = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+            updateParticipants();
+        }, (err) => console.warn('Participants subscription by scrimId failed:', err));
 
         return () => {
             unsub1();
-            if (unsub2) unsub2();
+            unsub2();
         };
-    }, [id, isEventScrim]);
+    }, [id]);
 
     // Independent effect for join status (depends on user/profile which might resolve later)
     useEffect(() => {
@@ -436,13 +453,25 @@ export default function TournamentDetails() {
     }, [tournament?.startTime, tournament?.status]);
 
     const filteredParticipants = useMemo(() => {
-        return effectiveParticipants.filter(p => 
-            (p.username && p.username.toLowerCase().includes(searchTerm.toLowerCase())) ||
-            (p.inGameId && p.inGameId.toLowerCase().includes(searchTerm.toLowerCase())) ||
-            (p.inGameName && p.inGameName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-            (p.teamName && p.teamName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-            (p.teammates && Array.isArray(p.teammates) && p.teammates.some((tm: string) => typeof tm === 'string' && tm.toLowerCase().includes(searchTerm.toLowerCase())))
-        );
+        const term = searchTerm.trim().toLowerCase();
+        if (!term) return effectiveParticipants;
+        return effectiveParticipants.filter(p => {
+            const username = (p.username || '').toLowerCase();
+            const inGameId = (p.inGameId || '').toLowerCase();
+            const inGameName = (p.inGameName || '').toLowerCase();
+            const teamName = (p.teamName || '').toLowerCase();
+            const teammates = Array.isArray(p.teammates) ? p.teammates : [];
+            const selectedPlayers = Array.isArray(p.selectedPlayers) ? p.selectedPlayers : [];
+
+            return (
+                username.includes(term) ||
+                inGameId.includes(term) ||
+                inGameName.includes(term) ||
+                teamName.includes(term) ||
+                teammates.some((tm: any) => typeof tm === 'string' && tm.toLowerCase().includes(term)) ||
+                selectedPlayers.some((sp: any) => typeof sp === 'string' && sp.toLowerCase().includes(term))
+            );
+        });
     }, [effectiveParticipants, searchTerm]);
 
     const handleActivateFunding = async () => {
@@ -806,7 +835,11 @@ export default function TournamentDetails() {
                             { id: 'overview', label: 'Overview', icon: Info },
                             { id: 'slots', label: `Slots (${filledCount}/${totalCount})`, icon: Users },
                             { id: 'description', label: 'Description', icon: Info },
-                            { id: 'participants', label: 'Players', icon: Users },
+                            { 
+                                id: 'participants', 
+                                label: isTeamEvent ? 'Teams' : 'Players', 
+                                icon: isTeamEvent ? Shield : Users 
+                            },
                             !isEventScrim ? { id: 'roadmap', label: 'Roadmap', icon: Calendar } : null,
                             !isEventScrim ? { id: 'groups', label: 'Match Groups', icon: Trophy } : null,
                             tournament.status === 'completed' ? { id: 'results', label: 'Results', icon: Trophy } : null,
@@ -1063,12 +1096,21 @@ export default function TournamentDetails() {
                                 className="space-y-4"
                             >
                                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                                    <h3 className="text-white font-black text-lg sm:text-xl uppercase tracking-tighter">Registered Players</h3>
+                                    <div>
+                                        <h3 className="text-white font-black text-lg sm:text-xl uppercase tracking-tighter">
+                                            {isTeamEvent ? 'Registered Teams' : 'Registered Players'}
+                                        </h3>
+                                        <p className="text-xs text-gray-400 mt-0.5">
+                                            {isTeamEvent 
+                                                ? `${filteredParticipants.length} teams registered for this competition` 
+                                                : `${filteredParticipants.length} players registered`}
+                                        </p>
+                                    </div>
                                     <div className="relative w-full sm:w-64">
                                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                                         <input 
                                             type="text" 
-                                            placeholder="Search player or ID..."
+                                            placeholder={isTeamEvent ? "Search team, captain, player..." : "Search player or ID..."}
                                             value={searchTerm}
                                             onChange={(e) => setSearchTerm(e.target.value)}
                                             className="w-full bg-surface border border-gray-800 rounded-xl py-2 pl-10 pr-4 text-xs sm:text-sm text-white focus:border-brand-500 focus-visible:outline-none transition"
@@ -1077,46 +1119,128 @@ export default function TournamentDetails() {
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                     {filteredParticipants.length > 0 ? filteredParticipants.map((p, i) => (
-                                        <div key={i} className="bg-surface p-4 sm:p-5 rounded-2xl border border-gray-800 flex flex-col justify-between gap-4 group hover:border-brand-500/30 transition-colors shadow-lg hover:shadow-brand-500/5 min-w-0">
-                                            <div className="flex items-start gap-3">
-                                                <div className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 bg-brand-600/10 rounded-2xl flex items-center justify-center text-brand-500 font-black border border-brand-500/20 text-sm sm:text-base">
-                                                    {p.slotNumber ? `#${p.slotNumber}` : i + 1}
-                                                </div>
-                                                <div className="flex flex-col gap-2 min-w-0 flex-1">
-                                                    <div className="text-white font-black text-base sm:text-lg leading-tight truncate">
-                                                        <ProfileLink to={p.userId && !p.userId.startsWith('slot_') ? `/user/${p.userId}` : '#'} name={p.username || p.inGameName || p.teamName || 'Player'} />
-                                                    </div>
-                                                    <div className="flex flex-wrap items-center gap-1.5">
-                                                        <div className="flex items-center gap-1 bg-dark px-2 py-1 rounded-lg border border-gray-800 max-w-full">
-                                                            <span className="text-[10px] text-gray-500 font-black uppercase tracking-widest shrink-0">UID:</span>
-                                                            <span className="text-xs text-brand-400 font-mono font-bold truncate">{p.inGameId || 'N/A'}</span>
+                                        isTeamEvent ? (
+                                            /* Dedicated Team Card for Duo & Squad */
+                                            <div key={i} className="bg-surface p-4 sm:p-5 rounded-2xl border border-gray-800 flex flex-col justify-between gap-4 group hover:border-brand-500/30 transition-colors shadow-lg hover:shadow-brand-500/5 min-w-0">
+                                                <div className="space-y-3">
+                                                    {/* Header: Slot #, Team Name, and Tag */}
+                                                    <div className="flex items-start justify-between gap-2">
+                                                        <div className="flex items-center gap-2.5 min-w-0">
+                                                            <div className="w-10 h-10 shrink-0 bg-brand-600/10 rounded-xl flex items-center justify-center text-brand-500 font-black border border-brand-500/20 text-sm font-mono">
+                                                                {p.slotNumber ? `#${p.slotNumber}` : `#${i + 1}`}
+                                                            </div>
+                                                            <div className="min-w-0">
+                                                                <div className="text-white font-black text-base leading-tight truncate">
+                                                                    {p.teamId ? (
+                                                                        <ProfileLink to={`/team/${p.teamId}`} name={p.teamName || p.username || 'Team'} />
+                                                                    ) : (
+                                                                        <span className="truncate">{p.teamName || p.username || `Slot #${p.slotNumber || i + 1} Team`}</span>
+                                                                    )}
+                                                                </div>
+                                                                <span className="text-[10px] text-brand-400 font-bold uppercase tracking-wider">
+                                                                    {tournament.teamType?.toUpperCase() || (tournament as any).format?.toUpperCase() || 'TEAM'} ROSTER
+                                                                </span>
+                                                            </div>
                                                         </div>
-                                                        {p.inGameName && (
+                                                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-lg bg-green-500/10 text-green-400 border border-green-500/20 shrink-0">
+                                                            CONFIRMED
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Captain Details */}
+                                                    <div className="bg-dark/60 p-2.5 rounded-xl border border-gray-800">
+                                                        <div className="flex items-center justify-between mb-1">
+                                                            <span className="text-[10px] text-yellow-500 font-black uppercase tracking-wider flex items-center gap-1">
+                                                                👑 Captain
+                                                            </span>
+                                                            <span className="text-[10px] text-gray-400 font-mono">
+                                                                UID: {p.inGameId || 'N/A'}
+                                                            </span>
+                                                        </div>
+                                                        <div className="text-xs font-bold text-white truncate">
+                                                            <ProfileLink to={p.userId && !p.userId.startsWith('slot_') ? `/user/${p.userId}` : '#'} name={p.inGameName || p.username || 'Captain'} />
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Teammates Lineup */}
+                                                    {(() => {
+                                                        const teammates: string[] = Array.isArray(p.teammates) && p.teammates.length > 0 
+                                                            ? p.teammates 
+                                                            : Array.isArray(p.selectedPlayers) && p.selectedPlayers.length > 1
+                                                            ? p.selectedPlayers.slice(1)
+                                                            : [];
+
+                                                        if (teammates.length === 0) return null;
+
+                                                        return (
+                                                            <div className="space-y-1.5">
+                                                                <div className="text-[10px] text-gray-500 uppercase font-black tracking-wider">
+                                                                    Teammates ({teammates.length})
+                                                                </div>
+                                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                                                                    {teammates.map((tm: string, idx: number) => (
+                                                                        <div key={idx} className="bg-dark/40 px-2 py-1.5 rounded-lg border border-gray-800 flex items-center gap-1.5 text-xs text-gray-300 min-w-0">
+                                                                            <span className="text-[9px] text-brand-400 font-black uppercase tracking-widest shrink-0">P{idx + 2}:</span>
+                                                                            <span className="truncate font-medium">{tm}</span>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })()}
+                                                </div>
+
+                                                <div className="pt-2 border-t border-gray-800/60 flex items-center justify-between text-[11px] text-gray-400">
+                                                    <span>Room Slot: <strong className="text-white font-mono font-bold">#{p.slotNumber || i + 1}</strong></span>
+                                                    <span className="text-[10px] text-gray-500 font-medium">Slot Booked</span>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            /* Solo Player Card */
+                                            <div key={i} className="bg-surface p-4 sm:p-5 rounded-2xl border border-gray-800 flex flex-col justify-between gap-4 group hover:border-brand-500/30 transition-colors shadow-lg hover:shadow-brand-500/5 min-w-0">
+                                                <div className="flex items-start gap-3">
+                                                    <div className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 bg-brand-600/10 rounded-2xl flex items-center justify-center text-brand-500 font-black border border-brand-500/20 text-sm sm:text-base font-mono">
+                                                        {p.slotNumber ? `#${p.slotNumber}` : `#${i + 1}`}
+                                                    </div>
+                                                    <div className="flex flex-col gap-2 min-w-0 flex-1">
+                                                        <div className="text-white font-black text-base sm:text-lg leading-tight truncate">
+                                                            <ProfileLink to={p.userId && !p.userId.startsWith('slot_') ? `/user/${p.userId}` : '#'} name={p.username || p.inGameName || p.teamName || 'Player'} />
+                                                        </div>
+                                                        <div className="flex flex-wrap items-center gap-1.5">
                                                             <div className="flex items-center gap-1 bg-dark px-2 py-1 rounded-lg border border-gray-800 max-w-full">
-                                                                <span className="text-[10px] text-gray-500 font-black uppercase tracking-widest shrink-0">IGN:</span>
-                                                                <span className="text-xs text-brand-400 font-mono font-bold truncate">{p.inGameName}</span>
+                                                                <span className="text-[10px] text-gray-500 font-black uppercase tracking-widest shrink-0">UID:</span>
+                                                                <span className="text-xs text-brand-400 font-mono font-bold truncate">{p.inGameId || 'N/A'}</span>
                                                             </div>
-                                                        )}
-                                                        {p.teammates && p.teammates.map((tm: string, idx: number) => (
-                                                            <div key={idx} className="flex items-center gap-1 bg-dark px-2 py-1 rounded-lg border border-gray-800 max-w-full">
-                                                                <span className="text-[10px] text-gray-500 font-black uppercase tracking-widest shrink-0">T{idx + 1}:</span>
-                                                                <span className="text-xs text-brand-400 font-mono font-bold truncate">{tm}</span>
-                                                            </div>
-                                                        ))}
+                                                            {p.inGameName && (
+                                                                <div className="flex items-center gap-1 bg-dark px-2 py-1 rounded-lg border border-gray-800 max-w-full">
+                                                                    <span className="text-[10px] text-gray-500 font-black uppercase tracking-widest shrink-0">IGN:</span>
+                                                                    <span className="text-xs text-brand-400 font-mono font-bold truncate">{p.inGameName}</span>
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                            <div className="bg-dark p-3 rounded-xl border border-gray-800">
-                                                <div className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1">Team Name</div>
-                                                <div className={`inline-block px-3 py-1 rounded-lg text-xs font-black uppercase tracking-tight truncate max-w-full ${p.teamName ? 'bg-brand-600/20 text-brand-400 border border-brand-500/20' : 'bg-surface text-gray-500'}`}>
-                                                    {p.teamId ? <ProfileLink to={`/team/${p.teamId}`} name={p.teamName || 'TEAM'} /> : (p.teamName || 'SOLO PLAYER')}
+                                                <div className="bg-dark p-3 rounded-xl border border-gray-800 flex items-center justify-between">
+                                                    <span className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Assigned Slot</span>
+                                                    <span className="text-xs font-mono font-bold text-white">SLOT #{p.slotNumber || i + 1}</span>
                                                 </div>
                                             </div>
-                                        </div>
+                                        )
                                     )) : (
                                         <div className="col-span-full py-12 text-center bg-surface rounded-3xl border border-gray-800 border-dashed">
-                                            <Users className="w-12 h-12 text-gray-700 mx-auto mb-4" />
-                                            <p className="text-gray-500 font-bold text-sm sm:text-base">No participants yet. Be the first to join!</p>
+                                            {isTeamEvent ? (
+                                                <>
+                                                    <Shield className="w-12 h-12 text-gray-700 mx-auto mb-4" />
+                                                    <p className="text-gray-400 font-bold text-sm sm:text-base">No teams registered yet.</p>
+                                                    <p className="text-gray-500 text-xs mt-1">Be the first squad to register for this event!</p>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Users className="w-12 h-12 text-gray-700 mx-auto mb-4" />
+                                                    <p className="text-gray-400 font-bold text-sm sm:text-base">No participants yet.</p>
+                                                    <p className="text-gray-500 text-xs mt-1">Be the first player to join!</p>
+                                                </>
+                                            )}
                                         </div>
                                     )}
                                 </div>
