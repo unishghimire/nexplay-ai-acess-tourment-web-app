@@ -1,4 +1,4 @@
-import { Router } from "express";
+﻿import { Router } from "express";
 import { createHash } from "crypto";
 import { db, admin, authenticateToken, rateLimit } from "../shared.js";
 import { ChunkProcessingError, commitBatchedWrites } from "../batchedWrites.js";
@@ -6,19 +6,19 @@ import { validatePrizeWinners } from "../prizeValidation.js";
 
 const router = Router();
 
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // WALLET SECURITY
-// All wallet writes go through server endpoints — clients cannot write
+// All wallet writes go through server endpoints â€” clients cannot write
 // to transactions collection directly (enforced by Firestore rules).
 // Duplicate detection: same transactionCode + same amount within 24h = blocked
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
-// Revenue split — mirrors src/shared/constants/finance.ts
+// Revenue split â€” mirrors src/shared/constants/finance.ts
 // ponytail: duplicated because server and client are separate build targets
 const REVENUE_SPLIT = { ORGANIZER: 0.85, PLATFORM: 0.15 } as const;
 const CANCELLATION_PAGE_SIZE = 100;
 
-// POST /api/wallet/deposit — create a pending deposit request
+// POST /api/wallet/deposit â€” create a pending deposit request
 router.post("/api/wallet/deposit",
   authenticateToken,
   rateLimit(30, 15 * 60 * 1000),
@@ -71,7 +71,7 @@ router.post("/api/wallet/deposit",
         }
       }
 
-      // Deposit is pending — balance credited when admin approves (atomic in useAdminData handleApproveTx)
+      // Deposit is pending â€” balance credited when admin approves (atomic in useAdminData handleApproveTx)
       // Deterministic ID makes concurrent double-submits converge on a single doc (idempotent replay).
       const depositKey = createHash('sha1').update(`${uid}|${numAmount}|${transactionCode}`).digest('hex').slice(0, 24);
       const txRef = db.collection('transactions').doc(`${uid}_DEP_${depositKey}`);
@@ -98,7 +98,7 @@ router.post("/api/wallet/deposit",
   }
 );
 
-// POST /api/wallet/withdraw — create a pending withdrawal + lock funds atomically
+// POST /api/wallet/withdraw â€” create a pending withdrawal + lock funds atomically
 router.post("/api/wallet/withdraw",
   authenticateToken,
   rateLimit(3, 15 * 60 * 1000),
@@ -205,8 +205,8 @@ router.post("/api/wallet/withdraw",
   }
 );
 
-// GET /api/wallet/transactions — list own transactions (paginated)
-// [BUG-026] maintenance-only endpoint — no client callers; client uses direct Firestore reads.
+// GET /api/wallet/transactions â€” list own transactions (paginated)
+// [BUG-026] maintenance-only endpoint â€” no client callers; client uses direct Firestore reads.
 router.get("/api/wallet/transactions",
   authenticateToken,
   rateLimit(30, 15 * 60 * 1000),
@@ -237,11 +237,11 @@ router.get("/api/wallet/transactions",
   }
 );
 
-// ═══════════════════════════════════════════════════════════════
-// TOURNAMENT ENTRY FEE — server-side atomic deduction
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// TOURNAMENT ENTRY FEE â€” server-side atomic deduction
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
-// POST /api/wallet/join-tournament — atomic entry fee deduction + participant create + ledger
+// POST /api/wallet/join-tournament â€” atomic entry fee deduction + participant create + ledger
 router.post("/api/wallet/join-tournament",
   authenticateToken,
   rateLimit(10, 15 * 60 * 1000),
@@ -255,7 +255,7 @@ router.post("/api/wallet/join-tournament",
       }
 
       // Deterministic participant doc ID for atomic duplicate check
-      // ponytail: underscore separator is safe — Firebase Auth UIDs and Firestore auto-generated doc IDs are alphanumeric-only (no underscores). Ceiling: manually-created tournament doc IDs with underscores could theoretically collide. Upgrade: use '::' separator if user-created IDs are ever allowed.
+      // ponytail: underscore separator is safe â€” Firebase Auth UIDs and Firestore auto-generated doc IDs are alphanumeric-only (no underscores). Ceiling: manually-created tournament doc IDs with underscores could theoretically collide. Upgrade: use '::' separator if user-created IDs are ever allowed.
       const partRef = db.collection('participants').doc(`${tournamentId}_${uid}`);
 
       const result = await db.runTransaction(async (tx) => {
@@ -493,7 +493,7 @@ router.post("/api/wallet/join-tournament",
   }
 );
 
-// POST /api/wallet/leave-tournament — atomic refund + participant delete + ledger
+// POST /api/wallet/leave-tournament â€” atomic refund + participant delete + ledger
 router.post("/api/wallet/leave-tournament",
   authenticateToken,
   rateLimit(10, 15 * 60 * 1000),
@@ -506,7 +506,7 @@ router.post("/api/wallet/leave-tournament",
         return res.status(400).json({ success: false, message: "Invalid tournament ID" });
       }
 
-      // Deterministic participant doc ID — matches join-tournament
+      // Deterministic participant doc ID â€” matches join-tournament
       const partRef = db.collection('participants').doc(`${tournamentId}_${uid}`);
 
       const result = await db.runTransaction(async (tx) => {
@@ -619,7 +619,152 @@ router.post("/api/wallet/leave-tournament",
   }
 );
 
-// POST /api/wallet/redeem-promo — atomic promo code redemption
+// POST /api/wallet/release-slot — organizer/admin releases a slot & automatically refunds entry fee
+router.post("/api/wallet/release-slot",
+  authenticateToken,
+  rateLimit(30, 15 * 60 * 1000),
+  async (req: any, res) => {
+    try {
+      const { tournamentId, slotNumber, userId } = req.body;
+      const callerUid = req.user.userId;
+
+      if (!tournamentId || typeof tournamentId !== 'string') {
+        return res.status(400).json({ success: false, message: "Invalid tournament ID" });
+      }
+      const slotNum = Number(slotNumber);
+      if (!Number.isInteger(slotNum) || slotNum < 1) {
+        return res.status(400).json({ success: false, message: "Invalid slot number" });
+      }
+
+      const tRef = db.collection('tournaments').doc(tournamentId);
+      const sRef = db.collection('scrims').doc(tournamentId);
+
+      const result = await db.runTransaction(async (tx) => {
+        // 1. ALL READS FIRST
+        const [tDoc, sDoc] = await Promise.all([tx.get(tRef), tx.get(sRef)]);
+        if (!tDoc.exists && !sDoc.exists) throw new Error("Tournament or scrim does not exist");
+
+        const primaryDoc = tDoc.exists ? tDoc : sDoc;
+        const targetRef = tDoc.exists ? tRef : sRef;
+        const tData = primaryDoc.data()!;
+
+        // Check caller is organizer/host/admin
+        const isHost = tData.hostUid === callerUid || tData.orgId === callerUid || tData.createdBy === callerUid || tData.userId === callerUid;
+        if (!isHost && req.user.role !== 'admin' && req.user.role !== 'organizer') {
+          throw new Error("Unauthorized: Only organizer or admin can release slots");
+        }
+
+        const slots = Array.isArray(tData.slots) ? [...tData.slots] : [];
+        const slotIdx = slots.findIndex((s: any) => s.slotNumber === slotNum);
+        if (slotIdx === -1) throw new Error("Slot not found");
+
+        const targetSlot = slots[slotIdx];
+        const occupantUid = userId || targetSlot.userId || targetSlot.captainUid || targetSlot.reservedBy;
+
+        let occupantUserSnap: any = null;
+        let partDocSnap: any = null;
+        let uRef: any = null;
+
+        if (occupantUid) {
+          uRef = db.collection('users').doc(occupantUid);
+          const partRef = db.collection('participants').doc(`${tournamentId}_${occupantUid}`);
+          [occupantUserSnap, partDocSnap] = await Promise.all([tx.get(uRef), tx.get(partRef)]);
+        }
+
+        // 2. ALL WRITES AFTER
+        const entryFee = Math.max(0, Number(tData.entryFee || 0));
+        let refundProcessed = false;
+        let refundAmount = 0;
+
+        slots[slotIdx] = {
+          slotNumber: slotNum,
+          status: 'open',
+          teamName: null,
+          teamId: null,
+          userId: null,
+          captainUid: null,
+          reservedBy: null,
+          inGameId: null,
+          inGameName: null,
+          joinedAt: null,
+        };
+
+        const filledSlots = slots.filter((s: any) => s.status === 'filled').length;
+        const tournamentUpdates: any = {
+          slots,
+          filledSlots,
+          currentPlayers: filledSlots,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        };
+
+        tx.update(targetRef, tournamentUpdates);
+        if (targetRef === tRef && sDoc.exists) tx.update(sRef, tournamentUpdates);
+        else if (targetRef === sRef && tDoc.exists) tx.update(tRef, tournamentUpdates);
+
+        if (partDocSnap && partDocSnap.exists) {
+          tx.delete(partDocSnap.ref);
+        }
+
+        // Refund entry fee if a registered player paid
+        const isRealPlayer = occupantUid && targetSlot.teamName !== 'Reserved' && targetSlot.teamName !== 'Reserved Slot';
+        if (entryFee > 0 && isRealPlayer && occupantUserSnap && occupantUserSnap.exists) {
+          const uData = occupantUserSnap.data()!;
+          const balanceBefore = Number(uData.balance || 0);
+          const balanceAfter = balanceBefore + entryFee;
+          tx.update(uRef, { balance: balanceAfter });
+
+          const refundTxRef = db.collection('transactions').doc(`SLOT_REFUND_${tournamentId}_${slotNum}_${occupantUid}`);
+          tx.set(refundTxRef, {
+            id: refundTxRef.id,
+            userId: occupantUid,
+            username: uData.username || targetSlot.leader || 'Player',
+            type: 'refund',
+            amount: entryFee,
+            method: 'Scrim Entry Refund',
+            refId: `RFD-${tournamentId.slice(0, 8)}-${slotNum}-${Date.now().toString().slice(-4)}`,
+            status: 'success',
+            timestamp: admin.firestore.FieldValue.serverTimestamp(),
+            desc: `Refund for released Slot #${slotNum} in ${tData.title || 'Scrim'}`,
+            tournamentId,
+            slotNumber: slotNum,
+            balanceBefore,
+            balanceAfter,
+          });
+
+          const notifRef = db.collection('notifications').doc();
+          tx.set(notifRef, {
+            userId: occupantUid,
+            title: 'Entry Fee Refunded',
+            message: `Your team was released from Slot #${slotNum} in "${tData.title || 'Scrim'}". Your entry fee of Rs. ${entryFee.toLocaleString()} has been refunded to your wallet.`,
+            type: 'info',
+            read: false,
+            link: '/wallet',
+            timestamp: admin.firestore.FieldValue.serverTimestamp(),
+          });
+
+          refundProcessed = true;
+          refundAmount = entryFee;
+        }
+
+        return { refundProcessed, refundAmount };
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: result.refundProcessed
+          ? `Slot #${slotNum} released and entry fee refunded`
+          : `Slot #${slotNum} released`,
+        refunded: result.refundProcessed,
+        refundAmount: result.refundAmount,
+        slotNumber: slotNum,
+      });
+    } catch (error: any) {
+      return res.status(500).json({ success: false, message: error.message || "Failed to release slot" });
+    }
+  }
+);
+
+// POST /api/wallet/redeem-promo â€” atomic promo code redemption
 router.post("/api/wallet/redeem-promo",
   authenticateToken,
   rateLimit(5, 15 * 60 * 1000),
@@ -643,7 +788,7 @@ router.post("/api/wallet/redeem-promo",
           .get();
         if (promoSnap.empty) throw new Error("Invalid promo code");
         const promoRef = promoSnap.docs[0].ref;
-        // Tracked read — ensures promo state is locked for the transaction
+        // Tracked read â€” ensures promo state is locked for the transaction
         const promoDoc = await tx.get(promoRef);
         if (!promoDoc.exists) throw new Error("Invalid promo code");
         const promoData = promoDoc.data()!;
@@ -653,7 +798,7 @@ router.post("/api/wallet/redeem-promo",
 
         // Idempotency: deterministic transaction doc ID prevents duplicate redemption
         // Two concurrent requests will conflict on this doc, and the retry will see it exists
-        // ponytail: deterministic doc ID — same (uid, promoCode) always collides for duplicate prevention. Underscore separator safe for Firebase Auth UIDs (alphanumeric-only). Promo codes are uppercased and may contain underscores, but the _PROMO_ marker disambiguates.
+        // ponytail: deterministic doc ID â€” same (uid, promoCode) always collides for duplicate prevention. Underscore separator safe for Firebase Auth UIDs (alphanumeric-only). Promo codes are uppercased and may contain underscores, but the _PROMO_ marker disambiguates.
         const promoTxRef = db.collection('transactions').doc(`${uid}_PROMO_${upperCode}`);
         const existingTx = await tx.get(promoTxRef);
         if (existingTx.exists) throw new Error("You have already used this promo code");
@@ -698,11 +843,11 @@ router.post("/api/wallet/redeem-promo",
   }
 );
 
-// ═══════════════════════════════════════════════════════════════
-// PRIZE DISTRIBUTION — server-side atomic, idempotent via tournament status check
-// ═══════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PRIZE DISTRIBUTION â€” server-side atomic, idempotent via tournament status check
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
-// POST /api/wallet/distribute-prizes — atomically distribute prizes to winners
+// POST /api/wallet/distribute-prizes â€” atomically distribute prizes to winners
 router.post("/api/wallet/distribute-prizes",
   authenticateToken,
   rateLimit(3, 15 * 60 * 1000),
@@ -725,7 +870,7 @@ router.post("/api/wallet/distribute-prizes",
         if (!tDoc.exists) throw new Error("Tournament not found");
         const tData = tDoc.data()!;
         if (tData.hostUid !== uid && req.user.role !== 'admin') {
-          throw new Error("Not authorized — only tournament host can distribute prizes");
+          throw new Error("Not authorized â€” only tournament host can distribute prizes");
         }
         // Idempotency: tournament status prevents double distribution
         if (tData.status === 'completed') throw new Error("Tournament already completed");
@@ -745,7 +890,7 @@ router.post("/api/wallet/distribute-prizes",
           if (!userDoc.exists) throw new Error(`Winner not found: ${winner.userId}`);
           winnerProfiles.set(winner.userId, userDoc);
 
-          // A winner must be an approved participant of this tournament —
+          // A winner must be an approved participant of this tournament â€”
           // prevents hosts from paying arbitrary accounts (or themselves).
           const partDoc = await tx.get(db.collection('participants').doc(`${tournamentId}_${winner.userId}`));
           if (!partDoc.exists) throw new Error(`Winner is not a participant: ${winner.userId}`);
@@ -804,7 +949,7 @@ router.post("/api/wallet/distribute-prizes",
           completedAt: admin.firestore.FieldValue.serverTimestamp()
         });
 
-        // Distribute prizes to each winner — read each user's balance for audit
+        // Distribute prizes to each winner â€” read each user's balance for audit
         for (const winner of winners) {
           const uRef = db.collection('users').doc(winner.userId);
           const uDoc = winnerProfiles.get(winner.userId)!;
@@ -843,9 +988,9 @@ router.post("/api/wallet/distribute-prizes",
           }
         }
 
-        // Revenue split (85/15) — atomic with prize distribution.
+        // Revenue split (85/15) â€” atomic with prize distribution.
         // Use currentPlayers as the authoritative participant count, falling back to
-        // winners.length. The denormalized approvedCount field is unreliable — it may be
+        // winners.length. The denormalized approvedCount field is unreliable â€” it may be
         // 0 for manual-registration tournaments or lag due to async increments (BUG-044).
         const entryFee = tData.entryFee || 0;
         const participantCount = tData.currentPlayers || tData.approvedCount || winners.length || 0;
@@ -855,7 +1000,7 @@ router.post("/api/wallet/distribute-prizes",
         const orgShare = Math.round(profit * REVENUE_SPLIT.ORGANIZER);
         const nexplayShare = Math.round(profit * REVENUE_SPLIT.PLATFORM);
 
-        // ponytail: only record earnings when profit > 0 — negative profit (organizer loss)
+        // ponytail: only record earnings when profit > 0 â€” negative profit (organizer loss)
         // would create a record that could debit organizer wallet on release
         if (profit > 0) {
           const earnRef = db.collection('tournamentEarnings').doc();
@@ -890,7 +1035,7 @@ router.post("/api/wallet/distribute-prizes",
   }
 );
 
-// POST /api/wallet/cancel-tournament — admin-only, paginated and idempotent
+// POST /api/wallet/cancel-tournament â€” admin-only, paginated and idempotent
 // Each participant refund gets a deterministic ledger document. Retrying a page
 // therefore cannot credit the same registration twice, even after a timeout.
 router.post("/api/wallet/cancel-tournament",
@@ -1063,8 +1208,8 @@ router.post("/api/wallet/cancel-tournament",
   },
 );
 
-// GET /api/migrate-room-creds — one-time migration of room creds to subcollection
-// ponytail: one-time migration endpoint — safe to delete after deployment
+// GET /api/migrate-room-creds â€” one-time migration of room creds to subcollection
+// ponytail: one-time migration endpoint â€” safe to delete after deployment
 router.get("/api/migrate-room-creds", authenticateToken, rateLimit(1, 60 * 60 * 1000), async (req: any, res) => {
   if (req.user.role !== 'admin') {
     return res.status(403).json({ success: false, message: "Admin only" });
