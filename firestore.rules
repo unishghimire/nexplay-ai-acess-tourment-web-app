@@ -47,9 +47,16 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
     function isTournamentHost(tournamentId) {
-      return isSignedIn() &&
-             exists(/databases/$(database)/documents/tournaments/$(tournamentId)) &&
-             get(/databases/$(database)/documents/tournaments/$(tournamentId)).data.hostUid == request.auth.uid;
+      return isSignedIn() && (
+        (exists(/databases/$(database)/documents/tournaments/$(tournamentId)) &&
+         (get(/databases/$(database)/documents/tournaments/$(tournamentId)).data.hostUid == request.auth.uid ||
+          (('orgId' in get(/databases/$(database)/documents/tournaments/$(tournamentId)).data) &&
+           get(/databases/$(database)/documents/tournaments/$(tournamentId)).data.orgId == request.auth.uid))) ||
+        (exists(/databases/$(database)/documents/scrims/$(tournamentId)) &&
+         (get(/databases/$(database)/documents/scrims/$(tournamentId)).data.hostUid == request.auth.uid ||
+          (('orgId' in get(/databases/$(database)/documents/scrims/$(tournamentId)).data) &&
+           get(/databases/$(database)/documents/scrims/$(tournamentId)).data.orgId == request.auth.uid)))
+      );
     }
     function isTeamOwner(teamId) {
       return isSignedIn() && teamId is string &&
