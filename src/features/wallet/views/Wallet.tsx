@@ -105,7 +105,7 @@ const Wallet: React.FC = () => {
         });
 
         const chartData = [...transactions].reverse().map(tx => ({
-            name: formatDate(tx.timestamp).split(',')[0],
+            name: formatDate(tx.timestamp || (tx as any).createdAt).split(',')[0],
             amount: tx.amount,
             type: tx.type,
             status: tx.status
@@ -185,7 +185,7 @@ const Wallet: React.FC = () => {
             const headers = ["Transaction ID", "Date", "Type", "Method", "Amount (NPR)", "Status", "Reference ID", "Description"];
             const rows = transactions.map(tx => [
                 `"${tx.id || ''}"`,
-                `"${formatDate(tx.timestamp)}"`,
+                `"${formatDate(tx.timestamp || (tx as any).createdAt)}"`,
                 `"${tx.type || ''}"`,
                 `"${tx.method || 'System'}"`,
                 `"${tx.amount || 0}"`,
@@ -355,7 +355,7 @@ const Wallet: React.FC = () => {
                                                 (tx.type === 'withdrawal' || tx.type === 'withdraw') ? 'bg-red-500/10 text-red-500' : 
                                                 tx.type === 'entry_fee' ? 'bg-amber-500/10 text-amber-400' :
                                                 tx.type === 'refund' ? 'bg-emerald-500/10 text-emerald-400' :
-                                                tx.type === 'prize' ? 'bg-yellow-500/10 text-yellow-400' :
+                                                (tx.type === 'prize' || tx.type === 'prize_payout') ? 'bg-yellow-500/10 text-yellow-400' :
                                                 tx.type === 'promo' ? 'bg-brand-500/10 text-brand-500' :
                                                 'bg-blue-500/10 text-blue-500'
                                             }`}>
@@ -364,7 +364,7 @@ const Wallet: React.FC = () => {
                                                 tx.type === 'promo' ? <Gift className="w-6 h-6" /> :
                                                 tx.type === 'entry_fee' ? <Medal className="w-6 h-6" /> :
                                                 tx.type === 'refund' ? <ArrowDownRight className="w-6 h-6" /> :
-                                                tx.type === 'prize' ? <Trophy className="w-6 h-6" /> :
+                                                (tx.type === 'prize' || tx.type === 'prize_payout') ? <Trophy className="w-6 h-6" /> :
                                                 <WalletIcon className="w-6 h-6" />}
                                             </div>
                                             <div>
@@ -373,11 +373,11 @@ const Wallet: React.FC = () => {
                                                     (tx.type === 'withdrawal' || tx.type === 'withdraw') ? 'Withdrawal' : 
                                                     tx.type === 'entry_fee' ? 'Tournament Entry' :
                                                     tx.type === 'refund' ? 'Tournament Refund' :
-                                                    tx.type === 'prize' ? 'Prize Winnings' :
+                                                    (tx.type === 'prize' || tx.type === 'prize_payout') ? 'Prize Winnings' :
                                                     tx.type === 'promo' ? 'Promo Code' : 'Transfer'}
                                                 </h4>
                                                 <div className="flex items-center gap-3 mt-1">
-                                                    <span className="text-xs text-gray-500 font-bold uppercase">{formatDate(tx.timestamp)}</span>
+                                                    <span className="text-xs text-gray-500 font-bold uppercase">{formatDate(tx.timestamp || (tx as any).createdAt)}</span>
                                                     <span className="w-1 h-1 rounded-full bg-surface"></span>
                                                     <span className="text-xs text-gray-400 font-bold uppercase">{tx.method || 'System'}</span>
                                                 </div>
@@ -386,11 +386,11 @@ const Wallet: React.FC = () => {
                                         <div className="flex items-center justify-between sm:justify-end gap-6 sm:w-auto w-full">
                                             <div className="text-left sm:text-right">
                                                 <p className={`font-black text-lg font-mono ${
-                                                    tx.type === 'deposit' || tx.type === 'promo' || tx.type === 'refund' || tx.type === 'prize' ? 'text-green-400' : 
+                                                    tx.type === 'deposit' || tx.type === 'promo' || tx.type === 'refund' || tx.type === 'prize' || tx.type === 'prize_payout' ? 'text-green-400' : 
                                                     (tx.type === 'withdrawal' || tx.type === 'withdraw' || tx.type === 'entry_fee') ? 'text-rose-400' : 
                                                     'text-white'
                                                 }`}>
-                                                    {(tx.type === 'deposit' || tx.type === 'promo' || tx.type === 'refund' || tx.type === 'prize') ? '+' : (tx.type === 'entry_fee' || Number(tx.amount) < 0) ? '-' : ''}{formatCurrency(Math.abs(Number(tx.amount || 0)))}
+                                                    {(tx.type === 'deposit' || tx.type === 'promo' || tx.type === 'refund' || tx.type === 'prize' || tx.type === 'prize_payout') ? '+' : (tx.type === 'entry_fee' || Number(tx.amount) < 0) ? '-' : ''}{formatCurrency(Math.abs(Number(tx.amount || 0)))}
                                                 </p>
                                                 <div className="flex items-center justify-start sm:justify-end gap-1.5 mt-1">
                                                     <span className={`text-xs font-black px-3 py-1 rounded-full uppercase tracking-widest ${

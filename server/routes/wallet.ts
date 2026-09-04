@@ -1028,6 +1028,18 @@ router.post("/api/wallet/distribute-prizes",
               balanceBefore,
               balanceAfter,
             });
+
+            // Send instant in-app notification to the winner
+            const notifRef = db.collection('notifications').doc();
+            tx.set(notifRef, {
+              userId: winner.userId,
+              title: 'Tournament Prize Won! 🏆',
+              message: `Congratulations! You placed #${winner.rank} in "${tData.title || 'Tournament'}" and won Rs. ${winner.prize.toLocaleString()}! The prize has been credited to your wallet balance.`,
+              type: 'success',
+              link: '/wallet',
+              read: false,
+              timestamp: admin.firestore.FieldValue.serverTimestamp(),
+            });
           }
         }
 

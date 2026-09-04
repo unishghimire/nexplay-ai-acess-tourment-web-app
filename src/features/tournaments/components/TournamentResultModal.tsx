@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import {Trophy, X, Calendar, Users, Target, Award, Star, Medal, ArrowUpRight, Share2, Download, CheckCircle2} from 'lucide-react';
+import { Trophy, X, Calendar, Users, Target, Award, Star, Medal, ArrowUpRight, Share2, Download, CheckCircle2, Crown } from 'lucide-react';
 import { Tournament } from '../../../shared/types/types';
 import { formatCurrency, formatDate } from '../../../shared/utils/utils';
 import PrizeBoard from './PrizeBoard';
@@ -47,7 +47,15 @@ const TournamentResultModal: React.FC<TournamentResultModalProps> = ({ isOpen, o
         });
     }
 
-    const firstPlace = tournament.winners?.find(w => w.rank === 1) || (tournament.manualResults && tournament.manualResults.find(m => parseInt(String(m.rank)) === 1));
+    const winnerList: any[] = (Array.isArray(tournament.winners) && tournament.winners.length > 0)
+        ? tournament.winners
+        : (Array.isArray((tournament as any).results) && (tournament as any).results.length > 0)
+        ? (tournament as any).results
+        : (Array.isArray((tournament as any).podium) && (tournament as any).podium.length > 0)
+        ? (tournament as any).podium
+        : [];
+
+    const firstPlace = winnerList.find((w: any) => Number(w.rank) === 1) || (tournament.manualResults && tournament.manualResults.find(m => parseInt(String(m.rank)) === 1));
 
     return (
         <AnimatePresence>
@@ -172,6 +180,95 @@ const TournamentResultModal: React.FC<TournamentResultModalProps> = ({ isOpen, o
                                 </h4>
                                 <div className="bg-[#1e293b]/30 rounded-3xl border border-gray-800 overflow-hidden shadow-xl p-4 sm:p-6">
                                     <PerKillResultView tournament={tournament} />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Winner Standings & Podium (Scrims & Tournaments) */}
+                        {winnerList.length > 0 && (
+                            <div className="space-y-4">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                    <h4 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
+                                        <Trophy className="w-5 h-5 text-amber-400" /> Final Standings & Winner Podium
+                                    </h4>
+                                    <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full flex items-center gap-1 w-fit">
+                                        <CheckCircle2 className="w-3 h-3" /> Prizes Credited to Wallet
+                                    </span>
+                                </div>
+                                <div className="bg-[#1e293b]/40 rounded-2xl sm:rounded-3xl border border-gray-800 overflow-hidden shadow-2xl">
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-left text-xs">
+                                            <thead>
+                                                <tr className="border-b border-gray-800/80 bg-gray-950/60 text-[10px] uppercase tracking-widest text-gray-400 font-black">
+                                                    <th className="py-3 px-4 sm:px-6">Rank</th>
+                                                    <th className="py-3 px-4 sm:px-6">Team / Player</th>
+                                                    <th className="py-3 px-3 text-center">Kills</th>
+                                                    <th className="py-3 px-3 text-center">Points</th>
+                                                    <th className="py-3 px-4 sm:px-6 text-right">Prize Won</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-800/50">
+                                                {winnerList.map((w: any, idx: number) => {
+                                                    const rankNum = Number(w.rank) || (idx + 1);
+                                                    const isTop1 = rankNum === 1;
+                                                    const isTop2 = rankNum === 2;
+                                                    const isTop3 = rankNum === 3;
+                                                    const prize = Number(w.prize) || Number(w.amount) || 0;
+
+                                                    return (
+                                                        <tr 
+                                                            key={idx}
+                                                            className={`transition-colors ${
+                                                                isTop1 ? 'bg-amber-500/5 hover:bg-amber-500/10' :
+                                                                isTop2 ? 'bg-slate-400/5 hover:bg-slate-400/10' :
+                                                                isTop3 ? 'bg-amber-700/5 hover:bg-amber-700/10' :
+                                                                'hover:bg-white/[0.02]'
+                                                            }`}
+                                                        >
+                                                            <td className="py-3.5 px-4 sm:px-6">
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-black text-xs shrink-0 shadow-md ${
+                                                                        isTop1 ? 'bg-gradient-to-br from-amber-400 to-amber-600 text-black shadow-amber-500/20' :
+                                                                        isTop2 ? 'bg-gradient-to-br from-slate-200 to-slate-400 text-black shadow-slate-400/20' :
+                                                                        isTop3 ? 'bg-gradient-to-br from-amber-600 to-amber-800 text-white shadow-amber-700/20' :
+                                                                        'bg-gray-800/80 text-gray-300 border border-gray-700/50'
+                                                                    }`}>
+                                                                        {isTop1 ? <Crown className="w-4 h-4" /> :
+                                                                         isTop2 ? <Medal className="w-4 h-4" /> :
+                                                                         isTop3 ? <Award className="w-4 h-4" /> :
+                                                                         `#${rankNum}`}
+                                                                    </div>
+                                                                    <span className="hidden sm:inline font-bold text-gray-400 text-[11px]">
+                                                                        {isTop1 ? 'Champion' : isTop2 ? '2nd Place' : isTop3 ? '3rd Place' : `Rank ${rankNum}`}
+                                                                    </span>
+                                                                </div>
+                                                            </td>
+                                                            <td className="py-3.5 px-4 sm:px-6">
+                                                                <div className="font-black text-white text-sm sm:text-base tracking-tight flex items-center gap-2">
+                                                                    <span>{w.teamName || w.username || w.playerId || `Slot ${rankNum}`}</span>
+                                                                </div>
+                                                            </td>
+                                                            <td className="py-3.5 px-3 text-center font-mono font-bold text-gray-300">
+                                                                {w.kills !== undefined ? w.kills : '-'}
+                                                            </td>
+                                                            <td className="py-3.5 px-3 text-center font-mono font-bold text-brand-400">
+                                                                {w.points !== undefined ? w.points : '-'}
+                                                            </td>
+                                                            <td className="py-3.5 px-4 sm:px-6 text-right">
+                                                                {prize > 0 ? (
+                                                                    <span className="inline-flex items-center gap-1 font-mono font-black text-xs sm:text-sm text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-xl">
+                                                                        +{formatCurrency(prize)}
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="text-gray-500 font-bold">-</span>
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         )}

@@ -418,6 +418,13 @@ router.post("/api/scrims/:id/payout", authenticateToken, rateLimit(5, 15 * 60 * 
             totalEarnings: admin.firestore.FieldValue.increment(prizeAmount),
             updatedAt: admin.firestore.FieldValue.serverTimestamp()
           });
+
+          // Sync public profile earnings
+          const pubRef = db.collection("users_public").doc(targetUserId);
+          transaction.set(pubRef, {
+            totalEarnings: admin.firestore.FieldValue.increment(prizeAmount),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
         }
 
         const txRef = db.collection("transactions").doc();
@@ -425,13 +432,28 @@ router.post("/api/scrims/:id/payout", authenticateToken, rateLimit(5, 15 * 60 * 
           id: txRef.id,
           userId: targetUserId,
           username: winner.teamName || winner.username || "Winner",
-          type: "prize_payout",
+          type: "prize",
           amount: prizeAmount,
+          method: "Scrim Prize",
           scrimId: id,
+          tournamentId: id,
           rank: winner.rank || 1,
           desc: `Prize payout for Rank #${winner.rank || 1} in ${scrim.title || 'Scrim'}`,
-          status: "completed",
+          status: "success",
+          timestamp: admin.firestore.FieldValue.serverTimestamp(),
           createdAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Send instant in-app notification to the winner
+        const notifRef = db.collection("notifications").doc();
+        transaction.set(notifRef, {
+          userId: targetUserId,
+          title: 'Prize Won! 🏆',
+          message: `Congratulations! You placed #${winner.rank || 1} in "${scrim.title || 'Scrim'}" and won Rs. ${prizeAmount.toLocaleString()}! The prize has been credited to your wallet balance.`,
+          type: 'success',
+          link: '/wallet',
+          read: false,
+          timestamp: admin.firestore.FieldValue.serverTimestamp(),
         });
       }
 
