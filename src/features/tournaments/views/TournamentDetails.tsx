@@ -26,6 +26,7 @@ import PerKillLeaderboard from '../components/PerKillLeaderboard';
 import { TournamentRoadmap } from '../components/TournamentRoadmap';
 import GroupStandingsView from '../components/GroupStandingsView';
 import { fetchRoomCredentials, subscribeRoomCredentials, RoomCredentials } from '../../../shared/services/roomCredentials';
+import ScrimResultsTable from '../components/ScrimResultsTable';
 
 const TOURNAMENT_TAB_IDS = ['overview', 'slots', 'description', 'participants', 'groups', 'roadmap', 'results', 'killrewards'] as const;
 type TournamentTabId = typeof TOURNAMENT_TAB_IDS[number];
@@ -213,6 +214,28 @@ export default function TournamentDetails() {
 
     const filledCount = useMemo(() => getFilledSlotCount(tournament, effectiveParticipants.length), [tournament, effectiveParticipants.length]);
     const totalCount = useMemo(() => getSlotCount(tournament), [tournament]);
+
+    const effectivePrizes = useMemo(() => {
+        if (tournament?.prizeDistribution && tournament.prizeDistribution.length > 0) {
+            return tournament.prizeDistribution;
+        }
+        const pool = Number(tournament?.prizePool || (tournament as any)?.requirements?.entryFee || 0);
+        if (pool > 0) {
+            return [
+                { id: 'p1', rank: 1, label: '1st Place (Champion)', amount: Math.round(pool * 0.5) },
+                { id: 'p2', rank: 2, label: '2nd Place (Runner-up)', amount: Math.round(pool * 0.3) },
+                { id: 'p3', rank: 3, label: '3rd Place (2nd Runner-up)', amount: Math.round(pool * 0.2) },
+            ];
+        }
+        return [];
+    }, [tournament?.prizeDistribution, tournament?.prizePool, (tournament as any)?.requirements?.entryFee]);
+
+    const hasResults = Boolean(
+        tournament?.status === 'completed' ||
+        (tournament?.manualResults && tournament.manualResults.length > 0) ||
+        (tournament?.winners && tournament.winners.length > 0) ||
+        ((tournament as any)?.results && (tournament as any).results.length > 0)
+    );
 
     const isHostOrAdmin = Boolean(
         (user && tournament && (
@@ -909,20 +932,16 @@ export default function TournamentDetails() {
                             },
                             !isEventScrim ? { id: 'roadmap', label: 'Roadmap', icon: Calendar } : null,
                             !isEventScrim ? { id: 'groups', label: 'Match Groups', icon: Trophy } : null,
-                            tournament.status === 'completed' ? { id: 'results', label: 'Results', icon: Trophy } : null,
+                            (isEventScrim || hasResults) ? { id: 'results', label: 'Results', icon: Trophy } : null,
                             (tournament as any).tournamentMode === 'PER_KILL_REWARD' && (tournament as any).killRewards?.length > 0 ? { id: 'killrewards', label: 'Kill Rewards', icon: Target } : null
                         ].filter((tab): tab is {id: string, label: string, icon: any} => tab !== null).map((tab) => (
                             <button type="button" 
                                 key={tab.id}
                                 onClick={() => {
-                                    if (tab.id === 'results') {
-                                        setIsResultModalOpen(true);
-                                    } else {
-                                        setActiveTab(tab.id as any);
-                                    }
+                                    setActiveTab(tab.id as any);
                                 }}
                                 className={`flex-1 min-w-max flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 rounded-xl sm:rounded-full text-xs sm:text-xs font-black transition-colors uppercase tracking-wider whitespace-nowrap ${
-                                    (activeTab === tab.id && tab.id !== 'results') 
+                                    activeTab === tab.id
                                     ? 'bg-brand-500 text-white shadow-xl shadow-brand-500/20' 
                                     : 'text-gray-500 hover:text-white hover:bg-surface/50'
                                 }`}
@@ -1198,15 +1217,27 @@ export default function TournamentDetails() {
                                         <ProfileLink to={`/user/${tournament.hostUid}`} name={tournament.hostName || 'Official Host'} />
                                     )}
                                 </div>
-                                {tournament.prizeDistribution && tournament.prizeDistribution.length > 0 && (
-                                    <div className="mb-6 sm:mb-8">
+                                {/* Prize Pool & Distribution Section */}
+                                {effectivePrizes.length > 0 && (
+                                    <div className="space-y-4">
                                         <PrizeBoard 
-                                            prizes={tournament.prizeDistribution} 
+                                            prizes={effectivePrizes} 
                                             currency={tournament.currency} 
-                                            totalPrizePool={tournament.prizePool}
+                                            totalPrizePool={tournament.prizePool || effectivePrizes.reduce((sum, p) => sum + (Number(p.amount) || 0), 0)}
                                         />
+                                        <div className="p-4 bg-brand-500/10 border border-brand-500/20 rounded-2xl flex items-center gap-3 text-xs text-brand-300 font-medium">
+                                            <Trophy className="w-5 h-5 text-amber-400 shrink-0" />
+                                            <span>
+                                                <strong>Prize Payout Guarantee:</strong> All tournament and scrim cash prizes are distributed and credited directly to verified winners' NexPlay Wallet balances immediately after the match concludes and referee verifies scores.
+                                            </span>
+                                        </div>
                                     </div>
                                 )}
+
+                                {/* Scoring System Breakdown Card */}
+                                <div className="space-y-4">
+                                    <ScoringInfoCard tournament={tournament} />
+                                </div>
                                 <div className="bg-card/50 p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-800">
                                     <h3 className="text-white font-black text-xs uppercase tracking-widest mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
                                         <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-brand-500 shrink-0" /> Rules & Regulations
@@ -1417,6 +1448,17 @@ export default function TournamentDetails() {
                                 <PerKillResultView tournament={tournament} />
                             </motion.div>
                         )}
+                        {activeTab === 'results' && (
+                            <motion.div 
+                                key="results"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                className="space-y-6 sm:space-y-8"
+                            >
+                                <ScrimResultsTable tournament={tournament} />
+                            </motion.div>
+                        )}
                     </AnimatePresence>
 
                     {metaError && (
@@ -1532,9 +1574,12 @@ export default function TournamentDetails() {
                             </div>
                         </div>
 
-                        {tournament.status === 'completed' ? (
+                        {tournament.status === 'completed' || hasResults ? (
                             <button type="button" 
-                                onClick={() => setIsResultModalOpen(true)}
+                                onClick={() => {
+                                    setActiveTab('results');
+                                    setIsResultModalOpen(true);
+                                }}
                                 className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-4 sm:py-5 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-widest shadow-[0_0_20px_rgba(79,70,229,0.3)] transition-colors active:scale-95 flex items-center justify-center gap-3 group"
                             >
                                 <Trophy className="w-5 h-5 sm:w-6 sm:h-6 group-hover:scale-110 transition-transform" /> View Results
