@@ -927,6 +927,16 @@ router.post("/api/wallet/distribute-prizes",
         // skipping a missing payout recipient.
         const hostRef = db.collection('users').doc(tData.hostUid);
         const hostDoc = await tx.get(hostRef);
+        const settingsRef = db.collection('settings').doc('site');
+        const settingsDoc = await tx.get(settingsRef);
+        let platformRate = 0.15;
+        if (settingsDoc.exists) {
+          const sData = settingsDoc.data();
+          if (typeof sData?.platformCommission === 'number' && sData.platformCommission >= 0 && sData.platformCommission <= 100) {
+            platformRate = sData.platformCommission / 100;
+          }
+        }
+        const organizerRate = 1 - platformRate;
         const winnerProfiles = new Map<string, FirebaseFirestore.DocumentSnapshot>();
         for (const winner of winners) {
           const userDoc = await tx.get(db.collection('users').doc(winner.userId));

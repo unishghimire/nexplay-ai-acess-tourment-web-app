@@ -40,6 +40,29 @@ router.get("/api/scrims", rateLimit(60, 60 * 1000), async (req, res) => {
 
     let scrims = Array.from(combinedMap.values());
 
+    // Strict segregation: exclude documents that are tournaments or not scrims
+    scrims = scrims.filter(s => {
+      if (s.matchType === 'tournament' || s.isTournament === true || s.type === 'tournament' || s.isScrim === false) return false;
+      const formatLower = typeof s.format === 'string' ? s.format.toLowerCase() : '';
+      if (
+        formatLower === 'single_elimination' ||
+        formatLower === 'double_elimination' ||
+        formatLower === 'round_robin' ||
+        formatLower === 'swiss' ||
+        formatLower === 'bracket'
+      ) {
+        return false;
+      }
+      const titleLower = typeof s.title === 'string' ? s.title.toLowerCase() : '';
+      if (
+        (titleLower.includes('tournament') || titleLower.includes('league') || titleLower.includes('leauge') || titleLower.includes('championship')) &&
+        !titleLower.includes('scrim')
+      ) {
+        return false;
+      }
+      return true;
+    });
+
     if (typeof game === "string" && game.trim() && game !== "All") {
       const g = game.trim().toLowerCase();
       scrims = scrims.filter(s => s.game && (s.game.toLowerCase() === g || (g === "mlbb" && s.game.toLowerCase().includes("legend"))));
@@ -102,6 +125,8 @@ router.post("/api/scrims", authenticateToken, rateLimit(10, 15 * 60 * 1000), asy
       currentPlayers: 0,
       slots: initialSlots,
       status: "open",
+      matchType: "scrims",
+      isScrim: true,
       hostUid: req.user.userId,
       orgId: req.user.userId,
       rules: rules || "",
@@ -404,6 +429,17 @@ router.post("/api/scrims/:id/payout", authenticateToken, rateLimit(5, 15 * 60 * 
           payoutTargets.push({ winner, targetUserId, prizeAmount, userRef });
         }
       }
+
+      const settingsRef = db.collection("settings").doc("site");
+      const settingsDoc = await transaction.get(settingsRef);
+      let platformRate = 0.15;
+      if (settingsDoc.exists) {
+        const sData = settingsDoc.data();
+        if (typeof sData?.platformCommission === "number" && sData.platformCommission >= 0 && sData.platformCommission <= 100) {
+          platformRate = sData.platformCommission / 100;
+        }
+      }
+      const organizerRate = 1 - platformRate;
 
       // Fetch all winner user profiles upfront before ANY writes
       const userSnaps = await Promise.all(payoutTargets.map(t => transaction.get(t.userRef)));
