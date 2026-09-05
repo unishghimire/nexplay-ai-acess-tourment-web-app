@@ -252,13 +252,18 @@ router.post("/api/admin/earnings/release",
         const orgDoc = await tx.get(orgRef);
         if (!orgDoc.exists) throw new Error("Organization user account not found");
 
+        const orgUserData = orgDoc.data() || {};
+        const balanceBefore = Number(orgUserData.balance || 0);
+        const balanceAfter = balanceBefore + orgShare;
+
         tx.update(earningRef, {
           status: "released",
           releasedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
         tx.update(orgRef, {
           orgPendingEarnings: admin.firestore.FieldValue.increment(-orgShare),
-          orgWalletBalance: admin.firestore.FieldValue.increment(orgShare),
+          balance: admin.firestore.FieldValue.increment(orgShare),
+          totalEarnings: admin.firestore.FieldValue.increment(orgShare),
         });
 
         const txRef = db.collection("transactions").doc();
@@ -271,8 +276,10 @@ router.post("/api/admin/earnings/release",
           method: "Tournament Earnings",
           refId: `EARN-${String(earningData.tournamentId || "").slice(0, 8)}`,
           status: "success",
+          balanceBefore,
+          balanceAfter,
           timestamp: admin.firestore.FieldValue.serverTimestamp(),
-          desc: `Earnings released for tournament: ${earningData.tournamentName || earningData.tournamentId}`,
+          desc: `Earnings released for event: ${earningData.tournamentName || earningData.tournamentId}`,
           tournamentId: earningData.tournamentId,
           confirmedBy: req.user.userId,
           confirmedByUsername: req.user.username,
