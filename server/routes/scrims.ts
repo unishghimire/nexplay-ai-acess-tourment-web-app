@@ -509,7 +509,7 @@ router.post("/api/scrims/:id/payout", authenticateToken, rateLimit(5, 15 * 60 * 
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
       });
 
-      // 3. Revenue split calculation for paid scrims (85% Organizer / 15% Platform Commission)
+      // 3. Revenue split calculation for paid scrims (dynamic platformCommission from site settings)
       const entryFee = Number(scrim.entryFee || scrim.requirements?.entryFee || scrim.price || 0);
       const slots = Array.isArray(scrim.slots) ? scrim.slots : [];
       const filledSlotsCount = slots.filter((s: any) => s.status === 'filled' || s.status === 'reserved' || Boolean(s.userId)).length;
@@ -519,9 +519,10 @@ router.post("/api/scrims/:id/payout", authenticateToken, rateLimit(5, 15 * 60 * 
       const profit = entryFeeTotal - prizePoolTotal;
 
       if (profit > 0) {
-        const REVENUE_SPLIT = { ORGANIZER: 0.85, PLATFORM: 0.15 } as const;
-        const orgShare = Math.round(profit * REVENUE_SPLIT.ORGANIZER);
-        const nexplayShare = Math.round(profit * REVENUE_SPLIT.PLATFORM);
+        // platformRate/organizerRate were read from settings/site above
+        // (defaults to 15% platform / 85% organizer when setting is absent or invalid).
+        const orgShare = Math.round(profit * organizerRate);
+        const nexplayShare = profit - orgShare; // remainder keeps orgShare + nexplayShare === profit
 
         const earnRef = db.collection("tournamentEarnings").doc();
         transaction.set(earnRef, {
@@ -534,6 +535,7 @@ router.post("/api/scrims/:id/payout", authenticateToken, rateLimit(5, 15 * 60 * 
           profit,
           orgShare,
           nexplayShare,
+          platformCommissionPercent: Math.round(platformRate * 10000) / 100,
           status: 'pending',
           isScrim: true,
           type: 'scrim',
