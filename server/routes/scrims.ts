@@ -513,7 +513,26 @@ router.post("/api/scrims/:id/payout", authenticateToken, rateLimit(5, 15 * 60 * 
       const entryFee = Number(scrim.entryFee || scrim.requirements?.entryFee || scrim.price || 0);
       const slots = Array.isArray(scrim.slots) ? scrim.slots : [];
       const filledSlotsCount = slots.filter((s: any) => s.status === 'filled' || s.status === 'reserved' || Boolean(s.userId)).length;
-      const participantCount = filledSlotsCount || Number(scrim.currentPlayers) || Number(scrim.filledSlots) || winners.length || 0;
+      const currentPlayersCount = Number(scrim.currentPlayers) || 0;
+      const docFilledSlotsCount = Number(scrim.filledSlots) || 0;
+      // Precedence: slot array is authoritative; doc counters are fallbacks;
+      // winners.length is a last-resort LOWER BOUND — it can understate profit
+      // (fewer winners than participants) but never overstate it.
+      let participantCount: number;
+      let participantCountSource: string;
+      if (filledSlotsCount > 0) {
+        participantCount = filledSlotsCount;
+        participantCountSource = 'slots';
+      } else if (currentPlayersCount > 0) {
+        participantCount = currentPlayersCount;
+        participantCountSource = 'currentPlayers';
+      } else if (docFilledSlotsCount > 0) {
+        participantCount = docFilledSlotsCount;
+        participantCountSource = 'filledSlots';
+      } else {
+        participantCount = winners.length;
+        participantCountSource = 'winners-lower-bound';
+      }
       const entryFeeTotal = participantCount * entryFee;
       const prizePoolTotal = Number(scrim.prizePool) || totalAllocated || 0;
       const profit = entryFeeTotal - prizePoolTotal;
@@ -536,6 +555,8 @@ router.post("/api/scrims/:id/payout", authenticateToken, rateLimit(5, 15 * 60 * 
           orgShare,
           nexplayShare,
           platformCommissionPercent: Math.round(platformRate * 10000) / 100,
+          participantCount,
+          participantCountSource,
           status: 'pending',
           isScrim: true,
           type: 'scrim',
