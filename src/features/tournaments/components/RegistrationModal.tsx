@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { eventDetailUrl } from '../../../shared/utils/eventUrl';
 import { auth } from '../../../shared/config/firebase';
 import { Tournament, UserProfile } from '../../../shared/types/types';
 import Modal from '../../../shared/components/Modal';
@@ -67,7 +68,7 @@ const RegistrationModal: React.FC<RegistrationModalProps> = ({
                 'Tournament Joined!',
                 `You have successfully joined ${tournament.title}${confirmedSlot ? ` in Slot #${confirmedSlot}` : ''}. Good luck!`,
                 'success',
-                `/tournaments/${tournament.id}`
+                eventDetailUrl(tournament)
             );
             
             showToast(`Joined Successfully in Slot #${confirmedSlot || 'Confirmed'}!`, 'success');

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { eventDetailUrl } from '../../../shared/utils/eventUrl';
 import { useNavigate } from 'react-router-dom';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db, auth } from '../../../shared/config/firebase';
@@ -222,7 +223,7 @@ const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
                 'Tournament Joined!',
                 `You have successfully joined ${tournament.title}${confirmedSlot ? ` in Slot #${confirmedSlot}` : ''}. Good luck!`,
                 'success',
-                `/tournaments/${tournament.id}`
+                eventDetailUrl(tournament)
             );
             
             showToast(`Joined Successfully in Slot #${confirmedSlot || 'Confirmed'}!`, 'success');

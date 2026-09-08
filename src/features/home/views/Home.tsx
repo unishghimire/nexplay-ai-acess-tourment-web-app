@@ -120,7 +120,8 @@ const Home: React.FC = () => {
                     orderBy('startTime', 'desc'),
                     limit(4)
                 ));
-                const resultsData = resultsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Tournament));
+                const resultsData = resultsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Tournament))
+                    .filter(t => (t as any).matchType !== 'scrims' && (t as any).isScrim !== true && (t as any).type !== 'scrim' && (t as any).type !== 'scrims');
                 setRecentResults(resultsData);
             } catch (error) {
                 console.warn("Could not fetch results:", error);

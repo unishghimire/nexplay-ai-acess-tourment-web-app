@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { eventDetailUrl } from '../utils/eventUrl';
 import { collection, query, where, getDocs, onSnapshot, doc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from './AuthContext';
@@ -136,7 +137,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
                                 'Upcoming Tournament!',
                                 `${t.title} is starting in less than 30 minutes. Get ready!`,
                                 'warning',
-                                `/tournaments/${t.id}`
+                                eventDetailUrl(t)
                             );
                             notifiedSet.add(t.id + '_upcoming');
                             showToast(`${t.title} starts in 30m!`, 'warning');

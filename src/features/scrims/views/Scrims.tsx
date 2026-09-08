@@ -7,6 +7,7 @@ import { motion } from 'motion/react';
 import { formatCurrency, formatDate, formatDateShort, formatGameName } from '../../../shared/utils/utils';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { collection, getDocs, query, where } from 'firebase/firestore';
+import { eventDetailUrl } from '../../../shared/utils/eventUrl';
 import { db } from '../../../shared/config/firebase';
 import TabErrorBoundary from '../../../shared/components/TabErrorBoundary';
 
@@ -375,7 +376,7 @@ const ScrimsContent: React.FC = () => {
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true }}
                                     onClick={() => {
-                                        navigate(`/tournaments/${scrim.tournamentId || scrim.id}`);
+                                        navigate(eventDetailUrl(scrim, scrim.tournamentId || scrim.id));
                                     }}
                                     className="bg-card/50 rounded-[2rem] border border-gray-800 overflow-hidden cursor-pointer group hover:border-brand-500/50 transition-colors hover:bg-card flex flex-col justify-between"
                                 >
