@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, MessageCircle, Gamepad2 } from 'lucide-react';
+import { Mail, MessageCircle, Gamepad2, Facebook, Instagram, Twitter, Youtube, Music2 } from 'lucide-react';
 
 const Footer: React.FC = () => {
     return (
@@ -25,6 +25,27 @@ const Footer: React.FC = () => {
                             <li><Link to="/privacy" className="text-gray-400 hover:text-white transition inline-block py-2">Privacy Policy</Link></li>
                         </ul>
                     </nav>
+                </div>
+
+                <div className="flex items-center justify-center gap-3 mb-6">
+                    <a href="https://www.facebook.com/nexplayorg" target="_blank" rel="noopener noreferrer" aria-label="NexPlay on Facebook" className="text-gray-400 hover:text-white hover:bg-gray-800 border border-gray-800 rounded-full p-2.5 transition-colors">
+                        <Facebook className="w-4 h-4" aria-hidden="true" />
+                    </a>
+                    <a href="https://www.instagram.com/nexplayorg" target="_blank" rel="noopener noreferrer" aria-label="NexPlay on Instagram" className="text-gray-400 hover:text-white hover:bg-gray-800 border border-gray-800 rounded-full p-2.5 transition-colors">
+                        <Instagram className="w-4 h-4" aria-hidden="true" />
+                    </a>
+                    <a href="https://twitter.com/nexplayorg" target="_blank" rel="noopener noreferrer" aria-label="NexPlay on Twitter" className="text-gray-400 hover:text-white hover:bg-gray-800 border border-gray-800 rounded-full p-2.5 transition-colors">
+                        <Twitter className="w-4 h-4" aria-hidden="true" />
+                    </a>
+                    <a href="https://www.youtube.com/@nexplayorg" target="_blank" rel="noopener noreferrer" aria-label="NexPlay on YouTube" className="text-gray-400 hover:text-white hover:bg-gray-800 border border-gray-800 rounded-full p-2.5 transition-colors">
+                        <Youtube className="w-4 h-4" aria-hidden="true" />
+                    </a>
+                    <a href="https://www.tiktok.com/@nexplayorg" target="_blank" rel="noopener noreferrer" aria-label="NexPlay on TikTok" className="text-gray-400 hover:text-white hover:bg-gray-800 border border-gray-800 rounded-full p-2.5 transition-colors">
+                        <Music2 className="w-4 h-4" aria-hidden="true" />
+                    </a>
+                    <a href="https://discord.gg/nexplay" target="_blank" rel="noopener noreferrer" aria-label="NexPlay on Discord" className="text-gray-400 hover:text-white hover:bg-gray-800 border border-gray-800 rounded-full p-2.5 transition-colors">
+                        <MessageCircle className="w-4 h-4" aria-hidden="true" />
+                    </a>
                 </div>
 
                 <div className="border-t border-gray-800 pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
