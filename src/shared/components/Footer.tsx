@@ -6,7 +6,7 @@ const Footer: React.FC = () => {
     return (
         <footer className="bg-dark border-t border-gray-800 py-10 mt-auto">
             <div className="max-w-7xl mx-auto px-4">
-                <div className="flex flex-col md:flex-row md:items-start gap-8 md:gap-20 mb-8">
+                <div className="flex flex-col md:flex-row md:items-start justify-between gap-8 mb-8">
                     {/* Brand + Description */}
                     <div className="max-w-sm shrink-0">
                         <Link to="/" className="flex items-center gap-2 mb-3">
