@@ -13,7 +13,7 @@ const socialLinks = [
 
 const Footer: React.FC = () => {
     return (
-        <footer className="relative bg-dark border-t border-gray-800 pt-10 pb-14 sm:pb-16 mt-auto overflow-hidden">
+        <footer className="relative bg-dark border-t border-gray-800 pt-10 pb-[52px] sm:pb-[60px] mt-auto overflow-hidden">
             {/* Subtle brand-colored hairline along the very top edge */}
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-500/50 to-transparent"></div>
 
