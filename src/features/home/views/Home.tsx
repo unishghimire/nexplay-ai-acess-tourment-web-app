@@ -1,7 +1,7 @@
 import Seo from '../../../shared/components/Seo';
 import Faq from '../../../shared/components/Faq';
 import React, { useEffect, useState } from 'react';
-import { collection, query, where, getDocs, orderBy, limit, getCountFromServer } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { Tournament, Game, Slide } from '../../../shared/types/types';
 import { PromoSlide } from '../components/HotPromotionsSlider';
@@ -9,18 +9,17 @@ import TournamentCard from '../../tournaments/components/TournamentCard';
 import GameCard from '../components/GameCard';
 import HotPromotionsSlider from '../components/HotPromotionsSlider';
 import { useNavigate, Link } from 'react-router-dom';
-import { motion } from 'motion/react';
 import { 
     Star, 
     ChevronRight, 
     Gamepad2, 
     Wallet, 
     Trophy, 
-    Users, 
     Flame,
     BarChart3,
     Newspaper,
-    Building2
+    Users,
+    Building2,
 } from 'lucide-react';
 import { formatGameName } from '../../../shared/utils/utils';
 
@@ -53,58 +52,14 @@ const homeFaqs = [
 ];
 
 
-/** Animates a number from 0 up to `target` with an ease-out curve. */
-function useCountUp(target: number | null, durationMs = 1200): number {
-    const [value, setValue] = useState(0);
-    useEffect(() => {
-        if (target === null) return;
-        let raf = 0;
-        const start = performance.now();
-        const tick = (now: number) => {
-            const p = Math.min((now - start) / durationMs, 1);
-            const eased = 1 - Math.pow(1 - p, 3);
-            setValue(Math.round((target as number) * eased));
-            if (p < 1) raf = requestAnimationFrame(tick);
-        };
-        raf = requestAnimationFrame(tick);
-        return () => cancelAnimationFrame(raf);
-    }, [target, durationMs]);
-    return value;
-}
-
 const Home: React.FC = () => {
     
     const [featuredTournaments, setFeaturedTournaments] = useState<Tournament[]>([]);
     const [popularGames, setPopularGames] = useState<Game[]>([]);
     const [slides, setSlides] = useState<Slide[]>([]);
     const [recentResults, setRecentResults] = useState<Tournament[]>([]);
-    const [communityStats, setCommunityStats] = useState<{ players: number | null; orgs: number | null }>({ players: null, orgs: null });
-    const playersCount = useCountUp(communityStats.players);
-    const orgsCount = useCountUp(communityStats.orgs);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
-
-    // Live community stats: total players and orgs from the database (aggregate counts, no doc reads)
-    useEffect(() => {
-        let cancelled = false;
-        (async () => {
-            try {
-                const [playersSnap, orgsSnap] = await Promise.all([
-                    getCountFromServer(query(collection(db, 'users_public'), where('role', '==', 'player'))),
-                    getCountFromServer(query(collection(db, 'users_public'), where('role', 'in', ['organizer', 'admin']))),
-                ]);
-                if (!cancelled) {
-                    setCommunityStats({
-                        players: playersSnap.data().count,
-                        orgs: orgsSnap.data().count,
-                    });
-                }
-            } catch (err) {
-                console.warn('Community stats unavailable:', err);
-            }
-        })();
-        return () => { cancelled = true; };
-    }, []);
 
     useEffect(() => {
         // Track Page View
@@ -261,54 +216,6 @@ const Home: React.FC = () => {
             
             {/* SEO: h1 for search engines — visually hidden */}
             <h1 className="sr-only">NexPlay — Esports Tournaments & Scrims in Nepal</h1>
-
-            {/* Community stats — live player & org counts from the database */}
-            <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, ease: 'easeOut' }}
-                className="relative mx-auto max-w-md sm:max-w-lg rounded-2xl border border-gray-800 bg-card/60 px-5 sm:px-8 py-4 sm:py-5 shadow-lg overflow-hidden"
-            >
-                {/* Hairline top accent */}
-                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-500/60 to-transparent"></div>
-
-                <div className="flex items-center justify-center gap-6 sm:gap-10">
-                    <motion.div
-                        initial={{ opacity: 0, x: -12 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.15, duration: 0.45, ease: 'easeOut' }}
-                        whileHover={{ y: -2 }}
-                        className="flex items-center gap-2.5"
-                    >
-                        <Users className="text-brand-400 w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
-                        <span className="text-sm sm:text-base font-bold text-white tabular-nums">
-                            {communityStats.players !== null ? `${playersCount.toLocaleString()}+` : '—'}
-                        </span>
-                        <span className="text-xs sm:text-sm text-gray-500">Players</span>
-                    </motion.div>
-
-                    <motion.span
-                        initial={{ scaleY: 0 }}
-                        animate={{ scaleY: 1 }}
-                        transition={{ delay: 0.35, duration: 0.4, ease: 'easeOut' }}
-                        className="w-px h-6 bg-gray-800 shrink-0"
-                    ></motion.span>
-
-                    <motion.div
-                        initial={{ opacity: 0, x: 12 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.25, duration: 0.45, ease: 'easeOut' }}
-                        whileHover={{ y: -2 }}
-                        className="flex items-center gap-2.5"
-                    >
-                        <Building2 className="text-emerald-400 w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
-                        <span className="text-sm sm:text-base font-bold text-white tabular-nums">
-                            {communityStats.orgs !== null ? `${orgsCount.toLocaleString()}+` : '—'}
-                        </span>
-                        <span className="text-xs sm:text-sm text-gray-500">Orgs</span>
-                    </motion.div>
-                </div>
-            </motion.div>
 
             {/* Main Promotion Carousel Section */}
             {slides.length > 0 && (
