@@ -1,40 +1,19 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, MessageCircle, Trophy, Users, Gamepad2 } from 'lucide-react';
+import { Mail, MessageCircle, Gamepad2 } from 'lucide-react';
 
 const Footer: React.FC = () => {
     return (
         <footer className="bg-dark border-t border-gray-800 py-10 mt-auto">
             <div className="max-w-7xl mx-auto px-4">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                     {/* Brand + Description */}
-                    <div className="col-span-2 md:col-span-1">
+                    <div className="max-w-sm">
                         <Link to="/" className="flex items-center gap-2 mb-3">
                             <span className="font-black text-lg tracking-tight text-white">NexPlay</span>
                         </Link>
                         <p className="text-gray-500 text-sm">Nepal's esports platform for tournaments, scrims, and competitive gaming.</p>
                     </div>
-
-                    {/* Compete */}
-                    <nav aria-label="Compete links">
-                        <h3 className="text-white font-bold text-sm mb-3 flex items-center gap-1.5"><Trophy className="w-4 h-4" aria-hidden="true" /> Compete</h3>
-                        <ul className="space-y-1 text-sm">
-                            <li><Link to="/results" className="text-gray-400 hover:text-white transition inline-block py-2">Results</Link></li>
-                            <li><Link to="/dashboard" className="text-gray-400 hover:text-white transition inline-block py-2">Dashboard</Link></li>
-                            <li><Link to="/wallet" className="text-gray-400 hover:text-white transition inline-block py-2">Wallet</Link></li>
-                        </ul>
-                    </nav>
-
-                    {/* Community */}
-                    <nav aria-label="Community links">
-                        <h3 className="text-white font-bold text-sm mb-3 flex items-center gap-1.5"><Users className="w-4 h-4" aria-hidden="true" /> Community</h3>
-                        <ul className="space-y-1 text-sm">
-                            <li><Link to="/teams" className="text-gray-400 hover:text-white transition inline-block py-2">Teams</Link></li>
-                            <li><Link to="/organizations" className="text-gray-400 hover:text-white transition inline-block py-2">Organizations</Link></li>
-                            <li><Link to="/games" className="text-gray-400 hover:text-white transition inline-block py-2">Games</Link></li>
-                            <li><Link to="/news" className="text-gray-400 hover:text-white transition inline-block py-2">News</Link></li>
-                        </ul>
-                    </nav>
 
                     {/* Company */}
                     <nav aria-label="Company links">
