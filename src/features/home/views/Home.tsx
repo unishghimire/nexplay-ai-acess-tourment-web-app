@@ -52,25 +52,6 @@ const homeFaqs = [
 ];
 
 
-/** Animates a number from 0 up to `target` with an ease-out curve. */
-function useCountUp(target: number | null, durationMs = 1400): number {
-    const [value, setValue] = useState(0);
-    useEffect(() => {
-        if (target === null) return;
-        let raf = 0;
-        const start = performance.now();
-        const tick = (now: number) => {
-            const p = Math.min((now - start) / durationMs, 1);
-            const eased = 1 - Math.pow(1 - p, 3); // ease-out cubic
-            setValue(Math.round((target as number) * eased));
-            if (p < 1) raf = requestAnimationFrame(tick);
-        };
-        raf = requestAnimationFrame(tick);
-        return () => cancelAnimationFrame(raf);
-    }, [target, durationMs]);
-    return value;
-}
-
 const Home: React.FC = () => {
     
     const [featuredTournaments, setFeaturedTournaments] = useState<Tournament[]>([]);
@@ -78,8 +59,6 @@ const Home: React.FC = () => {
     const [slides, setSlides] = useState<Slide[]>([]);
     const [recentResults, setRecentResults] = useState<Tournament[]>([]);
     const [communityStats, setCommunityStats] = useState<{ players: number | null; orgs: number | null }>({ players: null, orgs: null });
-    const playersCount = useCountUp(communityStats.players);
-    const orgsCount = useCountUp(communityStats.orgs);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
 
@@ -261,50 +240,22 @@ const Home: React.FC = () => {
             {/* SEO: h1 for search engines — visually hidden */}
             <h1 className="sr-only">NexPlay — Esports Tournaments & Scrims in Nepal</h1>
 
-            {/* Live Community Stats Banner — real player & org counts from the database */}
-            <div className="relative bg-gradient-to-br from-gray-900 via-black to-gray-900 border border-gray-800 rounded-2xl sm:rounded-3xl p-6 sm:p-10 shadow-2xl overflow-hidden">
-                {/* Ambient glow accents */}
-                <div className="pointer-events-none absolute -top-28 -left-20 w-72 h-72 bg-brand-500/10 rounded-full blur-3xl"></div>
-                <div className="pointer-events-none absolute -bottom-28 -right-20 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl"></div>
-
-                <div className="relative flex flex-col-reverse sm:flex-row items-center justify-between gap-6 sm:gap-10">
-                    {/* Live indicator */}
-                    <div className="flex items-center gap-2.5 shrink-0">
-                        <span className="relative flex h-2.5 w-2.5">
-                            <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60 animate-ping"></span>
-                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400"></span>
-                        </span>
-                        <span className="text-[10px] sm:text-xs font-black uppercase tracking-[0.35em] text-gray-400">Live from NexPlay</span>
-                    </div>
-
-                    {/* Stats */}
-                    <div className="flex items-center gap-6 sm:gap-10 lg:gap-14">
-                        <div className="flex items-center gap-3.5 sm:gap-4">
-                            <div className="bg-brand-500/10 border border-brand-500/20 p-3 sm:p-3.5 rounded-2xl shrink-0">
-                                <Users className="text-brand-400 w-5 h-5 sm:w-7 sm:h-7" />
-                            </div>
-                            <div>
-                                <div className="text-2xl sm:text-4xl font-black text-white tracking-tight tabular-nums leading-none">
-                                    {communityStats.players !== null ? `${playersCount.toLocaleString()}+` : '—'}
-                                </div>
-                                <div className="mt-1 text-[10px] sm:text-xs text-gray-400 font-black uppercase tracking-widest">Registered Players</div>
-                            </div>
-                        </div>
-
-                        <div className="w-px h-10 sm:h-14 bg-gradient-to-b from-transparent via-gray-700 to-transparent shrink-0"></div>
-
-                        <div className="flex items-center gap-3.5 sm:gap-4">
-                            <div className="bg-emerald-500/10 border border-emerald-500/20 p-3 sm:p-3.5 rounded-2xl shrink-0">
-                                <Building2 className="text-emerald-400 w-5 h-5 sm:w-7 sm:h-7" />
-                            </div>
-                            <div>
-                                <div className="text-2xl sm:text-4xl font-black text-white tracking-tight tabular-nums leading-none">
-                                    {communityStats.orgs !== null ? `${orgsCount.toLocaleString()}+` : '—'}
-                                </div>
-                                <div className="mt-1 text-[10px] sm:text-xs text-gray-400 font-black uppercase tracking-widest">Active Orgs</div>
-                            </div>
-                        </div>
-                    </div>
+            {/* Community stats — live player & org counts from the database */}
+            <div className="border border-gray-800 rounded-xl sm:rounded-2xl bg-card/40 px-4 sm:px-6 py-3 sm:py-4 flex flex-wrap items-center justify-center gap-x-8 sm:gap-x-10 gap-y-2">
+                <div className="flex items-center gap-2.5">
+                    <Users className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+                    <span className="text-sm sm:text-base font-bold text-white tabular-nums">
+                        {communityStats.players !== null ? `${communityStats.players.toLocaleString()}+` : '—'}
+                    </span>
+                    <span className="text-xs sm:text-sm text-gray-500">Players</span>
+                </div>
+                <div className="w-px h-4 bg-gray-800 shrink-0"></div>
+                <div className="flex items-center gap-2.5">
+                    <Building2 className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+                    <span className="text-sm sm:text-base font-bold text-white tabular-nums">
+                        {communityStats.orgs !== null ? `${communityStats.orgs.toLocaleString()}+` : '—'}
+                    </span>
+                    <span className="text-xs sm:text-sm text-gray-500">Orgs</span>
                 </div>
             </div>
 
