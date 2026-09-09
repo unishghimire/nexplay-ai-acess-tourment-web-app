@@ -6,9 +6,9 @@ const Footer: React.FC = () => {
     return (
         <footer className="bg-dark border-t border-gray-800 py-10 mt-auto">
             <div className="max-w-7xl mx-auto px-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <div className="flex flex-col md:flex-row md:items-start gap-8 md:gap-20 mb-8">
                     {/* Brand + Description */}
-                    <div className="max-w-sm">
+                    <div className="max-w-sm shrink-0">
                         <Link to="/" className="flex items-center gap-2 mb-3">
                             <span className="font-black text-lg tracking-tight text-white">NexPlay</span>
                         </Link>
@@ -16,7 +16,7 @@ const Footer: React.FC = () => {
                     </div>
 
                     {/* Company */}
-                    <nav aria-label="Company links">
+                    <nav aria-label="Company links" className="shrink-0">
                         <h3 className="text-white font-bold text-sm mb-3 flex items-center gap-1.5"><Gamepad2 className="w-4 h-4" aria-hidden="true" /> Company</h3>
                         <ul className="space-y-1 text-sm">
                             <li><Link to="/about" className="text-gray-400 hover:text-white transition inline-block py-2">About Us</Link></li>
