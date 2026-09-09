@@ -9,6 +9,7 @@ import TournamentCard from '../../tournaments/components/TournamentCard';
 import GameCard from '../components/GameCard';
 import HotPromotionsSlider from '../components/HotPromotionsSlider';
 import { useNavigate, Link } from 'react-router-dom';
+import { motion } from 'motion/react';
 import { 
     Star, 
     ChevronRight, 
@@ -52,6 +53,25 @@ const homeFaqs = [
 ];
 
 
+/** Animates a number from 0 up to `target` with an ease-out curve. */
+function useCountUp(target: number | null, durationMs = 1200): number {
+    const [value, setValue] = useState(0);
+    useEffect(() => {
+        if (target === null) return;
+        let raf = 0;
+        const start = performance.now();
+        const tick = (now: number) => {
+            const p = Math.min((now - start) / durationMs, 1);
+            const eased = 1 - Math.pow(1 - p, 3);
+            setValue(Math.round((target as number) * eased));
+            if (p < 1) raf = requestAnimationFrame(tick);
+        };
+        raf = requestAnimationFrame(tick);
+        return () => cancelAnimationFrame(raf);
+    }, [target, durationMs]);
+    return value;
+}
+
 const Home: React.FC = () => {
     
     const [featuredTournaments, setFeaturedTournaments] = useState<Tournament[]>([]);
@@ -59,6 +79,8 @@ const Home: React.FC = () => {
     const [slides, setSlides] = useState<Slide[]>([]);
     const [recentResults, setRecentResults] = useState<Tournament[]>([]);
     const [communityStats, setCommunityStats] = useState<{ players: number | null; orgs: number | null }>({ players: null, orgs: null });
+    const playersCount = useCountUp(communityStats.players);
+    const orgsCount = useCountUp(communityStats.orgs);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
 
@@ -241,23 +263,52 @@ const Home: React.FC = () => {
             <h1 className="sr-only">NexPlay — Esports Tournaments & Scrims in Nepal</h1>
 
             {/* Community stats — live player & org counts from the database */}
-            <div className="border border-gray-800 rounded-xl sm:rounded-2xl bg-card/40 px-4 sm:px-6 py-3 sm:py-4 flex flex-wrap items-center justify-center gap-x-8 sm:gap-x-10 gap-y-2">
-                <div className="flex items-center gap-2.5">
-                    <Users className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
-                    <span className="text-sm sm:text-base font-bold text-white tabular-nums">
-                        {communityStats.players !== null ? `${communityStats.players.toLocaleString()}+` : '—'}
-                    </span>
-                    <span className="text-xs sm:text-sm text-gray-500">Players</span>
+            <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: 'easeOut' }}
+                className="relative mx-auto max-w-md sm:max-w-lg rounded-2xl border border-gray-800 bg-card/60 px-5 sm:px-8 py-4 sm:py-5 shadow-lg overflow-hidden"
+            >
+                {/* Hairline top accent */}
+                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-500/60 to-transparent"></div>
+
+                <div className="flex items-center justify-center gap-6 sm:gap-10">
+                    <motion.div
+                        initial={{ opacity: 0, x: -12 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.15, duration: 0.45, ease: 'easeOut' }}
+                        whileHover={{ y: -2 }}
+                        className="flex items-center gap-2.5"
+                    >
+                        <Users className="text-brand-400 w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+                        <span className="text-sm sm:text-base font-bold text-white tabular-nums">
+                            {communityStats.players !== null ? `${playersCount.toLocaleString()}+` : '—'}
+                        </span>
+                        <span className="text-xs sm:text-sm text-gray-500">Players</span>
+                    </motion.div>
+
+                    <motion.span
+                        initial={{ scaleY: 0 }}
+                        animate={{ scaleY: 1 }}
+                        transition={{ delay: 0.35, duration: 0.4, ease: 'easeOut' }}
+                        className="w-px h-6 bg-gray-800 shrink-0"
+                    ></motion.span>
+
+                    <motion.div
+                        initial={{ opacity: 0, x: 12 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.25, duration: 0.45, ease: 'easeOut' }}
+                        whileHover={{ y: -2 }}
+                        className="flex items-center gap-2.5"
+                    >
+                        <Building2 className="text-emerald-400 w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+                        <span className="text-sm sm:text-base font-bold text-white tabular-nums">
+                            {communityStats.orgs !== null ? `${orgsCount.toLocaleString()}+` : '—'}
+                        </span>
+                        <span className="text-xs sm:text-sm text-gray-500">Orgs</span>
+                    </motion.div>
                 </div>
-                <div className="w-px h-4 bg-gray-800 shrink-0"></div>
-                <div className="flex items-center gap-2.5">
-                    <Building2 className="text-gray-500 w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
-                    <span className="text-sm sm:text-base font-bold text-white tabular-nums">
-                        {communityStats.orgs !== null ? `${communityStats.orgs.toLocaleString()}+` : '—'}
-                    </span>
-                    <span className="text-xs sm:text-sm text-gray-500">Orgs</span>
-                </div>
-            </div>
+            </motion.div>
 
             {/* Main Promotion Carousel Section */}
             {slides.length > 0 && (
