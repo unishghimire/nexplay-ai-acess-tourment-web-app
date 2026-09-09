@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, MessageCircle, ArrowUp, Facebook, Instagram, Twitter, Youtube, Music2 } from 'lucide-react';
+import { collection, getCountFromServer, query, where } from 'firebase/firestore';
+import { db } from '../config/firebase';
 
 const socialLinks = [
     { href: 'https://www.facebook.com/nexplayorg', label: 'Facebook', Icon: Facebook, hoverBg: 'hover:bg-[#1877F2]', hoverBorder: 'hover:border-[#1877F2]' },
@@ -11,10 +13,27 @@ const socialLinks = [
     { href: 'https://discord.gg/nexplay', label: 'Discord', Icon: MessageCircle, hoverBg: 'hover:bg-[#5865F2]', hoverBorder: 'hover:border-[#5865F2]' },
 ];
 
-const badges = ["Nepal's #1 Esports Platform", 'Est. 2025'];
-
 const Footer: React.FC = () => {
     const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+    const [stats, setStats] = useState<{ players: number; orgs: number } | null>(null);
+
+    // Live community counts via cheap Firestore aggregate queries (no doc reads).
+    // Same source of truth as the Orgs browser: users in users_public, orgs = organizer/admin role.
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            try {
+                const playersSnap = await getCountFromServer(collection(db, 'users_public'));
+                const orgsSnap = await getCountFromServer(
+                    query(collection(db, 'users_public'), where('role', 'in', ['organizer', 'admin']))
+                );
+                if (!cancelled) setStats({ players: playersSnap.data().count, orgs: orgsSnap.data().count });
+            } catch {
+                // fail silently — badges simply stay hidden
+            }
+        })();
+        return () => { cancelled = true; };
+    }, []);
 
     return (
         <footer className="relative bg-dark border-t border-gray-800 pt-10 pb-[52px] sm:pb-[60px] mt-auto overflow-hidden">
@@ -32,12 +51,23 @@ const Footer: React.FC = () => {
                         <p className="text-gray-500 text-sm leading-relaxed mb-4">Nepal's esports platform for tournaments, scrims, and competitive gaming.</p>
 
                         <div className="flex flex-wrap items-center gap-2 mb-5">
-                            {badges.map((label) => (
-                                <span key={label} className="inline-flex items-center gap-1.5 border border-gray-700 rounded-full px-3 py-1.5 text-xs font-bold text-brand-400">
+                            {stats ? (
+                                <>
+                                    <span className="inline-flex items-center gap-1.5 border border-gray-700 rounded-full px-3 py-1.5 text-xs font-bold text-brand-400">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" aria-hidden="true"></span>
+                                        {stats.players.toLocaleString()}+ Players
+                                    </span>
+                                    <span className="inline-flex items-center gap-1.5 border border-gray-700 rounded-full px-3 py-1.5 text-xs font-bold text-brand-400">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" aria-hidden="true"></span>
+                                        {stats.orgs.toLocaleString()}+ Organizations
+                                    </span>
+                                </>
+                            ) : (
+                                <span className="inline-flex items-center gap-1.5 border border-gray-700 rounded-full px-3 py-1.5 text-xs font-bold text-brand-400">
                                     <span className="w-1.5 h-1.5 rounded-full bg-brand-500 shrink-0" aria-hidden="true"></span>
-                                    {label}
+                                    Nepal's #1 Esports Platform
                                 </span>
-                            ))}
+                            )}
                         </div>
 
                         <div className="flex items-center gap-3">
