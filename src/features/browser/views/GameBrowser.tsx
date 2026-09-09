@@ -4,15 +4,13 @@ import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { Game } from '../../../shared/types/types';
 import GameCard from '../../home/components/GameCard';
-import { Search, Filter, Gamepad2 } from 'lucide-react';
-import { formatGameModeLabel } from '../../../shared/utils/utils';
+import { Search, Gamepad2 } from 'lucide-react';
 import { withStaticCache } from '../../../shared/utils/staticCache';
 
 export default function GameBrowser() {
     const [games, setGames] = useState<Game[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedMode, setSelectedMode] = useState('all');
 
     useEffect(() => {
         const fetchGames = async () => {
@@ -38,13 +36,7 @@ export default function GameBrowser() {
         fetchGames();
     }, []);
 
-    const allModes = Array.from(new Set<string>(games.flatMap(g => g.modes || [])));
-
-    const filteredGames = games.filter(g => {
-        const matchesSearch = g.name.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesMode = selectedMode === 'all' || (g.modes && g.modes.includes(selectedMode));
-        return matchesSearch && matchesMode;
-    });
+    const filteredGames = games.filter(g => g.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
     if (loading) {
         return (
@@ -77,32 +69,16 @@ export default function GameBrowser() {
                     <p className="text-gray-400 font-bold">Discover your next battlefield</p>
                 </div>
                 
-                <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
-                    <div className="relative flex-grow sm:w-64">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5" />
-                        <input 
-                            aria-label="Search games"
-                            type="text" 
-                            placeholder="Search games..." 
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-black border border-gray-800 rounded-2xl py-3 pl-12 pr-4 text-white focus:border-brand-500 focus-visible:outline-none transition-colors font-bold"
-                        />
-                    </div>
-                    <div className="relative sm:w-48">
-                        <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5" />
-                        <select 
-                            aria-label="Filter games by mode"
-                            value={selectedMode}
-                            onChange={(e) => setSelectedMode(e.target.value)}
-                            className="w-full bg-black border border-gray-800 rounded-2xl py-3 pl-12 pr-4 text-white focus:border-brand-500 focus-visible:outline-none transition-colors appearance-none cursor-pointer font-bold"
-                        >
-                            <option value="all">All Modes</option>
-                            {allModes.map(mode => (
-                                <option key={mode} value={mode}>{formatGameModeLabel(mode)}</option>
-                            ))}
-                        </select>
-                    </div>
+                <div className="relative w-full sm:w-64">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5" />
+                    <input 
+                        aria-label="Search games"
+                        type="text" 
+                        placeholder="Search games..." 
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full bg-black border border-gray-800 rounded-2xl py-3 pl-12 pr-4 text-white focus:border-brand-500 focus-visible:outline-none transition-colors font-bold"
+                    />
                 </div>
             </header>
 
