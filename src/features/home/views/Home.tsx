@@ -1,7 +1,7 @@
 import Seo from '../../../shared/components/Seo';
 import Faq from '../../../shared/components/Faq';
 import React, { useEffect, useState } from 'react';
-import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, limit, getCountFromServer } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { Tournament, Game, Slide } from '../../../shared/types/types';
 import { PromoSlide } from '../components/HotPromotionsSlider';
@@ -15,7 +15,6 @@ import {
     Gamepad2, 
     Wallet, 
     Trophy, 
-    CheckCircle2, 
     Users, 
     Flame,
     BarChart3,
@@ -59,8 +58,31 @@ const Home: React.FC = () => {
     const [popularGames, setPopularGames] = useState<Game[]>([]);
     const [slides, setSlides] = useState<Slide[]>([]);
     const [recentResults, setRecentResults] = useState<Tournament[]>([]);
+    const [communityStats, setCommunityStats] = useState<{ players: number | null; orgs: number | null }>({ players: null, orgs: null });
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
+
+    // Live community stats: total players and orgs from the database (aggregate counts, no doc reads)
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            try {
+                const [playersSnap, orgsSnap] = await Promise.all([
+                    getCountFromServer(query(collection(db, 'users_public'), where('role', '==', 'player'))),
+                    getCountFromServer(query(collection(db, 'users_public'), where('role', 'in', ['organizer', 'admin']))),
+                ]);
+                if (!cancelled) {
+                    setCommunityStats({
+                        players: playersSnap.data().count,
+                        orgs: orgsSnap.data().count,
+                    });
+                }
+            } catch (err) {
+                console.warn('Community stats unavailable:', err);
+            }
+        })();
+        return () => { cancelled = true; };
+    }, []);
 
     useEffect(() => {
         // Track Page View
@@ -218,22 +240,36 @@ const Home: React.FC = () => {
             {/* SEO: h1 for search engines — visually hidden */}
             <h1 className="sr-only">NexPlay — Esports Tournaments & Scrims in Nepal</h1>
 
-            {/* Real-time Status and Security Badges Banner */}
-            <div className="bg-gradient-to-br from-gray-900 to-black border border-gray-800 rounded-2xl sm:rounded-3xl p-5 sm:p-8 flex flex-col md:flex-row justify-between items-center gap-4 sm:gap-6 shadow-2xl">
-                <div className="flex items-center gap-4">
+            {/* Live Community Stats Banner — real player & org counts from the database */}
+            <div className="bg-gradient-to-br from-gray-900 to-black border border-gray-800 rounded-2xl sm:rounded-3xl p-5 sm:p-8 flex flex-col sm:flex-row justify-between items-center gap-4 sm:gap-8 shadow-2xl">
+                <div className="flex items-center gap-4 flex-1 min-w-0">
                     <div className="bg-brand-500/10 p-3 rounded-2xl shrink-0">
-                        <CheckCircle2 className="text-brand-400 w-7 h-7 sm:w-8 sm:h-8" />
+                        <Users className="text-brand-400 w-7 h-7 sm:w-8 sm:h-8" />
                     </div>
-                    <div>
-                        <h3 className="text-base sm:text-lg font-black text-white uppercase tracking-tight">Secure Matchmaking Active</h3>
-                        <p className="text-xs sm:text-sm text-gray-400">All escrow entries and payouts are guarded server-side.</p>
+                    <div className="min-w-0">
+                        <h3 className="text-base sm:text-lg font-black text-white uppercase tracking-tight">
+                            {communityStats.players !== null ? `${communityStats.players.toLocaleString()}+ Players` : 'Loading Players…'}
+                        </h3>
+                        <p className="text-xs sm:text-sm text-gray-400 truncate">Registered gamers competing right now.</p>
+                    </div>
+                </div>
+                <div className="hidden sm:block w-px h-12 bg-gray-800 shrink-0"></div>
+                <div className="flex items-center gap-4 flex-1 min-w-0">
+                    <div className="bg-emerald-500/10 p-3 rounded-2xl shrink-0">
+                        <Building2 className="text-emerald-400 w-7 h-7 sm:w-8 sm:h-8" />
+                    </div>
+                    <div className="min-w-0">
+                        <h3 className="text-base sm:text-lg font-black text-white uppercase tracking-tight">
+                            {communityStats.orgs !== null ? `${communityStats.orgs.toLocaleString()}+ Orgs` : 'Loading Orgs…'}
+                        </h3>
+                        <p className="text-xs sm:text-sm text-gray-400 truncate">Tournament organizations hosting on NexPlay.</p>
                     </div>
                 </div>
                 <button
-                    onClick={() => handleCtaClick('/wallet', 'InstantPayouts')}
+                    onClick={() => handleCtaClick('/register', 'JoinCommunity')}
                     className="flex items-center gap-2 bg-brand-500/10 hover:bg-brand-500/20 px-5 py-3 rounded-xl border border-brand-500/40 text-xs sm:text-sm text-brand-400 font-black uppercase tracking-widest transition-colors shrink-0 cursor-pointer"
                 >
-                    <Wallet className="w-4 h-4 sm:w-5 sm:h-5" /> Instant Payouts
+                    <Trophy className="w-4 h-4 sm:w-5 sm:h-5" /> Join the Community
                 </button>
             </div>
 
