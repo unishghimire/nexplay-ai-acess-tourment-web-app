@@ -20,7 +20,7 @@ const Footer: React.FC = () => {
             <div className="max-w-7xl mx-auto px-4">
                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-8 mb-8">
                     {/* Brand + Description */}
-                    <div className="max-w-sm shrink-0">
+                    <div className="max-w-sm shrink-0 md:order-1">
                         <Link to="/" className="inline-flex items-center gap-2.5 mb-3 group">
                             <img src="/logo.png" alt="NexPlay logo" loading="lazy" className="w-9 h-9 rounded-lg shrink-0 object-cover shadow-md group-hover:scale-105 transition-transform" />
                             <span className="font-black text-lg tracking-tight text-white">NexPlay</span>
@@ -28,8 +28,24 @@ const Footer: React.FC = () => {
                         <p className="text-gray-500 text-sm leading-relaxed">Nepal's esports platform for tournaments, scrims, and competitive gaming.</p>
                     </div>
 
+                    {/* Social icons — sit in the middle on desktop so the row doesn't read as two islands with a dead gap between them */}
+                    <div className="flex items-center gap-3 md:order-2 md:pt-1">
+                        {socialLinks.map(({ href, label, Icon, hoverBg, hoverBorder, hoverText }) => (
+                            <a
+                                key={label}
+                                href={href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label={`NexPlay on ${label}`}
+                                className={`group text-gray-400 hover:text-white ${hoverBg} ${hoverBorder} border border-gray-800 rounded-full p-2.5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg`}
+                            >
+                                <Icon className={`w-4 h-4 ${hoverText ?? ''}`} aria-hidden="true" />
+                            </a>
+                        ))}
+                    </div>
+
                     {/* Company */}
-                    <nav aria-label="Company links" className="shrink-0">
+                    <nav aria-label="Company links" className="shrink-0 md:order-3">
                         <h3 className="text-white font-bold text-sm mb-3 uppercase tracking-wider">Company</h3>
                         <ul className="space-y-1 text-sm">
                             <li><Link to="/about" className="text-gray-400 hover:text-white transition inline-block py-2">About Us</Link></li>
@@ -38,22 +54,6 @@ const Footer: React.FC = () => {
                             <li><Link to="/privacy" className="text-gray-400 hover:text-white transition inline-block py-2">Privacy Policy</Link></li>
                         </ul>
                     </nav>
-                </div>
-
-                {/* Social icons — authentic per-brand hover colors */}
-                <div className="flex items-center justify-center gap-3 mb-6">
-                    {socialLinks.map(({ href, label, Icon, hoverBg, hoverBorder, hoverText }) => (
-                        <a
-                            key={label}
-                            href={href}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            aria-label={`NexPlay on ${label}`}
-                            className={`group text-gray-400 hover:text-white ${hoverBg} ${hoverBorder} border border-gray-800 rounded-full p-2.5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg`}
-                        >
-                            <Icon className={`w-4 h-4 ${hoverText ?? ''}`} aria-hidden="true" />
-                        </a>
-                    ))}
                 </div>
 
                 <div className="border-t border-gray-800 pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
