@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, MessageCircle, Trophy, Facebook, Instagram, Twitter, Youtube, Music2 } from 'lucide-react';
+import { Mail, MessageCircle, Facebook, Instagram, Twitter, Youtube, Music2 } from 'lucide-react';
 
 const socialLinks = [
     { href: 'https://www.facebook.com/nexplayorg', label: 'Facebook', Icon: Facebook, hoverBg: 'hover:bg-[#1877F2]', hoverBorder: 'hover:border-[#1877F2]' },
@@ -13,7 +13,7 @@ const socialLinks = [
 
 const Footer: React.FC = () => {
     return (
-        <footer className="relative bg-dark border-t border-gray-800 py-10 mt-auto overflow-hidden">
+        <footer className="relative bg-dark border-t border-gray-800 pt-10 pb-14 sm:pb-16 mt-auto overflow-hidden">
             {/* Subtle brand-colored hairline along the very top edge */}
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-500/50 to-transparent"></div>
 
@@ -22,9 +22,7 @@ const Footer: React.FC = () => {
                     {/* Brand + Description */}
                     <div className="max-w-sm shrink-0">
                         <Link to="/" className="inline-flex items-center gap-2.5 mb-3 group">
-                            <span className="bg-brand-500 text-white rounded-lg p-1.5 shrink-0 group-hover:scale-105 transition-transform">
-                                <Trophy className="w-4 h-4" aria-hidden="true" />
-                            </span>
+                            <img src="/logo.png" alt="NexPlay logo" loading="lazy" className="w-9 h-9 rounded-lg shrink-0 object-cover shadow-md group-hover:scale-105 transition-transform" />
                             <span className="font-black text-lg tracking-tight text-white">NexPlay</span>
                         </Link>
                         <p className="text-gray-500 text-sm leading-relaxed">Nepal's esports platform for tournaments, scrims, and competitive gaming.</p>
