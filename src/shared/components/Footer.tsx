@@ -45,7 +45,7 @@ const Footer: React.FC = () => {
                     </div>
 
                     {/* Company */}
-                    <nav aria-label="Company links" className="shrink-0 md:order-3">
+                    <nav aria-label="Company links" className="shrink-0 md:order-3 md:mr-1">
                         <h3 className="text-white font-bold text-sm mb-3 uppercase tracking-wider">Company</h3>
                         <ul className="space-y-1 text-sm">
                             <li><Link to="/about" className="text-gray-400 hover:text-white transition inline-block py-2">About Us</Link></li>
