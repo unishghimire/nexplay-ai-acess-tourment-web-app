@@ -41,6 +41,14 @@ const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
     const [loadingTeams, setLoadingTeams] = useState(false);
     const [selectedSlot, setSelectedSlot] = useState<number | ''>(initialSlotNumber || '');
 
+    // SCRIM ENGINE: captain's webapp UID is required to reserve a slot
+    const isScrim = tournament.matchType === 'scrims' || (tournament as any).isScrim === true || (tournament as any).type === 'scrim' || (tournament as any).type === 'scrims';
+    const [captainUid, setCaptainUid] = useState('');
+
+    useEffect(() => {
+        if (isOpen && user) setCaptainUid(user.uid);
+    }, [isOpen, user]);
+
     const effectiveTeamType = (
         tournament.teamType?.toLowerCase() || 
         (tournament as any).format?.toLowerCase() || 
@@ -192,6 +200,26 @@ const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
             ? [teammate1, teammate2, teammate3]
             : [];
 
+        // SCRIM ENGINE: the captain's webapp UID must be entered and must exist in the database
+        const trimmedCaptainUid = captainUid.trim();
+        if (isScrim && !trimmedCaptainUid) {
+            showToast("Captain's Webapp UID is required to reserve a slot.", "warning");
+            return;
+        }
+        if (isScrim) {
+            try {
+                const captainDoc = await getDoc(doc(db, 'users', trimmedCaptainUid));
+                if (!captainDoc.exists()) {
+                    showToast("Captain UID not found. Please enter a valid NexPlay account UID.", "error");
+                    return;
+                }
+            } catch (err) {
+                console.warn('Could not verify captain UID:', err);
+                showToast('Could not verify Captain UID. Please check your connection and try again.', 'error');
+                return;
+            }
+        }
+
         const selectedPlayers = [profile.inGameName || profile.username, ...teammates];
         const registeredTeamName = selectedTeam?.name || profile.teamName || 'Registered Team';
         const registeredTeamId = selectedTeam?.id || profile.teamId || user.uid;
@@ -211,6 +239,7 @@ const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
                     teamId: registeredTeamId,
                     teamName: registeredTeamName,
                     selectedPlayers,
+                    captainUid: isScrim ? trimmedCaptainUid : undefined,
                 }),
             });
             const data = await res.json();
@@ -280,6 +309,24 @@ const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
                         ))}
                     </select>
                 </div>
+
+                {isScrim && (
+                    <div>
+                        <label className="text-[10px] text-gray-500 uppercase font-black tracking-wider mb-2 block">
+                            Captain's Webapp UID <span className="text-brand-400">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            value={captainUid}
+                            onChange={(e) => setCaptainUid(e.target.value)}
+                            placeholder="Enter the captain's webapp account UID"
+                            className="w-full bg-dark border border-gray-700 rounded-xl p-3 text-white focus:border-brand-500 focus-visible:outline-none font-mono text-xs"
+                        />
+                        <p className="text-[10px] text-gray-500 mt-1">
+                            Required to reserve a slot. This is the captain's UID on this webapp (found in your Profile page), not an in-game ID. It must be a real, verified NexPlay account — defaults to your account; change it only if reserving on behalf of another captain.
+                        </p>
+                    </div>
+                )}
 
                 {isTeamEvent && !loadingTeams && userTeams.length === 0 && (
                     <div className="p-4 bg-amber-500/10 border-2 border-amber-500/30 rounded-2xl space-y-3">

@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { eventDetailUrl } from '../../../shared/utils/eventUrl';
-import { auth } from '../../../shared/config/firebase';
+import { auth, db } from '../../../shared/config/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 import { Tournament, UserProfile } from '../../../shared/types/types';
 import Modal from '../../../shared/components/Modal';
 import { useNotification } from '../../../shared/context/NotificationContext';
@@ -32,6 +33,14 @@ const RegistrationModal: React.FC<RegistrationModalProps> = ({
     const [loading, setLoading] = useState(false);
     const [selectedSlot, setSelectedSlot] = useState<number | ''>(initialSlotNumber || '');
 
+    // SCRIM ENGINE: captain's webapp UID is required to reserve a slot
+    const isScrim = tournament.matchType === 'scrims' || (tournament as any).isScrim === true || (tournament as any).type === 'scrim' || (tournament as any).type === 'scrims';
+    const [captainUid, setCaptainUid] = useState('');
+
+    useEffect(() => {
+        if (isOpen && user) setCaptainUid(user.uid);
+    }, [isOpen, user]);
+
     const normalizedSlots = useMemo(() => {
         const total = getSlotCount(tournament);
         const filled = getFilledSlotCount(tournament);
@@ -45,6 +54,26 @@ const RegistrationModal: React.FC<RegistrationModalProps> = ({
     const handleSubmit = async () => {
         if (!user || !tournament || !profile) return;
 
+        // SCRIM ENGINE: the captain's webapp UID must be entered and must exist in the database
+        const trimmedCaptainUid = captainUid.trim();
+        if (isScrim && !trimmedCaptainUid) {
+            showToast("Captain's Webapp UID is required to reserve a slot.", "warning");
+            return;
+        }
+        if (isScrim) {
+            try {
+                const captainDoc = await getDoc(doc(db, 'users', trimmedCaptainUid));
+                if (!captainDoc.exists()) {
+                    showToast("Captain UID not found. Please enter a valid NexPlay account UID.", "error");
+                    return;
+                }
+            } catch (err) {
+                console.warn('Could not verify captain UID:', err);
+                showToast('Could not verify Captain UID. Please check your connection and try again.', 'error');
+                return;
+            }
+        }
+
         setLoading(true);
         try {
             const token = await auth.currentUser?.getIdToken();
@@ -56,6 +85,7 @@ const RegistrationModal: React.FC<RegistrationModalProps> = ({
                 body: JSON.stringify({ 
                     tournamentId: tournament.id,
                     slotNumber: selectedSlot ? Number(selectedSlot) : undefined,
+                    captainUid: isScrim ? trimmedCaptainUid : undefined,
                 }),
             });
             const data = await res.json();
@@ -135,6 +165,25 @@ const RegistrationModal: React.FC<RegistrationModalProps> = ({
                         ))}
                     </select>
                 </div>
+
+                {isScrim && (
+                    <div className="space-y-2">
+                        <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">
+                            Captain's Webapp UID <span className="text-brand-400">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            aria-label="Captain's Webapp UID"
+                            value={captainUid}
+                            onChange={(e) => setCaptainUid(e.target.value)}
+                            placeholder="Enter the captain's webapp account UID"
+                            className="w-full bg-surface border border-gray-800 rounded-xl p-3 text-white text-xs font-mono focus:border-brand-500 focus-visible:outline-none transition"
+                        />
+                        <p className="text-[10px] text-gray-500 ml-1">
+                            Required to reserve a slot. The captain's UID on this webapp (Profile page), not an in-game ID. It must be a real, verified NexPlay account — defaults to your account; change it only if reserving on behalf of another captain.
+                        </p>
+                    </div>
+                )}
 
                 <div className="space-y-3">
                     <h4 className="text-xs font-black text-gray-500 uppercase tracking-widest ml-1">Your Details</h4>

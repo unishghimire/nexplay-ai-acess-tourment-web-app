@@ -247,11 +247,18 @@ router.post("/api/wallet/join-tournament",
   rateLimit(10, 15 * 60 * 1000),
   async (req: any, res) => {
     try {
-      const { tournamentId, slotNumber, teammates, teamId, teamName, selectedPlayers } = req.body;
+      const { tournamentId, slotNumber, teammates, teamId, teamName, selectedPlayers, captainUid } = req.body;
       const uid = req.user.userId;
 
       if (!tournamentId || typeof tournamentId !== 'string' || tournamentId.length > 128) {
         return res.status(400).json({ success: false, message: "Invalid tournament ID" });
+      }
+      const trimmedCaptainUid = typeof captainUid === 'string' ? captainUid.trim() : '';
+      if (captainUid !== undefined && typeof captainUid !== 'string') {
+        return res.status(400).json({ success: false, message: "Invalid captain UID" });
+      }
+      if (trimmedCaptainUid.length > 128) {
+        return res.status(400).json({ success: false, message: "Invalid captain UID" });
       }
 
       // Deterministic participant doc ID for atomic duplicate check
@@ -264,11 +271,13 @@ router.post("/api/wallet/join-tournament",
         const uRef = db.collection('users').doc(uid);
 
         // 1. ALL READS FIRST (Firestore rule: all reads must precede all writes)
-        const [tDoc, sDoc, uDoc, partDoc] = await Promise.all([
+        const cRef = trimmedCaptainUid ? db.collection('users').doc(trimmedCaptainUid) : null;
+        const [tDoc, sDoc, uDoc, partDoc, captainDoc] = await Promise.all([
           tx.get(tRef),
           tx.get(sRef),
           tx.get(uRef),
           tx.get(partRef),
+          cRef ? tx.get(cRef) : Promise.resolve(null),
         ]);
 
         if (!tDoc.exists && !sDoc.exists) throw new Error("Tournament or scrim does not exist");
@@ -299,6 +308,16 @@ router.post("/api/wallet/join-tournament",
                         tData.isScrim === true || 
                         tData.type === 'scrim' || 
                         tData.type === 'scrims';
+
+        // SCRIM ENGINE: a genuine, database-verified captain UID is required to reserve a slot
+        if (isScrim) {
+          if (!trimmedCaptainUid) {
+            throw new Error("Captain's Webapp UID is required to reserve a scrim slot.");
+          }
+          if (!captainDoc || !captainDoc.exists) {
+            throw new Error("Captain UID not found. The slot can only be reserved with a real NexPlay account UID.");
+          }
+        }
 
         const effectiveEntryFee = Math.max(
           0,
@@ -402,13 +421,16 @@ router.post("/api/wallet/join-tournament",
 
         const assignedSlotNumber = currentSlots[assignedSlotIdx].slotNumber || (assignedSlotIdx + 1);
 
+        const validatedCaptainUid = isScrim ? trimmedCaptainUid : uid;
+        const captainData = (isScrim && captainDoc && captainDoc.exists ? captainDoc.data() : null) || {};
         currentSlots[assignedSlotIdx] = {
           slotNumber: assignedSlotNumber,
           status: 'filled',
           teamName: effectiveTeamName,
           teamId: effectiveTeamId,
           userId: uid,
-          captainUid: uid,
+          captainUid: validatedCaptainUid,
+          captainName: captainData.username || captainData.inGameName || uData.username || null,
           reservedBy: uid,
           inGameId: uData.inGameId || '',
           inGameName: uData.inGameName || '',
@@ -452,6 +474,9 @@ router.post("/api/wallet/join-tournament",
         if (Array.isArray(teammates) && teammates.length > 0) {
           participantData.teammates = teammates.slice(0, 4);
         }
+        if (isScrim) {
+          participantData.captainUid = validatedCaptainUid;
+        }
         if (Array.isArray(selectedPlayers) && selectedPlayers.length > 0) {
           participantData.selectedPlayers = selectedPlayers.slice(0, 5);
         } else {
@@ -492,7 +517,7 @@ router.post("/api/wallet/join-tournament",
       });
     } catch (error: any) {
       const msg = error.message || "Failed to join tournament";
-      const code = ["Insufficient balance", "Tournament is full", "Already registered"].some(m => msg.includes(m)) || msg.includes("Slot") ? 400 : 500;
+      const code = ["Insufficient balance", "Tournament is full", "Already registered", "Captain UID", "Captain's Webapp UID"].some(m => msg.includes(m)) || msg.includes("Slot") ? 400 : 500;
       return res.status(code).json({ success: false, message: msg });
     }
   }
