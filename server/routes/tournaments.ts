@@ -554,23 +554,15 @@ router.delete("/api/tournaments/:id",
       if (!id || id.length > 128) return res.status(400).json({ success: false, message: "Invalid tournament or scrim ID" });
 
       const uid = req.user.userId;
-      let targetRef = db.collection("tournaments").doc(id);
-      let targetSnap = await targetRef.get();
-      let collectionName = "tournaments";
+      const targetRef = db.collection("tournaments").doc(id);
+      const targetSnap = await targetRef.get();
 
       if (!targetSnap.exists) {
-        // Fallback: check 'scrims' collection
-        targetRef = db.collection("scrims").doc(id);
-        targetSnap = await targetRef.get();
-        collectionName = "scrims";
-      }
-
-      if (!targetSnap.exists) {
-        return res.status(404).json({ success: false, message: "Tournament or scrim not found" });
+        return res.status(404).json({ success: false, message: "Tournament not found" });
       }
 
       const targetData = targetSnap.data();
-      if (!targetData) return res.status(404).json({ success: false, message: "Event not found" });
+      if (!targetData) return res.status(404).json({ success: false, message: "Tournament not found" });
 
       // Flexible ownership verification: check hostUid, orgId, hostId, userId, organizerId, or createdBy
       const hostId = targetData.hostUid || targetData.orgId || targetData.hostId || targetData.userId || targetData.organizerId || targetData.createdBy;
@@ -634,23 +626,18 @@ router.delete("/api/tournaments/:id",
       const tourneyCredsSnap = await db.collection("tournaments").doc(id).collection("credentials").get();
       tourneyCredsSnap.docs.forEach(d => operations.push(batch => batch.delete(d.ref)));
 
-      // 5. Delete credentials subcollection for scrims
-      const scrimCredsSnap = await db.collection("scrims").doc(id).collection("credentials").get();
-      scrimCredsSnap.docs.forEach(d => operations.push(batch => batch.delete(d.ref)));
-
-      // 6. Delete groups subcollection
+      // 5. Delete groups subcollection
       const groupsSnap = await db.collection("tournaments").doc(id).collection("groups").get();
       groupsSnap.docs.forEach(d => operations.push(batch => batch.delete(d.ref)));
 
-      // 7. Delete both document pointers if present
+      // 6. Delete document
       operations.push(batch => batch.delete(db.collection("tournaments").doc(id)));
-      operations.push(batch => batch.delete(db.collection("scrims").doc(id)));
 
       await commitBatchedWrites(() => db.batch(), operations);
       return res.json({
         success: true,
-        message: `${collectionName === 'scrims' ? 'Scrim' : 'Tournament'} deleted successfully`,
-        deletedChildren: partsSnap.size + resultsSnap.size + earningsSnap.size + tourneyCredsSnap.size + scrimCredsSnap.size + groupsSnap.size
+        message: 'Tournament deleted successfully',
+        deletedChildren: partsSnap.size + resultsSnap.size + earningsSnap.size + tourneyCredsSnap.size + groupsSnap.size
       });
     } catch (error: any) {
       console.error("Tournament/Scrim delete error:", error);

@@ -5,32 +5,84 @@ import { db } from '../../../shared/config/firebase';
 import { Tournament } from '../../../shared/types/types';
 import { Trophy, Calendar, Gamepad2, ChevronRight, Search } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
-import { formatCurrency, formatDate, formatGameName } from '../../../shared/utils/utils';
+import { formatCurrency, formatDate, formatGameName, isTournamentEvent, isScrimEvent, toDateSafe } from '../../../shared/utils/utils';
 
 const Results: React.FC = () => {
     const [results, setResults] = useState<Tournament[]>([]);
+    const [teamLogos, setTeamLogos] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(true);
     const [fetchError, setFetchError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const navigate = useNavigate();
 
+    const getResultLink = (t: Tournament) => isScrimEvent(t) ? `/scrims/${t.id}` : `/tournaments/${t.id}`;
+
     useEffect(() => {
         const fetchResults = async () => {
             setLoading(true);
             try {
-                const resultsSnap = await getDocs(query(
-                    collection(db, 'tournaments'),
-                    where('status', '==', 'completed'),
-                    orderBy('startTime', 'desc'),
-                    limit(50)
-                ));
+                const [resultsSnap, scrimsSnap] = await Promise.all([
+                    getDocs(query(
+                        collection(db, 'tournaments'),
+                        where('status', '==', 'completed'),
+                        orderBy('startTime', 'desc'),
+                        limit(50)
+                    )),
+                    getDocs(query(
+                        collection(db, 'scrims'),
+                        where('status', '==', 'completed'),
+                        limit(50)
+                    ))
+                ]);
 
-                const resultsData = resultsSnap.docs
+                const tourList = resultsSnap.docs
                     .map(doc => ({ id: doc.id, ...doc.data() } as Tournament))
-                    .filter(t => (t as any).matchType !== 'scrims' && (t as any).isScrim !== true && (t as any).type !== 'scrim' && (t as any).type !== 'scrims')
+                    .filter(isTournamentEvent);
+
+                const scrimList = scrimsSnap.docs
+                    .map(doc => ({ id: doc.id, ...doc.data(), matchType: 'scrims' } as Tournament))
+                    .filter(isScrimEvent);
+
+                const resultsData = [...tourList, ...scrimList]
+                    .sort((a, b) => {
+                        const aTime = toDateSafe(a.startTime)?.getTime() || 0;
+                        const bTime = toDateSafe(b.startTime)?.getTime() || 0;
+                        return bTime - aTime;
+                    })
                     .slice(0, 50);
 
                 setResults(resultsData);
+
+                // Prefetch team logos for rendered cards
+                const namesToFetch = new Set<string>();
+                resultsData.forEach(t => {
+                    t.winners?.forEach((w: any) => {
+                        if (w.teamName) namesToFetch.add(w.teamName.trim().toLowerCase());
+                        if (w.username) namesToFetch.add(w.username.trim().toLowerCase());
+                    });
+                    t.manualResults?.forEach((m: any) => {
+                        if (m.team) namesToFetch.add(m.team.trim().toLowerCase());
+                    });
+                });
+
+                if (namesToFetch.size > 0) {
+                    try {
+                        const teamsSnap = await getDocs(query(collection(db, 'teams'), limit(50)));
+                        const map: Record<string, string> = {};
+                        teamsSnap.docs.forEach(d => {
+                            const dt = d.data();
+                            const logo = dt.logoUrl || dt.logo;
+                            if (logo) {
+                                map[d.id] = logo;
+                                if (dt.name) map[String(dt.name).trim().toLowerCase()] = logo;
+                                if (dt.tag) map[String(dt.tag).trim().toLowerCase()] = logo;
+                            }
+                        });
+                        setTeamLogos(map);
+                    } catch (err) {
+                        console.warn('Could not prefetch team logos for results:', err);
+                    }
+                }
             } catch (error) {
                 console.error("Error fetching results:", error);
                 setFetchError("Failed to load results. Please check your connection.");
@@ -168,7 +220,7 @@ const Results: React.FC = () => {
                                         <div className="mt-1 text-sm font-bold text-white">{featuredResult ? formatDate(featuredResult.startTime) : 'N/A'}</div>
                                     </div>
                                     <button
-                                        onClick={() => featuredResult && navigate(`/tournaments/${featuredResult.id}`)}
+                                        onClick={() => featuredResult && navigate(getResultLink(featuredResult))}
                                         disabled={!featuredResult}
                                         className="inline-flex items-center gap-2 rounded-xl bg-brand-500 px-4 py-3 text-xs font-black uppercase tracking-[0.25em] text-white transition hover:bg-brand-400 disabled:cursor-not-allowed disabled:opacity-50"
                                     >
@@ -198,7 +250,7 @@ const Results: React.FC = () => {
                     filteredResults.map(t => (
                         <Link
                             key={t.id} 
-                            to={`/tournaments/${t.id}`}
+                            to={getResultLink(t)}
                             className="bg-surface rounded-3xl border border-gray-800 hover:border-brand-500/30 transition-colors cursor-pointer group overflow-hidden block"
                         >
                             <div className="flex flex-col sm:flex-row h-full">
@@ -206,9 +258,9 @@ const Results: React.FC = () => {
                                     <img src={t.bannerUrl || `https://api.dicebear.com/7.x/identicon/svg?seed=${t.title}`} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" />
                                     <div className="absolute inset-0 bg-gradient-to-t from-gray-950 to-transparent"></div>
                                     <div className="absolute bottom-4 left-4">
-                                        <div className="flex items-center gap-1.5 bg-brand-500 px-3 py-1 rounded-full border border-brand-400/30">
+                                        <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full border ${isScrimEvent(t) ? 'bg-amber-500 border-amber-400/30' : 'bg-brand-500 border-brand-400/30'}`}>
                                             <Trophy className="w-3 h-3 text-white" />
-                                            <span className="text-[10px] font-black text-white uppercase uppercase tracking-widest leading-none">Result</span>
+                                            <span className="text-[10px] font-black text-white uppercase tracking-widest leading-none">{isScrimEvent(t) ? 'Scrim Result' : 'Result'}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -227,31 +279,59 @@ const Results: React.FC = () => {
                                             </div>
                                         </div>
 
-                                        {t.winners && t.winners.length > 0 ? (
-                                            <div className="space-y-3">
-                                                <div className="flex items-center gap-4 bg-dark/50 p-3 rounded-2xl border border-gray-800">
-                                                    <div className="w-10 h-10 rounded-xl bg-brand-500/20 flex items-center justify-center border border-brand-500/30">
-                                                        <Trophy className="w-5 h-5 text-yellow-500" />
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-[10px] text-gray-500 font-black uppercase">Champion</p>
-                                                        <p className="text-sm font-black text-white">{t.winners[0].username}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ) : t.manualResults && t.manualResults.length > 0 ? (
-                                            <div className="space-y-2">
-                                                {t.manualResults.slice(0, 3).map((r, ri) => (
-                                                    <div key={ri} className="flex items-center gap-3 bg-dark/50 p-3 rounded-2xl border border-gray-800">
-                                                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm shrink-0 ${ri === 0 ? 'bg-yellow-500/20 text-yellow-400' : ri === 1 ? 'bg-gray-400/10 text-gray-300' : 'bg-amber-800/20 text-amber-600'}`}>
-                                                            {r.rank}
+                                        {t.winners && t.winners.length > 0 ? (() => {
+                                            const champion = t.winners[0];
+                                            const championNormName = (champion.teamName || champion.username || '').trim().toLowerCase();
+                                            const championLogo = (champion as any).teamLogo 
+                                                || (champion as any).logo 
+                                                || (champion as any).avatar 
+                                                || ((champion as any).teamId ? teamLogos[(champion as any).teamId] : null)
+                                                || teamLogos[championNormName]
+                                                || (Array.isArray(t.slots) ? (t.slots as any[]).find((s: any) => s && (s.teamName === champion.teamName || s.username === champion.username))?.teamLogo : null);
+
+                                            return (
+                                                <div className="space-y-3">
+                                                    <div className="flex items-center gap-4 bg-dark/50 p-3 rounded-2xl border border-gray-800">
+                                                        <div className="w-10 h-10 rounded-xl overflow-hidden bg-brand-500/20 flex items-center justify-center border border-brand-500/30 shrink-0">
+                                                            {championLogo ? (
+                                                                <img src={championLogo} alt={champion.username || 'Champion'} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                                            ) : (
+                                                                <Trophy className="w-5 h-5 text-yellow-500" />
+                                                            )}
                                                         </div>
                                                         <div className="min-w-0">
-                                                            <p className="text-sm font-black text-white truncate">{r.team}</p>
-                                                            <p className="text-[10px] text-gray-500 font-bold">{r.score} pts</p>
+                                                            <p className="text-[10px] text-gray-500 font-black uppercase">Champion</p>
+                                                            <p className="text-sm font-black text-white truncate">{champion.username || champion.teamName}</p>
                                                         </div>
                                                     </div>
-                                                ))}
+                                                </div>
+                                            );
+                                        })() : t.manualResults && t.manualResults.length > 0 ? (
+                                            <div className="space-y-2">
+                                                {t.manualResults.slice(0, 3).map((r, ri) => {
+                                                    const teamNormName = (r.team || '').trim().toLowerCase();
+                                                    const rLogo = r.logo 
+                                                        || (r.teamId ? teamLogos[r.teamId] : null)
+                                                        || teamLogos[teamNormName]
+                                                        || (Array.isArray(t.slots) ? (t.slots as any[]).find((s: any) => s && s.teamName && String(s.teamName).trim().toLowerCase() === teamNormName)?.teamLogo : null);
+
+                                                    return (
+                                                        <div key={ri} className="flex items-center gap-3 bg-dark/50 p-3 rounded-2xl border border-gray-800">
+                                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm shrink-0 ${ri === 0 ? 'bg-yellow-500/20 text-yellow-400' : ri === 1 ? 'bg-gray-400/10 text-gray-300' : 'bg-amber-800/20 text-amber-600'}`}>
+                                                                {r.rank}
+                                                            </div>
+                                                            {rLogo && (
+                                                                <div className="w-8 h-8 rounded-lg overflow-hidden border border-gray-800 shrink-0 bg-surface">
+                                                                    <img src={rLogo} alt={r.team} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                                                </div>
+                                                            )}
+                                                            <div className="min-w-0 flex-1">
+                                                                <p className="text-sm font-black text-white truncate">{r.team}</p>
+                                                                <p className="text-[10px] text-gray-500 font-bold">{r.score} pts</p>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
                                             </div>
                                         ) : (
                                             <p className="text-gray-600 text-sm font-bold italic">Results pending official announcement.</p>

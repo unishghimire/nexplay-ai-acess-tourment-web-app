@@ -179,3 +179,95 @@ export function isSafeInternalPath(pathname: unknown): pathname is string {
     if (pathname === '/login' || pathname === '/register' || pathname === '/complete-profile') return false;
     return true;
 }
+
+/**
+ * Determines whether an event represents an esports Scrim (practice match).
+ * A scrim is NOT a tournament: it must not have explicit tournament markers,
+ * and must have explicit or implicit scrim markers.
+ */
+export function isScrimEvent(item: unknown): boolean {
+    if (!item || typeof item !== 'object') return false;
+    const ev = item as Record<string, any>;
+
+    // 1. Explicit tournament markers disqualify it immediately
+    if (ev.matchType === 'tournament') return false;
+    if (ev.isTournament === true) return false;
+    if (ev.isScrim === false) return false;
+    if (typeof ev.type === 'string' && ev.type.toLowerCase() === 'tournament') return false;
+
+    const formatLower = typeof ev.format === 'string' ? ev.format.toLowerCase() : '';
+    if (
+        formatLower === 'single_elimination' ||
+        formatLower === 'double_elimination' ||
+        formatLower === 'round_robin' ||
+        formatLower === 'swiss' ||
+        formatLower === 'bracket'
+    ) {
+        return false;
+    }
+
+    const titleLower = typeof ev.title === 'string' ? ev.title.toLowerCase() : '';
+    const isExplicitPerKill = ev.tournamentMode === 'PER_KILL_REWARD' || Number(ev.rewardPerKill) > 0 || titleLower.includes('per-kill') || titleLower.includes('per kill');
+
+    // If title has tournament/league keywords and does not explicitly say "scrim" or "per-kill"
+    if (
+        (titleLower.includes('tournament') || titleLower.includes('league') || titleLower.includes('leauge') || titleLower.includes('championship')) &&
+        !titleLower.includes('scrim') &&
+        !isExplicitPerKill
+    ) {
+        return false;
+    }
+
+    // 2. Positive scrim markers
+    if (ev.matchType === 'scrim' || ev.matchType === 'scrims') return true;
+    if (ev.isScrim === true) return true;
+    if (typeof ev.type === 'string' && (ev.type.toLowerCase() === 'scrim' || ev.type.toLowerCase() === 'scrims')) return true;
+    if (formatLower === 'scrim' || formatLower === 'scrims') return true;
+    if (titleLower.includes('scrim')) return true;
+    // Per-kill is strictly a scrim, never a tournament
+    if (isExplicitPerKill) return true;
+
+    // 3. Fallback for documents originating from scrims collection without tournament disqualifiers
+    if (ev._sourceCollection === 'scrims') return true;
+
+    return false;
+}
+
+/**
+ * Determines whether an event represents a Tournament (formal competition with bracket/prizes).
+ */
+export function isTournamentEvent(item: unknown): boolean {
+    if (!item || typeof item !== 'object') return false;
+    if (isScrimEvent(item)) return false;
+
+    const ev = item as Record<string, any>;
+    // Per-kill is strictly a scrim, never a tournament
+    if (ev.tournamentMode === 'PER_KILL_REWARD' || Number(ev.rewardPerKill) > 0) return false;
+
+    if (ev.matchType === 'tournament') return true;
+    if (ev.isTournament === true) return true;
+    if (ev.isScrim === false) return true;
+    if (typeof ev.type === 'string' && ev.type.toLowerCase() === 'tournament') return true;
+
+    const formatLower = typeof ev.format === 'string' ? ev.format.toLowerCase() : '';
+    if (
+        formatLower === 'single_elimination' ||
+        formatLower === 'double_elimination' ||
+        formatLower === 'round_robin' ||
+        formatLower === 'swiss' ||
+        formatLower === 'bracket'
+    ) {
+        return true;
+    }
+
+    const titleLower = typeof ev.title === 'string' ? ev.title.toLowerCase() : '';
+    if (titleLower.includes('tournament') || titleLower.includes('league') || titleLower.includes('leauge') || titleLower.includes('championship')) {
+        return true;
+    }
+
+    // Default for documents originating from tournaments collection that aren't scrims
+    if (ev.matchType !== 'scrims' && ev.isScrim !== true) return true;
+
+    return false;
+}
+

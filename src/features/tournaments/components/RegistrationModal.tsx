@@ -86,6 +86,9 @@ const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     tournamentId: tournament.id,
                     slotNumber: selectedSlot ? Number(selectedSlot) : undefined,
                     captainUid: isScrim ? trimmedCaptainUid : undefined,
+                    teamId: profile?.teamId || null,
+                    teamName: profile?.teamName || null,
+                    teamLogo: profile?.teamLogo || null,
                 }),
             });
             const data = await res.json();

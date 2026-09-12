@@ -1,4 +1,4 @@
-﻿import { Router } from "express";
+import { Router } from "express";
 import { createHash } from "crypto";
 import { db, admin, authenticateToken, rateLimit } from "../shared.js";
 import { ChunkProcessingError, commitBatchedWrites } from "../batchedWrites.js";
@@ -247,7 +247,7 @@ router.post("/api/wallet/join-tournament",
   rateLimit(10, 15 * 60 * 1000),
   async (req: any, res) => {
     try {
-      const { tournamentId, slotNumber, teammates, teamId, teamName, selectedPlayers, captainUid } = req.body;
+      const { tournamentId, slotNumber, teammates, teamId, teamName, teamLogo, selectedPlayers, captainUid } = req.body;
       const uid = req.user.userId;
 
       if (!tournamentId || typeof tournamentId !== 'string' || tournamentId.length > 128) {
@@ -262,32 +262,30 @@ router.post("/api/wallet/join-tournament",
       }
 
       // Deterministic participant doc ID for atomic duplicate check
-      // ponytail: underscore separator is safe â€” Firebase Auth UIDs and Firestore auto-generated doc IDs are alphanumeric-only (no underscores). Ceiling: manually-created tournament doc IDs with underscores could theoretically collide. Upgrade: use '::' separator if user-created IDs are ever allowed.
+      // ponytail: underscore separator is safe — Firebase Auth UIDs and Firestore auto-generated doc IDs are alphanumeric-only (no underscores). Ceiling: manually-created tournament doc IDs with underscores could theoretically collide. Upgrade: use '::' separator if user-created IDs are ever allowed.
       const partRef = db.collection('participants').doc(`${tournamentId}_${uid}`);
 
       const result = await db.runTransaction(async (tx) => {
         const tRef = db.collection('tournaments').doc(tournamentId);
-        const sRef = db.collection('scrims').doc(tournamentId);
         const uRef = db.collection('users').doc(uid);
 
         // 1. ALL READS FIRST (Firestore rule: all reads must precede all writes)
         const cRef = trimmedCaptainUid ? db.collection('users').doc(trimmedCaptainUid) : null;
-        const [tDoc, sDoc, uDoc, partDoc, captainDoc] = await Promise.all([
+        const [tDoc, uDoc, partDoc, captainDoc] = await Promise.all([
           tx.get(tRef),
-          tx.get(sRef),
           tx.get(uRef),
           tx.get(partRef),
           cRef ? tx.get(cRef) : Promise.resolve(null),
         ]);
 
-        if (!tDoc.exists && !sDoc.exists) throw new Error("Tournament or scrim does not exist");
+        if (!tDoc.exists) throw new Error("Tournament does not exist");
         if (!uDoc.exists) throw new Error("User not found");
         if (partDoc.exists) throw new Error("Already registered for this event");
 
-        const primaryDoc = tDoc.exists ? tDoc : sDoc;
-        const targetRef = tDoc.exists ? tRef : sRef;
-        const tData = primaryDoc.data()!;
+        const targetRef = tRef;
+        const tData = tDoc.data()!;
         const uData = uDoc.data()!;
+        const isScrim = Boolean(tData.isScrim === true || tData.matchType === 'scrims');
 
         if (!['upcoming', 'published', 'live', 'open', 'active'].includes(tData.status)) throw new Error("Registration is not open for this event");
         
@@ -302,12 +300,6 @@ router.post("/api/wallet/join-tournament",
         if (teamType === 'squad' && teammateArr.length !== 3) {
           throw new Error("Squad tournaments require exactly 3 teammates");
         }
-        
-        const isScrim = targetRef.path.startsWith('scrims') || 
-                        tData.matchType === 'scrims' || 
-                        tData.isScrim === true || 
-                        tData.type === 'scrim' || 
-                        tData.type === 'scrims';
 
         // SCRIM ENGINE: a genuine, database-verified captain UID is required to reserve a slot
         if (isScrim) {
@@ -325,17 +317,13 @@ router.post("/api/wallet/join-tournament",
         );
 
         // Registration Protection:
-        // 1. Scrims: Practice matches and daily scrim lobbies do not use the formal tournament escrow pipeline.
-        // 2. Paid Tournaments with entryFee (entryFee > 0): Funded via participant entry fees as players register.
-        // 3. Free Tournaments with cash prize (entryFee === 0 && prizePool > 0): Host must secure prize funds in escrow before opening.
-        if (!isScrim) {
-          const prizePool = Math.max(0, Math.round(Number(tData.prizePool || 0)));
-          const isExplicitlyPending = tData.status === 'pending_funding' || tData.fundingStatus === 'PENDING_FUNDING';
-          const isUnfundedFreePrize = prizePool > 0 && effectiveEntryFee === 0 && tData.fundingStatus !== 'RESERVED';
+        // Free Tournaments with cash prize (entryFee === 0 && prizePool > 0): Host must secure prize funds in escrow before opening.
+        const prizePool = Math.max(0, Math.round(Number(tData.prizePool || 0)));
+        const isExplicitlyPending = tData.status === 'pending_funding' || tData.fundingStatus === 'PENDING_FUNDING';
+        const isUnfundedFreePrize = prizePool > 0 && effectiveEntryFee === 0 && tData.fundingStatus !== 'RESERVED';
 
-          if (isExplicitlyPending || isUnfundedFreePrize) {
-            throw new Error("Tournament is currently awaiting organizer funding. Registration will open once funding is secured.");
-          }
+        if (isExplicitlyPending || isUnfundedFreePrize) {
+          throw new Error("Tournament is currently awaiting organizer funding. Registration will open once funding is secured.");
         }
 
         const totalSlotsCount = typeof tData.totalSlots === 'number' && !isNaN(tData.totalSlots) && tData.totalSlots > 0
@@ -358,11 +346,10 @@ router.post("/api/wallet/join-tournament",
 
         const effectiveTeamName = teamName || uData.teamName || (isTeamEvent ? (uData.username ? `${uData.username}'s Team` : 'Registered Team') : (uData.username || 'Registered Player'));
         const effectiveTeamId = teamId || uData.teamId || uid;
+        const effectiveTeamLogo = (typeof teamLogo === 'string' && teamLogo.trim()) ? teamLogo.trim() : (uData.teamLogo || null);
 
         // Build or normalize slots array
-        const formatTotalSlots = isScrim 
-          ? (tData.format === 'Solo' ? 48 : tData.format === 'Duo' ? 25 : 12)
-          : (totalSlotsCount > 0 ? totalSlotsCount : 12);
+        const formatTotalSlots = totalSlotsCount > 0 ? totalSlotsCount : (tData.format === 'Solo' ? 48 : tData.format === 'Duo' ? 25 : 12);
         const resolvedTotalSlots = totalSlotsCount > 0 ? totalSlotsCount : formatTotalSlots;
 
         let currentSlots: any[] = [];
@@ -374,6 +361,7 @@ router.post("/api/wallet/join-tournament",
               status: isFilled ? 'filled' : 'open',
               teamName: s.teamName || null,
               teamId: s.teamId || null,
+              teamLogo: s.teamLogo || s.logoUrl || null,
               userId: s.userId || s.captainUid || s.reservedBy || null,
               captainUid: s.captainUid || s.userId || s.reservedBy || null,
               reservedBy: s.reservedBy || s.userId || s.captainUid || null,
@@ -428,6 +416,7 @@ router.post("/api/wallet/join-tournament",
           status: 'filled',
           teamName: effectiveTeamName,
           teamId: effectiveTeamId,
+          teamLogo: effectiveTeamLogo,
           userId: uid,
           captainUid: validatedCaptainUid,
           captainName: captainData.username || captainData.inGameName || uData.username || null,
@@ -451,11 +440,6 @@ router.post("/api/wallet/join-tournament",
         // 2. ALL WRITES AFTER (No tx.get calls allowed past this point)
         tx.update(uRef, { balance: balanceAfter, xp: newXP, level: newLevel });
         tx.update(targetRef, tournamentUpdates);
-        if (targetRef === tRef && sDoc.exists) {
-          tx.update(sRef, tournamentUpdates);
-        } else if (targetRef === sRef && tDoc.exists) {
-          tx.update(tRef, tournamentUpdates);
-        }
 
         const participantData: any = {
           userId: uid,
@@ -465,8 +449,9 @@ router.post("/api/wallet/join-tournament",
           inGameName: uData.inGameName || '',
           teamName: effectiveTeamName,
           teamId: effectiveTeamId,
+          teamLogo: effectiveTeamLogo,
           username: uData.username || '',
-          logoUrl: uData.profilePicUrl || '',
+          logoUrl: effectiveTeamLogo || uData.profilePicUrl || '',
           status: tData.registrationType === 'manual' ? 'pending' : 'approved',
           entryFeePaid: entryFee,
           timestamp: admin.firestore.FieldValue.serverTimestamp()
@@ -541,24 +526,21 @@ router.post("/api/wallet/leave-tournament",
 
       const result = await db.runTransaction(async (tx) => {
         const tRef = db.collection('tournaments').doc(tournamentId);
-        const sRef = db.collection('scrims').doc(tournamentId);
         const uRef = db.collection('users').doc(uid);
 
         // 1. ALL READS FIRST (Firestore rule: all reads must precede all writes)
-        const [tDoc, sDoc, uDoc, partDoc] = await Promise.all([
+        const [tDoc, uDoc, partDoc] = await Promise.all([
           tx.get(tRef),
-          tx.get(sRef),
           tx.get(uRef),
           tx.get(partRef),
         ]);
 
-        if (!tDoc.exists && !sDoc.exists) throw new Error("Tournament or scrim does not exist");
+        if (!tDoc.exists) throw new Error("Tournament does not exist");
         if (!uDoc.exists) throw new Error("User not found");
         if (!partDoc.exists) throw new Error("Not registered for this event");
 
-        const primaryDoc = tDoc.exists ? tDoc : sDoc;
-        const targetRef = tDoc.exists ? tRef : sRef;
-        const tData = primaryDoc.data()!;
+        const targetRef = tRef;
+        const tData = tDoc.data()!;
         const uData = uDoc.data()!;
 
         if (partDoc.data().status === 'refunded') throw new Error("Already refunded");
@@ -618,11 +600,6 @@ router.post("/api/wallet/leave-tournament",
         // 2. ALL WRITES AFTER (No tx.get calls allowed past this point)
         tx.update(uRef, { balance: balanceAfter });
         tx.update(targetRef, tournamentUpdates);
-        if (targetRef === tRef && sDoc.exists) {
-          tx.update(sRef, tournamentUpdates);
-        } else if (targetRef === sRef && tDoc.exists) {
-          tx.update(tRef, tournamentUpdates);
-        }
         tx.delete(partRef);
 
         if (refundAmount > 0) {
@@ -677,16 +654,14 @@ router.post("/api/wallet/release-slot",
       }
 
       const tRef = db.collection('tournaments').doc(tournamentId);
-      const sRef = db.collection('scrims').doc(tournamentId);
 
       const result = await db.runTransaction(async (tx) => {
         // 1. ALL READS FIRST
-        const [tDoc, sDoc] = await Promise.all([tx.get(tRef), tx.get(sRef)]);
-        if (!tDoc.exists && !sDoc.exists) throw new Error("Tournament or scrim does not exist");
+        const tDoc = await tx.get(tRef);
+        if (!tDoc.exists) throw new Error("Tournament does not exist");
 
-        const primaryDoc = tDoc.exists ? tDoc : sDoc;
-        const targetRef = tDoc.exists ? tRef : sRef;
-        const tData = primaryDoc.data()!;
+        const targetRef = tRef;
+        const tData = tDoc.data()!;
 
         // Check caller is organizer/host/admin
         const isHost = tData.hostUid === callerUid || tData.orgId === callerUid || tData.createdBy === callerUid || tData.userId === callerUid;
@@ -766,8 +741,6 @@ router.post("/api/wallet/release-slot",
         };
 
         tx.update(targetRef, tournamentUpdates);
-        if (targetRef === tRef && sDoc.exists) tx.update(sRef, tournamentUpdates);
-        else if (targetRef === sRef && tDoc.exists) tx.update(tRef, tournamentUpdates);
 
         if (partDocSnap && partDocSnap.exists) {
           tx.delete(partDocSnap.ref);
@@ -1002,28 +975,38 @@ router.post("/api/wallet/distribute-prizes",
           }, { merge: true });
         }
 
+        // Build winners payload with team logos for frontend rendering
+        const winnersPayload = winners.map((w: any) => ({
+          userId: w.userId,
+          username: w.username || '',
+          inGameId: w.inGameId || '',
+          inGameName: w.inGameName || '',
+          rank: w.rank,
+          prize: w.prize,
+          teamName: w.teamName || '',
+          logo: w.logo || w.teamLogo || null,
+          teamId: w.teamId || null,
+        }));
+        const manualResultsPayload = resultsData?.manualResults || null;
+        const resultTemplatePayload = resultsData?.resultTemplate || null;
+
         tx.update(tRef, {
           status: 'completed',
           fundingStatus: 'COMPLETED',
           distributedAmount: totalPrizes,
-          completedAt: admin.firestore.FieldValue.serverTimestamp()
+          completedAt: admin.firestore.FieldValue.serverTimestamp(),
+          winners: winnersPayload,
+          manualResults: manualResultsPayload,
+          resultTemplate: resultTemplatePayload,
         });
 
         // Create results document
         const resultRef = db.collection('results').doc();
         tx.set(resultRef, {
           tournamentId,
-          winners: winners.map((w: any) => ({
-            userId: w.userId,
-            username: w.username || '',
-            inGameId: w.inGameId || '',
-            inGameName: w.inGameName || '',
-            rank: w.rank,
-            prize: w.prize,
-            teamName: w.teamName || ''
-          })),
-          manualResults: resultsData?.manualResults || null,
-          resultTemplate: resultsData?.resultTemplate || null,
+          winners: winnersPayload,
+          manualResults: manualResultsPayload,
+          resultTemplate: resultTemplatePayload,
           completedAt: admin.firestore.FieldValue.serverTimestamp()
         });
 

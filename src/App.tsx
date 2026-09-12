@@ -39,6 +39,7 @@ const TournamentDetails = lazyWithRetry(() => import('./features/tournaments/vie
 const Dashboard = lazyWithRetry(() => import('./features/dashboard/views/Dashboard'));
 const Profile = lazyWithRetry(() => import('./features/profile/views/Profile'));
 const Scrims = lazyWithRetry(() => import('./features/scrims/views/Scrims'));
+const ScrimDetails = lazyWithRetry(() => import('./features/scrims/views/ScrimDetails'));
 const Wallet = lazyWithRetry(() => import('./features/wallet/views/Wallet'));
 const Leaderboard = lazyWithRetry(() => import('./features/leaderboard/views/Leaderboard'));
 const About = lazyWithRetry(() => import('./features/home/views/About'));
@@ -139,7 +140,7 @@ const AppContent = () => {
               <Route path="/" element={<Home />} />
               <Route path="/tournaments" element={<Tournaments />} />
               <Route path="/scrims" element={<Scrims />} />
-              <Route path="/scrims/:id" element={<TournamentDetails />} />
+              <Route path="/scrims/:id" element={<ScrimDetails />} />
               <Route path="/games" element={<GameBrowser />} />
               <Route path="/results" element={<Results />} />
               <Route path="/games/:id" element={<GameModesBrowser />} />

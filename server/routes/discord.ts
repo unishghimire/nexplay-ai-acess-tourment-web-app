@@ -96,8 +96,12 @@ function buildDiscordEmbed(type: DiscordAnnouncementType, data: Record<string, a
     scrim_champion: 0xfbbf24,
   };
 
-  const tournyUrl = data.tournamentId ? `https://www.nexplayorg.app/tournaments/${data.tournamentId}` : 'https://www.nexplayorg.app';
-
+  const isScrimType = type.startsWith('scrim_');
+  const eventId = data.scrimId || data.tournamentId;
+  const eventUrl = eventId 
+    ? (isScrimType ? `https://www.nexplayorg.app/scrims/${eventId}` : `https://www.nexplayorg.app/tournaments/${eventId}`)
+    : 'https://www.nexplayorg.app';
+  const tournyUrl = eventUrl;
   const embedMap: Record<DiscordAnnouncementType, object> = {
     // 1. Tournament Announcement
     tournament_published: {
@@ -373,22 +377,33 @@ router.post('/api/discord/announce', authenticateToken, rateLimit(30, 15 * 60 * 
     if (!type || !data) {
       return res.status(400).json({ success: false, message: 'type and data are required.' });
     }
-    if (!ANNOUNCEMENT_TYPES.includes(type) ||
-        typeof data !== 'object' || Array.isArray(data) || typeof data.tournamentId !== 'string' || data.tournamentId.length > 128) {
-      return res.status(400).json({ success: false, message: 'Invalid announcement payload.' });
+    const targetEventId = String(data.scrimId || data.tournamentId || '').trim();
+    if (!targetEventId || targetEventId.length > 128) {
+      return res.status(400).json({ success: false, message: 'Invalid tournament or scrim ID.' });
     }
     if (typeof data.title !== 'string' || data.title.length === 0 || data.title.length > 200) {
       return res.status(400).json({ success: false, message: 'data.title is required and must be a string (max 200 chars).' });
     }
 
-    const tournament = await db.collection('tournaments').doc(data.tournamentId).get();
-    if (!tournament.exists) return res.status(404).json({ success: false, message: 'Tournament or scrim not found.' });
-    if (req.user.role !== 'admin' && tournament.data()?.hostUid !== req.user.userId) {
-      return res.status(403).json({ success: false, message: 'You can only announce your own tournaments.' });
+    const isScrimAnnouncement = channel === 'scrims' || type.startsWith('scrim_');
+    const effectiveChannel: 'tournaments' | 'scrims' = isScrimAnnouncement ? 'scrims' : 'tournaments';
+
+    if (isScrimAnnouncement) {
+      const scrimDoc = await db.collection('scrims').doc(targetEventId).get();
+      if (!scrimDoc.exists) return res.status(404).json({ success: false, message: 'Scrim not found.' });
+      const scrimData = scrimDoc.data();
+      const isOwner = req.user.role === 'admin' || scrimData?.hostUid === req.user.userId || scrimData?.orgId === req.user.userId;
+      if (!isOwner) return res.status(403).json({ success: false, message: 'You can only announce your own scrims.' });
+    } else {
+      const tournamentDoc = await db.collection('tournaments').doc(targetEventId).get();
+      if (!tournamentDoc.exists) return res.status(404).json({ success: false, message: 'Tournament not found.' });
+      const tData = tournamentDoc.data();
+      const isOwner = req.user.role === 'admin' || tData?.hostUid === req.user.userId || tData?.orgId === req.user.userId;
+      if (!isOwner) return res.status(403).json({ success: false, message: 'You can only announce your own tournaments.' });
     }
 
     const category = getCategoryForType(type);
-    const resolvedWebhook = await resolveDiscordWebhook(channel, category);
+    const resolvedWebhook = await resolveDiscordWebhook(effectiveChannel, category);
 
     if (!resolvedWebhook.enabled) {
       return res.json({ success: true, message: 'Discord announcements are currently disabled in Admin Site Settings.' });
@@ -398,7 +413,7 @@ router.post('/api/discord/announce', authenticateToken, rateLimit(30, 15 * 60 * 
     if (!webhookUrl) {
       return res.status(503).json({ 
         success: false, 
-        message: `Discord webhook for [${channel}] -> [${category}] is not configured. Add it in Admin Panel -> Settings.` 
+        message: `Discord webhook for [${effectiveChannel}] -> [${category}] is not configured. Add it in Admin Panel -> Settings.` 
       });
     }
 
@@ -410,9 +425,10 @@ router.post('/api/discord/announce', authenticateToken, rateLimit(30, 15 * 60 * 
       try {
         await db.collection('discordLogs').add({
           type, 
-          channel, 
+          channel: effectiveChannel, 
           category,
-          tournamentId: data.tournamentId || null,
+          tournamentId: targetEventId,
+          eventId: targetEventId,
           sentBy: req.user.userId, 
           sentAt: admin.firestore.FieldValue.serverTimestamp(),
         });

@@ -3,7 +3,7 @@ import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/fire
 import { db, auth } from '../../../shared/config/firebase';
 import { Tournament, ManualResult, ResultTemplateConfig } from '../../../shared/types/types';
 import Modal from '../../../shared/components/Modal';
-import { Upload, Plus, Trash2, Save, Trophy, Users, DollarSign, CheckCircle2, AlertCircle, List } from 'lucide-react';
+import { Upload, Plus, Trash2, Save, Trophy, Users, DollarSign, CheckCircle2, AlertCircle, List, Zap, Target } from 'lucide-react';
 import { NotificationService } from '../../../shared/services/NotificationService';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { motion, AnimatePresence } from 'motion/react';
@@ -11,6 +11,7 @@ import { useInvisibleImage } from '../../../shared/hooks/useInvisibleImage';
 import { MediaCategory } from '../../../shared/services/mediaService';
 import ManualResultManager from './ManualResultManager';
 import { useAuth } from '../../../shared/context/AuthContext';
+import { isScrimEvent } from '../../../shared/utils/utils';
 
 interface ResultUploadModalProps {
     isOpen: boolean;
@@ -26,7 +27,8 @@ const ResultUploadModal: React.FC<ResultUploadModalProps> = ({ isOpen, onClose, 
     const [participants, setParticipants] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [resultUrl, setResultUrl] = useState('');
-    const [winners, setWinners] = useState<{ uid: string; amount: number; rank: number; username: string }[]>([]);
+    const [winners, setWinners] = useState<{ uid: string; amount: number; rank: number; username: string; kills?: number }[]>([]);
+    const isPerKill = tournament.tournamentMode === 'PER_KILL_REWARD' || Number((tournament as any).rewardPerKill) > 0;
     
     const [manualResults, setManualResults] = useState<ManualResult[]>([]);
     const [templateConfig, setTemplateConfig] = useState<ResultTemplateConfig>({
@@ -68,7 +70,25 @@ const ResultUploadModal: React.FC<ResultUploadModalProps> = ({ isOpen, onClose, 
                 try {
                     const q = query(collection(db, 'participants'), where('tournamentId', '==', tournament.id));
                     const snap = await getDocs(q);
-                    setParticipants(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+                    const partList: any[] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+                    // If it's a scrim or participants is empty, extract from slots as well
+                    if (Array.isArray(tournament.slots)) {
+                        (tournament.slots as any[]).forEach((s: any) => {
+                            const uid = s.captainUid || s.userId;
+                            if (uid && !partList.some(p => p.userId === uid)) {
+                                partList.push({
+                                    id: `slot-${s.slotNumber}`,
+                                    userId: uid,
+                                    username: s.teamName || s.username || `Slot #${s.slotNumber}`,
+                                    teamName: s.teamName || undefined,
+                                    inGameId: `Slot #${s.slotNumber}`
+                                });
+                            }
+                        });
+                    }
+
+                    setParticipants(partList);
                 } catch (error) {
                     console.error("Error fetching participants:", error);
                 }
@@ -119,6 +139,94 @@ const ResultUploadModal: React.FC<ResultUploadModalProps> = ({ isOpen, onClose, 
         setWinners(newWinners);
     };
 
+    const handleAutoCalculatePayouts = () => {
+        if (!manualResults || manualResults.length === 0) {
+            showToast('Please enter match results in the Leaderboard Builder first.', 'error');
+            return;
+        }
+
+        const isPerKill = tournament.tournamentMode === 'PER_KILL_REWARD' || Number((tournament as any).rewardPerKill) > 0;
+        const rewardPerKill = Number((tournament as any).rewardPerKill || (tournament as any).rewardConfig?.rewardPerKill || 0);
+
+        // Merge participants from collection and slots
+        const allParticipants: Array<{ userId: string; username: string; teamName?: string; inGameId?: string }> = [...participants];
+        if (Array.isArray(tournament.slots)) {
+            (tournament.slots as any[]).forEach((s: any) => {
+                const uid = s.captainUid || s.userId;
+                if (uid && !allParticipants.some(p => p.userId === uid)) {
+                    allParticipants.push({
+                        userId: uid,
+                        username: s.teamName || s.username || `Slot #${s.slotNumber}`,
+                        teamName: s.teamName || undefined,
+                        inGameId: `Slot #${s.slotNumber}`
+                    });
+                }
+            });
+        }
+
+        const newWinners: Array<{ uid: string; amount: number; rank: number; username: string; kills?: number }> = [];
+        const sorted = [...manualResults].sort((a, b) => (Number(a.rank) || 999) - (Number(b.rank) || 999));
+
+        for (const res of sorted) {
+            const rank = Number(res.rank) || 1;
+            const kills = Number(res.kills) || 0;
+            const normTeam = (res.team || '').trim().toLowerCase();
+
+            // Match registered participant
+            const match = allParticipants.find(p => {
+                const pName = (p.username || '').trim().toLowerCase();
+                const pTeam = (p.teamName || '').trim().toLowerCase();
+                const pInGame = (p.inGameId || '').trim().toLowerCase();
+                return pName === normTeam || pTeam === normTeam || normTeam.includes(pName) || normTeam.includes(pTeam) || pInGame === normTeam;
+            });
+
+            if (isPerKill) {
+                // Per-Kill reward: every single enemy killed grants rewardPerKill (kills * rewardPerKill)
+                const killReward = kills * rewardPerKill;
+                const placementPrize = Number(tournament.prizeDistribution?.find(p => Number(p.rank) === rank)?.amount || 0);
+                const totalPrize = killReward + placementPrize;
+
+                if (totalPrize > 0 || kills >= 1) {
+                    newWinners.push({
+                        uid: match?.userId || '',
+                        username: match?.username || res.team,
+                        rank,
+                        amount: totalPrize,
+                        kills
+                    });
+                }
+            } else {
+                // Standard Scrim: 1st, 2nd, 3rd, 4th, etc. placement prize structure
+                let rankPrize = Number(tournament.prizeDistribution?.find(p => Number(p.rank) === rank)?.amount || 0);
+                if (rankPrize === 0 && tournament.prizePool && tournament.prizePool > 0) {
+                    const pool = Number(tournament.prizePool);
+                    if (rank === 1) rankPrize = Math.round(pool * 0.5);
+                    else if (rank === 2) rankPrize = Math.round(pool * 0.3);
+                    else if (rank === 3) rankPrize = Math.round(pool * 0.2);
+                }
+
+                if (rankPrize > 0) {
+                    newWinners.push({
+                        uid: match?.userId || '',
+                        username: match?.username || res.team,
+                        rank,
+                        amount: rankPrize,
+                        kills
+                    });
+                }
+            }
+        }
+
+        if (newWinners.length > 0) {
+            setWinners(newWinners);
+            setActiveTab('manual');
+            const totalAlloc = newWinners.reduce((sum, w) => sum + w.amount, 0);
+            showToast(`Calculated payouts for ${newWinners.length} teams (Total: NPR ${totalAlloc}). Review and finalize.`, 'success');
+        } else {
+            showToast('No eligible teams with kills or placement prizes found.', 'error');
+        }
+    };
+
     const handleSubmit = async () => {
         // Validate manual results
         if (activeTab === 'leaderboard') {
@@ -149,33 +257,67 @@ const ResultUploadModal: React.FC<ResultUploadModalProps> = ({ isOpen, onClose, 
         }
 
         // Validate prize pool allocation for manual payout
+        const isPerKill = tournament.tournamentMode === 'PER_KILL_REWARD' || Number((tournament as any).rewardPerKill) > 0;
         if (activeTab === 'manual' && tournament.prizePool && tournament.prizePool > 0) {
             const totalAllocated = winners.reduce((sum, w) => sum + (Number(w.amount) || 0), 0);
-            if (totalAllocated !== tournament.prizePool) {
+            if (isPerKill) {
                 if (totalAllocated > tournament.prizePool) {
-                    showToast(`Total distributed prizes (NPR ${totalAllocated}) exceed tournament prize pool (NPR ${tournament.prizePool})`, 'error');
-                } else {
-                    showToast(`Total distributed prizes (NPR ${totalAllocated}) must equal tournament prize pool (NPR ${tournament.prizePool}). Remaining: NPR ${tournament.prizePool - totalAllocated}`, 'error');
+                    showToast(`Total distributed kill bounties (NPR ${totalAllocated}) exceed maximum prize pool (NPR ${tournament.prizePool})`, 'error');
+                    return;
                 }
-                return;
+            } else {
+                if (totalAllocated !== tournament.prizePool) {
+                    if (totalAllocated > tournament.prizePool) {
+                        showToast(`Total distributed prizes (NPR ${totalAllocated}) exceed tournament prize pool (NPR ${tournament.prizePool})`, 'error');
+                    } else {
+                        showToast(`Total distributed prizes (NPR ${totalAllocated}) must equal tournament prize pool (NPR ${tournament.prizePool}). Remaining: NPR ${tournament.prizePool - totalAllocated}`, 'error');
+                    }
+                    return;
+                }
             }
         }
 
         setLoading(true);
         try {
-            const validWinners = winners.filter(w => w.uid !== '').map(({ uid, amount, rank, username }) => ({ userId: uid, prize: Number(amount) || 0, rank, username }));
+            const validWinners = winners.filter(w => w.uid !== '').map(({ uid, amount, rank, username, kills }) => ({
+                userId: uid,
+                prize: Number(amount) || 0,
+                rank,
+                username,
+                kills: Number(kills) || 0
+            }));
 
             const token = await auth.currentUser?.getIdToken();
             if (!token) throw new Error('Authentication required');
 
-            const res = await fetch('/api/wallet/distribute-prizes', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({
+            const isScrim = isScrimEvent(tournament);
+            const endpoint = isScrim ? `/api/scrims/${tournament.id}/payout` : '/api/wallet/distribute-prizes';
+            const payload = isScrim
+                ? {
+                    winners: validWinners,
+                    resultsData: { manualResults, resultTemplate: templateConfig },
+                    manualResults,
+                    resultTemplate: templateConfig,
+                    resultUrl,
+                    killRewards: isPerKill ? validWinners.map(w => ({
+                        userId: w.userId,
+                        username: w.username,
+                        rank: w.rank,
+                        kills: w.kills || 0,
+                        rewardAmount: w.prize
+                    })) : undefined,
+                }
+                : {
                     tournamentId: tournament.id,
                     winners: validWinners,
-                    resultsData: { manualResults, resultTemplate: templateConfig }
-                }),
+                    resultsData: { manualResults, resultTemplate: templateConfig },
+                    resultUrl,
+                };
+
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify(payload),
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || 'Failed to distribute prizes');
@@ -185,7 +327,7 @@ const ResultUploadModal: React.FC<ResultUploadModalProps> = ({ isOpen, onClose, 
                 'Results Uploaded!',
                 `Final results for ${tournament.title} are now available. Check the leaderboard!`,
                 'success',
-                `/tournaments/${tournament.id}`
+                isScrim ? `/scrims/${tournament.id}` : `/tournaments/${tournament.id}`
             );
 
             showToast('Results finalized and winners paid!', 'success');
@@ -325,16 +467,28 @@ const ResultUploadModal: React.FC<ResultUploadModalProps> = ({ isOpen, onClose, 
                             exit={{ opacity: 0, y: -10 }}
                             className="space-y-4"
                         >
-                            <div className="flex justify-between items-center mb-2">
+                            <div className="flex flex-wrap justify-between items-center gap-2 mb-2">
                                 <h4 className="text-xs font-black text-gray-500 uppercase tracking-widest flex items-center gap-2">
                                     <Trophy className="w-4 h-4 text-brand-500" /> Winners & Payouts
                                 </h4>
-                                <button type="button" 
-                                    onClick={handleAddWinner}
-                                    className="text-xs bg-brand-600/10 hover:bg-brand-600/20 text-brand-500 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors font-black uppercase tracking-wider border border-brand-500/20"
-                                >
-                                    <Plus className="w-3 h-3" /> Add Winner
-                                </button>
+                                <div className="flex items-center gap-2">
+                                    {manualResults.length > 0 && (
+                                        <button type="button" 
+                                            onClick={handleAutoCalculatePayouts}
+                                            className="text-xs bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors font-black uppercase tracking-wider border border-emerald-500/20 cursor-pointer"
+                                            title="Auto-calculate payouts from entered scores and per-kill settings"
+                                        >
+                                            <Zap className="w-3.5 h-3.5 text-emerald-400" />
+                                            {isPerKill ? 'Calculate Per-Kill Bounties' : 'Calculate from Standings'}
+                                        </button>
+                                    )}
+                                    <button type="button" 
+                                        onClick={handleAddWinner}
+                                        className="text-xs bg-brand-600/10 hover:bg-brand-600/20 text-brand-500 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors font-black uppercase tracking-wider border border-brand-500/20"
+                                    >
+                                        <Plus className="w-3 h-3" /> Add Winner
+                                    </button>
+                                </div>
                             </div>
 
                             {/* Live Prize Allocation Summary */}
@@ -344,17 +498,32 @@ const ResultUploadModal: React.FC<ResultUploadModalProps> = ({ isOpen, onClose, 
                                 const isExceeded = totalAllocated > tournament.prizePool;
                                 return (
                                     <div className={`p-3.5 rounded-xl border flex items-center justify-between text-xs font-bold ${
-                                        isMatched
-                                            ? 'bg-green-500/10 border-green-500/30 text-green-400'
-                                            : isExceeded
-                                            ? 'bg-red-500/10 border-red-500/30 text-red-400'
-                                            : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                                        isPerKill
+                                            ? isExceeded
+                                                ? 'bg-red-500/10 border-red-500/30 text-red-400'
+                                                : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                                            : isMatched
+                                                ? 'bg-green-500/10 border-green-500/30 text-green-400'
+                                                : isExceeded
+                                                ? 'bg-red-500/10 border-red-500/30 text-red-400'
+                                                : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
                                     }`}>
-                                        <span className="uppercase tracking-wider">
-                                            Prize Pool: NPR {tournament.prizePool}
+                                        <span className="uppercase tracking-wider flex items-center gap-1.5">
+                                            {isPerKill ? (
+                                                <>
+                                                    <Target className="w-3.5 h-3.5 text-emerald-400" />
+                                                    Per-Kill Bounty: NPR {Number((tournament as any).rewardPerKill || 0)}/kill
+                                                </>
+                                            ) : (
+                                                `Prize Pool: NPR ${tournament.prizePool}`
+                                            )}
                                         </span>
                                         <span className="font-black">
-                                            {isMatched
+                                            {isPerKill
+                                                ? isExceeded
+                                                    ? `Exceeds budget pool (NPR ${totalAllocated} / NPR ${tournament.prizePool})`
+                                                    : `✓ Bounty Allocated: NPR ${totalAllocated} (Budget Pool: NPR ${tournament.prizePool})`
+                                                : isMatched
                                                 ? `✓ 100% Allocated (NPR ${totalAllocated})`
                                                 : isExceeded
                                                 ? `Exceeds pool by NPR ${totalAllocated - tournament.prizePool}`

@@ -9,7 +9,7 @@ import { useNotification } from '../../../shared/context/NotificationContext';
 import { NotificationService } from '../../../shared/services/NotificationService';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { ShieldCheck, Users, Trophy, DollarSign, Shield } from 'lucide-react';
-import { formatCurrency, formatGameName } from '../../../shared/utils/utils';
+import { formatCurrency, formatGameName, isScrimEvent } from '../../../shared/utils/utils';
 import { normalizeScrimSlots, getSlotCount } from '../../../shared/utils/scrimSlots';
 
 interface JoinTournamentModalProps {
@@ -223,6 +223,7 @@ const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
         const selectedPlayers = [profile.inGameName || profile.username, ...teammates];
         const registeredTeamName = selectedTeam?.name || profile.teamName || 'Registered Team';
         const registeredTeamId = selectedTeam?.id || profile.teamId || user.uid;
+        const registeredTeamLogo = selectedTeam?.logoUrl || profile.teamLogo || null;
 
         setLoading(true);
         try {
@@ -238,6 +239,7 @@ const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
                     teammates,
                     teamId: registeredTeamId,
                     teamName: registeredTeamName,
+                    teamLogo: registeredTeamLogo,
                     selectedPlayers,
                     captainUid: isScrim ? trimmedCaptainUid : undefined,
                 }),
@@ -266,7 +268,7 @@ const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title={`Join ${effectiveTeamType.toUpperCase()} ${tournament.matchType === 'scrims' || (tournament as any).isScrim ? 'Scrim' : 'Tournament'}`}>
+        <Modal isOpen={isOpen} onClose={onClose} title={`Join ${effectiveTeamType.toUpperCase()} ${isScrimEvent(tournament) ? 'Scrim' : 'Tournament'}`}>
             <div className="space-y-5">
                 <div className="bg-brand-600/10 border border-brand-500/20 p-4 rounded-2xl">
                     <div className="flex items-center gap-3 mb-3">

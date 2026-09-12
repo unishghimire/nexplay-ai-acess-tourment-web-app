@@ -63,6 +63,7 @@ export default function ManualResultManager({ results, onChange, templateConfig,
             id: `res-${Date.now()}`,
             team: '',
             rank: nextRank,
+            kills: 0,
             score: 0,
             status: 'Qualified'
         }]);
@@ -111,13 +112,28 @@ export default function ManualResultManager({ results, onChange, templateConfig,
         const lines = text.split('\n').filter(line => line.trim() !== '');
         
         const newResults: ManualResult[] = lines.map((line, index) => {
-            // Try to parse CSV or TSV (Team, Score, Status)
+            // Parse CSV/TSV: supports (Team, Score, Status) or (Team, Kills, Score, Status)
             const parts = line.split(/[\t,]/).map(p => p.trim());
+            let team = parts[0] || `Team ${index + 1}`;
+            let kills = 0;
+            let score = 0;
+            let status = 'Qualified';
+
+            if (parts.length >= 4) {
+                kills = parseInt(parts[1]) || 0;
+                score = parseInt(parts[2]) || 0;
+                status = parts[3] || 'Qualified';
+            } else {
+                score = parseInt(parts[1]) || 0;
+                status = parts[2] || 'Qualified';
+            }
+
             return {
                 id: `res-${Date.now()}-${index}`,
-                team: parts[0] || `Team ${index + 1}`,
-                score: parseInt(parts[1]) || 0,
-                status: parts[2] || 'Qualified',
+                team,
+                kills,
+                score,
+                status,
                 rank: index + 1
             };
         });
@@ -247,12 +263,24 @@ export default function ManualResultManager({ results, onChange, templateConfig,
                                                                     />
                                                                 </div>
 
+                                                                <div className="w-20">
+                                                                    <input 
+                                                                        type="number" 
+                                                                        value={res.kills ?? ''}
+                                                                        onChange={(e) => handleResultChange(index, 'kills', Math.max(0, parseInt(e.target.value) || 0))}
+                                                                        placeholder="Kills"
+                                                                        title="Total Kills"
+                                                                        className="w-full bg-dark border border-gray-700 rounded-lg px-2 py-1.5 text-sm text-center text-red-400 font-bold focus-visible:outline-none focus:border-brand-500"
+                                                                    />
+                                                                </div>
+
                                                                 <div className="w-24">
                                                                     <input 
                                                                         type="number" 
                                                                         value={res.score}
                                                                         onChange={(e) => handleResultChange(index, 'score', parseInt(e.target.value) || 0)}
-                                                                        placeholder="Score"
+                                                                        placeholder="Points"
+                                                                        title="Total Points"
                                                                         className="w-full bg-dark border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-white font-bold focus-visible:outline-none focus:border-brand-500"
                                                                     />
                                                                 </div>

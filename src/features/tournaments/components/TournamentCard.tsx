@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Tournament } from '../../../shared/types/types';
 import { DEFAULT_BANNER } from '../../../shared/constants/constants';
-import { formatCurrency, formatDate, formatDateShort, formatGameName } from '../../../shared/utils/utils';
+import { formatCurrency, formatDate, formatDateShort, formatGameName, isScrimEvent } from '../../../shared/utils/utils';
 import { Clock, Users, Trophy, ChevronRight, Gamepad2, MapPin, Target } from 'lucide-react';
 import { motion } from 'motion/react';
 import { ScoringInfoCard } from './ScoringInfoCard';
@@ -19,7 +19,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({ tournament }) => {
     const statusLabel = isLive ? 'LIVE' : isCompleted ? 'COMPLETED' : 'UPCOMING';
 
     return (
-        <Link to={`/tournaments/${tournament.id}`} className="block h-full">
+        <Link to={isScrimEvent(tournament) ? `/scrims/${tournament.id}` : `/tournaments/${tournament.id}`} className="block h-full">
         <motion.div 
             whileHover={{ y: -8, scale: 1.02 }}
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}

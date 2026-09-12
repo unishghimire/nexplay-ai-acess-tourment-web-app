@@ -58,6 +58,14 @@ const TournamentResultModal: React.FC<TournamentResultModalProps> = ({ isOpen, o
 
     const firstPlace = winnerList.find((w: any) => Number(w.rank) === 1) || (tournament.manualResults && tournament.manualResults.find(m => parseInt(String(m.rank)) === 1));
 
+    const championName = ((firstPlace as any)?.teamName || (firstPlace as any)?.username || (firstPlace as any)?.team || (firstPlace as any)?.playerId || '').trim().toLowerCase();
+    const championLogo = (firstPlace as any)?.teamLogo 
+        || (firstPlace as any)?.logo 
+        || (firstPlace as any)?.avatar 
+        || (firstPlace as any)?.profilePicUrl 
+        || (Array.isArray(tournament.slots) ? (tournament.slots as any[]).find((s: any) => s && (s.teamName?.trim().toLowerCase() === championName || s.username?.trim().toLowerCase() === championName))?.teamLogo : null)
+        || (tournament.manualResults?.find(m => m.team?.trim().toLowerCase() === championName)?.logo);
+
     return (
         <AnimatePresence>
             <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-6 lg:p-12 font-sans">
@@ -119,7 +127,16 @@ const TournamentResultModal: React.FC<TournamentResultModalProps> = ({ isOpen, o
                         <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-indigo-900/40 via-[#0f172a] to-[#0f172a] border border-indigo-500/20 p-5 sm:p-8 lg:p-12 text-center group">
                             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-lg h-64 bg-indigo-500/20 blur-[100px] pointer-events-none"></div>
                             
-                            <Trophy className="w-20 h-20 text-yellow-500 mx-auto mb-6 filter drop-shadow-[0_0_15px_rgba(234,179,8,0.5)] transform group-hover:scale-110 transition-transform duration-500" />
+                            {championLogo ? (
+                                <div className="relative w-24 h-24 sm:w-28 sm:h-28 mx-auto mb-6 rounded-3xl overflow-hidden border-2 border-amber-400/60 shadow-[0_0_30px_rgba(245,158,11,0.45)] bg-[#0f172a] group-hover:scale-105 transition-transform duration-500">
+                                    <img src={championLogo} alt="Champions" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                    <div className="absolute -bottom-1 -right-1 bg-gradient-to-br from-amber-400 to-yellow-600 p-1.5 rounded-xl border border-black/50 shadow-lg text-black">
+                                        <Crown className="w-4 h-4" />
+                                    </div>
+                                </div>
+                            ) : (
+                                <Trophy className="w-20 h-20 text-yellow-500 mx-auto mb-6 filter drop-shadow-[0_0_15px_rgba(234,179,8,0.5)] transform group-hover:scale-110 transition-transform duration-500" />
+                            )}
                             
                             <h3 className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.3em] mb-2">Tournament Champions</h3>
                             

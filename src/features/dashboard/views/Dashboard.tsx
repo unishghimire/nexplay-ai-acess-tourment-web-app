@@ -3,9 +3,9 @@ import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { Tournament } from '../../../shared/types/types';
-import { formatCurrency, formatDateShort, formatGameName, toDateSafe } from '../../../shared/utils/utils';
+import { formatCurrency, formatDateShort, formatGameName, toDateSafe, isTournamentEvent, isScrimEvent } from '../../../shared/utils/utils';
 import { useNavigate } from 'react-router-dom';
-import { Trophy, Eye, Upload, BarChart, User, Shield, Users, AlertCircle, Calendar, Clock } from 'lucide-react';
+import { Trophy, Eye, Upload, BarChart, User, Shield, Users, AlertCircle, Calendar, Clock, Swords } from 'lucide-react';
 import ResultUploadModal from '../../results/components/ResultUploadModal';
 import TournamentResultModal from '../../tournaments/components/TournamentResultModal';
 import { Seo } from '../../../shared/components/Seo';
@@ -14,12 +14,15 @@ import { fetchRoomCredentials } from '../../../shared/services/roomCredentials';
 const Dashboard: React.FC = () => {
     const { user, profile } = useAuth();
     const [myTournaments, setMyTournaments] = useState<(Tournament & { role: 'participant' | 'organizer'; registration?: any })[]>([]);
+    const [dashboardFilter, setDashboardFilter] = useState<'all' | 'tournaments' | 'scrims'>('all');
     const [loading, setLoading] = useState(true);
     const [fetchError, setFetchError] = useState<string | null>(null);
     const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
     const [isResultModalOpen, setIsResultModalOpen] = useState(false);
     const [viewResultTournament, setViewResultTournament] = useState<Tournament | null>(null);
     const navigate = useNavigate();
+
+    const getEventLink = (t: Tournament) => isScrimEvent(t) ? `/scrims/${t.id}` : `/tournaments/${t.id}`;
 
     const fetchAllData = async () => {
         if (!user) return;
@@ -88,16 +91,20 @@ const Dashboard: React.FC = () => {
                 }
             }
 
-            // Fetch Hosted Tournaments if organizer/admin
+            // Fetch Hosted Tournaments and Scrims if organizer/admin
             let hostedTours: (Tournament & { role: 'participant' | 'organizer'; registration?: any })[] = [];
             if (profile?.role === 'organizer' || profile?.role === 'admin') {
-                const hostedSnap = await getDocs(query(
-                    collection(db, 'tournaments'),
-                    where('hostUid', '==', user.uid)
-                ));
-                hostedTours = hostedSnap.docs
+                const [hostedTourSnap, hostedScrimSnap] = await Promise.all([
+                    getDocs(query(collection(db, 'tournaments'), where('hostUid', '==', user.uid))),
+                    getDocs(query(collection(db, 'scrims'), where('hostUid', '==', user.uid)))
+                ]);
+                const tours = hostedTourSnap.docs
                     .map(d => ({ id: d.id, ...d.data(), role: 'organizer' } as Tournament & { role: 'participant' | 'organizer'; registration?: any }))
-                    .filter(t => (t as any).matchType !== 'scrims' && (t as any).isScrim !== true && (t as any).type !== 'scrim' && (t as any).type !== 'scrims');
+                    .filter(isTournamentEvent);
+                const scrimEvents = hostedScrimSnap.docs
+                    .map(d => ({ id: d.id, ...d.data(), role: 'organizer', matchType: 'scrims' } as Tournament & { role: 'participant' | 'organizer'; registration?: any }))
+                    .filter(isScrimEvent);
+                hostedTours = [...tours, ...scrimEvents];
                 hostedTours.sort((a, b) => {
                     const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
                     const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
@@ -193,12 +200,56 @@ const Dashboard: React.FC = () => {
                 })}
             </div>
 
-            <h3 id="my-tournaments" className="text-xl sm:text-2xl md:text-3xl font-black text-white uppercase tracking-tighter mb-8 pt-4 border-t border-gray-800 pt-8">My Tournaments</h3>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pt-4 border-t border-gray-800 pt-8">
+                <h3 id="my-tournaments" className="text-xl sm:text-2xl md:text-3xl font-black text-white uppercase tracking-tighter">My Events</h3>
+                <div className="flex items-center gap-2 bg-card/60 p-1.5 rounded-2xl border border-gray-800 self-start sm:self-auto">
+                    <button
+                        type="button"
+                        onClick={() => setDashboardFilter('all')}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition ${
+                            dashboardFilter === 'all' ? 'bg-brand-500 text-black shadow-lg shadow-brand-500/20' : 'text-gray-400 hover:text-white'
+                        }`}
+                    >
+                        All ({myTournaments.length})
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setDashboardFilter('tournaments')}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition ${
+                            dashboardFilter === 'tournaments' ? 'bg-brand-500 text-black shadow-lg shadow-brand-500/20' : 'text-gray-400 hover:text-white'
+                        }`}
+                    >
+                        Tournaments ({myTournaments.filter(t => !isScrimEvent(t)).length})
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setDashboardFilter('scrims')}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition ${
+                            dashboardFilter === 'scrims' ? 'bg-brand-500 text-black shadow-lg shadow-brand-500/20' : 'text-gray-400 hover:text-white'
+                        }`}
+                    >
+                        Scrims ({myTournaments.filter(t => isScrimEvent(t)).length})
+                    </button>
+                </div>
+            </div>
             <div className="grid gap-6">
-                {myTournaments.length > 0 ? (
-                    myTournaments.map(t => {
+                {(() => {
+                    const displayedEvents = myTournaments.filter(t => {
+                        if (dashboardFilter === 'tournaments') return !isScrimEvent(t);
+                        if (dashboardFilter === 'scrims') return isScrimEvent(t);
+                        return true;
+                    });
+                    if (displayedEvents.length === 0) {
+                        return (
+                            <div className="bg-card/50 p-8 sm:p-16 rounded-2xl sm:rounded-3xl border border-gray-800 text-center">
+                                <p className="text-gray-500 font-bold uppercase tracking-widest">No {dashboardFilter === 'all' ? 'events' : dashboardFilter} found.</p>
+                            </div>
+                        );
+                    }
+                    return displayedEvents.map(t => {
                         const isLive = t.status === 'live';
                         const isCompleted = t.status === 'completed';
+                        const isScrim = isScrimEvent(t);
                         const showRoom = isLive || (t.status === 'upcoming' && t.roomId);
 
                         return (
@@ -206,8 +257,15 @@ const Dashboard: React.FC = () => {
                                 <div className="flex flex-col sm:flex-row justify-between items-start gap-4 sm:gap-6">
                                     <div className="flex-1">
                                         <div className="flex items-center gap-3 mb-4 flex-wrap">
+                                            <span className={`text-xs font-black px-3.5 py-1.5 rounded-full border uppercase tracking-widest ${
+                                                isScrim 
+                                                    ? 'bg-amber-500/10 text-amber-300 border-amber-500/30' 
+                                                    : 'bg-brand-500/10 text-brand-300 border-brand-500/30'
+                                            }`}>
+                                                {isScrim ? 'Scrim' : 'Tournament'}
+                                            </span>
                                             {t.role === 'organizer' ? (
-                                                <span className="bg-brand-500/10 text-brand-400 text-xs font-black px-4 py-1.5 rounded-full border border-brand-500/20 flex items-center gap-2 uppercase tracking-widest">
+                                                <span className="bg-purple-500/10 text-purple-400 text-xs font-black px-4 py-1.5 rounded-full border border-purple-500/20 flex items-center gap-2 uppercase tracking-widest">
                                                     <Shield className="w-4 h-4" /> Host
                                                 </span>
                                             ) : (
@@ -221,8 +279,8 @@ const Dashboard: React.FC = () => {
                                         <h3 
                                             className="text-xl sm:text-2xl font-black text-white mb-3 hover:text-brand-400 truncate min-w-0 transition cursor-pointer tracking-tighter" 
                                             onClick={() => {
-                                                    navigate(`/tournaments/${t.id}`);
-                                                }}
+                                                navigate(getEventLink(t));
+                                            }}
                                         >
                                             {t.title}
                                         </h3>
@@ -268,7 +326,7 @@ const Dashboard: React.FC = () => {
                                 )}
                                 <div className="mt-6 sm:mt-8 flex flex-wrap gap-4 sm:gap-6 border-t border-gray-800 pt-6 sm:pt-8">
                                     <button type="button" onClick={() => {
-                                            navigate(`/tournaments/${t.id}`);
+                                            navigate(getEventLink(t));
                                         }} className="flex items-center gap-3 text-xs font-black uppercase tracking-widest text-gray-400 hover:text-white transition touch-target">
                                         <Eye className="w-5 h-5" /> View Details
                                     </button>
@@ -295,12 +353,8 @@ const Dashboard: React.FC = () => {
                                 </div>
                             </div>
                         );
-                    })
-                ) : (
-                    <div className="bg-card/50 p-8 sm:p-16 rounded-2xl sm:rounded-3xl border border-gray-800 text-center">
-                        <p className="text-gray-500 font-bold uppercase tracking-widest">No matches found.</p>
-                    </div>
-                )}
+                    });
+                })()}
             </div>
             {selectedTournament && (
                 <ResultUploadModal 

@@ -2,9 +2,9 @@ import Seo from '../../../shared/components/Seo';
 import Faq from '../../../shared/components/Faq';
 import React, { useEffect, useState, useCallback } from 'react';
 import { Scrim } from '../../../shared/types/types';
-import { Trophy, Search, Filter, Calendar, Clock, Gamepad2, AlertCircle } from 'lucide-react';
+import { Trophy, Search, Filter, Calendar, Clock, Gamepad2, AlertCircle, Target } from 'lucide-react';
 import { motion } from 'motion/react';
-import { formatCurrency, formatDate, formatDateShort, formatGameName } from '../../../shared/utils/utils';
+import { formatCurrency, formatDate, formatDateShort, formatGameName, isScrimEvent } from '../../../shared/utils/utils';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { eventDetailUrl } from '../../../shared/utils/eventUrl';
@@ -30,6 +30,7 @@ type ScrimRecord = Scrim & {
     currentPlayers?: number;
     isScrim?: boolean;
     totalSlots?: number;
+    _sourceCollection?: string;
 };
 
 const INACTIVE_SCRIM_STATUSES = new Set(['completed', 'cancelled', 'deleted']);
@@ -55,8 +56,9 @@ export const normalizeModeKey = (m?: string) => {
     return clean;
 };
 
-const toScrimRecord = (id: string, data: Record<string, unknown>): ScrimRecord => ({
+const toScrimRecord = (id: string, data: Record<string, unknown>, sourceCollection: 'scrims' = 'scrims'): ScrimRecord => ({
     id,
+    _sourceCollection: sourceCollection,
     ...data,
     matchType: 'scrims',
 } as ScrimRecord);
@@ -67,22 +69,18 @@ const uniqueScrims = (scrims: ScrimRecord[]): ScrimRecord[] => {
 
     for (const s of scrims) {
         if (!s) continue;
-        const id1 = (s.tournamentId || '').trim();
-        const id2 = (s.id || '').trim();
+        const id = (s.id || '').trim();
         
-        // Canonical content signature to catch identical events across collections
+        // Canonical content signature to catch identical events
         const titlePart = (s.title || '').trim().toLowerCase();
         const gamePart = normalizeGameKey(s.game);
         const timePart = (s.startTime || s.time || '').toString().trim();
         const contentKey = titlePart && timePart ? `c_${titlePart}_${gamePart}_${timePart}` : '';
 
-        // If any identifier or content signature was already processed, skip duplicate
-        if (id1 && seen.has(`id_${id1}`)) continue;
-        if (id2 && seen.has(`id_${id2}`)) continue;
+        if (id && seen.has(`id_${id}`)) continue;
         if (contentKey && seen.has(contentKey)) continue;
 
-        if (id1) seen.add(`id_${id1}`);
-        if (id2) seen.add(`id_${id2}`);
+        if (id) seen.add(`id_${id}`);
         if (contentKey) seen.add(contentKey);
 
         result.push(s);
@@ -129,41 +127,30 @@ const ScrimsContent: React.FC = () => {
         let list: ScrimRecord[] = [];
         let anySuccess = false;
 
-        // 1. Primary sources: tournaments with matchType=='scrims' or isScrim==true
+        // Dedicated 'scrims' collection query
         try {
-            const primary = await getDocs(query(collection(db, 'tournaments'), where('matchType', '==', 'scrims')));
-            list.push(...primary.docs.map(docSnap => toScrimRecord(docSnap.id, docSnap.data())));
-            anySuccess = true;
-        } catch (err) {
-            console.warn('Tournaments matchType scrims query failed:', err);
-        }
-
-        try {
-            const flagged = await getDocs(query(collection(db, 'tournaments'), where('isScrim', '==', true)));
-            list.push(...flagged.docs.map(docSnap => toScrimRecord(docSnap.id, docSnap.data())));
-            anySuccess = true;
-        } catch (err) {
-            console.warn('Tournaments isScrim query failed:', err);
-        }
-
-        // 2. Dedicated 'scrims' collection
-        try {
-            const legacy = await getDocs(collection(db, 'scrims'));
-            list.push(...legacy.docs.map(docSnap => toScrimRecord(docSnap.id, docSnap.data())));
+            const snap = await getDocs(collection(db, 'scrims'));
+            list.push(...snap.docs.map(docSnap => toScrimRecord(docSnap.id, docSnap.data(), 'scrims')));
             anySuccess = true;
         } catch (err) {
             console.warn('Scrims collection query failed:', err);
         }
 
+        // Filter through isScrimEvent so tournaments or invalid items are strictly excluded
+        list = list.filter(isScrimEvent);
+
         let activeList = uniqueScrims(list.filter(scrim => !scrim.status || !INACTIVE_SCRIM_STATUSES.has(scrim.status)));
 
-        // 3. Fallback to /api/scrims if Firestore queries returned no scrims
+        // Fallback to /api/scrims if Firestore queries returned no scrims
         if (activeList.length === 0) {
             try {
                 const response = await fetch('/api/scrims');
                 const result = await response.json().catch(() => null);
                 if (response.ok && result?.success && Array.isArray(result.scrims)) {
-                    activeList = uniqueScrims(result.scrims.map((s: any) => toScrimRecord(s.id, s)));
+                    const fromApi = result.scrims
+                        .map((s: any) => toScrimRecord(s.id, s, 'scrims'))
+                        .filter(isScrimEvent);
+                    activeList = uniqueScrims(fromApi);
                     anySuccess = true;
                 }
             } catch (apiErr) {
@@ -214,10 +201,13 @@ const ScrimsContent: React.FC = () => {
         return ['All', ...Array.from(canonicalMap.values())];
     }, [dbGames, scrims]);
 
-    const availableModes = ['All', 'Battle Royale', 'Clash Squad', 'Squad', 'Duo', 'Solo', 'Lone Wolf'];
+    const availableModes = ['All', 'Per-Kill', 'Battle Royale', 'Clash Squad', 'Squad', 'Duo', 'Solo', 'Lone Wolf'];
 
     const filteredScrims = React.useMemo(() => {
         return scrims.filter(s => {
+            // Strict segregation: never show tournaments on the scrims page
+            if (!isScrimEvent(s)) return false;
+
             const search = searchTerm.trim().toLowerCase();
             const titleMatch = s.title ? s.title.toLowerCase().includes(search) : false;
             const gameMatch = s.game ? s.game.toLowerCase().includes(search) : false;
@@ -227,12 +217,21 @@ const ScrimsContent: React.FC = () => {
                 normalizeGameKey(s.game) === normalizeGameKey(filterGame) ||
                 s.game?.toLowerCase() === filterGame.toLowerCase();
 
-            const scrimMode = (s as any).mode || s.type || (s as any).format || (s as any).teamType || '';
-            const matchesMode = filterMode === 'All' || 
-                normalizeModeKey(scrimMode) === normalizeModeKey(filterMode) ||
-                normalizeModeKey(s.title) === normalizeModeKey(filterMode) ||
-                scrimMode.toLowerCase() === filterMode.toLowerCase() ||
-                (s as any).teamType?.toLowerCase() === filterMode.toLowerCase();
+            const isPerKill = (s as any).tournamentMode === 'PER_KILL_REWARD' || 
+                Number((s as any).rewardPerKill) > 0 || 
+                (s.title && (s.title.toLowerCase().includes('per-kill') || s.title.toLowerCase().includes('per kill')));
+
+            let matchesMode = true;
+            if (filterMode === 'Per-Kill') {
+                matchesMode = isPerKill;
+            } else if (filterMode !== 'All') {
+                const scrimMode = (s as any).mode || s.type || (s as any).format || (s as any).teamType || '';
+                matchesMode = 
+                    normalizeModeKey(scrimMode) === normalizeModeKey(filterMode) ||
+                    normalizeModeKey(s.title) === normalizeModeKey(filterMode) ||
+                    scrimMode.toLowerCase() === filterMode.toLowerCase() ||
+                    (s as any).teamType?.toLowerCase() === filterMode.toLowerCase();
+            }
 
             return matchesSearch && matchesGame && matchesMode;
         });
@@ -368,6 +367,7 @@ const ScrimsContent: React.FC = () => {
                                 ?? scrim.currentPlayers
                                 ?? (Array.isArray(rawSlots) ? rawSlots.filter(slot => slot?.status === 'filled').length : 0);
                             const slotPercentage = Math.min(100, Math.max(0, (currentSlots / Math.max(1, totalSlots)) * 100));
+                            const isPerKill = (scrim as any).tournamentMode === 'PER_KILL_REWARD' || Number((scrim as any).rewardPerKill) > 0;
 
                             return (
                                 <motion.div 
@@ -376,7 +376,7 @@ const ScrimsContent: React.FC = () => {
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true }}
                                     onClick={() => {
-                                        navigate(eventDetailUrl(scrim, scrim.tournamentId || scrim.id));
+                                        navigate(`/scrims/${scrim.id}`);
                                     }}
                                     className="bg-card/50 rounded-[2rem] border border-gray-800 overflow-hidden cursor-pointer group hover:border-brand-500/50 transition-colors hover:bg-card flex flex-col justify-between"
                                 >
@@ -395,6 +395,12 @@ const ScrimsContent: React.FC = () => {
                                                 <span className="bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest text-white border border-white/10">
                                                     {scrim.type || 'BR'}
                                                 </span>
+                                                {isPerKill && (
+                                                    <span className="bg-amber-500/20 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-black uppercase tracking-widest text-amber-400 border border-amber-500/30 flex items-center gap-1">
+                                                        <Target className="w-3 h-3" />
+                                                        Per-Kill
+                                                    </span>
+                                                )}
                                             </div>
                                             <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border backdrop-blur-md ${
                                                 scrim.status === 'live'
@@ -422,8 +428,12 @@ const ScrimsContent: React.FC = () => {
                                                 <div className="text-white font-black">{!scrim.entryFee || scrim.entryFee === 0 ? 'FREE' : formatCurrency(scrim.entryFee)}</div>
                                             </div>
                                             <div className="bg-black p-3 rounded-2xl border border-gray-800">
-                                                <div className="text-[10px] text-gray-500 uppercase font-black mb-1">Prize Pool</div>
-                                                <div className="text-brand-400 font-black">{formatCurrency(scrim.prizePool || 0)}</div>
+                                                <div className="text-[10px] text-gray-500 uppercase font-black mb-1">{isPerKill ? 'Per-Kill' : 'Prize Pool'}</div>
+                                                <div className="text-brand-400 font-black">
+                                                    {isPerKill && (scrim as any).rewardPerKill 
+                                                        ? `${formatCurrency((scrim as any).rewardPerKill)}/kill` 
+                                                        : formatCurrency(scrim.prizePool || 0)}
+                                                </div>
                                             </div>
                                         </div>
 

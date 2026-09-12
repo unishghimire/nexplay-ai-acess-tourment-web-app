@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ShieldAlert, X, ChevronRight, AlertTriangle } from 'lucide-react';
 import { Tournament } from '../../../shared/types/types';
 import { auth } from '../../../shared/config/firebase';
+import { isScrimEvent } from '../../../shared/utils/utils';
 
 interface TournamentDisputeModalProps {
     isOpen: boolean;
@@ -51,7 +52,7 @@ export const TournamentDisputeModal: React.FC<TournamentDisputeModalProps> = ({
             const selectedCat = DISPUTE_CATEGORIES.find(c => c.id === category);
             const fullReason = `[${selectedCat?.label || 'Dispute'}] ${reason.trim()}`;
 
-            const isScrim = tournament.matchType === 'scrims' || (tournament as any).isScrim === true;
+            const isScrim = isScrimEvent(tournament);
             const res = await fetch('/api/disputes', {
                 method: 'POST',
                 headers: {

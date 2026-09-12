@@ -7,7 +7,7 @@ import { db } from '../../../shared/config/firebase';
 import { Tournament, Game } from '../../../shared/types/types';
 import TournamentCard from '../components/TournamentCard';
 import { Filter, Search } from 'lucide-react';
-import { formatGameModeLabel, formatGameName, toDateSafe } from '../../../shared/utils/utils';
+import { formatGameModeLabel, formatGameName, toDateSafe, isTournamentEvent } from '../../../shared/utils/utils';
 
 
 const tournamentFaqs = [
@@ -52,7 +52,7 @@ const Tournaments: React.FC = () => {
                 
                 let tours = tournamentsSnap.docs
                     .map(doc => ({ id: doc.id, ...doc.data() } as Tournament))
-                    .filter(t => (t as any).matchType !== 'scrims' && (t as any).isScrim !== true && (t as any).type !== 'scrim' && (t as any).type !== 'scrims');
+                    .filter(isTournamentEvent);
                 
                 tours.sort((a, b) => {
                     if (a.status === 'live' && b.status !== 'live') return -1;
@@ -93,6 +93,7 @@ const Tournaments: React.FC = () => {
     }, [gameFilter, modeFilter, statusFilter, entryFilter, teamTypeFilter, setSearchParams]);
 
     const filteredTournaments = tournaments.filter(t => {
+        if (!isTournamentEvent(t)) return false;
         const matchesGame = gameFilter === 'all' || t.game === gameFilter || t.game?.toLowerCase() === gameFilter.toLowerCase();
         const matchesMode = modeFilter === 'all' || t.type === modeFilter || t.type?.toLowerCase() === modeFilter.toLowerCase();
         const matchesStatus = statusFilter === 'all' || 

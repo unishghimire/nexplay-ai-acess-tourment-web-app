@@ -13,55 +13,17 @@ export function getScrimFormatSlots(format?: string | null): number {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 1. GET /api/scrims — Fetch all active scrims (dual-collection resilient)
+// 1. GET /api/scrims — Fetch all active scrims (strictly from scrims collection)
 // ─────────────────────────────────────────────────────────────────────────────
 router.get("/api/scrims", rateLimit(60, 60 * 1000), async (req, res) => {
   try {
     const { game, format } = req.query;
-    const sources = await Promise.allSettled([
-      db.collection("scrims").limit(100).get(),
-      db.collection("tournaments").where("matchType", "==", "scrims").limit(100).get(),
-      db.collection("tournaments").where("isScrim", "==", true).limit(100).get(),
-    ]);
-
+    const snap = await db.collection("scrims").limit(100).get();
     const activeStatuses = new Set(["open", "full", "credentials_sent", "live", "upcoming", "published"]);
-    const combinedMap = new Map<string, any>();
 
-    for (const result of sources) {
-      if (result.status === 'fulfilled') {
-        for (const doc of result.value.docs) {
-          const data: any = { id: doc.id, ...doc.data() };
-          if (activeStatuses.has(data.status)) {
-            combinedMap.set(doc.id, data);
-          }
-        }
-      }
-    }
-
-    let scrims = Array.from(combinedMap.values());
-
-    // Strict segregation: exclude documents that are tournaments or not scrims
-    scrims = scrims.filter(s => {
-      if (s.matchType === 'tournament' || s.isTournament === true || s.type === 'tournament' || s.isScrim === false) return false;
-      const formatLower = typeof s.format === 'string' ? s.format.toLowerCase() : '';
-      if (
-        formatLower === 'single_elimination' ||
-        formatLower === 'double_elimination' ||
-        formatLower === 'round_robin' ||
-        formatLower === 'swiss' ||
-        formatLower === 'bracket'
-      ) {
-        return false;
-      }
-      const titleLower = typeof s.title === 'string' ? s.title.toLowerCase() : '';
-      if (
-        (titleLower.includes('tournament') || titleLower.includes('league') || titleLower.includes('leauge') || titleLower.includes('championship')) &&
-        !titleLower.includes('scrim')
-      ) {
-        return false;
-      }
-      return true;
-    });
+    let scrims: any[] = snap.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter((s: any) => activeStatuses.has(s.status));
 
     if (typeof game === "string" && game.trim() && game !== "All") {
       const g = game.trim().toLowerCase();
@@ -80,11 +42,43 @@ router.get("/api/scrims", rateLimit(60, 60 * 1000), async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// 1b. GET /api/scrims/:id — Fetch single scrim by ID
+// ─────────────────────────────────────────────────────────────────────────────
+router.get("/api/scrims/:id", rateLimit(60, 60 * 1000), async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id || id.length > 128) return res.status(400).json({ success: false, message: "Invalid scrim ID" });
+    const snap = await db.collection("scrims").doc(id).get();
+    if (!snap.exists) return res.status(404).json({ success: false, message: "Scrim not found" });
+    return res.json({ success: true, scrim: { id: snap.id, ...snap.data() } });
+  } catch (error: any) {
+    console.error("Error fetching scrim by ID:", error);
+    return res.status(500).json({ success: false, message: "Failed to fetch scrim" });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 // 2. POST /api/scrims — Create a new Scrim (Squad:12, Duo:25, Solo:48)
 // ─────────────────────────────────────────────────────────────────────────────
 router.post("/api/scrims", authenticateToken, rateLimit(10, 15 * 60 * 1000), async (req: any, res) => {
   try {
-    const { title, game, format, map, startTime, entryFee, prizePool, rules, ytLink } = req.body;
+    const {
+      title,
+      game,
+      format,
+      map,
+      startTime,
+      entryFee,
+      prizePool,
+      prizeDistribution,
+      rules,
+      ytLink,
+      tournamentMode,
+      rewardPerKill,
+      rewardConfig,
+      pointSystem,
+      scoringSnapshot
+    } = req.body;
 
     if (!title || typeof title !== "string" || title.trim().length === 0 || title.length > 200) {
       return res.status(400).json({ success: false, message: "Valid scrim title is required (max 200 characters)." });
@@ -99,6 +93,19 @@ router.post("/api/scrims", authenticateToken, rateLimit(10, 15 * 60 * 1000), asy
     const fee = Math.max(0, Number(entryFee) || 0);
     const prize = Math.max(0, Number(prizePool) || 0);
 
+    const isPerKill = tournamentMode === 'PER_KILL_REWARD' || Number(rewardPerKill) > 0;
+    const resolvedRewardPerKill = Math.max(0, Number(rewardPerKill) || Number(rewardConfig?.rewardPerKill) || 0);
+
+    const resolvedPrizeDistribution = Array.isArray(prizeDistribution) && prizeDistribution.length > 0
+      ? prizeDistribution
+      : (!isPerKill && prize > 0
+          ? [
+              { rank: 1, amount: Math.round(prize * 0.5) },
+              { rank: 2, amount: Math.round(prize * 0.3) },
+              { rank: 3, amount: prize - Math.round(prize * 0.5) - Math.round(prize * 0.3) },
+            ].filter(p => p.amount > 0)
+          : null);
+
     // Generate clean initial slots array (1..totalSlots)
     const initialSlots = Array.from({ length: totalSlots }, (_, i) => ({
       slotNumber: i + 1,
@@ -111,7 +118,7 @@ router.post("/api/scrims", authenticateToken, rateLimit(10, 15 * 60 * 1000), asy
     }));
 
     const scrimRef = db.collection("scrims").doc();
-    const scrimData = {
+    const scrimData: any = {
       id: scrimRef.id,
       title: title.trim(),
       game: game.trim(),
@@ -120,6 +127,7 @@ router.post("/api/scrims", authenticateToken, rateLimit(10, 15 * 60 * 1000), asy
       startTime: startTime ? (new Date(startTime).toISOString()) : new Date().toISOString(),
       entryFee: fee,
       prizePool: prize,
+      prizeDistribution: resolvedPrizeDistribution,
       totalSlots,
       filledSlots: 0,
       currentPlayers: 0,
@@ -127,6 +135,15 @@ router.post("/api/scrims", authenticateToken, rateLimit(10, 15 * 60 * 1000), asy
       status: "open",
       matchType: "scrims",
       isScrim: true,
+      tournamentMode: isPerKill ? 'PER_KILL_REWARD' : 'POINTS',
+      rewardPerKill: resolvedRewardPerKill,
+      rewardConfig: rewardConfig || (isPerKill ? {
+        rewardPerKill: resolvedRewardPerKill,
+        minimumKillsForReward: Number(rewardConfig?.minimumKillsForReward) || 0,
+        currency: 'NPR',
+      } : null),
+      pointSystem: pointSystem || null,
+      scoringSnapshot: scoringSnapshot || null,
       hostUid: req.user.userId,
       orgId: req.user.userId,
       rules: rules || "",
@@ -149,29 +166,25 @@ router.post("/api/scrims", authenticateToken, rateLimit(10, 15 * 60 * 1000), asy
 // ─────────────────────────────────────────────────────────────────────────────
 router.post("/api/scrims/:id/join", authenticateToken, rateLimit(15, 60 * 1000), async (req: any, res) => {
   const { id } = req.params;
-  const { slotNumber, teamId, teamName, captainDiscord } = req.body;
+  const { slotNumber, teamId, teamName, teamLogo, captainDiscord } = req.body;
   const userId = req.user.userId;
 
   try {
     const result = await db.runTransaction(async (transaction) => {
       const scrimRef = db.collection("scrims").doc(id);
-      const tourneyRef = db.collection("tournaments").doc(id);
       const userRef = db.collection("users").doc(userId);
 
       // 1. ALL READS FIRST (Firestore rule: all reads must precede all writes)
-      const [scrimSnap, tourneySnap, userSnap] = await Promise.all([
+      const [scrimSnap, userSnap] = await Promise.all([
         transaction.get(scrimRef),
-        transaction.get(tourneyRef),
         transaction.get(userRef)
       ]);
 
-      if (!scrimSnap.exists && !tourneySnap.exists) {
+      if (!scrimSnap.exists) {
         throw new Error("Scrim not found");
       }
 
-      const activeDoc = scrimSnap.exists ? scrimSnap : tourneySnap;
-      const targetRef = scrimSnap.exists ? scrimRef : tourneyRef;
-      const scrim = activeDoc.data()!;
+      const scrim = scrimSnap.data()!;
 
       if (scrim.status !== "open") {
         throw new Error(`Scrim is currently ${scrim.status} and not open for registration.`);
@@ -215,6 +228,7 @@ router.post("/api/scrims/:id/join", authenticateToken, rateLimit(15, 60 * 1000),
         status: 'filled',
         teamId: teamId || null,
         teamName: teamName || req.user.name || "Player",
+        teamLogo: teamLogo || null,
         captainUid: userId,
         captainDiscord: captainDiscord || null,
         joinedAt: new Date().toISOString(),
@@ -251,6 +265,7 @@ router.post("/api/scrims/:id/join", authenticateToken, rateLimit(15, 60 * 1000),
         userId,
         teamId: teamId || null,
         teamName: teamName || req.user.name || "Player",
+        teamLogo: teamLogo || null,
         slotNumber: targetSlot,
         status: "approved",
         createdAt: admin.firestore.FieldValue.serverTimestamp()
@@ -264,12 +279,7 @@ router.post("/api/scrims/:id/join", authenticateToken, rateLimit(15, 60 * 1000),
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
       };
 
-      transaction.update(targetRef, scrimUpdates);
-      if (targetRef === scrimRef && tourneySnap.exists) {
-        transaction.update(tourneyRef, scrimUpdates);
-      } else if (targetRef === tourneyRef && scrimSnap.exists) {
-        transaction.update(scrimRef, scrimUpdates);
-      }
+      transaction.update(scrimRef, scrimUpdates);
 
       return { success: true, slotNumber: targetSlot, filledSlots, totalSlots, isFull: isNowFull };
     });
@@ -279,6 +289,94 @@ router.post("/api/scrims/:id/join", authenticateToken, rateLimit(15, 60 * 1000),
     const msg = error.message || "Failed to join scrim";
     const status = msg.includes("Insufficient") ? 402 : msg.includes("already") || msg.includes("Invalid") ? 400 : 500;
     return res.status(status).json({ success: false, message: msg });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 3b. POST /api/scrims/:id/leave — Release slot and refund fee
+// ─────────────────────────────────────────────────────────────────────────────
+router.post("/api/scrims/:id/leave", authenticateToken, rateLimit(15, 60 * 1000), async (req: any, res) => {
+  const { id } = req.params;
+  const userId = req.user.userId;
+
+  try {
+    const result = await db.runTransaction(async (transaction) => {
+      const scrimRef = db.collection("scrims").doc(id);
+      const userRef = db.collection("users").doc(userId);
+      const partRef = db.collection("participants").doc(`${id}_${userId}`);
+
+      const [scrimSnap, userSnap, partSnap] = await Promise.all([
+        transaction.get(scrimRef),
+        transaction.get(userRef),
+        transaction.get(partRef),
+      ]);
+
+      if (!scrimSnap.exists) throw new Error("Scrim not found");
+      const scrim = scrimSnap.data()!;
+
+      if (scrim.status !== "open" && scrim.status !== "full") {
+        throw new Error("Cannot leave a scrim that is live or completed");
+      }
+
+      const slots = Array.isArray(scrim.slots) ? [...scrim.slots] : [];
+      const slotIndex = slots.findIndex((s: any) => s.captainUid === userId);
+
+      if (slotIndex === -1 && !partSnap.exists) {
+        throw new Error("You are not registered in this scrim");
+      }
+
+      const entryFee = Number(scrim.entryFee) || 0;
+      if (entryFee > 0 && partSnap.exists) {
+        transaction.update(userRef, {
+          balance: admin.firestore.FieldValue.increment(entryFee),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        const refundTxRef = db.collection("transactions").doc();
+        transaction.set(refundTxRef, {
+          id: refundTxRef.id,
+          userId,
+          type: "refund",
+          amount: entryFee,
+          scrimId: id,
+          method: "Scrim Entry Refund",
+          status: "completed",
+          createdAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+      }
+
+      if (slotIndex !== -1) {
+        const slotNum = slots[slotIndex].slotNumber;
+        slots[slotIndex] = {
+          slotNumber: slotNum,
+          status: 'open',
+          teamId: null,
+          teamName: null,
+          teamLogo: null,
+          captainUid: null,
+          captainDiscord: null,
+          joinedAt: null,
+        };
+      }
+
+      const filledSlots = slots.filter((s: any) => s.status === 'filled').length;
+      transaction.update(scrimRef, {
+        slots,
+        filledSlots,
+        currentPlayers: filledSlots,
+        status: "open",
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+
+      if (partSnap.exists) {
+        transaction.delete(partRef);
+      }
+
+      return { success: true, message: "Successfully left scrim lobby" };
+    });
+
+    return res.status(200).json(result);
+  } catch (error: any) {
+    return res.status(400).json({ success: false, message: error.message || "Failed to leave scrim" });
   }
 });
 
@@ -379,12 +477,8 @@ router.post("/api/scrims/:id/payout", authenticateToken, rateLimit(5, 15 * 60 * 
       return res.status(400).json({ success: false, message: "Winners list is required." });
     }
 
-    let scrimRef = db.collection("scrims").doc(id);
-    let scrimSnap = await scrimRef.get();
-    if (!scrimSnap.exists) {
-      scrimRef = db.collection("tournaments").doc(id);
-      scrimSnap = await scrimRef.get();
-    }
+    const scrimRef = db.collection("scrims").doc(id);
+    const scrimSnap = await scrimRef.get();
     if (!scrimSnap.exists) return res.status(404).json({ success: false, message: "Scrim not found" });
 
     const scrim = scrimSnap.data()!;
@@ -402,13 +496,29 @@ router.post("/api/scrims/:id/payout", authenticateToken, rateLimit(5, 15 * 60 * 
       return res.status(400).json({ success: false, message: valError });
     }
 
+    const isPerKill = scrim.tournamentMode === 'PER_KILL_REWARD' || Number(scrim.rewardPerKill) > 0 || Array.isArray(req.body.killRewards);
     const totalAllocated = winners.reduce((sum, w) => sum + (Number(w.prize) || 0), 0);
     const expectedPool = Number(scrim.prizePool) || 0;
-    if (expectedPool > 0 && Math.abs(totalAllocated - expectedPool) > 0.01) {
-      return res.status(400).json({
-        success: false,
-        message: `Distributed prize sum (NPR ${totalAllocated}) must equal scrim prize pool (NPR ${expectedPool}).`
-      });
+
+    if (isPerKill) {
+      // In Per-Kill Scrims:
+      // Reward is allocated dynamically based on verified kills (kills * rewardPerKill) + placement bonuses.
+      // Total distributed must not exceed funded maximum pool (if expectedPool > 0).
+      if (expectedPool > 0 && totalAllocated > expectedPool + 0.01) {
+        return res.status(400).json({
+          success: false,
+          message: `Distributed kill bounty (NPR ${totalAllocated}) exceeds maximum prize pool (NPR ${expectedPool}).`
+        });
+      }
+    } else {
+      // In Standard Scrims:
+      // Placement prizes for 1st, 2nd, 3rd, 4th, etc. must match configured prize pool.
+      if (expectedPool > 0 && Math.abs(totalAllocated - expectedPool) > 0.01) {
+        return res.status(400).json({
+          success: false,
+          message: `Distributed prize sum (NPR ${totalAllocated}) must equal scrim prize pool (NPR ${expectedPool}).`
+        });
+      }
     }
 
     await db.runTransaction(async (transaction) => {
@@ -463,6 +573,12 @@ router.post("/api/scrims/:id/payout", authenticateToken, rateLimit(5, 15 * 60 * 
           }, { merge: true });
         }
 
+        const isPerKillRecipient = isPerKill && (Number(winner.kills) > 0 || Number(scrim.rewardPerKill) > 0);
+        const rewardRate = Number(scrim.rewardPerKill || scrim.rewardConfig?.rewardPerKill || 0);
+        const desc = isPerKillRecipient
+          ? `Per-kill bounty payout (${winner.kills || 0} kills @ NPR ${rewardRate}/kill) + Rank #${winner.rank || 1} in ${scrim.title || 'Scrim'}`
+          : `Prize payout for Rank #${winner.rank || 1} in ${scrim.title || 'Scrim'}`;
+
         const txRef = db.collection("transactions").doc();
         transaction.set(txRef, {
           id: txRef.id,
@@ -470,11 +586,12 @@ router.post("/api/scrims/:id/payout", authenticateToken, rateLimit(5, 15 * 60 * 
           username: winner.teamName || winner.username || "Winner",
           type: "prize",
           amount: prizeAmount,
-          method: "Scrim Prize",
+          method: isPerKillRecipient ? "Per-Kill Scrim Bounty" : "Scrim Prize",
           scrimId: id,
           tournamentId: id,
           rank: winner.rank || 1,
-          desc: `Prize payout for Rank #${winner.rank || 1} in ${scrim.title || 'Scrim'}`,
+          kills: Number(winner.kills) || 0,
+          desc,
           status: "success",
           timestamp: admin.firestore.FieldValue.serverTimestamp(),
           createdAt: admin.firestore.FieldValue.serverTimestamp()
@@ -482,10 +599,14 @@ router.post("/api/scrims/:id/payout", authenticateToken, rateLimit(5, 15 * 60 * 
 
         // Send instant in-app notification to the winner
         const notifRef = db.collection("notifications").doc();
+        const notifMessage = isPerKillRecipient
+          ? `Congratulations! You placed #${winner.rank || 1} with ${winner.kills || 0} kills in "${scrim.title || 'Scrim'}" and earned Rs. ${prizeAmount.toLocaleString()}! The prize has been credited to your wallet.`
+          : `Congratulations! You placed #${winner.rank || 1} in "${scrim.title || 'Scrim'}" and won Rs. ${prizeAmount.toLocaleString()}! The prize has been credited to your wallet balance.`;
+
         transaction.set(notifRef, {
           userId: targetUserId,
-          title: 'Prize Won! 🏆',
-          message: `Congratulations! You placed #${winner.rank || 1} in "${scrim.title || 'Scrim'}" and won Rs. ${prizeAmount.toLocaleString()}! The prize has been credited to your wallet balance.`,
+          title: isPerKillRecipient ? 'Bounty Won! 🎯' : 'Prize Won! 🏆',
+          message: notifMessage,
           type: 'success',
           link: '/wallet',
           read: false,
@@ -493,13 +614,13 @@ router.post("/api/scrims/:id/payout", authenticateToken, rateLimit(5, 15 * 60 * 
         });
       }
 
-      transaction.update(scrimRef, {
+      const scrimUpdates: any = {
         status: "completed",
         payoutStatus: "paid",
         winners,
         results: winners.map((w: any) => ({
           rank: w.rank,
-          teamName: w.teamName || `Rank ${w.rank}`,
+          teamName: w.teamName || w.username || `Rank ${w.rank}`,
           teamId: w.teamId || w.userId || '',
           prize: w.prize || 0,
           kills: w.kills || 0,
@@ -507,7 +628,30 @@ router.post("/api/scrims/:id/payout", authenticateToken, rateLimit(5, 15 * 60 * 
           userId: w.userId || '',
         })),
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
-      });
+      };
+
+      if (Array.isArray(req.body.manualResults) || Array.isArray(req.body.resultsData?.manualResults)) {
+        scrimUpdates.manualResults = req.body.resultsData?.manualResults || req.body.manualResults;
+      }
+      if (req.body.resultTemplate || req.body.resultsData?.resultTemplate) {
+        scrimUpdates.resultTemplate = req.body.resultsData?.resultTemplate || req.body.resultTemplate;
+      }
+      if (req.body.resultUrl) {
+        scrimUpdates.resultUrl = req.body.resultUrl;
+      }
+      if (Array.isArray(req.body.killRewards)) {
+        scrimUpdates.killRewards = req.body.killRewards;
+      } else if (isPerKill) {
+        scrimUpdates.killRewards = winners.map((w: any) => ({
+          userId: w.userId,
+          username: w.username || w.teamName,
+          rank: w.rank,
+          kills: Number(w.kills) || 0,
+          rewardAmount: Number(w.prize) || 0,
+        }));
+      }
+
+      transaction.update(scrimRef, scrimUpdates);
 
       // 3. Revenue split calculation for paid scrims (dynamic platformCommission from site settings)
       const entryFee = Number(scrim.entryFee || scrim.requirements?.entryFee || scrim.price || 0);
@@ -581,13 +725,8 @@ router.delete("/api/scrims/:id", authenticateToken, rateLimit(10, 15 * 60 * 1000
     if (!id || id.length > 128) return res.status(400).json({ success: false, message: "Invalid scrim ID" });
     const uid = req.user.userId;
 
-    let targetRef = db.collection("scrims").doc(id);
-    let targetSnap = await targetRef.get();
-
-    if (!targetSnap.exists) {
-      targetRef = db.collection("tournaments").doc(id);
-      targetSnap = await targetRef.get();
-    }
+    const targetRef = db.collection("scrims").doc(id);
+    const targetSnap = await targetRef.get();
 
     if (!targetSnap.exists) {
       return res.status(404).json({ success: false, message: "Scrim not found" });
@@ -604,7 +743,7 @@ router.delete("/api/scrims/:id", authenticateToken, rateLimit(10, 15 * 60 * 1000
 
     const operations: Array<(batch: FirebaseFirestore.WriteBatch) => void> = [];
 
-    // 1. Delete participants (both scrimId and tournamentId references)
+    // 1. Delete participants (scrimId references)
     const [pScrimSnap, pTournSnap] = await Promise.all([
       db.collection("participants").where("scrimId", "==", id).get(),
       db.collection("participants").where("tournamentId", "==", id).get()
@@ -612,13 +751,9 @@ router.delete("/api/scrims/:id", authenticateToken, rateLimit(10, 15 * 60 * 1000
     pScrimSnap.docs.forEach(d => operations.push(batch => batch.delete(d.ref)));
     pTournSnap.docs.forEach(d => operations.push(batch => batch.delete(d.ref)));
 
-    // 2. Delete credentials subcollections in both locations
-    const [sCreds, tCreds] = await Promise.all([
-      db.collection("scrims").doc(id).collection("credentials").get(),
-      db.collection("tournaments").doc(id).collection("credentials").get()
-    ]);
+    // 2. Delete credentials subcollection
+    const sCreds = await db.collection("scrims").doc(id).collection("credentials").get();
     sCreds.docs.forEach(d => operations.push(batch => batch.delete(d.ref)));
-    tCreds.docs.forEach(d => operations.push(batch => batch.delete(d.ref)));
 
     // 3. Delete results and earnings if any
     const [resultsSnap, earningsSnap] = await Promise.all([
@@ -628,9 +763,8 @@ router.delete("/api/scrims/:id", authenticateToken, rateLimit(10, 15 * 60 * 1000
     resultsSnap.docs.forEach(d => operations.push(batch => batch.delete(d.ref)));
     earningsSnap.docs.forEach(d => operations.push(batch => batch.delete(d.ref)));
 
-    // 4. Delete document in both collections
+    // 4. Delete document in scrims collection
     operations.push(batch => batch.delete(db.collection("scrims").doc(id)));
-    operations.push(batch => batch.delete(db.collection("tournaments").doc(id)));
 
     await commitBatchedWrites(() => db.batch(), operations);
     return res.json({ success: true, message: "Scrim deleted successfully" });

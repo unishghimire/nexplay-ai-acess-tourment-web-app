@@ -62,6 +62,17 @@ export interface Scrim {
     map?: string;
     format?: 'Battle Royale' | '5v5' | 'Clash Squad' | string;
     prizePool?: number;
+    prizeDistribution?: Array<{ rank: number; amount: number }> | null;
+    tournamentMode?: 'POINTS' | 'PER_KILL_REWARD';
+    rewardPerKill?: number;
+    rewardConfig?: any;
+    pointSystem?: any;
+    scoringSnapshot?: any;
+    manualResults?: any[];
+    resultTemplate?: any;
+    winners?: any[];
+    results?: any[];
+    killRewards?: any[];
     requirements?: ScrimRequirements;
     roomDetails?: RoomDetails;
     bannerUrl?: string;
@@ -79,6 +90,12 @@ export interface CreateScrimInput {
     map?: string;
     format?: 'Battle Royale' | '5v5' | 'Clash Squad' | string;
     prizePool?: number;
+    prizeDistribution?: Array<{ rank: number; amount: number }>;
+    tournamentMode?: 'POINTS' | 'PER_KILL_REWARD';
+    rewardPerKill?: number;
+    rewardConfig?: any;
+    pointSystem?: any;
+    scoringSnapshot?: any;
     requirements?: ScrimRequirements;
     roomDetails?: RoomDetails;
     bannerUrl?: string;
@@ -142,6 +159,17 @@ export function mapDocToScrim(id: string, data: Record<string, any>): Scrim {
             streamUrl: data.roomDetails?.streamUrl || data.streamUrl || data.ytLink || '',
         } as RoomDetails,
         bannerUrl: data.bannerUrl || '',
+        tournamentMode: data.tournamentMode || (data.rewardPerKill > 0 ? 'PER_KILL_REWARD' : 'POINTS'),
+        rewardPerKill: Number(data.rewardPerKill || data.rewardConfig?.rewardPerKill || 0),
+        rewardConfig: data.rewardConfig || null,
+        prizeDistribution: data.prizeDistribution || null,
+        pointSystem: data.pointSystem || null,
+        scoringSnapshot: data.scoringSnapshot || null,
+        manualResults: data.manualResults || null,
+        resultTemplate: data.resultTemplate || null,
+        winners: data.winners || null,
+        results: data.results || null,
+        killRewards: data.killRewards || null,
         createdAt: data.createdAt || new Date().toISOString(),
         updatedAt: data.updatedAt || new Date().toISOString(),
     };
@@ -179,7 +207,7 @@ export const ScrimsService = {
             ? Timestamp.fromDate(data.matchTime)
             : data.matchTime;
 
-        const scrimPayload = {
+        const scrimPayload: Record<string, any> = {
             title: data.title.trim(),
             game: data.game.trim(),
             hostUid: data.hostUid.trim(),
@@ -192,6 +220,8 @@ export const ScrimsService = {
             map: data.map?.trim() || 'Bermuda',
             format: data.format || 'Battle Royale',
             prizePool: Math.max(0, Number(data.prizePool) || 0),
+            tournamentMode: (data.tournamentMode === 'PER_KILL_REWARD' || Number(data.rewardPerKill) > 0) ? 'PER_KILL_REWARD' : 'POINTS',
+            rewardPerKill: Number(data.rewardPerKill || data.rewardConfig?.rewardPerKill || 0),
             requirements: {
                 minTier: data.requirements?.minTier || 'Bronze',
                 discordRequired: Boolean(data.requirements?.discordRequired),
@@ -210,6 +240,21 @@ export const ScrimsService = {
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
         };
+
+        if (Array.isArray(data.prizeDistribution) && data.prizeDistribution.length > 0) {
+            scrimPayload.prizeDistribution = data.prizeDistribution;
+        }
+        if (data.rewardConfig) {
+            scrimPayload.rewardConfig = data.rewardConfig;
+        } else if (scrimPayload.tournamentMode === 'PER_KILL_REWARD') {
+            scrimPayload.rewardConfig = {
+                rewardPerKill: scrimPayload.rewardPerKill,
+                minimumKillsForReward: 0,
+                currency: 'NPR',
+            };
+        }
+        if (data.pointSystem) scrimPayload.pointSystem = data.pointSystem;
+        if (data.scoringSnapshot) scrimPayload.scoringSnapshot = data.scoringSnapshot;
 
         try {
             const docRef = await addDoc(collection(db, SCRIMS_COLLECTION), scrimPayload);

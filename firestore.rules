@@ -47,16 +47,21 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
     function isTournamentHost(tournamentId) {
-      return isSignedIn() && (
-        (exists(/databases/$(database)/documents/tournaments/$(tournamentId)) &&
-         (get(/databases/$(database)/documents/tournaments/$(tournamentId)).data.hostUid == request.auth.uid ||
-          (('orgId' in get(/databases/$(database)/documents/tournaments/$(tournamentId)).data) &&
-           get(/databases/$(database)/documents/tournaments/$(tournamentId)).data.orgId == request.auth.uid))) ||
-        (exists(/databases/$(database)/documents/scrims/$(tournamentId)) &&
-         (get(/databases/$(database)/documents/scrims/$(tournamentId)).data.hostUid == request.auth.uid ||
-          (('orgId' in get(/databases/$(database)/documents/scrims/$(tournamentId)).data) &&
-           get(/databases/$(database)/documents/scrims/$(tournamentId)).data.orgId == request.auth.uid)))
-      );
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/tournaments/$(tournamentId)) &&
+        (get(/databases/$(database)/documents/tournaments/$(tournamentId)).data.hostUid == request.auth.uid ||
+         (('orgId' in get(/databases/$(database)/documents/tournaments/$(tournamentId)).data) &&
+          get(/databases/$(database)/documents/tournaments/$(tournamentId)).data.orgId == request.auth.uid));
+    }
+    function isScrimHost(scrimId) {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/scrims/$(scrimId)) &&
+        (get(/databases/$(database)/documents/scrims/$(scrimId)).data.hostUid == request.auth.uid ||
+         (('orgId' in get(/databases/$(database)/documents/scrims/$(scrimId)).data) &&
+          get(/databases/$(database)/documents/scrims/$(scrimId)).data.orgId == request.auth.uid));
+    }
+    function isEventHost(eventId) {
+      return isTournamentHost(eventId) || isScrimHost(eventId);
     }
     function isTeamOwner(teamId) {
       return isSignedIn() && teamId is string &&
@@ -265,7 +270,7 @@ service cloud.firestore {
       // strikes/warnings, bans). Players can check themselves in (toggle checkedIn only).
       // Player can delete their own registration (leave tournament).
       allow update: if isAdmin() ||
-                       (isOrganizer() && isTournamentHost(existing().tournamentId) &&
+                       (isOrganizer() && isEventHost(existing().tournamentId) &&
                         incoming().diff(existing()).affectedKeys().hasOnly([
                           'status', 'checkedIn', 'checkedInAt',
                           'totalKills', 'totalPoints', 'matchesPlayed',
@@ -277,7 +282,7 @@ service cloud.firestore {
       allow delete: if isAdmin() ||
                        (isVerified() && (
                          existing().userId == request.auth.uid ||
-                         isTournamentHost(existing().tournamentId)
+                         isEventHost(existing().tournamentId)
                        ));
     }
 
@@ -327,12 +332,10 @@ service cloud.firestore {
       allow create: if isAdmin() ||
                        (isOrganizer() &&
                         isValidId(resultId) &&
-                        exists(/databases/$(database)/documents/tournaments/$(incoming().tournamentId)) &&
-                        get(/databases/$(database)/documents/tournaments/$(incoming().tournamentId)).data.hostUid == request.auth.uid);
+                        isEventHost(incoming().tournamentId));
       allow update: if isAdmin() ||
                        (isOrganizer() &&
-                        exists(/databases/$(database)/documents/tournaments/$(existing().tournamentId)) &&
-                        get(/databases/$(database)/documents/tournaments/$(existing().tournamentId)).data.hostUid == request.auth.uid);
+                        isEventHost(existing().tournamentId));
     }
 
     // ═══════════════════════════════════════════════════════════════

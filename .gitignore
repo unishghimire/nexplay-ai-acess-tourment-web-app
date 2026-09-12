@@ -9,3 +9,4 @@ coverage/
 .vercel
 service-account.json
 *.exe
+scratch/

@@ -15,6 +15,7 @@ export interface UserProfile {
     inGameName?: string;
     teamName: string;
     teamId?: string;
+    teamLogo?: string;
     isVerified?: boolean;
     isChampion?: boolean;
     rank?: string;
@@ -66,6 +67,8 @@ export interface ManualResult {
     score: number;
     status: string;
     kills?: number;
+    logo?: string | null;
+    teamId?: string | null;
 }
 
 export interface ResultTemplateConfig {
@@ -225,6 +228,17 @@ export interface Scrim {
     prizePool?: number;
     currentSlots?: number;
     matchType?: 'scrims' | 'tournament';
+    tournamentMode?: 'POINTS' | 'PER_KILL_REWARD';
+    rewardPerKill?: number;
+    rewardConfig?: any;
+    prizeDistribution?: PrizeDistribution[];
+    pointSystem?: any;
+    scoringSnapshot?: any;
+    manualResults?: any[];
+    resultTemplate?: any;
+    winners?: any[];
+    results?: any[];
+    killRewards?: any[];
 }
 
 export interface Tournament {
@@ -260,7 +274,7 @@ export interface Tournament {
     ytLink?: string;
     uploadLink?: string;
     resultUrl?: string;
-    winners?: { uid: string; amount: number; rank: number; username?: string }[];
+    winners?: { uid: string; amount: number; rank: number; username?: string; teamName?: string; teamLogo?: string; logo?: string; avatar?: string; teamId?: string }[];
     distributedAmount?: number;
     manualResults?: ManualResult[];
     resultTemplate?: ResultTemplateConfig;

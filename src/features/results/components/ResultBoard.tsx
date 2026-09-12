@@ -35,7 +35,18 @@ export default function ResultBoard({ results, config }: ResultBoardProps) {
                                         </span>
                                     </td>
                                 )}
-                                {config.showFields.team && <td className="p-4 font-bold text-white">{res.team}</td>}
+                                {config.showFields.team && (
+                                    <td className="p-4 font-bold text-white">
+                                        <div className="flex items-center gap-2.5">
+                                            {res.logo && (
+                                                <div className="w-7 h-7 rounded-lg overflow-hidden border border-gray-800 bg-surface shrink-0">
+                                                    <img src={res.logo} alt={res.team} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                                </div>
+                                            )}
+                                            <span>{res.team}</span>
+                                        </div>
+                                    </td>
+                                )}
                                 {config.showFields.score && <td className="p-4 font-black text-brand-400 text-right">{res.score}</td>}
                                 {config.showFields.status && (
                                     <td className="p-4 text-right">
@@ -71,8 +82,13 @@ export default function ResultBoard({ results, config }: ResultBoardProps) {
                                 </div>
                             )}
                             {config.showFields.team && (
-                                <div className="flex-1 font-black text-xl text-white uppercase tracking-wider italic">
-                                    {res.team}
+                                <div className="flex-1 flex items-center gap-3 font-black text-xl text-white uppercase tracking-wider italic">
+                                    {res.logo && (
+                                        <div className="w-8 h-8 rounded-lg overflow-hidden border border-white/10 bg-black/40 shrink-0 not-italic">
+                                            <img src={res.logo} alt={res.team} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                        </div>
+                                    )}
+                                    <span>{res.team}</span>
                                 </div>
                             )}
                             {config.showFields.score && (
@@ -97,7 +113,13 @@ export default function ResultBoard({ results, config }: ResultBoardProps) {
                     <div className="relative rounded-3xl overflow-hidden border-2" style={{ borderColor: config.theme.primaryColor }}>
                         <div className="absolute inset-0 opacity-30" style={{ background: `radial-gradient(circle at center, ${config.theme.primaryColor}, transparent)` }} />
                         <div className="relative z-10 p-10 text-center">
-                            <Trophy className="w-16 h-16 mx-auto mb-4" style={{ color: config.theme.primaryColor }} />
+                            {winner.logo ? (
+                                <div className="w-20 h-20 rounded-2xl overflow-hidden mx-auto mb-4 border-2 border-white/20 shadow-2xl bg-black/40">
+                                    <img src={winner.logo} alt={winner.team} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                </div>
+                            ) : (
+                                <Trophy className="w-16 h-16 mx-auto mb-4" style={{ color: config.theme.primaryColor }} />
+                            )}
                             <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white uppercase tracking-tighter mb-2">{winner.team}</h2>
                             <p className="text-sm font-bold uppercase tracking-widest" style={{ color: config.theme.primaryColor }}>CHAMPIONS • {winner.score} PTS</p>
                         </div>
@@ -106,9 +128,16 @@ export default function ResultBoard({ results, config }: ResultBoardProps) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     {others.map(res => (
                         <div key={res.id} className="bg-dark-800 p-4 rounded-2xl border border-gray-800 flex justify-between items-center">
-                            <div>
-                                <div className="text-xs text-gray-500 font-black uppercase">Rank {res.rank}</div>
-                                <div className="text-white font-bold text-lg">{res.team}</div>
+                            <div className="flex items-center gap-3">
+                                {res.logo && (
+                                    <div className="w-8 h-8 rounded-lg overflow-hidden border border-gray-800 shrink-0 bg-surface">
+                                        <img src={res.logo} alt={res.team} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                    </div>
+                                )}
+                                <div>
+                                    <div className="text-xs text-gray-500 font-black uppercase">Rank {res.rank}</div>
+                                    <div className="text-white font-bold text-lg">{res.team}</div>
+                                </div>
                             </div>
                             <div className="text-right">
                                 <div className="text-brand-400 font-black text-xl">{res.score}</div>
@@ -129,6 +158,11 @@ export default function ResultBoard({ results, config }: ResultBoardProps) {
                             {config.showFields.rank && (
                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-sm ${i === 0 ? 'bg-yellow-500/20 text-yellow-500' : 'bg-dark text-gray-400'}`}>
                                     {res.rank}
+                                </div>
+                            )}
+                            {res.logo && (
+                                <div className="w-6 h-6 rounded-md overflow-hidden border border-gray-800 bg-dark shrink-0">
+                                    <img src={res.logo} alt={res.team} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                                 </div>
                             )}
                             {config.showFields.team && <div className="font-bold text-white">{res.team}</div>}
@@ -154,8 +188,13 @@ export default function ResultBoard({ results, config }: ResultBoardProps) {
             <div className="space-y-2">
                 {sortedResults.map((res) => (
                     <div key={res.id} className="flex justify-between p-3 border-b border-gray-800 last:border-0 hover:bg-white/5 transition-colors">
-                        <div className="flex gap-4">
+                        <div className="flex items-center gap-3">
                             {config.showFields.rank && <span className="font-mono text-gray-500 w-6">#{res.rank}</span>}
+                            {res.logo && (
+                                <div className="w-6 h-6 rounded-md overflow-hidden border border-gray-800 bg-surface shrink-0">
+                                    <img src={res.logo} alt={res.team} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                </div>
+                            )}
                             {config.showFields.team && <span className="text-white font-bold">{res.team}</span>}
                         </div>
                         <div className="flex gap-4 text-right">

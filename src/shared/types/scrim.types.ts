@@ -29,6 +29,23 @@ export interface Scrim {
   rules?: string;
   ytLink?: string;
   payoutStatus?: 'unpaid' | 'paid';
+  tournamentMode?: 'POINTS' | 'PER_KILL_REWARD';
+  rewardPerKill?: number;
+  rewardConfig?: {
+    rewardPerKill: number;
+    minimumKillsForReward?: number;
+    currency?: string;
+    capPerPlayer?: number;
+  } | null;
+  prizeDistribution?: Array<{ rank: number; amount: number }>;
+  pointSystem?: any;
+  scoringSnapshot?: any;
+  winners?: any[];
+  results?: any[];
+  manualResults?: any[];
+  resultTemplate?: any;
+  resultUrl?: string;
+  killRewards?: any[];
   createdAt?: string | any;
   updatedAt?: string | any;
 }

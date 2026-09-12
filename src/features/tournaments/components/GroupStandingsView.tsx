@@ -134,7 +134,7 @@ function StandingsTable({ standings }: { standings: TeamStanding[] }) {
                                 <td className="py-3.5">
                                     <div className="w-9 h-9 rounded-xl bg-surface border border-gray-700 flex items-center justify-center font-black text-xs text-brand-400 overflow-hidden shrink-0">
                                         {s.logoUrl ? (
-                                            <img src={s.logoUrl} alt={s.name} className="w-full h-full object-cover" loading="lazy" />
+                                            <img src={s.logoUrl} alt={s.name} className="w-full h-full object-cover" loading="lazy" referrerPolicy="no-referrer" />
                                         ) : (
                                             s.name.charAt(0).toUpperCase()
                                         )}
@@ -203,7 +203,7 @@ function StandingsTable({ standings }: { standings: TeamStanding[] }) {
                                 <div className="flex items-center gap-3">
                                     <div className="w-8 h-8 rounded-xl bg-surface border border-gray-700 flex items-center justify-center font-black text-xs text-brand-400 overflow-hidden shrink-0">
                                         {s.logoUrl ? (
-                                            <img src={s.logoUrl} alt={s.name} className="w-full h-full object-cover" loading="lazy" />
+                                            <img src={s.logoUrl} alt={s.name} className="w-full h-full object-cover" loading="lazy" referrerPolicy="no-referrer" />
                                         ) : (
                                             s.name.charAt(0).toUpperCase()
                                         )}
@@ -586,7 +586,7 @@ function GroupCard({ group, participants, currentTeamId, isHighlighted, label }:
                                 >
                                     <div className="w-10 h-10 rounded-xl bg-surface border border-gray-700 flex items-center justify-center font-black text-sm text-brand-400 overflow-hidden shrink-0">
                                         {participant?.logoUrl ? (
-                                            <img src={participant?.logoUrl} alt={t.name} className="w-full h-full object-cover" loading="lazy" />
+                                            <img src={participant?.logoUrl} alt={t.name} className="w-full h-full object-cover" loading="lazy" referrerPolicy="no-referrer" />
                                         ) : (
                                             t.name.charAt(0).toUpperCase()
                                         )}

@@ -5,7 +5,7 @@ import { db, auth } from '../../../shared/config/firebase';
 import { Tournament, UserProfile } from '../../../shared/types/types';
 import { DEFAULT_BANNER } from '../../../shared/constants/constants';
 import { useAuth } from '../../../shared/context/AuthContext';
-import { formatCurrency, formatDate, formatGameName, getYoutubeId, toDateSafe, sanitizeUrl } from '../../../shared/utils/utils';
+import { formatCurrency, formatDate, formatGameName, getYoutubeId, toDateSafe, sanitizeUrl, isScrimEvent, isTournamentEvent } from '../../../shared/utils/utils';
 import { getSlotCount, getFilledSlotCount, normalizeScrimSlots } from '../../../shared/utils/scrimSlots';
 import { Clock, Users, Trophy, Lock, Eye, EyeOff, Play, Share2, Calendar, MapPin, Info, Medal, ExternalLink, ChevronRight, AlertCircle, CheckCircle2, Search, Building2 , Target, Trash2, Settings2, AlertTriangle, ShieldAlert, Shield } from 'lucide-react';
 import RegistrationModal from '../components/RegistrationModal';
@@ -106,11 +106,7 @@ export default function TournamentDetails() {
     }, [user, profile?.teamId]);
 
     const isEventScrim = Boolean(
-        eventCollection === 'scrims' ||
-        tournament?.matchType === 'scrims' ||
-        (tournament as any)?.isScrim === true ||
-        (tournament as any)?.type === 'scrim' ||
-        (tournament as any)?.type === 'scrims'
+        tournament ? isScrimEvent(tournament) : (eventCollection === 'scrims')
     );
 
     const isTeamEvent = Boolean(
@@ -261,35 +257,28 @@ export default function TournamentDetails() {
         if (!id) return;
         setLoading(true);
 
-        let unsubScrims: (() => void) | null = null;
-
-        // 1. Core Tournament Listener (Real-time & Self-healing with fallback to 'scrims')
+        // 1. Core Tournament Listener (Strictly scoped to tournaments collection, with canonical redirect to /scrims/:id if scrim)
         const unsubTournament = onSnapshot(doc(db, 'tournaments', id), (snapshot) => {
             if (snapshot.exists()) {
                 const tData = { id: snapshot.id, ...snapshot.data() } as Tournament;
+                if (isScrimEvent(tData)) {
+                    navigate(`/scrims/${snapshot.id}`, { replace: true });
+                    return;
+                }
                 setTournament(tData);
                 setEventCollection('tournaments');
                 setLoading(false);
             } else {
-                // Fallback to legacy 'scrims' collection
-                unsubScrims = onSnapshot(doc(db, 'scrims', id), (scrimSnap) => {
+                // Check if this ID belongs to a scrim in 'scrims' collection
+                getDoc(doc(db, 'scrims', id)).then((scrimSnap) => {
                     if (scrimSnap.exists()) {
-                        const raw = scrimSnap.data() || {};
-                        const sData = {
-                            id: scrimSnap.id,
-                            ...raw,
-                            entryFee: raw.entryFee ?? raw.requirements?.entryFee ?? 0,
-                            matchType: 'scrims'
-                        } as Tournament;
-                        setTournament(sData);
-                        setEventCollection('scrims');
-                        setLoading(false);
+                        navigate(`/scrims/${scrimSnap.id}`, { replace: true });
                     } else {
-                        showToast("Event not found", "error");
+                        showToast("Tournament not found", "error");
                         navigate('/tournaments');
                     }
-                }, () => {
-                    showToast("Event not found", "error");
+                }).catch(() => {
+                    showToast("Tournament not found", "error");
                     navigate('/tournaments');
                 });
             }
@@ -298,19 +287,17 @@ export default function TournamentDetails() {
             // Self-healing: if listener fails, try one-time fetch as fallback
             getDoc(doc(db, 'tournaments', id)).then(snap => {
                 if (snap.exists()) {
-                    setTournament({ id: snap.id, ...snap.data() } as Tournament);
+                    const tData = { id: snap.id, ...snap.data() } as Tournament;
+                    if (isScrimEvent(tData)) {
+                        navigate(`/scrims/${snap.id}`, { replace: true });
+                        return;
+                    }
+                    setTournament(tData);
                     setEventCollection('tournaments');
                 } else {
                     getDoc(doc(db, 'scrims', id)).then(scrimSnap => {
                         if (scrimSnap.exists()) {
-                            const raw = scrimSnap.data() || {};
-                            setTournament({
-                                id: scrimSnap.id,
-                                ...raw,
-                                entryFee: raw.entryFee ?? raw.requirements?.entryFee ?? 0,
-                                matchType: 'scrims'
-                            } as Tournament);
-                            setEventCollection('scrims');
+                            navigate(`/scrims/${scrimSnap.id}`, { replace: true });
                         }
                     });
                 }
@@ -336,14 +323,16 @@ export default function TournamentDetails() {
                         }
                     }
 
-                    // Related Tournaments
+                    // Related Tournaments / Scrims
                     if (tData.game) {
                         const relSnap = await getDocs(query(
                             collection(db, 'tournaments'),
                             where('status', '==', 'upcoming'),
                             where('game', '==', tData.game)
                         ));
-                        setRelatedTournaments(relSnap.docs.map(d => ({ id: d.id, ...d.data() } as Tournament)).filter(t => t.id !== id).slice(0, 3));
+                        const allRel = relSnap.docs.map(d => ({ id: d.id, ...d.data() } as Tournament));
+                        const filteredRel = isScrimEvent(tData) ? allRel.filter(isScrimEvent) : allRel.filter(isTournamentEvent);
+                        setRelatedTournaments(filteredRel.filter(t => t.id !== id).slice(0, 3));
                     }
                 }
             } catch (err) {
@@ -355,7 +344,6 @@ export default function TournamentDetails() {
 
         return () => {
             unsubTournament();
-            if (unsubScrims) unsubScrims();
         };
     }, [id, navigate, showToast]);
 
@@ -722,32 +710,18 @@ export default function TournamentDetails() {
             const token = await auth.currentUser?.getIdToken();
             if (!token) throw new Error("Authentication required");
 
-            let res = await fetch(`/api/tournaments/${id}`, {
+            const res = await fetch(`/api/tournaments/${id}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!res.ok) {
-                res = await fetch(`/api/scrims/${id}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-            }
-            if (!res.ok) {
                 const errData = await res.json().catch(() => ({}));
-                throw new Error(errData.message || 'Failed to delete');
+                throw new Error(errData.message || 'Failed to delete tournament');
             }
 
-            const isScrim = tournament.matchType === 'scrims' || (tournament as any).isScrim === true;
-            showToast(
-                isScrim ? 'Scrim deleted successfully' : 'Tournament deleted successfully',
-                'success'
-            );
+            showToast('Tournament deleted successfully', 'success');
             setShowDeleteModal(false);
-            if (isScrim) {
-                navigate('/scrims');
-            } else {
-                navigate('/tournaments');
-            }
+            navigate('/tournaments');
         } catch (err: any) {
             showToast(err.message || 'Failed to delete tournament', 'error');
         } finally {
@@ -1290,8 +1264,12 @@ export default function TournamentDetails() {
                                                     {/* Header: Slot #, Team Name, and Tag */}
                                                     <div className="flex items-start justify-between gap-2">
                                                         <div className="flex items-center gap-2.5 min-w-0">
-                                                            <div className="w-10 h-10 shrink-0 bg-brand-600/10 rounded-xl flex items-center justify-center text-brand-500 font-black border border-brand-500/20 text-sm font-mono">
-                                                                {p.slotNumber ? `#${p.slotNumber}` : `#${i + 1}`}
+                                                            <div className="w-10 h-10 shrink-0 bg-brand-600/10 rounded-xl flex items-center justify-center text-brand-500 font-black border border-brand-500/20 text-sm font-mono overflow-hidden">
+                                                                {p.teamLogo || p.logoUrl ? (
+                                                                    <img src={p.teamLogo || p.logoUrl} alt={p.teamName || 'Team'} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                                                ) : (
+                                                                    <span>{p.slotNumber ? `#${p.slotNumber}` : `#${i + 1}`}</span>
+                                                                )}
                                                             </div>
                                                             <div className="min-w-0">
                                                                 <div className="text-white font-black text-base leading-tight truncate">
@@ -1456,7 +1434,7 @@ export default function TournamentDetails() {
                                 exit={{ opacity: 0, y: -10 }}
                                 className="space-y-6 sm:space-y-8"
                             >
-                                <ScrimResultsTable tournament={tournament} />
+                                <ScrimResultsTable tournament={tournament} participants={effectiveParticipants} slots={normalizedSlots} />
                             </motion.div>
                         )}
                     </AnimatePresence>
@@ -1782,7 +1760,7 @@ export default function TournamentDetails() {
                                 onClick={handleJoinClick}
                                 className="w-full bg-brand-600 hover:bg-brand-500 text-white py-4 sm:py-5 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-widest shadow-xl shadow-brand-600/20 transition-colors active:scale-95 flex items-center justify-center gap-3 group"
                             >
-                                {tournament.matchType === 'scrims' || (tournament as any).isScrim ? 'Join Scrim' : 'Join Tournament'} <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                {isEventScrim ? 'Join Scrim' : 'Join Tournament'} <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                             </button>
                         )}
                     </div>
@@ -1837,7 +1815,7 @@ export default function TournamentDetails() {
                 <Modal
                     isOpen={showDeleteModal}
                     onClose={() => setShowDeleteModal(false)}
-                    title={tournament.matchType === 'scrims' || (tournament as any).isScrim === true ? "Delete Scrim" : "Delete Tournament"}
+                    title={isEventScrim ? "Delete Scrim" : "Delete Tournament"}
                 >
                     <div className="p-6 text-center">
                         <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
