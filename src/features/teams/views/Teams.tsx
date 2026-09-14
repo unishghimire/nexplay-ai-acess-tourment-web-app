@@ -1,6 +1,6 @@
 import Seo from '../../../shared/components/Seo';
 import React, { useState, useEffect } from 'react';
-import { collection, query, getDocs, serverTimestamp, where, doc, orderBy, limit, writeBatch } from 'firebase/firestore';
+import { collection, query, getDocs, serverTimestamp, where, doc, orderBy, limit, writeBatch, startAfter, QueryDocumentSnapshot } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
@@ -20,8 +20,13 @@ const Teams: React.FC = () => {
     const [teams, setTeams] = useState<Team[]>([]);
     const [myTeams, setMyTeams] = useState<Team[]>([]);
     const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot | null>(null);
+    const [hasMore, setHasMore] = useState(true);
     const [fetchError, setFetchError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+
+    const PAGE_SIZE = 18;
     
     const [isCreating, setIsCreating] = useState(false);
     const [newTeamName, setNewTeamName] = useState('');
@@ -54,9 +59,13 @@ const Teams: React.FC = () => {
         try {
             let allTeams: Team[] = [];
             try {
-                const q = query(collection(db, 'teams'), limit(200));
+                const q = query(collection(db, 'teams'), limit(PAGE_SIZE));
                 const snap = await getDocs(q);
-                allTeams = snap.docs.map(d => ({ id: d.id, ...d.data() } as Team));
+                const docs = snap.docs;
+                setLastDoc(docs.length > 0 ? docs[docs.length - 1] : null);
+                setHasMore(docs.length === PAGE_SIZE);
+
+                allTeams = docs.map(d => ({ id: d.id, ...d.data() } as Team));
                 allTeams.sort((a, b) => {
                     const aTime = (a.createdAt as any)?.toMillis ? (a.createdAt as any).toMillis() : new Date((a.createdAt as any) || 0).getTime();
                     const bTime = (b.createdAt as any)?.toMillis ? (b.createdAt as any).toMillis() : new Date((b.createdAt as any) || 0).getTime();
@@ -80,6 +89,39 @@ const Teams: React.FC = () => {
             setFetchError(error?.message || "Something went wrong while loading teams.");
         } finally {
             setLoading(false);
+        }
+    };
+
+    const loadMoreTeams = async () => {
+        if (!lastDoc || loadingMore || !hasMore) return;
+        setLoadingMore(true);
+        try {
+            const q = query(collection(db, 'teams'), startAfter(lastDoc), limit(PAGE_SIZE));
+            const snap = await getDocs(q);
+            const docs = snap.docs;
+            setLastDoc(docs.length > 0 ? docs[docs.length - 1] : null);
+            setHasMore(docs.length === PAGE_SIZE);
+
+            const newTeams = docs.map(d => ({ id: d.id, ...d.data() } as Team));
+            setTeams(prev => {
+                const combined = [...prev, ...newTeams];
+                const seen = new Set<string>();
+                const unique = combined.filter(t => {
+                    if (seen.has(t.id)) return false;
+                    seen.add(t.id);
+                    return true;
+                });
+                unique.sort((a, b) => {
+                    const aTime = (a.createdAt as any)?.toMillis ? (a.createdAt as any).toMillis() : new Date((a.createdAt as any) || 0).getTime();
+                    const bTime = (b.createdAt as any)?.toMillis ? (b.createdAt as any).toMillis() : new Date((b.createdAt as any) || 0).getTime();
+                    return bTime - aTime;
+                });
+                return unique;
+            });
+        } catch (error: any) {
+            console.error("Error loading more teams:", error);
+        } finally {
+            setLoadingMore(false);
         }
     };
 
@@ -368,26 +410,49 @@ const Teams: React.FC = () => {
                         <p className="text-gray-400 font-black uppercase tracking-widest">No teams found.</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {filteredTeams.map(team => (
-                            <Link to={`/team/${team.id}`} key={team.id} className="bg-card/50 rounded-2xl sm:rounded-3xl border border-gray-800 p-5 sm:p-8 hover:border-brand-500/50 transition group hover:bg-card flex flex-col h-full">
-                                <div className="flex items-center gap-6 mb-6">
-                                    <div className="w-20 h-20 rounded-2xl bg-black border border-gray-800 overflow-hidden flex items-center justify-center shrink-0">
-                                        <img 
-                                            src={team.logoUrl || DEFAULT_TEAM_LOGO || undefined} 
-                                            alt={team.name} 
-                                            className="w-full h-full object-cover" 
-                                            referrerPolicy="no-referrer" loading="lazy" />
+                    <>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {filteredTeams.map(team => (
+                                <Link to={`/team/${team.id}`} key={team.id} className="bg-card/50 rounded-2xl sm:rounded-3xl border border-gray-800 p-5 sm:p-8 hover:border-brand-500/50 transition group hover:bg-card flex flex-col h-full">
+                                    <div className="flex items-center gap-6 mb-6">
+                                        <div className="w-20 h-20 rounded-2xl bg-black border border-gray-800 overflow-hidden flex items-center justify-center shrink-0">
+                                            <img 
+                                                src={team.logoUrl || DEFAULT_TEAM_LOGO || undefined} 
+                                                alt={team.name} 
+                                                className="w-full h-full object-cover" 
+                                                referrerPolicy="no-referrer" loading="lazy" />
+                                        </div>
+                                        <h3 className="text-xl font-black text-white group-hover:text-brand-400 transition line-clamp-1">{team.name}</h3>
                                     </div>
-                                    <h3 className="text-xl font-black text-white group-hover:text-brand-400 transition line-clamp-1">{team.name}</h3>
-                                </div>
-                                <p className="text-sm text-gray-400 line-clamp-2 mb-8 flex-grow">{team.description || 'No description provided.'}</p>
-                                <div className="flex items-center text-brand-300 text-sm font-black uppercase tracking-widest group-hover:translate-x-1 transition-transform mt-auto">
-                                    View Team <ArrowRight className="w-5 h-5 ml-2" />
-                                </div>
-                            </Link>
-                        ))}
-                    </div>
+                                    <p className="text-sm text-gray-400 line-clamp-2 mb-8 flex-grow">{team.description || 'No description provided.'}</p>
+                                    <div className="flex items-center text-brand-300 text-sm font-black uppercase tracking-widest group-hover:translate-x-1 transition-transform mt-auto">
+                                        View Team <ArrowRight className="w-5 h-5 ml-2" />
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
+
+                        {/* Pagination Load More Controller */}
+                        {hasMore && filteredTeams.length > 0 && (
+                            <div className="flex justify-center mt-8 sm:mt-12">
+                                <button
+                                    type="button"
+                                    onClick={loadMoreTeams}
+                                    disabled={loadingMore}
+                                    className="px-8 py-3.5 bg-card hover:bg-brand-500/10 border border-gray-800 hover:border-brand-500/50 text-white font-black text-xs uppercase tracking-widest rounded-xl transition flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-brand-500/10"
+                                >
+                                    {loadingMore ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+                                            <span>Loading More Teams...</span>
+                                        </>
+                                    ) : (
+                                        <span>Load More Teams</span>
+                                    )}
+                                </button>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </div>

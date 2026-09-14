@@ -1,6 +1,6 @@
 import Seo from '../../../shared/components/Seo';
 import React, { useEffect, useState } from 'react';
-import { collection, query, getDocs, limit, where, orderBy } from 'firebase/firestore';
+import { collection, query, getDocs, limit, where, orderBy, startAfter, QueryDocumentSnapshot } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { Tournament } from '../../../shared/types/types';
 import { Trophy, Calendar, Gamepad2, ChevronRight, Search } from 'lucide-react';
@@ -11,29 +11,72 @@ const Results: React.FC = () => {
     const [results, setResults] = useState<Tournament[]>([]);
     const [teamLogos, setTeamLogos] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [tourLastDoc, setTourLastDoc] = useState<QueryDocumentSnapshot | null>(null);
+    const [scrimLastDoc, setScrimLastDoc] = useState<QueryDocumentSnapshot | null>(null);
+    const [hasMore, setHasMore] = useState(true);
     const [fetchError, setFetchError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const navigate = useNavigate();
 
+    const PAGE_SIZE = 20;
+
     const getResultLink = (t: Tournament) => isScrimEvent(t) ? `/scrims/${t.id}` : `/tournaments/${t.id}`;
+
+    const prefetchLogos = async (data: Tournament[]) => {
+        const namesToFetch = new Set<string>();
+        data.forEach(t => {
+            t.winners?.forEach((w: any) => {
+                if (w.teamName) namesToFetch.add(w.teamName.trim().toLowerCase());
+                if (w.username) namesToFetch.add(w.username.trim().toLowerCase());
+            });
+            t.manualResults?.forEach((m: any) => {
+                if (m.team) namesToFetch.add(m.team.trim().toLowerCase());
+            });
+        });
+
+        if (namesToFetch.size > 0) {
+            try {
+                const teamsSnap = await getDocs(query(collection(db, 'teams'), limit(50)));
+                const map: Record<string, string> = {};
+                teamsSnap.docs.forEach(d => {
+                    const dt = d.data();
+                    const logo = dt.logoUrl || dt.logo;
+                    if (logo) {
+                        map[d.id] = logo;
+                        if (dt.name) map[String(dt.name).trim().toLowerCase()] = logo;
+                        if (dt.tag) map[String(dt.tag).trim().toLowerCase()] = logo;
+                    }
+                });
+                setTeamLogos(prev => ({ ...prev, ...map }));
+            } catch (e) {
+                console.warn('Could not prefetch team logos for results:', e);
+            }
+        }
+    };
 
     useEffect(() => {
         const fetchResults = async () => {
             setLoading(true);
+            setFetchError(null);
             try {
                 const [resultsSnap, scrimsSnap] = await Promise.all([
                     getDocs(query(
                         collection(db, 'tournaments'),
                         where('status', '==', 'completed'),
                         orderBy('startTime', 'desc'),
-                        limit(50)
+                        limit(PAGE_SIZE)
                     )),
                     getDocs(query(
                         collection(db, 'scrims'),
                         where('status', '==', 'completed'),
-                        limit(50)
+                        limit(PAGE_SIZE)
                     ))
                 ]);
+
+                setTourLastDoc(resultsSnap.docs.length > 0 ? resultsSnap.docs[resultsSnap.docs.length - 1] : null);
+                setScrimLastDoc(scrimsSnap.docs.length > 0 ? scrimsSnap.docs[scrimsSnap.docs.length - 1] : null);
+                setHasMore(resultsSnap.docs.length === PAGE_SIZE || scrimsSnap.docs.length === PAGE_SIZE);
 
                 const tourList = resultsSnap.docs
                     .map(doc => ({ id: doc.id, ...doc.data() } as Tournament))
@@ -48,42 +91,11 @@ const Results: React.FC = () => {
                         const aTime = toDateSafe(a.startTime)?.getTime() || 0;
                         const bTime = toDateSafe(b.startTime)?.getTime() || 0;
                         return bTime - aTime;
-                    })
-                    .slice(0, 50);
+                    });
 
                 setResults(resultsData);
-
-                // Prefetch team logos for rendered cards
-                const namesToFetch = new Set<string>();
-                resultsData.forEach(t => {
-                    t.winners?.forEach((w: any) => {
-                        if (w.teamName) namesToFetch.add(w.teamName.trim().toLowerCase());
-                        if (w.username) namesToFetch.add(w.username.trim().toLowerCase());
-                    });
-                    t.manualResults?.forEach((m: any) => {
-                        if (m.team) namesToFetch.add(m.team.trim().toLowerCase());
-                    });
-                });
-
-                if (namesToFetch.size > 0) {
-                    try {
-                        const teamsSnap = await getDocs(query(collection(db, 'teams'), limit(50)));
-                        const map: Record<string, string> = {};
-                        teamsSnap.docs.forEach(d => {
-                            const dt = d.data();
-                            const logo = dt.logoUrl || dt.logo;
-                            if (logo) {
-                                map[d.id] = logo;
-                                if (dt.name) map[String(dt.name).trim().toLowerCase()] = logo;
-                                if (dt.tag) map[String(dt.tag).trim().toLowerCase()] = logo;
-                            }
-                        });
-                        setTeamLogos(map);
-                    } catch (err) {
-                        console.warn('Could not prefetch team logos for results:', err);
-                    }
-                }
-            } catch (error) {
+                prefetchLogos(resultsData);
+            } catch (error: any) {
                 console.error("Error fetching results:", error);
                 setFetchError("Failed to load results. Please check your connection.");
             } finally {
@@ -93,6 +105,74 @@ const Results: React.FC = () => {
 
         fetchResults();
     }, []);
+
+    const loadMoreResults = async () => {
+        if ((!tourLastDoc && !scrimLastDoc) || loadingMore || !hasMore) return;
+        setLoadingMore(true);
+        try {
+            const promises: Promise<any>[] = [];
+            if (tourLastDoc) {
+                promises.push(getDocs(query(
+                    collection(db, 'tournaments'),
+                    where('status', '==', 'completed'),
+                    orderBy('startTime', 'desc'),
+                    startAfter(tourLastDoc),
+                    limit(PAGE_SIZE)
+                )));
+            } else {
+                promises.push(Promise.resolve({ docs: [] }));
+            }
+
+            if (scrimLastDoc) {
+                promises.push(getDocs(query(
+                    collection(db, 'scrims'),
+                    where('status', '==', 'completed'),
+                    startAfter(scrimLastDoc),
+                    limit(PAGE_SIZE)
+                )));
+            } else {
+                promises.push(Promise.resolve({ docs: [] }));
+            }
+
+            const [nextTourSnap, nextScrimSnap] = await Promise.all(promises);
+
+            const nextTourDocs = nextTourSnap.docs || [];
+            const nextScrimDocs = nextScrimSnap.docs || [];
+
+            setTourLastDoc(nextTourDocs.length > 0 ? nextTourDocs[nextTourDocs.length - 1] : null);
+            setScrimLastDoc(nextScrimDocs.length > 0 ? nextScrimDocs[nextScrimDocs.length - 1] : null);
+            setHasMore(nextTourDocs.length === PAGE_SIZE || nextScrimDocs.length === PAGE_SIZE);
+
+            const moreTours = nextTourDocs
+                .map((doc: any) => ({ id: doc.id, ...doc.data() } as Tournament))
+                .filter(isTournamentEvent);
+
+            const moreScrims = nextScrimDocs
+                .map((doc: any) => ({ id: doc.id, ...doc.data(), matchType: 'scrims' } as Tournament))
+                .filter(isScrimEvent);
+
+            const newResults = [...moreTours, ...moreScrims];
+            setResults(prev => {
+                const combined = [...prev, ...newResults];
+                const seen = new Set<string>();
+                return combined.filter(t => {
+                    if (seen.has(t.id)) return false;
+                    seen.add(t.id);
+                    return true;
+                }).sort((a, b) => {
+                    const aTime = toDateSafe(a.startTime)?.getTime() || 0;
+                    const bTime = toDateSafe(b.startTime)?.getTime() || 0;
+                    return bTime - aTime;
+                });
+            });
+
+            prefetchLogos(newResults);
+        } catch (err) {
+            console.error("Error loading more results:", err);
+        } finally {
+            setLoadingMore(false);
+        }
+    };
 
     const filteredResults = results.filter(r => 
         (r.title || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -360,6 +440,27 @@ const Results: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            {/* Pagination Load More Controller */}
+            {hasMore && filteredResults.length > 0 && (
+                <div className="flex justify-center mt-8 sm:mt-12">
+                    <button
+                        type="button"
+                        onClick={loadMoreResults}
+                        disabled={loadingMore}
+                        className="px-8 py-3.5 bg-card hover:bg-brand-500/10 border border-gray-800 hover:border-brand-500/50 text-white font-black text-xs uppercase tracking-widest rounded-xl transition flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-brand-500/10"
+                    >
+                        {loadingMore ? (
+                            <>
+                                <div className="w-4 h-4 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+                                <span>Loading More Results...</span>
+                            </>
+                        ) : (
+                            <span>Load More Results</span>
+                        )}
+                    </button>
+                </div>
+            )}
         </div>
     );
 };

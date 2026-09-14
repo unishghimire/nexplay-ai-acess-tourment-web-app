@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, query, getDocs, limit, startAfter, QueryDocumentSnapshot } from 'firebase/firestore';
 import { db } from '../../shared/config/firebase';
 import { OrgPost } from '../../shared/types/types';
 import Seo from '../../shared/components/Seo';
@@ -10,12 +10,21 @@ import { Calendar, ArrowLeft, Newspaper } from 'lucide-react';
 const News: React.FC = () => {
     const [posts, setPosts] = useState<OrgPost[]>([]);
     const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot | null>(null);
+    const [hasMore, setHasMore] = useState(true);
+
+    const PAGE_SIZE = 8;
 
     const fetchNews = useCallback(async () => {
         try {
-            // ponytail: client-side sort — no composite index needed for createdAt orderBy
-            const snap = await getDocs(collection(db, 'org_posts'));
-            const all = snap.docs
+            // Database-efficient paginated read
+            const snap = await getDocs(query(collection(db, 'org_posts'), limit(PAGE_SIZE)));
+            const docs = snap.docs;
+            setLastDoc(docs.length > 0 ? docs[docs.length - 1] : null);
+            setHasMore(docs.length === PAGE_SIZE);
+
+            const all = docs
                 .map(d => ({ id: d.id, ...d.data() } as OrgPost))
                 .sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
             setPosts(all);
@@ -25,6 +34,32 @@ const News: React.FC = () => {
             setLoading(false);
         }
     }, []);
+
+    const loadMoreNews = async () => {
+        if (!lastDoc || loadingMore || !hasMore) return;
+        setLoadingMore(true);
+        try {
+            const snap = await getDocs(query(collection(db, 'org_posts'), startAfter(lastDoc), limit(PAGE_SIZE)));
+            const docs = snap.docs;
+            setLastDoc(docs.length > 0 ? docs[docs.length - 1] : null);
+            setHasMore(docs.length === PAGE_SIZE);
+
+            const newPosts = docs.map(d => ({ id: d.id, ...d.data() } as OrgPost));
+            setPosts(prev => {
+                const combined = [...prev, ...newPosts];
+                const seen = new Set<string>();
+                return combined.filter(p => {
+                    if (seen.has(p.id)) return false;
+                    seen.add(p.id);
+                    return true;
+                }).sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
+            });
+        } catch (e) {
+            console.error('Load more news error:', e);
+        } finally {
+            setLoadingMore(false);
+        }
+    };
 
     useEffect(() => { fetchNews(); }, [fetchNews]);
 
@@ -63,7 +98,8 @@ const News: React.FC = () => {
                         <p className="text-gray-500 font-bold">No news yet. Check back soon!</p>
                     </div>
                 ) : (
-                    <div className="space-y-6">
+                    <>
+                        <div className="space-y-6">
                         {posts.map(post => (
                             <Link
                                 key={post.id}
@@ -87,6 +123,28 @@ const News: React.FC = () => {
                             </Link>
                         ))}
                     </div>
+
+                    {/* Pagination Load More Controller */}
+                    {hasMore && posts.length > 0 && (
+                        <div className="flex justify-center mt-8 sm:mt-12">
+                            <button
+                                type="button"
+                                onClick={loadMoreNews}
+                                disabled={loadingMore}
+                                className="px-8 py-3.5 bg-card hover:bg-brand-500/10 border border-gray-800 hover:border-brand-500/50 text-white font-black text-xs uppercase tracking-widest rounded-xl transition flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-brand-500/10"
+                            >
+                                {loadingMore ? (
+                                    <>
+                                        <div className="w-4 h-4 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+                                        <span>Loading More News...</span>
+                                    </>
+                                ) : (
+                                    <span>Load More News</span>
+                                )}
+                            </button>
+                        </div>
+                    )}
+                </>
                 )}
 
                 <Link to="/" className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition font-bold text-sm mt-10">

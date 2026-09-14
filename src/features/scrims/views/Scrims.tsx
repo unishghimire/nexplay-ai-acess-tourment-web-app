@@ -6,7 +6,7 @@ import { Trophy, Search, Filter, Calendar, Clock, Gamepad2, AlertCircle, Target 
 import { motion } from 'motion/react';
 import { formatCurrency, formatDate, formatDateShort, formatGameName, isScrimEvent } from '../../../shared/utils/utils';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs, query, where, limit, startAfter, QueryDocumentSnapshot } from 'firebase/firestore';
 import { eventDetailUrl } from '../../../shared/utils/eventUrl';
 import { db } from '../../../shared/config/firebase';
 import TabErrorBoundary from '../../../shared/components/TabErrorBoundary';
@@ -91,12 +91,17 @@ const uniqueScrims = (scrims: ScrimRecord[]): ScrimRecord[] => {
 const ScrimsContent: React.FC = () => {
     const [scrims, setScrims] = useState<ScrimRecord[]>([]);
     const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot | null>(null);
+    const [hasMore, setHasMore] = useState(true);
     const [fetchError, setFetchError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [searchParams, setSearchParams] = useSearchParams();
     const [filterGame, setFilterGame] = useState(searchParams.get('game') || 'All');
     const [filterMode, setFilterMode] = useState(searchParams.get('mode') || 'All');
     const navigate = useNavigate();
+
+    const PAGE_SIZE = 16;
 
     useEffect(() => {
         const game = searchParams.get('game');
@@ -127,10 +132,13 @@ const ScrimsContent: React.FC = () => {
         let list: ScrimRecord[] = [];
         let anySuccess = false;
 
-        // Dedicated 'scrims' collection query
+        // Dedicated 'scrims' collection query with cursor pagination
         try {
-            const snap = await getDocs(collection(db, 'scrims'));
-            list.push(...snap.docs.map(docSnap => toScrimRecord(docSnap.id, docSnap.data(), 'scrims')));
+            const snap = await getDocs(query(collection(db, 'scrims'), limit(PAGE_SIZE)));
+            const docs = snap.docs;
+            setLastDoc(docs.length > 0 ? docs[docs.length - 1] : null);
+            setHasMore(docs.length === PAGE_SIZE);
+            list.push(...docs.map(docSnap => toScrimRecord(docSnap.id, docSnap.data(), 'scrims')));
             anySuccess = true;
         } catch (err) {
             console.warn('Scrims collection query failed:', err);
@@ -166,6 +174,27 @@ const ScrimsContent: React.FC = () => {
         }
         setLoading(false);
     }, []);
+
+    const loadMoreScrims = async () => {
+        if (!lastDoc || loadingMore || !hasMore) return;
+        setLoadingMore(true);
+        try {
+            const snap = await getDocs(query(collection(db, 'scrims'), startAfter(lastDoc), limit(PAGE_SIZE)));
+            const docs = snap.docs;
+            setLastDoc(docs.length > 0 ? docs[docs.length - 1] : null);
+            setHasMore(docs.length === PAGE_SIZE);
+
+            const moreList = docs
+                .map(docSnap => toScrimRecord(docSnap.id, docSnap.data(), 'scrims'))
+                .filter(isScrimEvent);
+            const moreActive = moreList.filter(scrim => !scrim.status || !INACTIVE_SCRIM_STATUSES.has(scrim.status));
+            setScrims(prev => uniqueScrims([...prev, ...moreActive]));
+        } catch (err) {
+            console.error("Error loading more scrims:", err);
+        } finally {
+            setLoadingMore(false);
+        }
+    };
 
     useEffect(() => {
         fetchScrims();
@@ -354,7 +383,8 @@ const ScrimsContent: React.FC = () => {
                         </button>
                     </div>
                 ) : filteredScrims.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                    <>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
                         {filteredScrims.map((scrim) => {
                             const rawSlots = scrim.slots as unknown;
                             const totalSlots = typeof rawSlots === 'number'
@@ -455,6 +485,28 @@ const ScrimsContent: React.FC = () => {
                             );
                         })}
                     </div>
+
+                    {/* Pagination Load More Controller */}
+                    {hasMore && filteredScrims.length > 0 && (
+                        <div className="flex justify-center mt-8 sm:mt-12">
+                            <button
+                                type="button"
+                                onClick={loadMoreScrims}
+                                disabled={loadingMore}
+                                className="px-8 py-3.5 bg-card hover:bg-brand-500/10 border border-gray-800 hover:border-brand-500/50 text-white font-black text-xs uppercase tracking-widest rounded-xl transition flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-brand-500/10"
+                            >
+                                {loadingMore ? (
+                                    <>
+                                        <div className="w-4 h-4 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+                                        <span>Loading More Scrims...</span>
+                                    </>
+                                ) : (
+                                    <span>Load More Scrims</span>
+                                )}
+                            </button>
+                        </div>
+                    )}
+                </>
                 ) : (
                     <div className="bg-card/50 p-6 sm:p-12 rounded-3xl border border-gray-800 text-center">
                         <Gamepad2 className="w-16 h-16 text-gray-700 mx-auto mb-6" />

@@ -1,6 +1,6 @@
 import Seo from '../../../shared/components/Seo';
 import React, { useState, useEffect } from 'react';
-import { collection, query, getDocs, where, addDoc, deleteDoc, doc, limit } from 'firebase/firestore';
+import { collection, query, getDocs, where, addDoc, deleteDoc, doc, limit, startAfter, QueryDocumentSnapshot } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
@@ -13,9 +13,14 @@ const OrgBrowser: React.FC = () => {
     const { showToast } = useNotification();
     const [orgs, setOrgs] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot | null>(null);
+    const [hasMore, setHasMore] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [following, setFollowing] = useState<Set<string>>(new Set());
     const [togglingId, setTogglingId] = useState<string | null>(null);
+
+    const PAGE_SIZE = 18;
 
     useEffect(() => {
         fetchOrgs();
@@ -25,16 +30,28 @@ const OrgBrowser: React.FC = () => {
     const fetchOrgs = async () => {
         setLoading(true);
         try {
-            const snap = await getDocs(query(collection(db, 'users_public'), where('role', 'in', ['organizer', 'admin']), limit(200)));
-            const orgsData = snap.docs
+            const snap = await getDocs(query(
+                collection(db, 'users_public'),
+                where('role', 'in', ['organizer', 'admin']),
+                limit(PAGE_SIZE)
+            ));
+            const docs = snap.docs;
+            setLastDoc(docs.length > 0 ? docs[docs.length - 1] : null);
+            setHasMore(docs.length === PAGE_SIZE);
+
+            const orgsData = docs
                 .map(d => ({ uid: d.id, ...(d.data() as any) }))
                 .filter((d: any) => d.role === 'organizer' || d.role === 'admin' || (d.orgName && d.orgName.trim() !== ''));
             setOrgs(orgsData);
         } catch (error: any) {
             console.error('FetchOrganizersFailed:', error);
             try {
-                const fallbackSnap = await getDocs(query(collection(db, 'users_public'), limit(200)));
-                const fallbackData = fallbackSnap.docs
+                const fallbackSnap = await getDocs(query(collection(db, 'users_public'), limit(PAGE_SIZE)));
+                const docs = fallbackSnap.docs;
+                setLastDoc(docs.length > 0 ? docs[docs.length - 1] : null);
+                setHasMore(docs.length === PAGE_SIZE);
+
+                const fallbackData = docs
                     .map(d => ({ uid: d.id, ...(d.data() as any) }))
                     .filter((d: any) => d.role === 'organizer' || d.role === 'admin' || (d.orgName && d.orgName.trim() !== ''));
                 setOrgs(fallbackData);
@@ -43,6 +60,40 @@ const OrgBrowser: React.FC = () => {
             }
         } finally {
             setLoading(false);
+        }
+    };
+
+    const loadMoreOrgs = async () => {
+        if (!lastDoc || loadingMore || !hasMore) return;
+        setLoadingMore(true);
+        try {
+            const snap = await getDocs(query(
+                collection(db, 'users_public'),
+                where('role', 'in', ['organizer', 'admin']),
+                startAfter(lastDoc),
+                limit(PAGE_SIZE)
+            ));
+            const docs = snap.docs;
+            setLastDoc(docs.length > 0 ? docs[docs.length - 1] : null);
+            setHasMore(docs.length === PAGE_SIZE);
+
+            const newOrgs = docs
+                .map(d => ({ uid: d.id, ...(d.data() as any) }))
+                .filter((d: any) => d.role === 'organizer' || d.role === 'admin' || (d.orgName && d.orgName.trim() !== ''));
+
+            setOrgs(prev => {
+                const combined = [...prev, ...newOrgs];
+                const seen = new Set<string>();
+                return combined.filter(o => {
+                    if (seen.has(o.uid)) return false;
+                    seen.add(o.uid);
+                    return true;
+                });
+            });
+        } catch (error: any) {
+            console.error('LoadMoreOrganizersFailed:', error);
+        } finally {
+            setLoadingMore(false);
         }
     };
 
@@ -306,6 +357,27 @@ const OrgBrowser: React.FC = () => {
                                 </motion.div>
                             ))}
                         </div>
+
+                        {/* Pagination Load More Controller */}
+                        {hasMore && (searchTerm ? filteredOrgs : rest).length > 0 && (
+                            <div className="flex justify-center mt-8 sm:mt-12">
+                                <button
+                                    type="button"
+                                    onClick={loadMoreOrgs}
+                                    disabled={loadingMore}
+                                    className="px-8 py-3.5 bg-card hover:bg-brand-500/10 border border-gray-800 hover:border-brand-500/50 text-white font-black text-xs uppercase tracking-widest rounded-xl transition flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-brand-500/10"
+                                >
+                                    {loadingMore ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+                                            <span>Loading More Organizations...</span>
+                                        </>
+                                    ) : (
+                                        <span>Load More Organizations</span>
+                                    )}
+                                </button>
+                            </div>
+                        )}
                     </section>
                 </>
             )}

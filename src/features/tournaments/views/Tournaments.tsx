@@ -1,8 +1,8 @@
 import Seo from '../../../shared/components/Seo';
 import Faq from '../../../shared/components/Faq';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs, query, where, limit, startAfter, QueryDocumentSnapshot } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { Tournament, Game } from '../../../shared/types/types';
 import TournamentCard from '../components/TournamentCard';
@@ -38,40 +38,95 @@ const Tournaments: React.FC = () => {
     const [teamTypeFilter, setTeamTypeFilter] = useState(searchParams.get('teamType') || 'all');
     
     const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot | null>(null);
+    const [hasMore, setHasMore] = useState(true);
     const [fetchError, setFetchError] = useState<string | null>(null);
 
-    useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true);
-            try {
-                // Fetch visible tournaments only — excludes draft/cancelled to reduce reads
-                const [tournamentsSnap, gamesSnap] = await Promise.all([
-                    getDocs(query(collection(db, 'tournaments'), where('status', 'in', ['upcoming', 'published', 'live', 'completed']))),
-                    getDocs(query(collection(db, 'games'), where('isPublished', '==', true)))
-                ]);
-                
-                let tours = tournamentsSnap.docs
-                    .map(doc => ({ id: doc.id, ...doc.data() } as Tournament))
-                    .filter(isTournamentEvent);
-                
-                tours.sort((a, b) => {
+    const PAGE_SIZE = 16;
+
+    const fetchData = useCallback(async () => {
+        setLoading(true);
+        setFetchError(null);
+        try {
+            // Fetch initial page of tournaments and published games in parallel
+            const [tournamentsSnap, gamesSnap] = await Promise.all([
+                getDocs(query(
+                    collection(db, 'tournaments'),
+                    where('status', 'in', ['upcoming', 'published', 'live', 'completed']),
+                    limit(PAGE_SIZE)
+                )),
+                getDocs(query(collection(db, 'games'), where('isPublished', '==', true)))
+            ]);
+            
+            const docs = tournamentsSnap.docs;
+            setLastDoc(docs.length > 0 ? docs[docs.length - 1] : null);
+            setHasMore(docs.length === PAGE_SIZE);
+
+            let tours = docs
+                .map(doc => ({ id: doc.id, ...doc.data() } as Tournament))
+                .filter(isTournamentEvent);
+            
+            tours.sort((a, b) => {
+                if (a.status === 'live' && b.status !== 'live') return -1;
+                if (b.status === 'live' && a.status !== 'live') return 1;
+                return (toDateSafe(a.startTime)?.getTime() || 0) - (toDateSafe(b.startTime)?.getTime() || 0);
+            });
+
+            setTournaments(tours);
+            setGames(gamesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Game)));
+        } catch (error: any) {
+            console.error("Error fetching tournament data:", error);
+            setFetchError("Failed to load tournaments. Please check your connection.");
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    const loadMoreTournaments = async () => {
+        if (!lastDoc || loadingMore || !hasMore) return;
+        setLoadingMore(true);
+        try {
+            const nextSnap = await getDocs(query(
+                collection(db, 'tournaments'),
+                where('status', 'in', ['upcoming', 'published', 'live', 'completed']),
+                startAfter(lastDoc),
+                limit(PAGE_SIZE)
+            ));
+
+            const docs = nextSnap.docs;
+            setLastDoc(docs.length > 0 ? docs[docs.length - 1] : null);
+            setHasMore(docs.length === PAGE_SIZE);
+
+            const newTours = docs
+                .map(doc => ({ id: doc.id, ...doc.data() } as Tournament))
+                .filter(isTournamentEvent);
+
+            setTournaments(prev => {
+                const combined = [...prev, ...newTours];
+                const seen = new Set<string>();
+                const unique = combined.filter(t => {
+                    if (seen.has(t.id)) return false;
+                    seen.add(t.id);
+                    return true;
+                });
+                unique.sort((a, b) => {
                     if (a.status === 'live' && b.status !== 'live') return -1;
                     if (b.status === 'live' && a.status !== 'live') return 1;
                     return (toDateSafe(a.startTime)?.getTime() || 0) - (toDateSafe(b.startTime)?.getTime() || 0);
                 });
+                return unique;
+            });
+        } catch (error: any) {
+            console.error("Error loading more tournaments:", error);
+        } finally {
+            setLoadingMore(false);
+        }
+    };
 
-                setTournaments(tours);
-                setGames(gamesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Game)));
-            } catch (error: any) {
-                console.error("Error fetching tournament data:", error);
-                setFetchError("Failed to load tournaments. Please check your connection.");
-            } finally {
-                setLoading(false);
-            }
-        };
-
+    useEffect(() => {
         fetchData();
-    }, []);
+    }, [fetchData]);
 
     useEffect(() => {
         const game = searchParams.get('game');
@@ -291,6 +346,27 @@ const Tournaments: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            {/* Pagination Load More Controller */}
+            {hasMore && filteredTournaments.length > 0 && (
+                <div className="flex justify-center mt-8 sm:mt-12">
+                    <button
+                        type="button"
+                        onClick={loadMoreTournaments}
+                        disabled={loadingMore}
+                        className="px-8 py-3.5 bg-card hover:bg-brand-500/10 border border-gray-800 hover:border-brand-500/50 text-white font-black text-xs uppercase tracking-widest rounded-xl transition flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-brand-500/10"
+                    >
+                        {loadingMore ? (
+                            <>
+                                <div className="w-4 h-4 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+                                <span>Loading More Tournaments...</span>
+                            </>
+                        ) : (
+                            <span>Load More Tournaments</span>
+                        )}
+                    </button>
+                </div>
+            )}
 
             <Faq items={tournamentFaqs} />
         </div>
