@@ -53,7 +53,7 @@ const Navbar: React.FC = () => {
                     {/* Desktop nav links — lives in its own grid column, so it can never overlap
                         the logo or right section. Scrolls horizontally if it ever runs out of room
                         instead of spilling over neighboring columns (fix for navbar overlap bug). */}
-                    <div className="hidden lg:flex min-w-0 items-center justify-center">
+                    <div className="hidden md:flex min-w-0 items-center justify-center">
                         <div className="flex items-center space-x-1 max-w-full overflow-x-auto no-scrollbar bg-dark/50 backdrop-blur-md px-2 py-1.5 rounded-full border border-gray-800/50 shadow-xl">
                             {navLinks.map((link) => (
                                 <Link
@@ -91,7 +91,7 @@ const Navbar: React.FC = () => {
                         {/* Mobile menu toggle */}
                         <button
                             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                            className="lg:hidden text-gray-400 hover:text-white transition-colors w-11 h-11 flex items-center justify-center shrink-0"
+                            className="md:hidden text-gray-400 hover:text-white transition-colors w-11 h-11 flex items-center justify-center shrink-0"
                             aria-label="Toggle menu"
                             aria-expanded={isMobileMenuOpen}
                         >

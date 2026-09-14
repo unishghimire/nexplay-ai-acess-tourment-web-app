@@ -125,7 +125,9 @@ const Footer: React.FC = () => {
                             &copy; {new Date().getFullYear()} NexPlay. All rights reserved. Nepal's esports platform.
                         </p>
                     </div>
-                    <nav aria-label="Legal links" className="flex flex-wrap gap-4 text-gray-400 text-sm">
+                    <nav aria-label="Footer links" className="flex flex-wrap gap-4 text-gray-400 text-sm">
+                        <Link to="/games" className="hover:text-white transition">Games</Link>
+                        <Link to="/organizations" className="hover:text-white transition">Organizations</Link>
                         <Link to="/about" className="hover:text-white transition">About Us</Link>
                         <Link to="/contact" className="hover:text-white transition">Contact</Link>
                         <Link to="/terms" className="hover:text-white transition">Terms of Service</Link>

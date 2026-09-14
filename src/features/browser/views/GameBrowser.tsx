@@ -20,6 +20,10 @@ export default function GameBrowser() {
                     getDocs(query(collection(db, 'games'), where('isPublished', '==', true)))
                 );
                 let gamesData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Game));
+                if (gamesData.length === 0) {
+                    const fallbackSnap = await getDocs(collection(db, 'games'));
+                    gamesData = fallbackSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Game));
+                }
                 gamesData.sort((a,b) => {
                     const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
                     const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
@@ -28,6 +32,13 @@ export default function GameBrowser() {
                 setGames(gamesData);
             } catch (error) {
                 console.error("Error fetching games:", error);
+                try {
+                    const fallbackSnap = await getDocs(collection(db, 'games'));
+                    const fallbackData = fallbackSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Game));
+                    setGames(fallbackData);
+                } catch (fallbackError) {
+                    console.error("Fallback fetching games failed:", fallbackError);
+                }
             } finally {
                 setLoading(false);
             }
