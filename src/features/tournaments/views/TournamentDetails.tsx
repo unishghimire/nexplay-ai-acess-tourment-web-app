@@ -668,7 +668,10 @@ export default function TournamentDetails() {
             const token = await auth.currentUser?.getIdToken();
             if (!token) throw new Error('Authentication required');
 
-            const res = await fetch('/api/wallet/leave-tournament', {
+            const isScrim = Boolean((tournament as any).isScrim === true || tournament.matchType === 'scrims' || (tournament as any).eventCollection === 'scrims');
+            const endpoint = (isScrim && (tournament as any).eventCollection === 'scrims') ? `/api/scrims/${tournament.id}/leave` : '/api/wallet/leave-tournament';
+
+            const res = await fetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ tournamentId: tournament.id }),

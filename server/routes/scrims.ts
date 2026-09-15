@@ -252,8 +252,20 @@ router.post("/api/scrims/:id/join", authenticateToken, rateLimit(15, 60 * 1000),
           amount: entryFee,
           scrimId: id,
           status: "completed",
-          createdAt: admin.firestore.FieldValue.serverTimestamp()
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          timestamp: admin.firestore.FieldValue.serverTimestamp(),
+          refId: `SCRIM-${id.slice(0, 8)}-${targetSlot}`,
+          desc: `Entry fee for ${scrim.title || 'Scrim'} (Slot #${targetSlot})`,
         });
+
+        const scrimHostId = scrim.hostUid || scrim.orgId || scrim.hostId || scrim.userId;
+        if (scrimHostId) {
+          const hostRef = db.collection("users").doc(scrimHostId);
+          transaction.set(hostRef, {
+            orgTournamentsLockedBalance: admin.firestore.FieldValue.increment(entryFee),
+            orgPendingEarnings: admin.firestore.FieldValue.increment(entryFee),
+          }, { merge: true });
+        }
       }
 
       // Register participant record
@@ -271,13 +283,18 @@ router.post("/api/scrims/:id/join", authenticateToken, rateLimit(15, 60 * 1000),
         createdAt: admin.firestore.FieldValue.serverTimestamp()
       });
 
-      const scrimUpdates = {
+      const scrimUpdates: any = {
         slots,
         filledSlots,
         currentPlayers: filledSlots,
         status: isNowFull ? "full" : "open",
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
       };
+
+      if (entryFee > 0) {
+        scrimUpdates.collectedEntryFees = admin.firestore.FieldValue.increment(entryFee);
+        scrimUpdates.lockedMoney = admin.firestore.FieldValue.increment(entryFee);
+      }
 
       transaction.update(scrimRef, scrimUpdates);
 
@@ -325,12 +342,21 @@ router.post("/api/scrims/:id/leave", authenticateToken, rateLimit(15, 60 * 1000)
         throw new Error("You are not registered in this scrim");
       }
 
+      const scrimUpdates: any = {
+        slots,
+        filledSlots: 0,
+        currentPlayers: 0,
+        status: "open",
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      };
+
       const entryFee = Number(scrim.entryFee) || 0;
       if (entryFee > 0 && partSnap.exists) {
         transaction.update(userRef, {
           balance: admin.firestore.FieldValue.increment(entryFee),
           updatedAt: admin.firestore.FieldValue.serverTimestamp()
         });
+
         const refundTxRef = db.collection("transactions").doc();
         transaction.set(refundTxRef, {
           id: refundTxRef.id,
@@ -340,8 +366,23 @@ router.post("/api/scrims/:id/leave", authenticateToken, rateLimit(15, 60 * 1000)
           scrimId: id,
           method: "Scrim Entry Refund",
           status: "completed",
-          createdAt: admin.firestore.FieldValue.serverTimestamp()
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          timestamp: admin.firestore.FieldValue.serverTimestamp(),
+          refId: `SCRIM-RFD-${id.slice(0, 8)}-${Date.now().toString().slice(-4)}`,
+          desc: `Refund for leaving ${scrim.title || 'Scrim'}`,
         });
+
+        scrimUpdates.collectedEntryFees = admin.firestore.FieldValue.increment(-entryFee);
+        scrimUpdates.lockedMoney = admin.firestore.FieldValue.increment(-entryFee);
+
+        const scrimHostId = scrim.hostUid || scrim.orgId || scrim.hostId || scrim.userId;
+        if (scrimHostId) {
+          const hostRef = db.collection("users").doc(scrimHostId);
+          transaction.set(hostRef, {
+            orgTournamentsLockedBalance: admin.firestore.FieldValue.increment(-entryFee),
+            orgPendingEarnings: admin.firestore.FieldValue.increment(-entryFee),
+          }, { merge: true });
+        }
       }
 
       if (slotIndex !== -1) {
@@ -359,13 +400,11 @@ router.post("/api/scrims/:id/leave", authenticateToken, rateLimit(15, 60 * 1000)
       }
 
       const filledSlots = slots.filter((s: any) => s.status === 'filled').length;
-      transaction.update(scrimRef, {
-        slots,
-        filledSlots,
-        currentPlayers: filledSlots,
-        status: "open",
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
-      });
+      scrimUpdates.slots = slots;
+      scrimUpdates.filledSlots = filledSlots;
+      scrimUpdates.currentPlayers = filledSlots;
+
+      transaction.update(scrimRef, scrimUpdates);
 
       if (partSnap.exists) {
         transaction.delete(partRef);
@@ -627,8 +666,22 @@ router.post("/api/scrims/:id/payout", authenticateToken, rateLimit(5, 15 * 60 * 
           points: w.points || 0,
           userId: w.userId || '',
         })),
+        lockedMoney: 0,
+        distributedAmount: totalAllocated,
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
       };
+
+      const scrimHostId = scrim.hostUid || scrim.orgId || scrim.hostId || scrim.userId;
+      if (scrimHostId) {
+        const lockedAmount = Number(scrim.collectedEntryFees || scrim.lockedMoney || 0);
+        if (lockedAmount > 0) {
+          const hostRef = db.collection("users").doc(scrimHostId);
+          transaction.set(hostRef, {
+            orgTournamentsLockedBalance: admin.firestore.FieldValue.increment(-lockedAmount),
+            orgPendingEarnings: admin.firestore.FieldValue.increment(-lockedAmount),
+          }, { merge: true });
+        }
+      }
 
       if (Array.isArray(req.body.manualResults) || Array.isArray(req.body.resultsData?.manualResults)) {
         scrimUpdates.manualResults = req.body.resultsData?.manualResults || req.body.manualResults;

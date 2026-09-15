@@ -356,6 +356,9 @@ export interface Transaction {
         | 'tournament_reservation'
         | 'tournament_release'
         | 'prize_payout'
+        | 'scrim_entry'
+        | 'scrim_refund'
+        | 'scrim_payout'
         | 'admin_adjustment';
     amount: number;
     method: string;

@@ -278,14 +278,25 @@ router.post("/api/wallet/join-tournament",
           cRef ? tx.get(cRef) : Promise.resolve(null),
         ]);
 
-        if (!tDoc.exists) throw new Error("Tournament does not exist");
+        let targetRef = tRef;
+        let actualTDoc = tDoc;
+        if (!actualTDoc.exists) {
+          const sRef = db.collection('scrims').doc(tournamentId);
+          const sDoc = await tx.get(sRef);
+          if (sDoc.exists) {
+            targetRef = sRef;
+            actualTDoc = sDoc;
+          } else {
+            throw new Error("Tournament does not exist");
+          }
+        }
+
         if (!uDoc.exists) throw new Error("User not found");
         if (partDoc.exists) throw new Error("Already registered for this event");
 
-        const targetRef = tRef;
-        const tData = tDoc.data()!;
+        const tData = actualTDoc.data()!;
         const uData = uDoc.data()!;
-        const isScrim = Boolean(tData.isScrim === true || tData.matchType === 'scrims');
+        const isScrim = Boolean(tData.isScrim === true || tData.matchType === 'scrims' || targetRef.path.startsWith('scrims/'));
 
         if (!['upcoming', 'published', 'live', 'open', 'active'].includes(tData.status)) throw new Error("Registration is not open for this event");
         
@@ -437,6 +448,12 @@ router.post("/api/wallet/join-tournament",
           tournamentUpdates.status = 'full';
         }
 
+        if (entryFee > 0) {
+          tournamentUpdates.collectedEntryFees = admin.firestore.FieldValue.increment(entryFee);
+          tournamentUpdates.lockedMoney = admin.firestore.FieldValue.increment(entryFee);
+          tournamentUpdates.escrowBalance = admin.firestore.FieldValue.increment(entryFee);
+        }
+
         // 2. ALL WRITES AFTER (No tx.get calls allowed past this point)
         tx.update(uRef, { balance: balanceAfter, xp: newXP, level: newLevel });
         tx.update(targetRef, tournamentUpdates);
@@ -470,6 +487,24 @@ router.post("/api/wallet/join-tournament",
         tx.set(partRef, participantData);
 
         if (entryFee > 0) {
+          const fundingRef = db.collection('tournament_funding').doc(tournamentId);
+          tx.set(fundingRef, {
+            tournamentId,
+            organizationId: tData.hostUid || tData.orgId || '',
+            collectedEntryFees: admin.firestore.FieldValue.increment(entryFee),
+            lockedEntryFees: admin.firestore.FieldValue.increment(entryFee),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          }, { merge: true });
+
+          const hostId = tData.hostUid || tData.orgId || tData.hostId;
+          if (hostId) {
+            const hostRef = db.collection('users').doc(hostId);
+            tx.set(hostRef, {
+              orgTournamentsLockedBalance: admin.firestore.FieldValue.increment(entryFee),
+              orgPendingEarnings: admin.firestore.FieldValue.increment(entryFee),
+            }, { merge: true });
+          }
+
           const txRef = db.collection('transactions').doc();
           tx.set(txRef, {
             userId: uid,
@@ -535,12 +570,23 @@ router.post("/api/wallet/leave-tournament",
           tx.get(partRef),
         ]);
 
-        if (!tDoc.exists) throw new Error("Tournament does not exist");
+        let targetRef = tRef;
+        let actualTDoc = tDoc;
+        if (!actualTDoc.exists) {
+          const sRef = db.collection('scrims').doc(tournamentId);
+          const sDoc = await tx.get(sRef);
+          if (sDoc.exists) {
+            targetRef = sRef;
+            actualTDoc = sDoc;
+          } else {
+            throw new Error("Tournament does not exist");
+          }
+        }
+
         if (!uDoc.exists) throw new Error("User not found");
         if (!partDoc.exists) throw new Error("Not registered for this event");
 
-        const targetRef = tRef;
-        const tData = tDoc.data()!;
+        const tData = actualTDoc.data()!;
         const uData = uDoc.data()!;
 
         if (partDoc.data().status === 'refunded') throw new Error("Already refunded");
@@ -562,6 +608,12 @@ router.post("/api/wallet/leave-tournament",
         const tournamentUpdates: any = {
           currentPlayers: Math.max(0, (tData.currentPlayers || 0) - 1),
         };
+
+        if (refundAmount > 0) {
+          tournamentUpdates.collectedEntryFees = admin.firestore.FieldValue.increment(-refundAmount);
+          tournamentUpdates.lockedMoney = admin.firestore.FieldValue.increment(-refundAmount);
+          tournamentUpdates.escrowBalance = admin.firestore.FieldValue.increment(-refundAmount);
+        }
 
         if (Array.isArray(tData.slots) && tData.slots.length > 0) {
           const mySlotNum = partDoc.data()?.slotNumber;
@@ -603,6 +655,22 @@ router.post("/api/wallet/leave-tournament",
         tx.delete(partRef);
 
         if (refundAmount > 0) {
+          const fundingRef = db.collection('tournament_funding').doc(tournamentId);
+          tx.set(fundingRef, {
+            collectedEntryFees: admin.firestore.FieldValue.increment(-refundAmount),
+            lockedEntryFees: admin.firestore.FieldValue.increment(-refundAmount),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          }, { merge: true });
+
+          const hostId = tData.hostUid || tData.orgId || tData.hostId;
+          if (hostId) {
+            const hostRef = db.collection('users').doc(hostId);
+            tx.set(hostRef, {
+              orgTournamentsLockedBalance: admin.firestore.FieldValue.increment(-refundAmount),
+              orgPendingEarnings: admin.firestore.FieldValue.increment(-refundAmount),
+            }, { merge: true });
+          }
+
           const txRef = db.collection('transactions').doc();
           tx.set(txRef, {
             userId: uid,
@@ -994,11 +1062,22 @@ router.post("/api/wallet/distribute-prizes",
           status: 'completed',
           fundingStatus: 'COMPLETED',
           distributedAmount: totalPrizes,
+          lockedMoney: 0,
           completedAt: admin.firestore.FieldValue.serverTimestamp(),
           winners: winnersPayload,
           manualResults: manualResultsPayload,
           resultTemplate: resultTemplatePayload,
         });
+
+        if (hostDoc.exists) {
+          const lockedAmount = Number(tData.collectedEntryFees || tData.lockedMoney || 0);
+          if (lockedAmount > 0) {
+            tx.set(hostRef, {
+              orgTournamentsLockedBalance: admin.firestore.FieldValue.increment(-lockedAmount),
+              orgPendingEarnings: admin.firestore.FieldValue.increment(-lockedAmount),
+            }, { merge: true });
+          }
+        }
 
         // Create results document
         const resultRef = db.collection('results').doc();

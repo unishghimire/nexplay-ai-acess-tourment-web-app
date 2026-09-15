@@ -96,10 +96,10 @@ const Wallet: React.FC = () => {
 
         transactions.forEach(tx => {
             if (tx.status === 'success' || tx.status === 'completed') {
-                if (tx.type === 'deposit') {
-                    recentDeposits += tx.amount;
-                } else if (tx.type === 'withdrawal' || tx.type === 'withdraw') {
-                    recentWithdrawals += Math.abs(tx.amount);
+                if (tx.type === 'deposit' || tx.type === 'promo' || tx.type === 'refund' || tx.type === 'scrim_refund' || tx.type === 'tournament_release') {
+                    recentDeposits += Math.abs(Number(tx.amount || 0));
+                } else if (tx.type === 'withdrawal' || tx.type === 'withdraw' || tx.type === 'entry_fee' || tx.type === 'scrim_entry' || tx.type === 'tournament_reservation') {
+                    recentWithdrawals += Math.abs(Number(tx.amount || 0));
                 }
             }
         });
@@ -238,14 +238,18 @@ const Wallet: React.FC = () => {
                         </p>
                         
                         {isOrg && (
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 pt-6 sm:pt-8 border-t border-gray-800">
+                            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 sm:gap-6 pt-6 sm:pt-8 border-t border-gray-800">
                                 <div>
                                     <h3 className="text-xs font-black text-gray-500 uppercase tracking-widest mb-2">Org Available</h3>
                                     <p className="text-2xl sm:text-3xl font-black text-emerald-400 tracking-tight">{formatCurrency(profile.orgWalletBalance || 0)}</p>
                                 </div>
                                 <div>
-                                    <h3 className="text-xs font-black text-gray-500 uppercase tracking-widest mb-2">Reserved Escrow</h3>
+                                    <h3 className="text-xs font-black text-gray-500 uppercase tracking-widest mb-2">Prize Escrow</h3>
                                     <p className="text-2xl sm:text-3xl font-black text-amber-400 tracking-tight">{formatCurrency(profile.reservedBalance || 0)}</p>
+                                </div>
+                                <div>
+                                    <h3 className="text-xs font-black text-gray-500 uppercase tracking-widest mb-2">Locked Entry Fees</h3>
+                                    <p className="text-2xl sm:text-3xl font-black text-cyan-400 tracking-tight">{formatCurrency((profile as any).orgTournamentsLockedBalance || 0)}</p>
                                 </div>
                                 <div>
                                     <h3 className="text-xs font-black text-gray-500 uppercase tracking-widest mb-2">Pending</h3>
@@ -353,18 +357,18 @@ const Wallet: React.FC = () => {
                                             <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 border border-gray-800 ${
                                                 tx.type === 'deposit' ? 'bg-green-500/10 text-green-500' : 
                                                 (tx.type === 'withdrawal' || tx.type === 'withdraw') ? 'bg-red-500/10 text-red-500' : 
-                                                tx.type === 'entry_fee' ? 'bg-amber-500/10 text-amber-400' :
-                                                tx.type === 'refund' ? 'bg-emerald-500/10 text-emerald-400' :
-                                                (tx.type === 'prize' || tx.type === 'prize_payout') ? 'bg-yellow-500/10 text-yellow-400' :
+                                                (tx.type === 'entry_fee' || tx.type === 'scrim_entry') ? 'bg-amber-500/10 text-amber-400' :
+                                                (tx.type === 'refund' || tx.type === 'scrim_refund' || tx.type === 'tournament_release') ? 'bg-emerald-500/10 text-emerald-400' :
+                                                (tx.type === 'prize' || tx.type === 'prize_payout' || tx.type === 'scrim_payout') ? 'bg-yellow-500/10 text-yellow-400' :
                                                 tx.type === 'promo' ? 'bg-brand-500/10 text-brand-500' :
                                                 'bg-blue-500/10 text-blue-500'
                                             }`}>
                                                 {tx.type === 'deposit' ? <ArrowDownRight className="w-6 h-6" /> : 
                                                 (tx.type === 'withdrawal' || tx.type === 'withdraw') ? <ArrowUpRight className="w-6 h-6" /> : 
                                                 tx.type === 'promo' ? <Gift className="w-6 h-6" /> :
-                                                tx.type === 'entry_fee' ? <Medal className="w-6 h-6" /> :
-                                                tx.type === 'refund' ? <ArrowDownRight className="w-6 h-6" /> :
-                                                (tx.type === 'prize' || tx.type === 'prize_payout') ? <Trophy className="w-6 h-6" /> :
+                                                (tx.type === 'entry_fee' || tx.type === 'scrim_entry') ? <Medal className="w-6 h-6" /> :
+                                                (tx.type === 'refund' || tx.type === 'scrim_refund' || tx.type === 'tournament_release') ? <ArrowDownRight className="w-6 h-6" /> :
+                                                (tx.type === 'prize' || tx.type === 'prize_payout' || tx.type === 'scrim_payout') ? <Trophy className="w-6 h-6" /> :
                                                 <WalletIcon className="w-6 h-6" />}
                                             </div>
                                             <div>
@@ -372,8 +376,11 @@ const Wallet: React.FC = () => {
                                                     {tx.type === 'deposit' ? 'Added Funds' : 
                                                     (tx.type === 'withdrawal' || tx.type === 'withdraw') ? 'Withdrawal' : 
                                                     tx.type === 'entry_fee' ? 'Tournament Entry' :
-                                                    tx.type === 'refund' ? 'Tournament Refund' :
-                                                    (tx.type === 'prize' || tx.type === 'prize_payout') ? 'Prize Winnings' :
+                                                    tx.type === 'scrim_entry' ? 'Scrim Entry' :
+                                                    (tx.type === 'refund' || tx.type === 'scrim_refund') ? 'Refund' :
+                                                    tx.type === 'tournament_release' ? 'Escrow Release' :
+                                                    tx.type === 'tournament_reservation' ? 'Prize Escrow Reserved' :
+                                                    (tx.type === 'prize' || tx.type === 'prize_payout' || tx.type === 'scrim_payout') ? 'Prize Winnings' :
                                                     tx.type === 'promo' ? 'Promo Code' : 'Transfer'}
                                                 </h4>
                                                 <div className="flex items-center gap-3 mt-1">
@@ -386,11 +393,11 @@ const Wallet: React.FC = () => {
                                         <div className="flex items-center justify-between sm:justify-end gap-6 sm:w-auto w-full">
                                             <div className="text-left sm:text-right">
                                                 <p className={`font-black text-lg font-mono ${
-                                                    tx.type === 'deposit' || tx.type === 'promo' || tx.type === 'refund' || tx.type === 'prize' || tx.type === 'prize_payout' ? 'text-green-400' : 
-                                                    (tx.type === 'withdrawal' || tx.type === 'withdraw' || tx.type === 'entry_fee') ? 'text-rose-400' : 
+                                                    tx.type === 'deposit' || tx.type === 'promo' || tx.type === 'refund' || tx.type === 'scrim_refund' || tx.type === 'tournament_release' || tx.type === 'prize' || tx.type === 'prize_payout' || tx.type === 'scrim_payout' ? 'text-green-400' : 
+                                                    (tx.type === 'withdrawal' || tx.type === 'withdraw' || tx.type === 'entry_fee' || tx.type === 'scrim_entry' || tx.type === 'tournament_reservation') ? 'text-rose-400' : 
                                                     'text-white'
                                                 }`}>
-                                                    {(tx.type === 'deposit' || tx.type === 'promo' || tx.type === 'refund' || tx.type === 'prize' || tx.type === 'prize_payout') ? '+' : (tx.type === 'entry_fee' || Number(tx.amount) < 0) ? '-' : ''}{formatCurrency(Math.abs(Number(tx.amount || 0)))}
+                                                    {(tx.type === 'deposit' || tx.type === 'promo' || tx.type === 'refund' || tx.type === 'scrim_refund' || tx.type === 'tournament_release' || tx.type === 'prize' || tx.type === 'prize_payout' || tx.type === 'scrim_payout') ? '+' : (tx.type === 'entry_fee' || tx.type === 'scrim_entry' || tx.type === 'tournament_reservation' || Number(tx.amount) < 0) ? '-' : ''}{formatCurrency(Math.abs(Number(tx.amount || 0)))}
                                                 </p>
                                                 <div className="flex items-center justify-start sm:justify-end gap-1.5 mt-1">
                                                     <span className={`text-xs font-black px-3 py-1 rounded-full uppercase tracking-widest ${
