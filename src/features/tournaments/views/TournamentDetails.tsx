@@ -1118,12 +1118,12 @@ export default function TournamentDetails() {
                                         <p className="text-xs text-gray-400 font-medium">
                                             {isJoined 
                                                 ? `You are allocated to Slot #${mySlotNumber || 'TBD'}. Sit strictly in your slot in-game.` 
-                                                : 'Click an available slot to claim and reserve your spot in the custom match room.'}
+                                                : 'Click an available slot to join and secure your spot in the custom match room.'}
                                         </p>
                                     </div>
                                     <div className="flex items-center gap-3 shrink-0">
                                         <div className="bg-dark px-3 py-1.5 rounded-xl border border-gray-800 text-center">
-                                            <span className="text-[10px] text-gray-500 uppercase font-black tracking-wider block">Booked</span>
+                                            <span className="text-[10px] text-gray-500 uppercase font-black tracking-wider block">Joined</span>
                                             <span className="text-sm font-mono font-bold text-white">{filledCount}/{totalCount}</span>
                                         </div>
                                         {mySlotNumber && (

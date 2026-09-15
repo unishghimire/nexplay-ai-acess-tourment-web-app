@@ -84,10 +84,10 @@ export const JoinScrimModal: React.FC<JoinScrimModalProps> = ({
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.message || 'Failed to book slot');
+        throw new Error(data.message || 'Failed to join scrim');
       }
 
-      showToast(`Slot #${slotNumber} reserved successfully!`, 'success');
+      showToast(`Successfully joined Slot #${slotNumber}!`, 'success');
       onSuccess(slotNumber);
       onClose();
     } catch (err: any) {
@@ -108,7 +108,7 @@ export const JoinScrimModal: React.FC<JoinScrimModalProps> = ({
             </div>
             <div>
               <h3 className="text-lg font-black text-white uppercase tracking-wider">
-                Book Scrim Slot
+                Join Scrim
               </h3>
               <p className="text-xs text-gray-400 font-medium">
                 {scrim.title} • {scrim.format || 'Squad'}
@@ -199,7 +199,7 @@ export const JoinScrimModal: React.FC<JoinScrimModalProps> = ({
             </div>
             {entryFee > 0 && !hasSufficientBalance && (
               <p className="text-[11px] text-red-400 font-medium pt-1">
-                Please deposit funds into your NexPlay wallet before reserving a slot.
+                Please deposit funds into your NexPlay wallet before joining this scrim.
               </p>
             )}
           </div>
@@ -214,12 +214,12 @@ export const JoinScrimModal: React.FC<JoinScrimModalProps> = ({
               {loading ? (
                 <>
                   <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                  <span>Reserving Slot...</span>
+                  <span>Joining Scrim...</span>
                 </>
               ) : (
                 <>
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>Confirm & Reserve Slot #{slotNumber}</span>
+                  <span>Confirm & Join Slot #{slotNumber}</span>
                 </>
               )}
             </button>

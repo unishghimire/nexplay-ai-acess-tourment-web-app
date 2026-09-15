@@ -48,7 +48,7 @@ export const SlotGrid: React.FC<SlotGridProps> = ({
                 {filledCount} / {totalSlots}
               </span>
               <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest ml-1">
-                Booked
+                Joined
               </span>
             </div>
             <div className="w-28 sm:w-36 bg-dark rounded-full h-2 overflow-hidden border border-gray-800">
@@ -175,7 +175,7 @@ export const SlotGrid: React.FC<SlotGridProps> = ({
                 ) : (
                   <div className="text-center py-1">
                     <span className="text-[10px] font-bold text-gray-500 group-hover:text-brand-400 transition-colors uppercase tracking-widest">
-                      {canClick ? (isTeamEvent ? 'Claim for Team' : 'Choose Slot') : 'Available'}
+                      {canClick ? (isTeamEvent ? 'Join for Team' : 'Join Slot') : 'Available'}
                     </span>
                   </div>
                 )}
@@ -184,7 +184,7 @@ export const SlotGrid: React.FC<SlotGridProps> = ({
               {/* Slot Footer Action */}
               {canClick && !isFilled && (
                 <div className="text-[9px] font-black uppercase tracking-wider text-brand-400 flex items-center justify-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                  Select <ChevronRight className="w-2.5 h-2.5" />
+                  Join <ChevronRight className="w-2.5 h-2.5" />
                 </div>
               )}
             </div>

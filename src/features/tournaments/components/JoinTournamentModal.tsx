@@ -203,7 +203,7 @@ const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
         // SCRIM ENGINE: the captain's webapp UID must be entered and must exist in the database
         const trimmedCaptainUid = captainUid.trim();
         if (isScrim && !trimmedCaptainUid) {
-            showToast("Captain's Webapp UID is required to reserve a slot.", "warning");
+            showToast("Captain's Webapp UID is required to join.", "warning");
             return;
         }
         if (isScrim) {
@@ -325,7 +325,7 @@ const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
                             className="w-full bg-dark border border-gray-700 rounded-xl p-3 text-white focus:border-brand-500 focus-visible:outline-none font-mono text-xs"
                         />
                         <p className="text-[10px] text-gray-500 mt-1">
-                            Required to reserve a slot. This is the captain's UID on this webapp (found in your Profile page), not an in-game ID. It must be a real, verified NexPlay account — defaults to your account; change it only if reserving on behalf of another captain.
+                            Required to join. This is the captain's UID on this webapp (found in your Profile page), not an in-game ID. It must be a real, verified NexPlay account — defaults to your account; change it only if joining on behalf of another captain.
                         </p>
                     </div>
                 )}

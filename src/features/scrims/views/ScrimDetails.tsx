@@ -353,7 +353,7 @@ export default function ScrimDetails() {
                   className="w-full sm:w-auto px-6 py-3 rounded-xl bg-brand-500 hover:bg-brand-600 text-black font-black text-xs uppercase tracking-wider shadow-lg shadow-brand-500/20 flex items-center justify-center gap-2 transition-all"
                 >
                   <Sparkles className="w-4 h-4" />
-                  <span>Reserve Slot Now</span>
+                  <span>Join Scrim Now</span>
                 </button>
               )}
             </div>
@@ -581,8 +581,8 @@ export default function ScrimDetails() {
           scrim={scrim}
           selectedSlot={selectedSlotForBooking}
           onClose={() => setShowJoinModal(false)}
-          onSuccess={(reservedSlot) => {
-            showToast(`Slot #${reservedSlot} confirmed!`, 'success');
+          onSuccess={(joinedSlot) => {
+            showToast(`Successfully joined Slot #${joinedSlot}!`, 'success');
           }}
         />
       )}
