@@ -10,6 +10,7 @@ import Breadcrumbs from './shared/components/Breadcrumbs';
 import Footer from './shared/components/Footer';
 import BackButton from './shared/components/BackButton';
 import ScrollToTop from './shared/components/ScrollToTop';
+import MobileBottomNav from './shared/components/MobileBottomNav';
 import ProfileCompletionGuard from './features/auth/components/ProfileCompletionGuard';
 import ProtectedRoute from './shared/components/ProtectedRoute';
 
@@ -128,7 +129,7 @@ const AppContent = () => {
       
       <Breadcrumbs />
       <ScrollToTop />
-      <main id="main-content" className="flex-grow container mx-auto px-4 pt-6 sm:pt-8 pb-20 sm:pb-24 relative min-h-[80vh]">
+      <main id="main-content" className="flex-grow container mx-auto px-4 pt-6 sm:pt-8 pb-28 md:pb-24 relative min-h-[80vh]">
         {!isHome && (
           <div className="mb-6">
             <BackButton />
@@ -172,6 +173,7 @@ const AppContent = () => {
         </ProfileCompletionGuard>
       </main>
       <Footer />
+      <MobileBottomNav />
     </div>
   );
 };

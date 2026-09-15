@@ -134,3 +134,13 @@ body {
 
 /* ponytail: Touch-friendly tap target minimum */
 .touch-target { min-height: 44px; min-width: 44px; }
+
+/* Hide Google reCAPTCHA floating badge while maintaining legal attribution in forms and footer */
+.grecaptcha-badge {
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  right: -9999px !important;
+  bottom: -9999px !important;
+}

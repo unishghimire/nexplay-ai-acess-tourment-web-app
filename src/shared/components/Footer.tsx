@@ -43,7 +43,7 @@ const Footer: React.FC = () => {
     }, []);
 
     return (
-        <footer className="relative bg-dark border-t border-gray-800 pt-10 pb-[52px] sm:pb-[60px] mt-auto overflow-hidden">
+        <footer className="relative bg-dark border-t border-gray-800 pt-10 pb-28 md:pb-12 mt-auto overflow-hidden">
             {/* Subtle brand-colored hairline along the very top edge */}
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-500/50 to-transparent"></div>
 
@@ -121,9 +121,14 @@ const Footer: React.FC = () => {
                         >
                             <ArrowUp className="w-3.5 h-3.5" aria-hidden="true" />
                         </button>
-                        <p className="text-gray-500 text-sm text-center md:text-left">
-                            &copy; {new Date().getFullYear()} NexPlay. All rights reserved. Nepal's esports platform.
-                        </p>
+                        <div>
+                            <p className="text-gray-500 text-sm text-center md:text-left">
+                                &copy; {new Date().getFullYear()} NexPlay. All rights reserved. Nepal's esports platform.
+                            </p>
+                            <p className="text-[11px] text-gray-600 text-center md:text-left mt-1">
+                                Protected by Google reCAPTCHA Enterprise. <a href="https://policies.google.com/privacy" target="_blank" rel="noreferrer" className="underline hover:text-gray-400">Privacy</a> &amp; <a href="https://policies.google.com/terms" target="_blank" rel="noreferrer" className="underline hover:text-gray-400">Terms</a>.
+                            </p>
+                        </div>
                     </div>
                     <nav aria-label="Footer links" className="flex flex-wrap gap-4 text-gray-400 text-sm">
                         <Link to="/games" className="hover:text-white transition">Games</Link>
