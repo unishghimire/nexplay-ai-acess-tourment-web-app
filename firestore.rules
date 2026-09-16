@@ -163,7 +163,9 @@ service cloud.firestore {
             'lastActive', 'updatedAt', 'skills', 'orgName', 'email',
             'orgStatus', 'resultPresets',
             'youtubeUrl', 'twitchUrl',
-            'refereeName', 'refereeEnabled', 'casterName', 'casterEnabled'
+            'refereeName', 'refereeEnabled', 'casterName', 'casterEnabled',
+            'powerOrgApplicationStatus', 'powerOrgAppliedAt', 'completedScrimsCount',
+            'isPowerOrganizer', 'isPowerOrg', 'orgTier'
           ]) &&
           incoming().uid == existing().uid &&
           incoming().role == existing().role &&
@@ -434,6 +436,12 @@ service cloud.firestore {
       allow update: if isAdmin();
     }
 
+    match /power_org_applications/{appId} {
+      allow read:   if isAdmin() || (isSignedIn() && existing().userId == request.auth.uid);
+      allow create: if isSignedIn() && incoming().userId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
     // ═══════════════════════════════════════════════════════════════
     // DISPUTES — signed-in users can file; the tournament host or an admin can resolve.
     // ═══════════════════════════════════════════════════════════════
@@ -473,6 +481,15 @@ service cloud.firestore {
       // Writes are strictly server-side (Admin SDK bypasses rules)
       allow create, update, delete: if false;
     }
+
+    match /transactions/{transactionId} {
+      // Financial ledger: users can read their own transactions, admins can read all
+      allow get:  if isAdmin() || (isSignedIn() && existing().userId == request.auth.uid);
+      allow list: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      // Writes are strictly server-side (Admin SDK bypasses rules)
+      allow create, update, delete: if false;
+    }
+
 
     // ═══════════════════════════════════════════════════════════════
     // DISCORD LOGS — server-side only (no client reads needed)
@@ -537,3 +554,5 @@ service cloud.firestore {
     }
   }
 }
+
+

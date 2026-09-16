@@ -108,64 +108,138 @@ const GameModesBrowser: React.FC = () => {
                     "description": `Find ${gameLabel} tournaments and scrims in Nepal on NexPlay.`
                 }}
             />
-            <div className="animate-fade-in max-w-5xl mx-auto p-4 md:p-8">
-                <Link to="/games" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-white transition mb-6 touch-target">
-                    <ArrowLeft className="w-4 h-4" /> Back to Games
+            <div className="animate-fade-in max-w-5xl mx-auto px-4 py-4 space-y-6">
+                <Link to="/games" className="inline-flex items-center gap-2 text-xs font-semibold text-slate-300 hover:text-purple-400 bg-slate-800/40 hover:bg-slate-800/70 border border-slate-800 px-3 py-1.5 rounded-lg transition-all touch-target">
+                    <ArrowLeft className="w-4 h-4 text-indigo-400" /> Back to Games
                 </Link>
 
-                <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6 border-b border-gray-800 pb-8">
-                    <div className="space-y-2">
-                        <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white uppercase tracking-tighter flex items-center gap-4">
-                            <img src={game.logoUrl || ''} alt={gameLabel} className="w-14 h-14 object-cover rounded-2xl border border-gray-800" referrerPolicy="no-referrer" loading="lazy" />
-                            {gameLabel}
-                        </h1>
-                        <p className="text-gray-400 font-bold uppercase tracking-widest text-sm">Choose what you want to play</p>
+                {/* Hero Game Header with Live Stats */}
+                <section className="bg-gradient-to-b from-[#141C2E] to-[#0D1424] border border-slate-800/90 rounded-2xl p-4 sm:p-6 shadow-xl relative overflow-hidden" data-purpose="hero-game-badge">
+                    <div className="absolute -top-12 -right-12 w-36 h-36 bg-purple-600/15 rounded-full blur-2xl pointer-events-none"></div>
+                    <div className="flex items-start gap-3.5 sm:gap-5 relative z-10">
+                        <div className="relative shrink-0">
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border-2 border-indigo-500/40 shadow-lg shadow-purple-950/60 bg-slate-900">
+                                <img src={game.logoUrl || ''} alt={gameLabel} className="w-full h-full object-cover" referrerPolicy="no-referrer" loading="lazy" />
+                            </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <h1 className="font-black text-xl sm:text-3xl text-white tracking-wide uppercase leading-tight truncate">
+                                {gameLabel}
+                            </h1>
+                            <p className="text-[11px] sm:text-xs font-bold text-slate-400 tracking-wider uppercase mt-0.5">
+                                Choose What You Want To Play
+                            </p>
+                            <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
+                                {game.modes?.map((mode) => (
+                                    <span key={mode} className="text-[10px] font-medium bg-slate-800/90 text-indigo-300 px-2 py-0.5 rounded-md border border-indigo-500/20 uppercase">
+                                        {formatGameModeLabel(mode)}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
                     </div>
-                </header>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <motion.button
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 }}
-                        whileHover={{ y: -8 }}
-                        onClick={() => setSelectedType('tournaments')}
-                        className="relative rounded-3xl overflow-hidden group border border-gray-800 bg-card/50 text-left w-full min-h-[280px] cursor-pointer"
-                    >
-                        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-transparent" />
-                        <div className="relative p-8 flex flex-col items-center justify-center h-full">
-                            <div className="w-20 h-20 rounded-3xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                                <Trophy className="w-10 h-10 text-amber-400" />
-                            </div>
-                            <h3 className="text-2xl font-black text-white uppercase tracking-widest mb-2">Tournaments</h3>
-                            <p className="text-sm text-gray-400 font-bold text-center">Compete in organized tournaments with prizes</p>
-                            <div className="mt-4 flex items-center gap-1 text-amber-400 text-xs font-black uppercase tracking-widest">
-                                Browse Tournaments <ChevronRight className="w-3 h-3" />
-                            </div>
+                    {/* Quick Platform Live Stat Bar */}
+                    <div className="grid grid-cols-3 gap-2 mt-4 pt-3.5 border-t border-slate-800/80 text-center">
+                        <div className="bg-slate-900/60 rounded-lg py-2 px-2 border border-slate-800/60">
+                            <div className="text-xs sm:text-sm font-black text-amber-400">ACTIVE</div>
+                            <div className="text-[10px] text-slate-400 uppercase font-semibold">Tournaments</div>
                         </div>
-                    </motion.button>
+                        <div className="bg-slate-900/60 rounded-lg py-2 px-2 border border-slate-800/60">
+                            <div className="text-xs sm:text-sm font-black text-indigo-400">DAILY</div>
+                            <div className="text-[10px] text-slate-400 uppercase font-semibold">Custom Scrims</div>
+                        </div>
+                        <div className="bg-slate-900/60 rounded-lg py-2 px-2 border border-slate-800/60">
+                            <div className="text-xs sm:text-sm font-black text-emerald-400">VERIFIED</div>
+                            <div className="text-[10px] text-slate-400 uppercase font-semibold">Prize Escrow</div>
+                        </div>
+                    </div>
+                </section>
 
-                    <motion.button
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                        whileHover={{ y: -8 }}
-                        onClick={() => setSelectedType('scrims')}
-                        className="relative rounded-3xl overflow-hidden group border border-gray-800 bg-card/50 text-left w-full min-h-[280px] cursor-pointer"
-                    >
-                        <div className="absolute inset-0 bg-gradient-to-br from-brand-500/10 to-transparent" />
-                        <div className="relative p-8 flex flex-col items-center justify-center h-full">
-                            <div className="w-20 h-20 rounded-3xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                                <Swords className="w-10 h-10 text-brand-400" />
+                {/* Gateway Selection Hub */}
+                <section className="space-y-4" data-purpose="gateway-cards">
+                    <div className="flex items-center justify-between px-1">
+                        <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
+                            <span className="w-1.5 h-3 bg-purple-500 rounded-full"></span>
+                            Select Competitive Mode
+                        </h2>
+                        <span className="text-[11px] text-indigo-400 font-semibold">Instant Access</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                        {/* Card 1: TOURNAMENTS (Amber Theme) */}
+                        <motion.article
+                            whileHover={{ y: -4 }}
+                            onClick={() => setSelectedType('tournaments')}
+                            className="relative bg-gradient-to-b from-[#161B2E] via-[#101626] to-[#0D1220] rounded-2xl border border-amber-500/30 p-5 sm:p-6 shadow-xl overflow-hidden group transition-all duration-200 hover:border-amber-400/50 cursor-pointer flex flex-col justify-between"
+                            data-purpose="tournaments-card"
+                        >
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none"></div>
+                            <div className="flex flex-col items-center text-center">
+                                <div className="w-16 h-16 rounded-2xl bg-gradient-to-b from-amber-500/20 to-amber-950/40 border border-amber-500/40 flex items-center justify-center mb-3.5 shadow-inner group-hover:scale-105 transition-transform">
+                                    <Trophy className="w-9 h-9 text-amber-400" />
+                                </div>
+                                <h3 className="font-black text-xl text-white uppercase tracking-wider mb-1">
+                                    Tournaments
+                                </h3>
+                                <p className="text-xs text-slate-300 max-w-xs leading-relaxed font-normal">
+                                    Compete in organized tournaments with cash prizes, verified brackets, and official refereeing.
+                                </p>
+                                <div className="flex flex-wrap justify-center items-center gap-1.5 my-4">
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-amber-500/10 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full">
+                                        ★ Cash Rewards
+                                    </span>
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-slate-800/80 text-slate-300 border border-slate-700 px-2 py-0.5 rounded-full">
+                                        Official Brackets
+                                    </span>
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-slate-800/80 text-slate-300 border border-slate-700 px-2 py-0.5 rounded-full">
+                                        E-Certificate
+                                    </span>
+                                </div>
                             </div>
-                            <h3 className="text-2xl font-black text-white uppercase tracking-widest mb-2">Scrims</h3>
-                            <p className="text-sm text-gray-400 font-bold text-center">Join casual practice matches with other teams</p>
-                            <div className="mt-4 flex items-center gap-1 text-brand-400 text-xs font-black uppercase tracking-widest">
-                                Browse Scrims <ChevronRight className="w-3 h-3" />
+                            <div className="w-full flex items-center justify-center gap-2 py-3 px-6 rounded-xl font-bold text-xs tracking-wider uppercase bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600 text-slate-950 hover:brightness-110 active:scale-[0.98] transition-all shadow-lg shadow-amber-500/25">
+                                <span>Browse Tournaments</span>
+                                <ChevronRight className="w-4 h-4" />
                             </div>
-                        </div>
-                    </motion.button>
-                </div>
+                        </motion.article>
+
+                        {/* Card 2: DAILY SCRIMS (Violet Theme) */}
+                        <motion.article
+                            whileHover={{ y: -4 }}
+                            onClick={() => setSelectedType('scrims')}
+                            className="relative bg-gradient-to-b from-[#181630] via-[#111226] to-[#0E0F20] rounded-2xl border border-indigo-500/30 p-5 sm:p-6 shadow-xl overflow-hidden group transition-all duration-200 hover:border-purple-500/50 cursor-pointer flex flex-col justify-between"
+                            data-purpose="scrims-card"
+                        >
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl pointer-events-none"></div>
+                            <div className="flex flex-col items-center text-center">
+                                <div className="w-16 h-16 rounded-2xl bg-gradient-to-b from-purple-500/20 to-purple-950/40 border border-purple-500/40 flex items-center justify-center mb-3.5 shadow-inner group-hover:scale-105 transition-transform">
+                                    <Swords className="w-9 h-9 text-purple-400" />
+                                </div>
+                                <h3 className="font-black text-xl text-white uppercase tracking-wider mb-1">
+                                    Daily Scrims
+                                </h3>
+                                <p className="text-xs text-slate-300 max-w-xs leading-relaxed font-normal">
+                                    Train with top tier competitive squads and improve team synergy before major qualifiers.
+                                </p>
+                                <div className="flex flex-wrap justify-center items-center gap-1.5 my-4">
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-purple-500/10 text-purple-300 border border-purple-500/30 px-2 py-0.5 rounded-full">
+                                        ★ Daily Practice
+                                    </span>
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-slate-800/80 text-slate-300 border border-slate-700 px-2 py-0.5 rounded-full">
+                                        Room Sync
+                                    </span>
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-slate-800/80 text-slate-300 border border-slate-700 px-2 py-0.5 rounded-full">
+                                        Instant Join
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="w-full flex items-center justify-center gap-2 py-3 px-6 rounded-xl font-bold text-xs tracking-wider uppercase bg-gradient-to-r from-purple-600 via-purple-500 to-indigo-600 text-white hover:brightness-110 active:scale-[0.98] transition-all shadow-lg shadow-purple-600/25">
+                                <span>Browse Daily Scrims</span>
+                                <ChevronRight className="w-4 h-4" />
+                            </div>
+                        </motion.article>
+                    </div>
+                </section>
             </div>
             </>
         );

@@ -1,0 +1,399 @@
+<!DOCTYPE html><html class="dark" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
+<title>Tournament Browser - NexPlay Esports</title>
+<!-- Tailwind CSS v3 with Plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration for Esports Palette -->
+<script data-purpose="tailwind-config">
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            nexbg: '#070b14',
+            nexcard: '#0e1424',
+            nexcardalt: '#111728',
+            nexpurple: '#7c3aed',
+            nexpurplelight: '#a855f7',
+            nexpurpledotted: '#8b5cf6',
+            nexcyan: '#06b6d4',
+            nexgreen: '#10b981'
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif']
+          }
+        }
+      }
+    };
+  </script>
+<style data-purpose="custom-scroll-and-effects">
+    /* Hide scrollbar for tabs navigation */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    
+    /* Touch optimization */
+    button, a {
+      -webkit-tap-highlight-color: transparent;
+    }
+  </style>
+</head>
+<body class="bg-[#070b14] text-slate-100 font-sans antialiased min-h-screen flex justify-center selection:bg-purple-600 selection:text-white">
+<!-- Mobile Viewport Constraint Box -->
+<div class="w-full max-w-md bg-[#070b14] min-h-screen relative flex flex-col shadow-2xl border-x border-white/5 pb-28">
+<!-- BEGIN: MainHeader -->
+<header class="sticky top-0 z-40 bg-[#070b14]/95 backdrop-blur-md border-b border-white/5 px-4 py-3" data-purpose="top-header">
+<div class="flex items-center justify-between">
+<!-- NexPlay Logo Brand -->
+<div class="flex items-center space-x-2.5">
+<div class="relative w-8 h-8 rounded-lg overflow-hidden bg-[#151c33] p-0.5 border border-purple-500/40 shadow-inner flex items-center justify-center"><img alt="NexPlay Emblem" class="w-full h-full object-contain rounded-md" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDBZM0mPqsjlGWeWEitigYf_qbZ--_iwhh9oHq5bcz_8qrv9B6bUVK0tcZ0v-5VmYDDw88eVEUVne3YuWHUHHZfOmiOYJ5t4lkscA8z1U-4ULp799LUuUv5dZcNQ4RWQdXsZhM9dqKjzmicWjt4iLe1koSuJSWdCINmZg4NEpJkWKnBgGLR9Df5nCDwYtWm6l0S7J52ZwzuG-2LnvFMlqJzP1hXuX5estdy0YT1KC9abh0aYXucDtz8_7yYYDigv1UnAeA"></div>
+<div class="text-xl font-black tracking-wider flex items-center">
+<span class="text-white">NEX</span>
+<span class="text-[#a855f7]">PLAY</span>
+</div>
+</div>
+<!-- Right Side Utility Controls -->
+<div class="flex items-center space-x-2.5">
+<!-- Notification Bell with Unread Badge -->
+<button aria-label="Notifications" class="relative p-1.5 text-slate-300 hover:text-white transition-colors" data-purpose="notification-button">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span class="absolute 1.5 top-0.5 right-0 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center border-2 border-[#070b14]">
+              2
+            </span>
+</button>
+<!-- Wallet Balance Pill -->
+<div class="flex items-center bg-[#191533] border border-purple-500/40 rounded-full px-3 py-1 text-xs font-bold text-purple-200 shadow-sm" data-purpose="wallet-pill">
+<svg class="w-3.5 h-3.5 mr-1.5 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span class="">Rs. 5K</span>
+</div>
+<!-- Robot Gamer Profile Avatar with Chevron -->
+<button aria-label="User Profile" class="flex items-center bg-[#15232d] border border-cyan-500/30 rounded-full pl-1.5 pr-2 py-1 space-x-1" data-purpose="user-avatar">
+<div class="w-5 h-5 rounded-full bg-cyan-900/60 flex items-center justify-center text-xs text-cyan-300">
+              🤖
+            </div>
+<svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+<!-- Mobile Hamburger Menu Button -->
+<button aria-label="Main Menu" class="p-1 text-slate-300 hover:text-white" data-purpose="menu-toggle">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path>
+</svg>
+</button>
+</div>
+</div>
+</header>
+<!-- END: MainHeader -->
+<!-- BEGIN: BreadcrumbAndBackNav -->
+<div class="px-4 pt-4 pb-2 text-xs font-semibold" data-purpose="navigation-hierarchy">
+<!-- Breadcrumbs -->
+<div class="flex items-center space-x-2 text-slate-400 tracking-wider">
+<a class="hover:text-slate-200 transition-colors uppercase" href="#">HOME</a>
+<span class="text-slate-600 font-bold">&gt;</span>
+<span class="text-slate-200 uppercase font-bold tracking-wider">TOURNAMENTS</span>
+</div>
+<!-- Back Link Action -->
+<div class="mt-4">
+<button class="flex items-center text-slate-400 hover:text-white transition-colors font-bold text-xs uppercase tracking-wider space-x-1.5" data-purpose="back-link">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span class="">BACK</span>
+</button>
+</div>
+</div>
+<!-- END: BreadcrumbAndBackNav -->
+<!-- BEGIN: TournamentBrowserHeader -->
+<section class="px-4 pt-3 pb-3" data-purpose="browser-title-section">
+<div class="flex items-baseline justify-between">
+<h1 class="text-2xl font-black text-white tracking-wider uppercase drop-shadow-sm">
+          TOURNAMENT BROWSER
+        </h1>
+<span class="text-xs font-bold uppercase tracking-wider text-slate-400">
+          0 TOURNAMENTS
+        </span>
+</div>
+<!-- Subtle Separator -->
+<div class="w-full h-px bg-slate-800/80 mt-4"></div>
+</section>
+<!-- END: TournamentBrowserHeader -->
+<!-- BEGIN: TournamentStatusFilterTabs -->
+<nav class="px-4 border-b border-slate-800/80" data-purpose="status-tab-filter">
+<div class="flex items-center space-x-4 overflow-x-auto no-scrollbar font-bold text-xs tracking-wider">
+<!-- Active Tab: ALL -->
+<button class="flex items-center space-x-1.5 pb-3 border-b-2 border-[#a855f7] text-white pt-1" data-purpose="tab-all">
+<span class="uppercase">ALL</span>
+<span class="bg-[#241c42] text-purple-300 text-[10px] px-2 py-0.5 rounded-full font-bold">0</span>
+</button>
+<!-- Inactive Tab: UPCOMING -->
+<button class="flex items-center space-x-1.5 pb-3 text-slate-400 hover:text-slate-200 transition-colors pt-1" data-purpose="tab-upcoming">
+<span class="uppercase">UPCOMING</span>
+<span class="bg-slate-800/80 text-slate-400 text-[10px] px-2 py-0.5 rounded-full font-bold">0</span>
+</button>
+<!-- Inactive Tab: LIVE NOW -->
+<button class="flex items-center space-x-1.5 pb-3 text-slate-400 hover:text-slate-200 transition-colors pt-1" data-purpose="tab-live-now">
+<span class="uppercase">LIVE NOW</span>
+<span class="bg-slate-800/80 text-slate-400 text-[10px] px-2 py-0.5 rounded-full font-bold">0</span>
+</button>
+<!-- Inactive Tab: ENDED -->
+<button class="flex items-center space-x-1.5 pb-3 text-slate-400 hover:text-slate-200 transition-colors pt-1" data-purpose="tab-ended">
+<span class="uppercase">ENDED</span>
+<span class="bg-slate-800/80 text-slate-400 text-[10px] px-2 py-0.5 rounded-full font-bold">0</span>
+</button>
+</div>
+</nav>
+<!-- END: TournamentStatusFilterTabs -->
+<!-- BEGIN: FilterOptionsCard -->
+<section class="px-4 mt-5" data-purpose="filter-options-card">
+<div class="bg-[#0e1424] border border-white/5 rounded-2xl p-4 shadow-xl shadow-black/40">
+<!-- Filter Header Title -->
+<div class="flex items-center space-x-2 text-purple-400 mb-4">
+<svg class="w-4 h-4 text-purple-400" fill="currentColor" viewBox="0 0 24 24">
+<path d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+</svg>
+<h2 class="text-xs font-black tracking-wider uppercase text-white">
+            FILTER OPTIONS
+          </h2>
+</div>
+<!-- 2x2 Filter Selection Grid -->
+<div class="grid grid-cols-2 gap-3.5">
+<!-- Filter 1: GAME -->
+<div class="space-y-1.5">
+<label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              GAME
+            </label>
+<div class="relative">
+<select class="w-full bg-[#070b14] border border-white/10 rounded-xl px-3 py-2.5 text-xs font-bold text-white appearance-none focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 pr-8 transition cursor-pointer">
+<option selected="" value="free_fire">Free Fire</option>
+<option value="pubg_mobile">PUBG Mobile</option>
+<option value="cod_mobile">Call of Duty Mobile</option>
+<option value="mlbb">Mobile Legends</option>
+</select>
+<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-400">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path>
+</svg>
+</div>
+</div>
+</div>
+<!-- Filter 2: MODE -->
+<div class="space-y-1.5">
+<label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              MODE
+            </label>
+<div class="relative">
+<select class="w-full bg-[#070b14] border border-white/10 rounded-xl px-3 py-2.5 text-xs font-bold text-white appearance-none focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 pr-8 transition cursor-pointer">
+<option selected="" value="battle_royale">Battle Royale</option>
+<option value="clash_squad">Clash Squad</option>
+<option value="tdm">Team Deathmatch</option>
+</select>
+<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-400">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path>
+</svg>
+</div>
+</div>
+</div>
+<!-- Filter 3: ENTRY -->
+<div class="space-y-1.5">
+<label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              ENTRY
+            </label>
+<div class="relative">
+<select class="w-full bg-[#070b14] border border-white/10 rounded-xl px-3 py-2.5 text-xs font-bold text-white appearance-none focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 pr-8 transition cursor-pointer">
+<option selected="" value="all">All Types</option>
+<option value="free">Free Entry</option>
+<option value="paid">Paid Entry</option>
+</select>
+<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-400">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path>
+</svg>
+</div>
+</div>
+</div>
+<!-- Filter 4: PLAYER SIZE -->
+<div class="space-y-1.5">
+<label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              PLAYER SIZE
+            </label>
+<div class="relative">
+<select class="w-full bg-[#070b14] border border-white/10 rounded-xl px-3 py-2.5 text-xs font-bold text-white appearance-none focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 pr-8 transition cursor-pointer">
+<option selected="" value="all">All Sizes</option>
+<option value="solo">Solo (1v1)</option>
+<option value="duo">Duo (2v2)</option>
+<option value="squad">Squad (4v4)</option>
+</select>
+<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-400">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path>
+</svg>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- END: FilterOptionsCard -->
+<!-- BEGIN: EmptyStateResultsCard -->
+<main class="px-4 mt-4 mb-6" data-purpose="tournament-results-empty-state">
+<div class="bg-[#0e1424] border border-white/5 rounded-2xl px-6 py-12 flex flex-col items-center justify-center text-center min-h-[260px] shadow-xl shadow-black/40">
+<!-- Large Glowing Magnifying Glass Icon -->
+<div class="relative mb-5" data-purpose="empty-icon-wrapper">
+<div class="absolute inset-0 bg-purple-600/10 blur-xl rounded-full"></div>
+<svg class="w-16 h-16 text-slate-500/70 relative z-10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<circle cx="11" cy="11" r="8"></circle>
+<line x1="21" x2="16.65" y1="21" y2="16.65"></line>
+</svg>
+</div>
+<!-- Heavy Heading -->
+<h2 class="text-white font-black text-lg sm:text-xl tracking-wider uppercase mb-2">
+          NO MATCHES FOUND
+        </h2>
+<!-- Subtext Instruction -->
+<p class="text-slate-400 text-xs sm:text-sm font-medium max-w-xs leading-relaxed">
+          Adjust your filters to see more tournaments.
+        </p>
+</div>
+</main>
+<!-- END: EmptyStateResultsCard -->
+<!-- BEGIN: StandardizedMobileFooter -->
+<footer class="px-5 pt-8 pb-10 border-t border-purple-900/30 bg-[#070b14] space-y-6 text-center" data-purpose="site-footer">
+<!-- Top Row: Brand & Scroll to Top -->
+<div class="flex items-center justify-between">
+<div class="flex items-center space-x-2 text-left">
+<div class="w-6 h-6 rounded-md overflow-hidden bg-[#151c33] p-0.5 border border-purple-500/40 shrink-0"><img alt="NexPlay Icon" class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAko52PavbQ7YBQdK_gDJLNYYS24OjqDtA_Jn9gUk0NESQrS3NXxgkelypBm4aCPd9L5MpCeR83p0twzOngX3YxMjOPfaOPWasvlGi3KSBQLOBAU30juSvHZjjRXzx7DycYfwAfJkjQvBANMqvXYN4CgxihyqfIQUFyzDk7K6l-EZO0uQ69ja7Jtr9TiznNVRuIxkDbOzbUwsb5WYZio9yKeuxKXxtMVNw1mq3DFvlE-aJ3_gmjbQIdeX4Gqoeq55UpOuw"></div>
+<div>
+<div class="text-sm font-black tracking-wider text-white">NexPlay</div>
+<div class="text-[10px] text-purple-400 font-bold uppercase tracking-wider">Esports Arena</div>
+</div>
+</div>
+<!-- Scroll to top button -->
+
+</div>
+<!-- Tagline -->
+<p class="text-[12px] text-slate-400 leading-relaxed text-left">
+        Nepal's esports platform for tournaments, scrims, and competitive gaming.
+      </p>
+<!-- Pulse Metrics Badges -->
+<div class="flex items-center justify-start space-x-3 text-[11px] font-semibold">
+<div class="flex items-center space-x-1.5 bg-[#0e1424] border border-white/5 px-2.5 py-1 rounded-full text-slate-300">
+<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+<span class="">12+ Players</span>
+</div>
+<div class="flex items-center space-x-1.5 bg-[#0e1424] border border-white/5 px-2.5 py-1 rounded-full text-slate-300">
+<span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+<span class="">4+ Organizations</span>
+</div>
+</div>
+<!-- Action Support Buttons -->
+<div class="grid grid-cols-2 gap-2.5 pt-1">
+<!-- WhatsApp Support Button -->
+<a class="flex items-center justify-center space-x-2 bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-500/40 py-2.5 px-3 rounded-xl text-emerald-300 font-bold text-xs transition shadow-sm" data-purpose="support-whatsapp" href="#">
+<svg class="w-4 h-4 text-emerald-400 fill-current" viewBox="0 0 24 24">
+<path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.664-.698c.969.54 1.761.777 2.796.778 3.182 0 5.768-2.587 5.768-5.766 0-3.18-2.586-5.765-5.768-5.765zm3.376 8.205c-.145.408-.838.762-1.157.787-.319.026-.643.08-2.02-.491-1.378-.571-2.264-1.956-2.332-2.046-.068-.09-.553-.736-.553-1.403 0-.667.348-.996.471-1.12.124-.125.27-.156.362-.156.091 0 .183 0 .264.005.087.004.204-.033.319.244.116.277.397.969.432 1.04.035.071.058.156.012.246-.046.09-.069.146-.139.227-.069.081-.146.182-.209.244-.069.068-.142.143-.061.282.081.139.36 1.18 1.48 2.178.683.608 1.259.797 1.438.887.179.091.284.076.39-.046.107-.123.456-.531.578-.713.123-.183.245-.152.411-.091.167.06.945.445 1.107.526.162.081.27.12.31.189.04.068.04.398-.105.806z"></path>
+</svg>
+<span class="">WhatsApp Support</span>
+</a>
+<!-- Email Us Button -->
+<a class="flex items-center justify-center space-x-2 bg-slate-900/80 hover:bg-slate-800 border border-white/10 py-2.5 px-3 rounded-xl text-slate-200 font-bold text-xs transition shadow-sm" data-purpose="support-email" href="#">
+<svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span class="">Email Us</span>
+</a>
+</div>
+<!-- Social Icons Row -->
+<div class="flex items-center justify-center space-x-4 pt-1 text-slate-400">
+<!-- Facebook -->
+<a class="p-2 bg-slate-900/60 rounded-full hover:text-white hover:bg-purple-900/40 transition" href="#">
+<svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"></path></svg>
+</a>
+<!-- Instagram -->
+<a class="p-2 bg-slate-900/60 rounded-full hover:text-white hover:bg-purple-900/40 transition" href="#">
+<svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"></path></svg>
+</a>
+<!-- Twitter/X -->
+<a class="p-2 bg-slate-900/60 rounded-full hover:text-white hover:bg-purple-900/40 transition" href="#">
+<svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
+</a>
+<!-- YouTube -->
+<a class="p-2 bg-slate-900/60 rounded-full hover:text-white hover:bg-purple-900/40 transition" href="#">
+<svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"></path></svg>
+</a>
+<!-- Discord -->
+<a class="p-2 bg-slate-900/60 rounded-full hover:text-white hover:bg-purple-900/40 transition" href="#">
+<svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"></path></svg>
+</a>
+</div>
+<!-- Legal Links -->
+<div class="text-[11px] text-slate-500 font-medium tracking-wide">
+<a class="hover:text-slate-300" href="#">Contact</a>
+<span class="mx-1.5">•</span>
+<a class="hover:text-slate-300" href="#">Terms</a>
+<span class="mx-1.5">•</span>
+<a class="hover:text-slate-300" href="#">Privacy</a>
+</div>
+<!-- Copyright Notice -->
+<div class="text-[11px] text-slate-600 font-semibold">
+        © 2026 NexPlay Esports | Built for gamers
+      </div>
+</footer>
+<!-- END: StandardizedMobileFooter -->
+<!-- BEGIN: BottomNavigationTabBar -->
+<nav class="fixed bottom-0 left-0 right-0 z-50 flex justify-center pointer-events-none" data-purpose="mobile-bottom-navigation">
+<div class="w-full max-w-md bg-[#0b101e]/95 backdrop-blur-lg border-t border-white/10 px-2 py-2 flex items-center justify-around text-center pointer-events-auto shadow-2xl">
+<!-- Tab 1: Home -->
+<a class="flex flex-col items-center justify-center flex-1 py-1 text-slate-400 hover:text-slate-200 transition-colors" data-purpose="nav-home" href="#">
+<svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span class="text-[10px] font-semibold tracking-tight">Home</span>
+</a>
+<!-- Tab 2: Games (Active Tab) -->
+<a class="flex flex-col items-center justify-center flex-1 py-1 text-[#a855f7] relative" data-purpose="nav-games" href="#">
+<svg class="w-5 h-5 mb-1 text-[#a855f7]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span class="text-[10px] font-bold tracking-tight text-white">Games</span>
+<!-- Active Dot -->
+<span class="w-1 h-1 bg-[#a855f7] rounded-full absolute bottom-0"></span>
+</a>
+<!-- Tab 3: News -->
+<a class="flex flex-col items-center justify-center flex-1 py-1 text-slate-400 hover:text-slate-200 transition-colors" data-purpose="nav-news" href="#">
+<svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span class="text-[10px] font-semibold tracking-tight">News</span>
+</a>
+<!-- Tab 4: Orgs -->
+<a class="flex flex-col items-center justify-center flex-1 py-1 text-slate-400 hover:text-slate-200 transition-colors" data-purpose="nav-orgs" href="#">
+<svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span class="text-[10px] font-semibold tracking-tight">Orgs</span>
+</a>
+<!-- Tab 5: Profile -->
+<a class="flex flex-col items-center justify-center flex-1 py-1 text-slate-400 hover:text-slate-200 transition-colors" data-purpose="nav-profile" href="#">
+<svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span class="text-[10px] font-semibold tracking-tight">Profile</span>
+</a>
+</div>
+</nav>
+<!-- END: BottomNavigationTabBar -->
+</div>
+
+
+</body></html>

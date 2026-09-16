@@ -29,35 +29,71 @@ const About: React.FC = () => {
                 url: "https://www.nexplayorg.app/about",
             }}
         />
-        <div className="animate-fade-in max-w-4xl mx-auto space-y-8">
-            <div className="bg-card p-5 sm:p-8 rounded-xl border border-gray-800 shadow-2xl">
-                <h1 className="text-2xl sm:text-3xl font-bold text-white mb-6 border-b border-gray-700 pb-4 flex items-center">
-                    <Info className="mr-3 text-brand-500 w-8 h-8" /> About NexPlay
-                </h1>
-                <div className="space-y-4 text-gray-300 leading-relaxed">
-                    <p>Welcome to <span className="text-brand-400 font-bold">NexPlay</span>, Nepal's premier esports tournament platform designed for gamers, by gamers. We are dedicated to elevating the esports ecosystem in Nepal by providing a professional, secure, and competitive environment for players to showcase their skills.</p>
-                    <p>Founded in 2025, our mission is to bridge the gap between casual gaming and professional esports. Whether you play PUBG Mobile, Free Fire, or Mobile Legends, NexPlay offers daily tournaments, scrims, and major leagues with real cash prizes.</p>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-                        <div className="bg-dark p-4 rounded-lg border border-gray-700 text-center">
-                            <Users className="text-3xl text-blue-500 mb-2 mx-auto" />
-                            <h3 className="font-bold text-white">Community First</h3>
-                            <p className="text-xs text-gray-500">Building a safe and toxic-free environment.</p>
+        <div className="animate-fade-in max-w-4xl mx-auto space-y-6 px-1 sm:px-0">
+            {/* Primary About Us Card */}
+            <article className="bg-[#13192B] rounded-2xl p-5 sm:p-7 border border-[#1F293D] shadow-2xl relative overflow-hidden">
+                {/* Ambient background glow */}
+                <div className="absolute -top-16 -right-16 w-36 h-36 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
+
+                {/* Header: Icon + Title */}
+                <div className="flex items-center gap-3 pb-4 border-b border-[#1F293D]">
+                    <div className="w-10 h-10 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-[#8B5CF6] shrink-0 shadow-inner">
+                        <Info className="w-5 h-5 text-purple-400" />
+                    </div>
+                    <div>
+                        <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">About NexPlay</h1>
+                        <p className="text-xs text-purple-300 font-medium">Nepal's Premier Esports Hub</p>
+                    </div>
+                </div>
+
+                {/* Description Paragraphs */}
+                <div className="mt-4 space-y-3.5 text-sm sm:text-base leading-relaxed text-slate-300">
+                    <p>
+                        Welcome to <strong className="text-white font-semibold">NexPlay</strong>, Nepal's premier esports tournament platform designed for gamers, by gamers. We are dedicated to elevating the esports ecosystem in Nepal by providing a professional, secure, and competitive environment for players to showcase their skills.
+                    </p>
+                    <p>
+                        Founded in 2025, our mission is to bridge the gap between casual gaming and professional esports. Whether you play PUBG Mobile, Free Fire, or Mobile Legends, NexPlay offers daily tournaments, scrims, and major leagues with real cash prizes.
+                    </p>
+                </div>
+
+                {/* Three Core Pillars */}
+                <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {/* Pillar 1: Community First */}
+                    <div className="bg-[#0D1220] rounded-xl p-4 border border-[#1E273C] flex items-center sm:flex-col sm:text-center gap-3.5 hover:border-sky-500/40 transition group">
+                        <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 shrink-0 group-hover:scale-105 transition-transform">
+                            <Users className="w-5 h-5" />
                         </div>
-                        <div className="bg-dark p-4 rounded-lg border border-gray-700 text-center">
-                            <Trophy className="text-3xl text-yellow-500 mb-2 mx-auto" />
-                            <h3 className="font-bold text-white">Fair Play</h3>
-                            <p className="text-xs text-gray-500">Advanced anti-cheat and strict moderation.</p>
+                        <div className="flex-1 min-w-0">
+                            <h2 className="text-sm font-bold text-white leading-tight">Community First</h2>
+                            <p className="text-xs text-slate-400 mt-1 leading-snug">Building a safe and toxic-free environment.</p>
                         </div>
-                        <div className="bg-dark p-4 rounded-lg border border-gray-700 text-center">
-                            <Zap className="text-3xl text-brand-500 mb-2 mx-auto" />
-                            <h3 className="font-bold text-white">Instant Payouts</h3>
-                            <p className="text-xs text-gray-500">Fast and secure prize distribution.</p>
+                    </div>
+
+                    {/* Pillar 2: Fair Play */}
+                    <div className="bg-[#0D1220] rounded-xl p-4 border border-[#1E273C] flex items-center sm:flex-col sm:text-center gap-3.5 hover:border-amber-500/40 transition group">
+                        <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0 group-hover:scale-105 transition-transform">
+                            <Trophy className="w-5 h-5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <h2 className="text-sm font-bold text-white leading-tight">Fair Play</h2>
+                            <p className="text-xs text-slate-400 mt-1 leading-snug">Advanced anti-cheat and strict moderation.</p>
+                        </div>
+                    </div>
+
+                    {/* Pillar 3: Instant Payouts */}
+                    <div className="bg-[#0D1220] rounded-xl p-4 border border-[#1E273C] flex items-center sm:flex-col sm:text-center gap-3.5 hover:border-purple-500/40 transition group">
+                        <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 shrink-0 group-hover:scale-105 transition-transform">
+                            <Zap className="w-5 h-5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <h2 className="text-sm font-bold text-white leading-tight">Instant Payouts</h2>
+                            <p className="text-xs text-slate-400 mt-1 leading-snug">Fast and secure prize distribution.</p>
                         </div>
                     </div>
                 </div>
-            </div>
+            </article>
 
-            {/* ponytail: FAQ section for About page */}
+            {/* FAQ section */}
             <Faq items={aboutFaqs} />
         </div>
         </>

@@ -12,6 +12,7 @@ interface WalletModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialTab?: 'deposit' | 'withdraw';
+  onSuccess?: () => void;
 }
 
 const DEFAULT_CATEGORIES: PaymentCategory[] = [
@@ -73,7 +74,7 @@ const DEFAULT_METHODS: PaymentMethod[] = [
 
 const PRESET_AMOUNTS = [200, 500, 1000, 2000, 5000];
 
-const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab = 'deposit' }) => {
+const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab = 'deposit', onSuccess }) => {
   const { user, profile } = useAuth();
   const { showToast } = useNotification();
   const [activeTab, setActiveTab] = useState<'deposit' | 'withdraw'>(initialTab);
@@ -244,6 +245,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
       setProofUrl('');
       setProofPreview('');
       onClose();
+      onSuccess?.();
     } catch (error: any) {
       console.error('Error submitting deposit:', error);
       showToast(error.message || 'Failed to submit deposit request', 'error');
@@ -294,6 +296,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
       setWithdrawMethod('');
       setAccountDetails('');
       onClose();
+      onSuccess?.();
     } catch (error) {
       showToast('Failed to submit withdrawal request', 'error');
     } finally {
@@ -638,6 +641,14 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
                       e.target.value = '';
                     }}
                   />
+                </div>
+
+                {/* Verification Notice */}
+                <div className="bg-brand-500/10 border border-brand-500/20 rounded-xl p-3 flex items-start gap-2.5 text-[11px] text-gray-300">
+                  <ShieldCheck className="w-4 h-4 text-brand-400 shrink-0 mt-0.5" />
+                  <span>
+                    Deposit requests are verified and credited to your balance by administrators. Once submitted, you can track the status under <strong>Transaction History</strong>.
+                  </span>
                 </div>
 
                 {/* Submit Button */}

@@ -28,7 +28,7 @@ const RegistrationModal: React.FC<RegistrationModalProps> = ({
     initialSlotNumber,
     onSuccess
 }) => {
-    const { user } = useAuth();
+    const { user, refreshProfile } = useAuth();
     const { showToast } = useNotification();
     const [loading, setLoading] = useState(false);
     const [selectedSlot, setSelectedSlot] = useState<number | ''>(initialSlotNumber || '');
@@ -105,6 +105,7 @@ const RegistrationModal: React.FC<RegistrationModalProps> = ({
             );
             
             showToast(`Joined Successfully in Slot #${confirmedSlot || 'Confirmed'}!`, 'success');
+            await refreshProfile().catch(() => {});
             onSuccess(confirmedSlot, data);
             onClose();
         } catch (e: any) {

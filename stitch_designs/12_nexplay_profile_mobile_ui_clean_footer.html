@@ -1,0 +1,324 @@
+<!DOCTYPE html><html class="dark" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
+<title>NexPlay - MELLO Yt Profile</title>
+<!-- Tailwind CSS v3 with Plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts: Orbitron & Rajdhani / Inter -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              dark: '#080b12',
+              card: '#131927',
+              cardBorder: '#1f293d',
+              accent: '#8b5cf6',
+              accentGlow: '#a78bfa',
+              cyan: '#06b6d4',
+              emerald: '#10b981',
+              gold: '#f59e0b',
+            }
+          },
+          fontFamily: {
+            heading: ['Chakra Petch', 'sans-serif'],
+            sans: ['Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+<!-- Custom Styles for esports aesthetic -->
+<style data-purpose="custom-decorations">
+    body {
+      background-color: #090d16;
+      color: #e2e8f0;
+      font-family: 'Inter', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .carbon-pattern {
+      background-color: #111726;
+      background-image: radial-gradient(#1e293b 1px, transparent 1px);
+      background-size: 8px 8px;
+    }
+    .glow-purple {
+      box-shadow: 0 0 20px -3px rgba(139, 92, 246, 0.45);
+    }
+    .glow-emerald {
+      box-shadow: 0 0 15px -3px rgba(16, 185, 129, 0.35);
+    }
+    .glow-tab {
+      box-shadow: 0 3px 12px rgba(139, 92, 246, 0.7);
+    }
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-[#090d16] text-slate-100 flex flex-col justify-between selection:bg-purple-600 selection:text-white">
+<!-- BEGIN: AppHeader -->
+<header class="sticky top-0 z-40 w-full bg-[#080c16]/95 backdrop-blur-md border-b border-slate-800/80 px-3.5 py-2.5" data-purpose="top-navigation-bar"><div class="flex items-center justify-between gap-2 max-w-lg mx-auto"><a class="flex items-center gap-2 group shrink-0" data-purpose="brand-identity" href="#"><div class="relative w-8 h-8 rounded-lg overflow-hidden bg-[#151c33] p-0.5 border border-purple-500/40 shadow-inner flex items-center justify-center"><img alt="NexPlay Emblem" class="w-full h-full object-contain rounded-md" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCC3ety_dalFT6pgXKMAIoI6BhKY6HzBxBxFeY7bBfUljaOtpakfXRgZkjuCSxmXR_p1JOycxPh0ou3VoHlgB0hh7V_Cx7FZmwdioDIoNTcfnSOEjHdrmsQTdhs73Y0R8H4xnG4diQjSlLZ_udKZYnovYz0mxzQehdbaG4x8IOK-N3X97U2yoLlKRzSU7W7sJkLGUh2NVFA9kJ0SvuWD-1mEouiRmp8KkJXtAdDFv_Udt9OLzcFrhu39ShsKAUD6hwX0OA"></div><div class="flex tracking-wider font-extrabold text-base"><span class="text-white">NEX</span><span class="text-[#8b5cf6]">PLAY</span></div></a><div class="flex items-center gap-2" data-purpose="header-controls"><button aria-label="Notifications" class="relative p-2 rounded-full text-slate-300 hover:text-white hover:bg-slate-800/60 transition" type="button"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke-linecap="round" stroke-linejoin="round"></path></svg><span class="absolute 1 top-1 right-1 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center border-2 border-[#080c16]">2</span></button><div class="flex items-center gap-1.5 bg-[#171330] border border-purple-600/50 hover:border-purple-500 text-purple-300 px-2.5 py-1 rounded-full text-xs font-semibold shadow-sm shadow-purple-950/40"><svg class="w-3.5 h-3.5 text-purple-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" stroke-linecap="round" stroke-linejoin="round"></path></svg><span class="">Rs. 5K</span></div><button aria-label="User Profile Menu" class="flex items-center gap-1 bg-[#15232d] hover:bg-[#1c303f] border border-cyan-700/50 p-1 pl-1.5 pr-2 rounded-full transition" type="button"><div class="w-5 h-5 rounded-full bg-emerald-950 border border-emerald-500 flex items-center justify-center text-xs">🤖</div><svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round"></path></svg></button><button aria-label="Open Navigation Menu" class="p-1.5 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg" type="button"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round" stroke-linejoin="round"></path></svg></button></div></div></header>
+<!-- END: AppHeader -->
+<!-- Main Scrollable Content Container -->
+<main class="w-full max-w-md mx-auto px-3 pt-2 flex-1 flex flex-col gap-3 pb-20">
+<!-- BEGIN: BackNavigation -->
+<section class="flex items-center justify-between pt-1">
+<button class="inline-flex items-center gap-2 text-xs font-semibold text-slate-400 uppercase tracking-widest hover:text-purple-400 transition-colors" onclick="history.back()" type="button">
+<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"></path>
+</svg>
+        BACK
+      </button>
+<div class="flex items-center gap-2">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-purple-950/70 border border-purple-600/40 text-purple-300">
+          ● Profile Active
+        </span>
+</div>
+</section>
+<!-- END: BackNavigation -->
+<!-- BEGIN: ProfileHeroCard -->
+<section class="relative rounded-2xl bg-[#111728] border border-slate-800/90 overflow-hidden shadow-xl" data-purpose="profile-hero">
+<!-- Compact Banner -->
+<div class="relative h-24 carbon-pattern border-b border-slate-800/80 px-3 py-2 flex justify-end items-start gap-1.5">
+<div class="absolute -top-10 -left-10 w-28 h-28 bg-purple-600/20 rounded-full blur-2xl pointer-events-none"></div>
+<div class="absolute -top-10 right-10 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
+<!-- Banner Action 1: Settings Gear -->
+<button aria-label="Settings" class="relative z-10 w-7 h-7 rounded-full bg-slate-900/85 border border-slate-700/80 flex items-center justify-center text-slate-300 hover:text-white hover:border-purple-500 transition-all shadow-sm" type="button">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path></svg>
+</button>
+<!-- Banner Action 2: Change Cover -->
+<button aria-label="Change Cover" class="relative z-10 w-7 h-7 rounded-full bg-slate-900/85 border border-slate-700/80 flex items-center justify-center text-slate-300 hover:text-white hover:border-purple-500 transition-all shadow-sm" type="button">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path></svg>
+</button>
+</div>
+<!-- Avatar & Details Container -->
+<div class="px-4 pt-0 pb-3">
+<!-- Compact Avatar with Overlap -->
+<div class="flex flex-col items-center -mt-10 mb-1">
+<div class="relative group">
+<div class="w-20 h-20 rounded-2xl bg-[#0e1422] border-2 border-purple-500/50 p-1 shadow-xl flex items-center justify-center relative shadow-[0_0_12px_rgba(168,85,247,0.35)]">
+<!-- Antenna Icon -->
+<div class="absolute -top-2.5 left-1/2 -translate-x-1/2 flex flex-col items-center">
+<span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+<span class="w-0.5 h-1.5 bg-slate-400"></span>
+</div>
+<!-- Robot Avatar -->
+<div class="w-full h-full rounded-xl bg-gradient-to-b from-[#0ea58a] to-[#047864] p-1 flex flex-col items-center justify-center relative shadow-inner">
+<span class="absolute -left-1.5 top-1/2 -translate-y-1/2 w-1 h-3.5 rounded-sm bg-teal-300/80"></span>
+<span class="absolute -right-1.5 top-1/2 -translate-y-1/2 w-1 h-3.5 rounded-sm bg-teal-300/80"></span>
+<div class="w-full h-6 bg-[#0b171a] rounded flex items-center justify-around px-2 mb-0.5 shadow-inner border border-teal-900/40">
+<span class="w-2 h-2.5 bg-teal-300 rounded-full animate-pulse"></span>
+<span class="w-2 h-2.5 bg-teal-300 rounded-full animate-pulse"></span>
+</div>
+<div class="w-3.5 h-1 border-b-2 border-teal-950/80 rounded-full"></div>
+</div>
+<!-- Satellite Dish Badge -->
+<div class="absolute -top-1.5 right-1 w-5 h-5 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center text-[9px] text-white shadow">
+📡
+</div>
+</div>
+</div>
+<!-- Compact Change Avatar Pill -->
+<button class="mt-1.5 inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#1b2238]/90 hover:bg-purple-900/50 border border-purple-500/40 text-[10px] font-bold tracking-wider text-purple-200 transition-all uppercase shadow-sm" type="button">
+<svg class="w-3 h-3 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path><path d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+CHANGE AVATAR
+</button>
+</div>
+<!-- Name & Player Badge Row (Compact) -->
+<div class="flex items-center justify-center gap-2 mt-1">
+<h1 class="font-bold text-xl tracking-tight text-white">MELLO Yt</h1>
+<div class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-950/60 border border-purple-500/50 text-[10px] font-bold tracking-wider text-purple-300 uppercase">
+<svg class="w-2.5 h-2.5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+PLAYER
+</div>
+</div>
+<!-- Sleek ID Bar -->
+<div class="mt-2 flex items-center justify-between bg-[#0b101c] border border-slate-800 rounded-lg px-2.5 py-1.5"><div class="text-xs text-slate-400 truncate max-w-[280px] flex items-center"><span class="text-slate-500 font-semibold uppercase mr-1">ID:</span><span class="font-mono text-slate-300 text-xs truncate" id="player-uid">8zPyxE6EsIgpkYUv4EiuAQNsvld2</span></div><button aria-label="Copy Player ID" class="p-1 text-slate-400 hover:text-purple-400 transition-colors" id="copy-btn" type="button"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg></button></div>
+<!-- Email & Stats Row Combined -->
+<div class="mt-2 flex items-center justify-between text-xs">
+<div class="flex items-center gap-1.5 text-slate-400 truncate">
+<svg class="w-3.5 h-3.5 text-slate-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+<span class="text-slate-300 truncate text-xs">melloyt22@gmail.com</span>
+</div>
+<div class="flex items-center gap-3 font-medium text-xs flex-shrink-0">
+<div class="flex items-center gap-1">
+<span class="font-bold text-white font-heading text-sm">0</span>
+<span class="text-slate-400 text-[10px]">Followers</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="font-bold text-white font-heading text-sm">0</span>
+<span class="text-slate-400 text-[10px]">Following</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Compact Tab Bar -->
+<div class="p-2 border-t border-slate-800/80 bg-[#0c101c]/95"><div class="bg-[#080d18] border border-slate-800/90 rounded-xl p-1 flex items-center justify-between gap-1"><button class="flex-1 py-1.5 px-2.5 rounded-lg bg-purple-600 text-white font-semibold text-xs tracking-wide uppercase flex items-center justify-center gap-1.5 shadow-sm shadow-[0_0_12px_rgba(168,85,247,0.35)] transition-all" type="button"><svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg><span class="">OVERVIEW</span></button><button class="flex-1 py-1.5 px-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 font-medium text-xs tracking-wide uppercase flex items-center justify-center gap-1.5 transition-all" type="button"><svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg><span class="">ACTIVITY</span></button><button class="flex-1 py-1.5 px-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 font-medium text-xs tracking-wide uppercase flex items-center justify-center gap-1.5 transition-all" type="button"><svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path></svg><span class="">SETTINGS</span></button></div></div>
+</section>
+<!-- END: ProfileHeroCard -->
+<!-- BEGIN: PlayerStatsCardsGroup -->
+<div class="space-y-3.5" data-purpose="player-stats-cards">
+<!-- Side-by-Side 2-Column Cards for Wallet Balance & Total Earnings -->
+<div class="grid grid-cols-2 gap-3">
+<!-- Card 1: Wallet Balance -->
+<div class="rounded-xl bg-[#111728] border border-slate-800/90 p-3.5 shadow-md flex flex-col justify-between hover:border-emerald-500/40 transition-all">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-400 truncate">
+<span class="w-5 h-5 rounded-md bg-emerald-950/60 border border-emerald-500/40 flex items-center justify-center text-emerald-400 flex-shrink-0">
+<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</span>
+<span class="truncate">WALLET</span>
+</div>
+<button class="px-2 py-0.5 rounded-lg bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-[10px] font-bold hover:bg-emerald-800/40 transition-colors uppercase tracking-tight" type="button">
+TOP UP
+</button>
+</div>
+<div class="mt-2 font-heading font-bold text-xl tracking-wide text-white">
+Rs. 5K
+</div>
+</div>
+<!-- Card 2: Total Earnings -->
+<div class="rounded-xl bg-[#111728] border border-slate-800/90 p-3.5 shadow-md flex flex-col justify-between hover:border-amber-500/40 transition-all">
+<div class="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-400 truncate">
+<span class="w-5 h-5 rounded-md bg-amber-950/60 border border-amber-500/40 flex items-center justify-center text-amber-400 flex-shrink-0">
+<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</span>
+<span class="truncate">EARNINGS</span>
+</div>
+<div class="mt-2 font-heading font-bold text-xl tracking-wide text-white">
+Rs. 0
+</div>
+</div>
+</div>
+<!-- Card 3: Player Level with Sleek Progress Bar -->
+<div class="rounded-xl bg-[#111728] border border-slate-800/90 p-3.5 shadow-md space-y-2.5 hover:border-purple-500/40 transition-all">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-400">
+<span class="w-5 h-5 rounded-md bg-purple-950/60 border border-purple-500/40 flex items-center justify-center text-purple-400 flex-shrink-0">
+<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</span>
+<span class="">PLAYER LEVEL</span>
+</div>
+<span class="text-xs font-mono font-semibold text-slate-400">0 / 500 XP</span>
+</div>
+<div class="flex items-baseline justify-between">
+<div class="font-heading font-bold text-xl tracking-wide text-white">
+LVL 1
+</div>
+<span class="text-xs text-purple-400 font-semibold">Tier 1 Recruit</span>
+</div>
+<div class="w-full bg-[#080d18] h-2 rounded-full overflow-hidden border border-slate-800">
+<div class="bg-gradient-to-r from-purple-600 to-indigo-400 h-full w-[4%] rounded-full shadow-sm"></div>
+</div>
+</div>
+<!-- Card 4: About Me / Bio (Compact) -->
+<div class="rounded-xl bg-[#111728] border border-slate-800/90 p-3.5 shadow-md space-y-1.5 hover:border-slate-700 transition-all">
+<div class="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-slate-400">
+<div class="flex items-center gap-1.5">
+<svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+<span class="">ABOUT ME</span>
+</div>
+<button aria-label="Edit Bio" class="text-slate-400 hover:text-purple-400 transition-colors" type="button">
+<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+</button>
+</div>
+<p class="text-xs text-slate-400 italic">
+No bio provided yet.
+</p>
+</div>
+</div>
+<!-- END: PlayerStatsCardsGroup -->
+<!-- BEGIN: UnifiedFooter -->
+<footer class="w-full bg-[#050811] border-t border-purple-900/40 pt-7 pb-24 px-4 mt-8" data-purpose="unified-nexplay-footer"><div class="max-w-lg mx-auto flex flex-col gap-4"><div><div class="flex items-center gap-2 mb-2"><div class="w-6 h-6 rounded-md overflow-hidden bg-[#151c33] p-0.5 border border-purple-500/40"><img alt="NexPlay Icon" class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDqJQkvBFCf6wQrkwKaNve8Mb6TgAM8PJQh_4gTJx2EdNicxnhVQaXfdDxkpw-73J9u82RpPsS2OLP8ths9Be7x3XzVHphFIFstXviR1vFe1V0R6qzBPRtrNf7Rx5ijj-yySAj14uhZw3RwyA7zuyEdon6KhzPHtsXx5A1dHOEnu9tkxX3XKN5f_dr31G0Dq0iGSzhRAv1SwrnAXcLrYMGmlAlg9QYirI2Str2BH6qGX_5_VkVn9sE2mly6JgmSTPjkWxQ"></div><span class="font-extrabold text-white text-base">NexPlay</span></div><p class="text-xs text-slate-400 leading-relaxed font-normal">Nepal's esports platform for tournaments, scrims, and competitive gaming.</p></div><div class="flex flex-wrap items-center gap-2.5" data-purpose="community-stats-badges"><div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/90 border border-slate-800 text-xs font-medium text-slate-200"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span><span class="">12+ Players</span></div><div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/90 border border-slate-800 text-xs font-medium text-slate-200"><span class="w-2 h-2 rounded-full bg-cyan-400"></span><span class="">4+ Organizations</span></div></div><div class="flex items-center gap-2.5 pt-1" data-purpose="social-media-links"><a aria-label="Facebook" class="w-8 h-8 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:border-purple-500/50 transition" href="#"><svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M9 8H6v4h3v12h5V12h3.642L18 8h-4V6.333C14 5.374 14.556 5 15.63 5H18V0h-3.808C10.592 0 9 1.582 9 4.615V8z"></path></svg></a><a aria-label="Instagram" class="w-8 h-8 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:border-purple-500/50 transition" href="#"><svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"></path></svg></a><a aria-label="X (Twitter)" class="w-8 h-8 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:border-purple-500/50 transition" href="#"><svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg></a><a aria-label="YouTube" class="w-8 h-8 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:border-purple-500/50 transition" href="#"><svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"></path></svg></a><a aria-label="Discord" class="w-8 h-8 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:border-purple-500/50 transition" href="#"><svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.372-.292a.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.1.246.198.373.292a.077.077 0 0 1-.006.128 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"></path></svg></a></div><div class="grid grid-cols-2 gap-2 mt-1" data-purpose="support-buttons"><a class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-600/40 text-emerald-400 text-xs font-semibold transition" href="#"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" stroke-linecap="round" stroke-linejoin="round"></path></svg>WhatsApp Support</a><a class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-xs font-semibold transition" href="#"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round"></path></svg>Email Us</a></div><div class="border-t border-slate-800/80 pt-3 text-[11px] text-slate-500 flex flex-col gap-1"><div class="">© 2026 NexPlay Esports | Built for gamers</div><div class="flex items-center gap-2"><a class="hover:text-slate-400" href="#">Contact</a><span class="">•</span><a class="hover:text-slate-400" href="#">Terms</a><span class="">•</span><a class="hover:text-slate-400" href="#">Privacy</a></div></div></div></footer>
+<!-- END: UnifiedFooter -->
+</main>
+<!-- BEGIN: MobileBottomNavigation -->
+<nav class="fixed bottom-0 left-0 right-0 z-50 bg-[#0b0f1a]/95 backdrop-blur-lg border-t border-slate-800/90 py-2 px-3 safe-area-pb" data-purpose="mobile-bottom-bar">
+<div class="max-w-md mx-auto grid grid-cols-5 items-center text-center">
+<!-- Item 1: Home -->
+<a class="flex flex-col items-center gap-1 text-slate-400 hover:text-purple-400 transition-colors" href="#">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span class="text-[10px] font-medium tracking-tight">Home</span>
+</a>
+<!-- Item 2: Games / Scrims -->
+<a class="flex flex-col items-center gap-1 text-slate-400 hover:text-purple-400 transition-colors" href="#">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span class="text-[10px] font-medium tracking-tight">Games</span>
+</a>
+<!-- Item 3: News -->
+<a class="flex flex-col items-center gap-1 text-slate-400 hover:text-purple-400 transition-colors" href="#">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span class="text-[10px] font-medium tracking-tight">News</span>
+</a>
+<!-- Item 4: Orgs -->
+<a class="flex flex-col items-center gap-1 text-slate-400 hover:text-purple-400 transition-colors" href="#">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<span class="text-[10px] font-medium tracking-tight">Orgs</span>
+</a>
+<!-- Item 5: Active Profile -->
+<a class="flex flex-col items-center gap-1 text-purple-400 font-bold relative transition-colors" data-purpose="active-nav-tab" href="#">
+<div class="relative">
+<svg class="w-5 h-5 text-purple-400 drop-shadow-[0_0_8px_rgba(168,85,247,0.6)]" fill="currentColor" viewBox="0 0 20 20">
+<path clip-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" fill-rule="evenodd"></path>
+</svg>
+</div>
+<span class="text-[10px] tracking-tight font-bold text-white">Profile</span>
+<!-- Bottom Active Indicator Dot -->
+<span class="w-1.5 h-1.5 rounded-full bg-purple-500 shadow-[0_0_8px_#a855f7]"></span>
+</a>
+</div>
+</nav>
+<!-- END: MobileBottomNavigation -->
+<!-- JavaScript: Copy ID and Interactive Feedback -->
+<script data-purpose="interaction-handlers">
+    document.addEventListener('DOMContentLoaded', () => {
+      const copyBtn = document.getElementById('copy-btn');
+      const uidText = document.getElementById('player-uid');
+
+      if (copyBtn && uidText) {
+        copyBtn.addEventListener('click', () => {
+          navigator.clipboard.writeText(uidText.textContent.trim()).then(() => {
+            const originalHTML = copyBtn.innerHTML;
+            copyBtn.innerHTML = `
+              <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+              </svg>
+            `;
+            setTimeout(() => {
+              copyBtn.innerHTML = originalHTML;
+            }, 1800);
+          }).catch(err => {
+            console.error('Failed to copy ID: ', err);
+          });
+        });
+      }
+    });
+  </script>
+
+
+
+
+
+
+
+
+
+
+</body></html>

@@ -62,77 +62,101 @@ const Contact: React.FC = () => {
             description="Get in touch with the NexPlay team for support, partnerships, and esports tournament inquiries in Nepal."
             canonicalPath="/contact"
         />
-        <div className="animate-fade-in max-w-4xl mx-auto space-y-8">
-            <div className="bg-card p-5 sm:p-8 rounded-2xl border border-gray-800 shadow-2xl">
-                <h1 className="text-2xl sm:text-3xl font-black text-white mb-6 border-b border-gray-800 pb-4 flex items-center gap-4">
-                    <Headset className="text-brand-500 w-10 h-10" /> Contact Us
-                </h1>
-                <p className="text-gray-400 mb-8 leading-relaxed">Have a question, found a bug, or want to partner with us? We'd love to hear from you.</p>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-6">
-                        <div className="bg-dark/50 p-5 rounded-2xl border border-gray-800 hover:border-brand-500/30 transition-colors group">
-                            <h3 className="text-brand-400 font-black text-[10px] uppercase tracking-widest mb-2">Email Support</h3>
-                            <a href="mailto:nexplayorg@gmail.com" className="text-white text-lg hover:text-brand-300 transition flex items-center gap-3 font-bold">
-                                <div className="w-10 h-10 rounded-xl bg-brand-500/10 flex items-center justify-center group-hover:bg-brand-500/20 transition-colors">
-                                    <Mail className="w-5 h-5 text-brand-500" />
-                                </div>
-                                nexplayorg@gmail.com
-                            </a>
+        <div className="animate-fade-in max-w-4xl mx-auto space-y-6">
+            <div className="bg-[#131b2e] p-5 sm:p-8 rounded-3xl border border-slate-800 shadow-2xl space-y-6">
+                {/* Contact Heading */}
+                <div className="flex items-center gap-3.5">
+                    <div className="w-12 h-12 rounded-2xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400 shadow-md shadow-purple-900/20 shrink-0">
+                        <Headset className="w-6 h-6 text-purple-400" />
+                    </div>
+                    <div>
+                        <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight">Contact Us</h1>
+                        <p className="text-slate-400 text-xs sm:text-sm mt-0.5">
+                            Have a question, found a bug, or want to partner with us? We'd love to hear from you.
+                        </p>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                    {/* Support Cards */}
+                    <div className="space-y-3">
+                        <div className="bg-[#141f36] border border-white/5 rounded-2xl p-4 flex items-center gap-4 transition hover:border-purple-500/30">
+                            <div className="w-11 h-11 rounded-xl bg-purple-900/40 border border-purple-500/30 flex items-center justify-center text-purple-300 shrink-0">
+                                <Mail className="w-5 h-5 text-purple-300" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <span className="block text-[10px] font-bold text-slate-400 tracking-wider uppercase mb-0.5">EMAIL SUPPORT</span>
+                                <a href="mailto:nexplayorg@gmail.com" className="text-sm sm:text-base font-bold text-white hover:text-purple-400 truncate block transition-colors">
+                                    nexplayorg@gmail.com
+                                </a>
+                            </div>
                         </div>
-                        <div className="bg-dark/50 p-5 rounded-2xl border border-gray-800 hover:border-brand-500/30 transition-colors group">
-                            <h3 className="text-brand-400 font-black text-[10px] uppercase tracking-widest mb-2">Business Inquiries</h3>
-                            <a href="mailto:nex.unishghimire@gmail.com" className="text-white text-lg hover:text-brand-300 transition flex items-center gap-3 font-bold">
-                                <div className="w-10 h-10 rounded-xl bg-brand-500/10 flex items-center justify-center group-hover:bg-brand-500/20 transition-colors">
-                                    <Briefcase className="w-5 h-5 text-brand-500" />
-                                </div>
-                                next.unishghimire@gmail.com
-                            </a>
+
+                        <div className="bg-[#141f36] border border-white/5 rounded-2xl p-4 flex items-center gap-4 transition hover:border-cyan-500/30">
+                            <div className="w-11 h-11 rounded-xl bg-indigo-900/40 border border-indigo-500/30 flex items-center justify-center text-indigo-300 shrink-0">
+                                <Briefcase className="w-5 h-5 text-indigo-300" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <span className="block text-[10px] font-bold text-slate-400 tracking-wider uppercase mb-0.5">BUSINESS INQUIRIES</span>
+                                <a href="mailto:nex.unishghimire@gmail.com" className="text-sm sm:text-base font-bold text-white hover:text-cyan-400 truncate block transition-colors">
+                                    next.unishghimire@gmail.com
+                                </a>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="bg-dark/30 p-6 rounded-2xl border border-gray-800 text-center">
-                        <h3 className="text-white font-black uppercase tracking-widest text-xs mb-6">Follow Our Community</h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <a href="https://discord.gg/D3M3AqAe5U" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 bg-[#5865F2] hover:bg-[#4752C4] text-white py-3 rounded-xl font-bold transition-colors text-xs">
+                    {/* Community Grid */}
+                    <div className="bg-[#131d33] border border-white/5 rounded-2xl p-4 sm:p-5 space-y-3">
+                        <h3 className="text-xs font-black uppercase text-center text-slate-300 tracking-widest">
+                            FOLLOW OUR COMMUNITY
+                        </h3>
+                        <div className="grid grid-cols-2 gap-2.5 pt-1">
+                            <a href="https://discord.gg/D3M3AqAe5U" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] text-white font-semibold text-xs sm:text-sm transition-transform active:scale-95 shadow-md shadow-indigo-900/30">
                                 <MessageCircle className="w-4 h-4" /> Discord
                             </a>
-                            <a href="https://www.facebook.com/nexplayorg" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 bg-[#1877F2] hover:bg-[#166FE5] text-white py-3 rounded-xl font-bold transition-colors text-xs">
+                            <a href="https://www.facebook.com/nexplayorg" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#1877F2] hover:bg-[#0c63d4] text-white font-semibold text-xs sm:text-sm transition-transform active:scale-95 shadow-md shadow-blue-900/30">
                                 <Facebook className="w-4 h-4" /> Facebook
                             </a>
-                            <a href="https://www.instagram.com/nexplayorg?igsh=MWd6a2hqa2JqbzBxaw==" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 bg-[#E1306C] hover:bg-[#C13584] text-white py-3 rounded-xl font-bold transition-colors text-xs">
+                            <a href="https://www.instagram.com/nexplayorg?igsh=MWd6a2hqa2JqbzBxaw==" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-[#e1306c] to-[#c13584] hover:opacity-95 text-white font-semibold text-xs sm:text-sm transition-transform active:scale-95 shadow-md shadow-pink-900/30">
                                 <Instagram className="w-4 h-4" /> Instagram
                             </a>
-                            <a href="https://wa.me/+9779767783336" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white py-3 rounded-xl font-bold transition-colors text-xs">
+                            <a href="https://wa.me/+9779767783336" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#25D366] hover:bg-[#1ebd59] text-white font-semibold text-xs sm:text-sm transition-transform active:scale-95 shadow-md shadow-emerald-900/30">
                                 <MessageCircle className="w-4 h-4" /> WhatsApp
                             </a>
-                            <a href="https://www.tiktok.com/@nexplayorg" target="_blank" rel="noopener noreferrer" className="col-span-2 flex items-center justify-center gap-2 bg-black hover:bg-card text-white py-3 rounded-xl font-bold transition-colors text-xs border border-gray-800">
-                                <Music2 className="w-4 h-4" /> Follow on TikTok
-                            </a>
                         </div>
+                        <a href="https://www.tiktok.com/@nexplayorg" target="_blank" rel="noopener noreferrer" className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-black border border-white/15 hover:border-white/30 text-white font-bold text-xs sm:text-sm tracking-wide transition-transform active:scale-[0.98]">
+                            <Music2 className="w-4 h-4" /> Follow on TikTok
+                        </a>
                     </div>
                 </div>
             </div>
 
             {/* Organization Application Section */}
             {(settings?.isOrgFormOpen ?? true) ? (
-                <div className="bg-gradient-to-br from-brand-900/20 to-dark p-5 sm:p-8 rounded-2xl border border-brand-500/20 shadow-2xl relative overflow-hidden group">
-                    <div className="absolute -right-20 -top-20 w-64 h-64 bg-brand-500/5 rounded-full blur-3xl group-hover:bg-brand-500/10 transition-colors"></div>
+                <section className="rounded-3xl p-5 md:p-6 bg-gradient-to-b from-[#181a38] to-[#0f172a] border border-purple-500/30 shadow-2xl relative overflow-hidden" data-purpose="organizer-banner">
+                    <div className="absolute -top-16 -right-16 w-36 h-36 bg-purple-600/20 rounded-full blur-3xl pointer-events-none"></div>
                     
                     <div className="relative z-10">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-6">
                             <div className="space-y-2">
-                                <h2 className="text-2xl font-black text-white uppercase tracking-tight flex items-center gap-3">
-                                    <Building2 className="text-brand-500 w-8 h-8" /> Become an Organizer
-                                </h2>
-                                <p className="text-gray-400 text-sm max-w-xl">Host your own tournaments, manage participants, and grow your gaming community with NexPlay's professional tools.</p>
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-xl bg-purple-600/30 border border-purple-400/40 flex items-center justify-center text-purple-300 shrink-0">
+                                        <Building2 className="w-5 h-5" />
+                                    </div>
+                                    <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight">
+                                        Become an Organizer
+                                    </h2>
+                                </div>
+                                <p className="text-slate-400 text-xs sm:text-sm max-w-xl">
+                                    Host your own tournaments, manage participants, and grow your gaming community with NexPlay's professional tools.
+                                </p>
                             </div>
                             <button type="button" 
                                 onClick={() => setIsApplying(!isApplying)}
-                                className={`px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-sm transition-colors shadow-xl ${
+                                className={`px-6 py-3 rounded-xl font-bold uppercase tracking-wider text-xs transition-all shadow-lg shrink-0 ${
                                     isApplying 
-                                    ? 'bg-surface text-gray-400 hover:text-white' 
-                                    : 'bg-brand-600 hover:bg-brand-500 text-white shadow-brand-500/20'
+                                    ? 'bg-slate-800 text-slate-300 hover:text-white' 
+                                    : 'bg-purple-600 hover:bg-purple-500 text-white shadow-purple-900/40 active:scale-95'
                                 }`}
                             >
                                 {isApplying ? 'Close Form' : 'Apply Now'}
@@ -263,7 +287,7 @@ const Contact: React.FC = () => {
                             </div>
                         )}
                     </div>
-                </div>
+                </section>
             ) : (
                 <div className="bg-dark/50 p-5 sm:p-8 rounded-2xl border border-gray-800 text-center">
                     <AlertTriangle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />

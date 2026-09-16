@@ -21,6 +21,7 @@ interface AuthContextType {
     authError: string | null;
     retryAuth: () => void;
     logout: () => Promise<void>;
+    refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -30,7 +31,8 @@ const AuthContext = createContext<AuthContextType>({
     profileLoading: false,
     authError: null,
     retryAuth: () => {},
-    logout: async () => {}
+    logout: async () => {},
+    refreshProfile: async () => {}
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -252,7 +254,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     });
                 }
             }, (error) => {
-                // Error in user profile snapshot
+                console.error('User profile onSnapshot error:', error);
             });
 
             // Presence Management — debounced to avoid excessive Firestore writes
@@ -302,6 +304,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     }, [user?.uid]);
 
+    const refreshProfile = useCallback(async () => {
+        if (!user?.uid) return;
+        try {
+            const userRef = doc(db, 'users', user.uid);
+            const snapshot = await getDoc(userRef);
+            if (snapshot.exists()) {
+                const data = snapshot.data() as UserProfile;
+                const isSuperAdmin = SUPER_ADMIN_EMAILS.includes(user.email || '');
+                setProfile(isSuperAdmin ? { ...data, role: 'admin' } : data);
+            }
+        } catch (error) {
+            console.error('Error refreshing user profile:', error);
+        }
+    }, [user?.uid, user?.email]);
+
     // When the profile role changes (admin promoted/demoted a user), force-refresh the
     // ID token so the custom-claims role is picked up (BUG-030). Claims win over the
     // doc role when present; the doc role remains a display fallback during migration.
@@ -320,7 +337,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, [profile?.role]);
 
     return (
-        <AuthContext.Provider value={{ user, profile, loading, profileLoading, authError, retryAuth: () => void initProfile(), logout }}>
+        <AuthContext.Provider value={{ user, profile, loading, profileLoading, authError, retryAuth: () => void initProfile(), logout, refreshProfile }}>
             {children}
         </AuthContext.Provider>
     );

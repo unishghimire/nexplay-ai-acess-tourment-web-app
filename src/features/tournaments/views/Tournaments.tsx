@@ -6,7 +6,7 @@ import { collection, getDocs, query, where, limit, startAfter, QueryDocumentSnap
 import { db } from '../../../shared/config/firebase';
 import { Tournament, Game } from '../../../shared/types/types';
 import TournamentCard from '../components/TournamentCard';
-import { Filter, Search } from 'lucide-react';
+import { Filter, Search, ChevronDown } from 'lucide-react';
 import { formatGameModeLabel, formatGameName, toDateSafe, isTournamentEvent } from '../../../shared/utils/utils';
 
 
@@ -226,13 +226,16 @@ const Tournaments: React.FC = () => {
                 }}
             />
 
-            <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 sm:mb-12 gap-4 sm:gap-6 border-b border-gray-800 pb-6 sm:pb-8 w-full">
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white uppercase tracking-tighter break-words">Tournament Browser</h1>
-                <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs font-black text-gray-500 uppercase tracking-widest">
-                    <span>{filteredTournaments.length} tournament{filteredTournaments.length !== 1 ? 's' : ''}</span>
+            <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 gap-4 border-b border-slate-800/80 pb-5 w-full">
+                <div>
+                    <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-white uppercase tracking-wider drop-shadow-sm">Tournament Browser</h1>
+                    <p className="text-[11px] sm:text-xs font-semibold text-slate-400 mt-0.5">Compete in verified tournaments with prize escrow</p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400">
+                    <span className="bg-[#111728] border border-slate-800 px-3 py-1.5 rounded-full text-slate-300">{filteredTournaments.length} tournament{filteredTournaments.length !== 1 ? 's' : ''}</span>
                     {tournaments.filter(t => t.status === 'live').length > 0 && (
-                        <span className="bg-red-500/10 text-red-400 border border-red-500/20 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full flex items-center gap-1.5 sm:gap-2 min-h-[32px]">
-                            <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse inline-block shrink-0" />
+                        <span className="bg-rose-500/15 text-rose-400 border border-rose-500/30 px-3 py-1.5 rounded-full flex items-center gap-1.5 font-bold">
+                            <span className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse inline-block shrink-0" />
                             {tournaments.filter(t => t.status === 'live').length} Live
                         </span>
                     )}
@@ -242,107 +245,133 @@ const Tournaments: React.FC = () => {
                 <div className="p-4 mb-6 text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-2xl">{fetchError}</div>
             )}
 
-            <div className="flex items-center gap-1 sm:gap-2 border-b border-gray-800 mb-8 sm:mb-10 overflow-x-auto py-1 w-full no-scrollbar">
-                {statusTabs.map(s => (
-                    <button
-                        key={s.id}
-                        onClick={() => setStatusFilter(s.id)}
-                        className={`min-h-[44px] flex items-center gap-2 px-4 sm:px-6 py-3 sm:py-4 text-xs font-black uppercase tracking-widest transition-colors whitespace-nowrap shrink-0 ${
-                            statusFilter === s.id
-                                ? 'text-white border-b-2 border-brand-500'
-                                : 'text-gray-500 hover:text-white'
-                        }`}
-                    >
-                        <span>{s.label}</span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-black tabular-nums ${
-                            statusFilter === s.id
-                                ? s.id === 'live' ? 'bg-red-500/20 text-red-400' : 'bg-brand-500/20 text-brand-400'
-                                : 'bg-surface text-gray-600'
-                        }`}>
-                            {s.count}
-                        </span>
-                    </button>
-                ))}
+            <div className="flex items-center space-x-3 border-b border-slate-800/80 mb-6 sm:mb-8 overflow-x-auto no-scrollbar font-bold text-xs tracking-wider pb-1 w-full">
+                {statusTabs.map(s => {
+                    const isActive = statusFilter === s.id;
+                    return (
+                        <button
+                            key={s.id}
+                            onClick={() => setStatusFilter(s.id)}
+                            className={`flex items-center space-x-1.5 pb-3 pt-1 transition-colors whitespace-nowrap shrink-0 ${
+                                isActive
+                                    ? 'border-b-2 border-purple-500 text-white'
+                                    : 'text-slate-400 hover:text-slate-200'
+                            }`}
+                        >
+                            <span className="uppercase">{s.label}</span>
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                                isActive
+                                    ? s.id === 'live' ? 'bg-rose-500/20 text-rose-300' : 'bg-[#241c42] text-purple-300'
+                                    : 'bg-slate-800/80 text-slate-400'
+                            }`}>
+                                {s.count}
+                            </span>
+                        </button>
+                    );
+                })}
             </div>
 
-            {/* Filter Bar: Stacks on mobile, 2 columns on tablet, 4 columns on desktop */}
-            <div className="bg-card/50 p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 mb-8 sm:mb-12 w-full">
-                <div className="flex items-center gap-2 sm:gap-3 mb-6 sm:mb-8">
-                    <Filter className="w-4 h-4 sm:w-5 sm:h-5 text-brand-500 shrink-0" />
-                    <h3 className="text-xs font-black text-white uppercase tracking-widest">Filter Options</h3>
+            {/* Filter Bar matching Stitch Screen 13 */}
+            <div className="bg-[#0e1424] border border-white/5 rounded-2xl p-4 sm:p-6 shadow-xl shadow-black/40 mb-6 sm:mb-8 w-full">
+                <div className="flex items-center space-x-2 text-purple-400 mb-4">
+                    <Filter className="w-4 h-4 text-purple-400" />
+                    <h2 className="text-xs font-black tracking-wider uppercase text-white">Filter Options</h2>
                 </div>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                    <div className="min-w-0">
-                        <label className="block text-xs font-black text-gray-500 uppercase mb-2 sm:mb-3 tracking-widest">Game</label>
-                        <select 
-                            aria-label="Filter tournaments by game"
-                            value={gameFilter}
-                            onChange={(e) => {
-                                setGameFilter(e.target.value);
-                                setModeFilter('all');
-                            }}
-                            className="w-full min-h-[44px] bg-black border border-gray-800 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white focus:border-brand-500 focus-visible:outline-none transition text-sm font-bold cursor-pointer"
-                        >
-                            <option value="all">All Games</option>
-                            {games.map(g => <option key={g.id} value={g.name}>{formatGameName(g.name)}</option>)}
-                        </select>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
+                    <div className="space-y-1.5 min-w-0">
+                        <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">Game</label>
+                        <div className="relative">
+                            <select 
+                                aria-label="Filter tournaments by game"
+                                value={gameFilter}
+                                onChange={(e) => {
+                                    setGameFilter(e.target.value);
+                                    setModeFilter('all');
+                                }}
+                                className="w-full bg-[#070b14] border border-white/10 rounded-xl px-3 py-2.5 text-xs font-bold text-white appearance-none focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 pr-8 transition cursor-pointer"
+                            >
+                                <option value="all">All Games</option>
+                                {games.map(g => <option key={g.id} value={g.name}>{formatGameName(g.name)}</option>)}
+                            </select>
+                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-400">
+                                <ChevronDown className="w-3.5 h-3.5" />
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="min-w-0">
-                        <label className="block text-xs font-black text-gray-500 uppercase mb-2 sm:mb-3 tracking-widest">Mode</label>
-                        <select 
-                            aria-label="Filter tournaments by mode"
-                            value={modeFilter}
-                            onChange={(e) => setModeFilter(e.target.value)}
-                            className="w-full min-h-[44px] bg-black border border-gray-800 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white focus:border-brand-500 focus-visible:outline-none transition text-sm font-bold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                            disabled={gameFilter === 'all' && availableModes.length === 0}
-                        >
-                            <option value="all">All Modes</option>
-                            {availableModes.map(m => <option key={m} value={m}>{formatGameModeLabel(m)}</option>)}
-                        </select>
+                    <div className="space-y-1.5 min-w-0">
+                        <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">Mode</label>
+                        <div className="relative">
+                            <select 
+                                aria-label="Filter tournaments by mode"
+                                value={modeFilter}
+                                onChange={(e) => setModeFilter(e.target.value)}
+                                className="w-full bg-[#070b14] border border-white/10 rounded-xl px-3 py-2.5 text-xs font-bold text-white appearance-none focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 pr-8 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled={gameFilter === 'all' && availableModes.length === 0}
+                            >
+                                <option value="all">All Modes</option>
+                                {availableModes.map(m => <option key={m} value={m}>{formatGameModeLabel(m)}</option>)}
+                            </select>
+                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-400">
+                                <ChevronDown className="w-3.5 h-3.5" />
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="min-w-0">
-                        <label className="block text-xs font-black text-gray-500 uppercase mb-2 sm:mb-3 tracking-widest">Entry</label>
-                        <select 
-                            aria-label="Filter tournaments by entry type"
-                            value={entryFilter}
-                            onChange={(e) => setEntryFilter(e.target.value)}
-                            className="w-full min-h-[44px] bg-black border border-gray-800 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white focus:border-brand-500 focus-visible:outline-none transition text-sm font-bold cursor-pointer"
-                        >
-                            <option value="all">All Types</option>
-                            <option value="free">Free Entry</option>
-                            <option value="paid">Paid Entry</option>
-                        </select>
+                    <div className="space-y-1.5 min-w-0">
+                        <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">Entry</label>
+                        <div className="relative">
+                            <select 
+                                aria-label="Filter tournaments by entry type"
+                                value={entryFilter}
+                                onChange={(e) => setEntryFilter(e.target.value)}
+                                className="w-full bg-[#070b14] border border-white/10 rounded-xl px-3 py-2.5 text-xs font-bold text-white appearance-none focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 pr-8 transition cursor-pointer"
+                            >
+                                <option value="all">All Types</option>
+                                <option value="free">Free Entry</option>
+                                <option value="paid">Paid Entry</option>
+                            </select>
+                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-400">
+                                <ChevronDown className="w-3.5 h-3.5" />
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="min-w-0">
-                        <label className="block text-xs font-black text-gray-500 uppercase mb-2 sm:mb-3 tracking-widest">Player Size</label>
-                        <select 
-                            aria-label="Filter tournaments by player size"
-                            value={teamTypeFilter}
-                            onChange={(e) => setTeamTypeFilter(e.target.value)}
-                            className="w-full min-h-[44px] bg-black border border-gray-800 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white focus:border-brand-500 focus-visible:outline-none transition text-sm font-bold cursor-pointer"
-                        >
-                            <option value="all">All Sizes</option>
-                            <option value="solo">Solo</option>
-                            <option value="duo">Duo</option>
-                            <option value="squad">Squad</option>
-                        </select>
+                    <div className="space-y-1.5 min-w-0">
+                        <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">Player Size</label>
+                        <div className="relative">
+                            <select 
+                                aria-label="Filter tournaments by player size"
+                                value={teamTypeFilter}
+                                onChange={(e) => setTeamTypeFilter(e.target.value)}
+                                className="w-full bg-[#070b14] border border-white/10 rounded-xl px-3 py-2.5 text-xs font-bold text-white appearance-none focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 pr-8 transition cursor-pointer"
+                            >
+                                <option value="all">All Sizes</option>
+                                <option value="solo">Solo</option>
+                                <option value="duo">Duo</option>
+                                <option value="squad">Squad</option>
+                            </select>
+                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-400">
+                                <ChevronDown className="w-3.5 h-3.5" />
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
             
             {/* Tournaments Grid: 1 col on mobile, 2 cols on tablet, 3 cols on desktop */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8 min-h-[50vh] w-full">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 min-h-[50vh] w-full">
                 {filteredTournaments.length > 0 ? (
                     filteredTournaments.map(t => <TournamentCard key={t.id} tournament={t} />)
                 ) : (
-                    <div className="col-span-full py-12 sm:py-20 bg-card/50 rounded-2xl sm:rounded-3xl border border-gray-800 text-center p-4 sm:p-8">
-                        <Search className="w-12 h-12 sm:w-16 sm:h-16 text-gray-700 mx-auto mb-4 sm:mb-6" />
-                        <h3 className="text-base sm:text-xl font-black text-white uppercase tracking-widest">No Matches Found</h3>
-                        <p className="text-xs sm:text-sm text-gray-500 font-bold mt-2">Adjust your filters to see more tournaments.</p>
+                    <div className="col-span-full py-12 sm:py-16 bg-[#0e1424] rounded-2xl border border-white/5 text-center p-6 sm:p-10 shadow-xl shadow-black/40">
+                        <div className="relative mb-5 mx-auto w-16 h-16 flex items-center justify-center">
+                            <div className="absolute inset-0 bg-purple-600/10 blur-xl rounded-full"></div>
+                            <Search className="w-12 h-12 text-slate-500/70 relative z-10" />
+                        </div>
+                        <h3 className="text-base sm:text-lg font-black text-white uppercase tracking-wider mb-2">No Matches Found</h3>
+                        <p className="text-slate-400 text-xs sm:text-sm font-medium max-w-xs mx-auto">Adjust your filters to see more tournaments.</p>
                     </div>
                 )}
             </div>

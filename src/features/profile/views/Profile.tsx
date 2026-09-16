@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { doc, updateDoc, writeBatch, serverTimestamp, collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { updateEmail, sendPasswordResetEmail } from 'firebase/auth';
 import { db, auth } from '../../../shared/config/firebase';
@@ -16,6 +17,7 @@ import { useSiteSettings } from '../../../shared/context/SiteSettingsContext';
 import { Seo } from '../../../shared/components/Seo';
 
 const Profile: React.FC = () => {
+    const navigate = useNavigate();
     const { user, profile } = useAuth();
     const { showToast } = useNotification();
 
@@ -302,34 +304,35 @@ const Profile: React.FC = () => {
     };
 
     return (
-        <div className="max-w-3xl mx-auto animate-fade-in pb-20">
+        <div className="max-w-4xl mx-auto animate-fade-in pb-20 px-1 sm:px-0">
             <Seo title="Profile | NexPlay" description="Your profile settings" noindex />
 
             {/* Header Card */}
-                <div 
+            <div 
                 onPaste={handlePaste}
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
-                className="bg-card/50 rounded-3xl border border-gray-800 overflow-hidden shadow-2xl mb-6 relative group"
+                className="bg-[#0e1424] rounded-3xl border border-slate-800 overflow-hidden shadow-2xl mb-6 relative group"
             >
                 <button type="button" 
                     onClick={() => setShowSettingsModal(true)}
-                    className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black rounded-full border border-gray-700 transition text-gray-300 hover:text-white z-20 backdrop-blur-sm"
+                    className="absolute top-3.5 right-3.5 p-2 bg-slate-900/80 hover:bg-slate-800 rounded-full border border-slate-700/80 transition text-slate-300 hover:text-white z-20 backdrop-blur-sm shadow-md"
                     title="Settings"
                 >
-                    <SettingsIcon className="w-5 h-5" />
+                    <SettingsIcon className="w-4 h-4" />
                 </button>
                 <div 
-                    className="h-32 bg-gradient-to-r from-gray-900 via-gray-800 to-black relative bg-cover bg-center"
+                    className="h-32 sm:h-40 bg-gradient-to-r from-gray-900 via-indigo-950 to-black relative bg-cover bg-center"
                     style={profile.bannerUrl ? { backgroundImage: `url(${profile.bannerUrl})` } : {}}
                 >
                     <div className="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
                     <button type="button" 
                         onClick={() => setShowBannerPresetModal(true)}
-                        className="absolute bottom-4 right-4 p-2 bg-black/50 hover:bg-black rounded-full border border-gray-700 transition text-gray-300 hover:text-white z-20 backdrop-blur-sm"
+                        className="absolute bottom-3 right-3 px-2.5 py-1.5 bg-slate-900/80 hover:bg-slate-800 rounded-xl border border-slate-700/80 transition text-slate-300 hover:text-white z-20 backdrop-blur-sm shadow-md flex items-center gap-1.5 text-xs font-semibold"
                         title="Change Banner"
                     >
-                        <ImageIcon className="w-4 h-4" />
+                        <ImageIcon className="w-3.5 h-3.5 text-purple-400" />
+                        <span className="hidden xs:inline text-[10px] uppercase font-bold tracking-wider">Banner</span>
                     </button>
                     {isUploading && (
                         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
@@ -340,12 +343,13 @@ const Profile: React.FC = () => {
                         </div>
                     )}
                 </div>
-                <div className="px-8 pb-8 relative">
-                    <div className="flex flex-col md:flex-row items-end gap-6 -mt-12 relative z-10">
-                        <div className="relative group flex flex-col items-center gap-2">
+                <div className="px-4 sm:px-8 pb-6 relative">
+                    <div className="flex flex-col md:flex-row items-center md:items-end gap-4 sm:gap-6 -mt-12 sm:-mt-16 relative z-10 text-center md:text-left">
+                        {/* Avatar */}
+                        <div className="relative group flex flex-col items-center gap-2 shrink-0">
                             <div 
                                 onClick={() => document.getElementById('profile-avatar-file-input')?.click()}
-                                className="w-32 h-32 rounded-3xl border-4 border-gray-950 bg-black overflow-hidden shadow-2xl relative cursor-pointer hover:border-brand-500 transition-colors"
+                                className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl sm:rounded-3xl border-4 border-[#0e1424] bg-slate-900 overflow-hidden shadow-2xl relative cursor-pointer hover:border-purple-500 transition-colors shadow-purple-950/50"
                             >
                                 <img 
                                     src={profile.profilePicUrl || DEFAULT_AVATAR || undefined} 
@@ -354,7 +358,7 @@ const Profile: React.FC = () => {
                                     onError={(e) => (e.currentTarget.src = NEXPLAY_LOGO)}
                                     referrerPolicy="no-referrer" loading="lazy" />
                                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                    <span className="text-xs font-black uppercase tracking-widest text-white text-center px-4">Click to Update</span>
+                                    <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-white text-center px-2">Update</span>
                                 </div>
                             </div>
                             <input 
@@ -369,41 +373,49 @@ const Profile: React.FC = () => {
                                 }}
                             />
                             <button
+                                type="button"
                                 onClick={() => setShowPresetModal(true)}
-                                className="text-xs font-black uppercase tracking-widest text-brand-400 hover:text-brand-300 transition bg-brand-500/10 px-5 py-2 min-h-[44px] rounded-2xl border border-brand-500/20 flex items-center gap-2"
+                                className="text-[10px] font-bold uppercase tracking-wider text-purple-300 hover:text-white transition bg-purple-950/60 hover:bg-purple-900/60 px-3 py-1 rounded-full border border-purple-500/40 flex items-center gap-1.5 shadow-sm"
                             >
-                                <ImageIcon className="w-4 h-4" /> Change Avatar
+                                <ImageIcon className="w-3 h-3 text-purple-400" /> Change Avatar
                             </button>
                         </div>
-                        <div className="flex-grow pb-2 w-full">
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                <div>
-                                    <div className="flex items-center gap-3 mb-1">
-                                        <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tighter break-words">{profile.username}</h2>
-                                        <span className="bg-brand-500/10 text-brand-400 border border-brand-500/20 px-4 py-1 rounded-full text-xs uppercase font-black tracking-widest flex items-center gap-2">
-                                            <Shield className="w-4 h-4" /> {profile.role}
+
+                        {/* Player Metadata */}
+                        <div className="flex-grow pb-1 w-full">
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                                <div className="space-y-1.5">
+                                    <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5">
+                                        <h2 className="text-xl sm:text-3xl font-black text-white tracking-tight break-words">{profile.username}</h2>
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-purple-950/60 border border-purple-500/50 text-[10px] font-bold tracking-wider text-purple-300 uppercase">
+                                            <Shield className="w-3 h-3 text-purple-400" /> {profile.role}
                                         </span>
                                     </div>
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <span className="text-xs text-gray-500 font-mono bg-black px-3 py-1.5 rounded-xl border border-gray-800 flex items-center gap-2">
-                                            ID: {user?.uid}
-                                            <button type="button" onClick={handleCopyId} aria-label="Copy player ID" className="hover:text-white transition touch-target flex items-center justify-center">
-                                                {copiedId ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+
+                                    {/* Sleek ID bar */}
+                                    <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
+                                        <div className="inline-flex items-center gap-2 bg-[#080d18] border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-400">
+                                            <span className="text-slate-500 font-bold uppercase text-[10px]">ID:</span>
+                                            <span className="font-mono text-slate-300 text-xs truncate max-w-[200px] sm:max-w-[260px]">{user?.uid}</span>
+                                            <button type="button" onClick={handleCopyId} aria-label="Copy player ID" className="hover:text-purple-400 transition ml-1">
+                                                {copiedId ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                                             </button>
-                                        </span>
+                                        </div>
                                         {profile.customActivity && (
-                                            <span className="text-xs text-brand-300 bg-brand-500/10 px-3 py-1.5 rounded-xl border border-brand-500/20 font-bold">
+                                            <span className="text-xs text-purple-300 bg-purple-950/60 px-2.5 py-1 rounded-lg border border-purple-500/30 font-semibold">
                                                 {profile.customActivity}
                                             </span>
                                         )}
                                     </div>
-                                    <div className="flex flex-wrap items-center gap-4 text-gray-400 text-sm font-bold mb-3">
-                                        <div className="flex items-center gap-2"><Mail className="w-4 h-4" /> {profile.email}</div>
-                                        {profile.phone && <div className="flex items-center gap-2"><Phone className="w-4 h-4" /> {profile.phone}</div>}
-                                    </div>
-                                    <div className="flex items-center gap-6 text-sm font-black text-gray-300">
-                                        <div><span className="text-white text-lg">{followerCount}</span> Followers</div>
-                                        <div><span className="text-white text-lg">{followingCount}</span> Following</div>
+
+                                    {/* Email & Follows */}
+                                    <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-slate-400 text-xs font-semibold pt-0.5">
+                                        <div className="flex items-center gap-1.5"><Mail className="w-3.5 h-3.5 text-slate-500" /> {profile.email}</div>
+                                        {profile.phone && <div className="flex items-center gap-1.5"><Phone className="w-3.5 h-3.5 text-slate-500" /> {profile.phone}</div>}
+                                        <div className="flex items-center gap-4 text-xs font-bold text-slate-300">
+                                            <div><span className="text-white font-extrabold">{followerCount}</span> <span className="text-slate-500 text-[11px]">Followers</span></div>
+                                            <div><span className="text-white font-extrabold">{followingCount}</span> <span className="text-slate-500 text-[11px]">Following</span></div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -412,69 +424,109 @@ const Profile: React.FC = () => {
                 </div>
 
                 {/* Tabs */}
-                <div className="flex border-t border-gray-800 px-8">
-                    <button type="button" 
-                        onClick={() => {
-                            setActiveTab('settings');
-                        }}
-                        className={`px-6 py-4 font-black text-xs uppercase tracking-widest transition border-t-2 ${activeTab === 'settings' ? 'text-brand-400 border-brand-500' : 'text-gray-500 border-transparent hover:text-white'}`}
-                    >
-                        Overview
-                    </button>
-                    <button type="button" 
-                        onClick={() => {
-                            setActiveTab('activity');
-                        }}
-                        className={`px-6 py-4 font-black text-xs uppercase tracking-widest transition border-t-2 ${activeTab === 'activity' ? 'text-brand-400 border-brand-500' : 'text-gray-500 border-transparent hover:text-white'}`}
-                    >
-                        Activity
-                    </button>
-                    <button type="button" 
-                        onClick={() => {
-                            setShowSettingsModal(true);
-                        }}
-                        className="px-6 py-4 font-black text-xs uppercase tracking-widest text-gray-500 hover:text-white transition border-t-2 border-transparent flex items-center gap-2"
-                    >
-                        <SettingsIcon className="w-4 h-4" /> Settings
-                    </button>
+                <div className="p-2 border-t border-slate-800/80 bg-[#0c101c]/95">
+                    <div className="bg-[#080d18] border border-slate-800/90 rounded-xl p-1 flex items-center justify-between gap-1">
+                        <button type="button" 
+                            onClick={() => {
+                                setActiveTab('settings');
+                            }}
+                            className={`flex-1 py-1.5 px-2.5 rounded-lg font-bold text-xs tracking-wide uppercase flex items-center justify-center gap-1.5 transition-all ${
+                                activeTab === 'settings' 
+                                    ? 'bg-purple-600 text-white shadow-md shadow-purple-950' 
+                                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                            }`}
+                        >
+                            Overview
+                        </button>
+                        <button type="button" 
+                            onClick={() => {
+                                setActiveTab('activity');
+                            }}
+                            className={`flex-1 py-1.5 px-2.5 rounded-lg font-bold text-xs tracking-wide uppercase flex items-center justify-center gap-1.5 transition-all ${
+                                activeTab === 'activity' 
+                                    ? 'bg-purple-600 text-white shadow-md shadow-purple-950' 
+                                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                            }`}
+                        >
+                            Activity
+                        </button>
+                        <button type="button" 
+                            onClick={() => {
+                                setShowSettingsModal(true);
+                            }}
+                            className="flex-1 py-1.5 px-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 font-medium text-xs tracking-wide uppercase flex items-center justify-center gap-1.5 transition-all"
+                        >
+                            <SettingsIcon className="w-3.5 h-3.5 text-slate-400" /> Settings
+                        </button>
+                    </div>
                 </div>
             </div>
 
             {activeTab === 'settings' ? (
                 <div className="space-y-6">
-                    {/* Stats Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-                        <div className="bg-card p-6 rounded-2xl border border-gray-800 shadow-lg">
-                            <div className="flex items-center gap-3 mb-3">
-                                <div className="p-2 bg-green-500/10 rounded-lg border border-green-500/20 text-green-400">
-                                    <WalletIcon className="w-5 h-5" />
+                    {/* Stats Grid matching Stitch screen 12 */}
+                    <div className="space-y-3.5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {/* Card 1: Wallet Balance */}
+                            <div className="rounded-xl bg-[#111728] border border-slate-800/90 p-4 shadow-md flex flex-col justify-between hover:border-emerald-500/40 transition-all">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-400">
+                                        <span className="w-6 h-6 rounded-md bg-emerald-950/60 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
+                                            <WalletIcon className="w-3.5 h-3.5" />
+                                        </span>
+                                        <span>WALLET</span>
+                                    </div>
+                                    <button 
+                                        type="button"
+                                        onClick={() => navigate('/wallet')}
+                                        className="px-2.5 py-1 rounded-lg bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-[10px] font-bold hover:bg-emerald-800/40 transition-colors uppercase tracking-tight"
+                                    >
+                                        TOP UP
+                                    </button>
                                 </div>
-                                <span className="text-xs text-gray-500 font-bold uppercase tracking-widest">Wallet Balance</span>
+                                <div className="mt-3 font-bold text-xl sm:text-2xl tracking-wide text-white">
+                                    {formatCurrency(profile.balance)}
+                                </div>
                             </div>
-                            <div className="text-2xl font-black text-white">{formatCurrency(profile.balance)}</div>
+
+                            {/* Card 2: Total Earnings */}
+                            <div className="rounded-xl bg-[#111728] border border-slate-800/90 p-4 shadow-md flex flex-col justify-between hover:border-amber-500/40 transition-all">
+                                <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-400">
+                                    <span className="w-6 h-6 rounded-md bg-amber-950/60 border border-amber-500/40 flex items-center justify-center text-amber-400">
+                                        <Trophy className="w-3.5 h-3.5" />
+                                    </span>
+                                    <span>EARNINGS</span>
+                                </div>
+                                <div className="mt-3 font-bold text-xl sm:text-2xl tracking-wide text-white">
+                                    {formatCurrency(profile.totalEarnings || 0)}
+                                </div>
+                            </div>
                         </div>
-                        <div className="bg-card p-6 rounded-2xl border border-gray-800 shadow-lg">
-                            <div className="flex items-center gap-3 mb-3">
-                                <div className="p-2 bg-yellow-500/10 rounded-lg border border-yellow-500/20 text-yellow-400">
-                                    <Trophy className="w-5 h-5" />
+
+                        {/* Card 3: Player Level with sleek progress bar */}
+                        <div className="rounded-xl bg-[#111728] border border-slate-800/90 p-4 shadow-md space-y-2.5 hover:border-purple-500/40 transition-all">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-400">
+                                    <span className="w-6 h-6 rounded-md bg-purple-950/60 border border-purple-500/40 flex items-center justify-center text-purple-400">
+                                        <Shield className="w-3.5 h-3.5" />
+                                    </span>
+                                    <span>PLAYER LEVEL</span>
                                 </div>
-                                <span className="text-xs text-gray-500 font-bold uppercase tracking-widest">Total Earnings</span>
-                            </div>
-                            <div className="text-2xl font-black text-white">{formatCurrency(profile.totalEarnings || 0)}</div>
-                        </div>
-                        <div className="bg-card p-6 rounded-2xl border border-gray-800 shadow-lg relative overflow-hidden group">
-                            <div className="absolute top-0 left-0 h-1 bg-brand-500 transition-colors duration-1000" style={{ width: `${getLevelProgress(profile.xp)}%` }}></div>
-                            <div className="flex items-center gap-3 mb-3">
-                                <div className="p-2 bg-brand-500/10 rounded-lg border border-brand-500/20 text-brand-400">
-                                    <Shield className="w-5 h-5" />
-                                </div>
-                                <span className="text-xs text-gray-500 font-bold uppercase tracking-widest">Player Level</span>
-                            </div>
-                            <div className="flex items-start sm:items-end justify-between">
-                                <div className="text-2xl font-black text-white">LVL {calculateLevel(profile.xp)}</div>
-                                <div className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">
+                                <span className="text-xs font-mono font-semibold text-slate-400">
                                     {profile.xp || 0} / {getXPForNextLevel(calculateLevel(profile.xp))} XP
+                                </span>
+                            </div>
+                            <div className="flex items-baseline justify-between">
+                                <div className="font-bold text-xl text-white">
+                                    LVL {calculateLevel(profile.xp)}
                                 </div>
+                                <span className="text-xs text-purple-400 font-semibold">Tier {calculateLevel(profile.xp)} Challenger</span>
+                            </div>
+                            <div className="w-full bg-[#080d18] h-2 rounded-full overflow-hidden border border-slate-800">
+                                <div 
+                                    className="bg-gradient-to-r from-purple-600 to-indigo-400 h-full rounded-full transition-all duration-700 shadow-sm" 
+                                    style={{ width: `${Math.max(5, getLevelProgress(profile.xp))}%` }}
+                                />
                             </div>
                         </div>
                     </div>

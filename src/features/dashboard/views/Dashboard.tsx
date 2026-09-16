@@ -169,193 +169,255 @@ const Dashboard: React.FC = () => {
     }
 
     return (
-        <div className="animate-fade-in max-w-5xl mx-auto p-4 md:p-8">
-            <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6 border-b border-gray-800 pb-8">
-            <Seo title="Dashboard | NexPlay" description="Your personal dashboard" noindex />
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white uppercase tracking-tighter">My Dashboard</h2>
-            </header>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-8 sm:mb-12">
-                {[
-                    { title: 'Profile', icon: User, path: '/profile', interaction: 'ClickProfileIcon' },
-                    { title: 'Teams', icon: Users, path: '/teams', interaction: 'ClickTeamsIcon' },
-                    { title: 'Tournaments', icon: Trophy, path: '#my-tournaments', interaction: 'ClickMyTournamentsAnchor' },
-                    { title: 'Leaderboard', icon: BarChart, path: '/leaderboard', interaction: 'ClickLeaderboardIcon' },
-                ].map((item, idx) => {
-                    const Component = item.path.startsWith('#') ? 'a' : 'div';
-                    const props = item.path.startsWith('#') ? { href: item.path } : { onClick: () => { navigate(item.path); } };
-                    
-                    return (
-                        <Component 
-                            key={idx}
-                            {...props}
-                            className="bg-card/50 p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-gray-800 hover:border-brand-500/50 transition-colors hover:-translate-y-1 cursor-pointer group shadow-2xl flex flex-col items-center text-center gap-5"
-                        >
-                            <div className="w-16 h-16 rounded-2xl bg-black flex items-center justify-center border border-gray-800 group-hover:bg-brand-500/10 group-hover:border-brand-500/50 transition duration-300">
-                                <item.icon className="w-7 h-7 text-brand-500" />
-                            </div>
-                            <h3 className="text-white font-black uppercase tracking-widest text-xs group-hover:text-brand-400 transition">{item.title}</h3>
-                        </Component>
-                    );
-                })}
-            </div>
+        <div className="animate-fade-in max-w-5xl mx-auto px-1 sm:px-4 pb-20 space-y-6">
+            <Seo title="Dashboard | NexPlay" description="Your personal esports dashboard" noindex />
 
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pt-4 border-t border-gray-800 pt-8">
-                <h3 id="my-tournaments" className="text-xl sm:text-2xl md:text-3xl font-black text-white uppercase tracking-tighter">My Events</h3>
-                <div className="flex items-center gap-2 bg-card/60 p-1.5 rounded-2xl border border-gray-800 self-start sm:self-auto">
-                    <button
-                        type="button"
-                        onClick={() => setDashboardFilter('all')}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition ${
-                            dashboardFilter === 'all' ? 'bg-brand-500 text-black shadow-lg shadow-brand-500/20' : 'text-gray-400 hover:text-white'
-                        }`}
-                    >
-                        All ({myTournaments.length})
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setDashboardFilter('tournaments')}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition ${
-                            dashboardFilter === 'tournaments' ? 'bg-brand-500 text-black shadow-lg shadow-brand-500/20' : 'text-gray-400 hover:text-white'
-                        }`}
-                    >
-                        Tournaments ({myTournaments.filter(t => !isScrimEvent(t)).length})
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setDashboardFilter('scrims')}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition ${
-                            dashboardFilter === 'scrims' ? 'bg-brand-500 text-black shadow-lg shadow-brand-500/20' : 'text-gray-400 hover:text-white'
-                        }`}
-                    >
-                        Scrims ({myTournaments.filter(t => isScrimEvent(t)).length})
-                    </button>
+            {/* Dashboard Header */}
+            <header className="space-y-1" data-purpose="dashboard-heading">
+                <div className="inline-block bg-[#162a63] border border-blue-500/40 px-3.5 py-1 rounded-lg shadow-sm">
+                    <h1 className="text-xl sm:text-2xl font-black text-white tracking-wider uppercase">MY DASHBOARD</h1>
                 </div>
-            </div>
-            <div className="grid gap-6">
-                {(() => {
-                    const displayedEvents = myTournaments.filter(t => {
-                        if (dashboardFilter === 'tournaments') return !isScrimEvent(t);
-                        if (dashboardFilter === 'scrims') return isScrimEvent(t);
-                        return true;
-                    });
-                    if (displayedEvents.length === 0) {
-                        return (
-                            <div className="bg-card/50 p-8 sm:p-16 rounded-2xl sm:rounded-3xl border border-gray-800 text-center">
-                                <p className="text-gray-500 font-bold uppercase tracking-widest">No {dashboardFilter === 'all' ? 'events' : dashboardFilter} found.</p>
-                            </div>
-                        );
-                    }
-                    return displayedEvents.map(t => {
-                        const isLive = t.status === 'live';
-                        const isCompleted = t.status === 'completed';
-                        const isScrim = isScrimEvent(t);
-                        const showRoom = isLive || (t.status === 'upcoming' && t.roomId);
+                <p className="text-xs sm:text-sm text-slate-400 font-medium">Manage your competitive events and shortcuts</p>
+            </header>
 
-                        return (
-                            <div key={t.id} className="bg-black border border-gray-800 p-4 sm:p-8 rounded-2xl sm:rounded-3xl transition duration-300 hover:border-gray-700 hover:bg-card/50 group">
-                                <div className="flex flex-col sm:flex-row justify-between items-start gap-4 sm:gap-6">
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-3 mb-4 flex-wrap">
-                                            <span className={`text-xs font-black px-3.5 py-1.5 rounded-full border uppercase tracking-widest ${
-                                                isScrim 
-                                                    ? 'bg-amber-500/10 text-amber-300 border-amber-500/30' 
-                                                    : 'bg-brand-500/10 text-brand-300 border-brand-500/30'
-                                            }`}>
-                                                {isScrim ? 'Scrim' : 'Tournament'}
-                                            </span>
+            {/* Quick Actions Grid (2x2 on mobile, 4-col on md+) */}
+            <section data-purpose="quick-actions-grid">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+                    {[
+                        { title: 'PROFILE', icon: User, path: '/profile' },
+                        { title: 'TEAMS', icon: Users, path: '/teams' },
+                        { title: 'TOURNAMENTS', icon: Trophy, path: '/tournaments' },
+                        { title: 'LEADERBOARD', icon: BarChart, path: '/leaderboard' },
+                    ].map((item, idx) => (
+                        <div
+                            key={idx}
+                            onClick={() => navigate(item.path)}
+                            className="flex flex-col items-center justify-center p-4 sm:p-6 rounded-2xl bg-gradient-to-b from-[#11192e] to-[#0c1220] border border-slate-800 hover:border-purple-500/50 active:scale-[0.98] transition cursor-pointer group shadow-xl"
+                        >
+                            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-[#090d18] border border-slate-700/60 flex items-center justify-center mb-3 shadow-inner group-hover:border-purple-500 transition">
+                                <item.icon className="w-6 h-6 sm:w-7 sm:h-7 text-purple-400 group-hover:text-purple-300 transition" />
+                            </div>
+                            <span className="inline-block px-3 py-1 rounded-md bg-[#162758] border border-blue-500/30 text-[10px] sm:text-[11px] font-black tracking-wider text-white uppercase group-hover:border-blue-400 transition">
+                                {item.title}
+                            </span>
+                        </div>
+                    ))}
+                </div>
+            </section>
+
+            {/* Divider */}
+            <div className="h-px w-full bg-slate-800/80" />
+
+            {/* My Events Section */}
+            <section className="space-y-4" data-purpose="my-events-container">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="inline-block bg-[#162a63] border border-blue-500/40 px-3 py-1 rounded-lg shadow-sm self-start">
+                        <h2 className="text-base sm:text-lg font-black text-white tracking-wider uppercase">MY EVENTS</h2>
+                    </div>
+
+                    {/* Filter Tab Buttons */}
+                    <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+                        <button
+                            type="button"
+                            onClick={() => setDashboardFilter('all')}
+                            className={`px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider transition whitespace-nowrap ${
+                                dashboardFilter === 'all'
+                                    ? 'bg-gradient-to-r from-blue-700 via-indigo-600 to-purple-600 text-white shadow-md shadow-purple-900/30'
+                                    : 'bg-slate-900/90 border border-slate-800 text-slate-400 hover:text-white'
+                            }`}
+                        >
+                            ALL ({myTournaments.length})
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setDashboardFilter('tournaments')}
+                            className={`px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider transition whitespace-nowrap ${
+                                dashboardFilter === 'tournaments'
+                                    ? 'bg-gradient-to-r from-blue-700 via-indigo-600 to-purple-600 text-white shadow-md shadow-purple-900/30'
+                                    : 'bg-slate-900/90 border border-slate-800 text-slate-400 hover:text-white'
+                            }`}
+                        >
+                            TOURNAMENTS ({myTournaments.filter(t => !isScrimEvent(t)).length})
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setDashboardFilter('scrims')}
+                            className={`px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider transition whitespace-nowrap ${
+                                dashboardFilter === 'scrims'
+                                    ? 'bg-gradient-to-r from-blue-700 via-indigo-600 to-purple-600 text-white shadow-md shadow-purple-900/30'
+                                    : 'bg-slate-900/90 border border-slate-800 text-slate-400 hover:text-white'
+                            }`}
+                        >
+                            SCRIMS ({myTournaments.filter(t => isScrimEvent(t)).length})
+                        </button>
+                    </div>
+                </div>
+
+                {/* Event Cards List */}
+                <div className="space-y-4">
+                    {(() => {
+                        const displayedEvents = myTournaments.filter(t => {
+                            if (dashboardFilter === 'tournaments') return !isScrimEvent(t);
+                            if (dashboardFilter === 'scrims') return isScrimEvent(t);
+                            return true;
+                        });
+
+                        if (displayedEvents.length === 0) {
+                            return (
+                                <div className="bg-[#0c1322]/80 p-8 sm:p-12 rounded-2xl border border-dashed border-slate-800 text-center">
+                                    <Trophy className="w-10 h-10 text-slate-700 mx-auto mb-3" />
+                                    <p className="text-slate-400 font-bold uppercase tracking-wider text-xs sm:text-sm">
+                                        No {dashboardFilter === 'all' ? 'events' : dashboardFilter} joined yet.
+                                    </p>
+                                    <p className="text-xs text-slate-500 mt-1">Explore tournaments or daily scrims to compete.</p>
+                                </div>
+                            );
+                        }
+
+                        return displayedEvents.map(t => {
+                            const isLive = t.status === 'live';
+                            const isCompleted = t.status === 'completed';
+                            const isScrim = isScrimEvent(t);
+                            const showRoom = isLive || (t.status === 'upcoming' && t.roomId);
+
+                            return (
+                                <article
+                                    key={t.id}
+                                    className="relative rounded-2xl bg-gradient-to-b from-[#0c1322] to-[#080d1a] border border-slate-800 p-4 sm:p-6 shadow-xl hover:border-slate-700 transition"
+                                >
+                                    {/* Badges Row */}
+                                    <div className="flex flex-wrap items-center gap-1.5 mb-3">
+                                        <span className={`px-2.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider border ${
+                                            isScrim
+                                                ? 'bg-blue-900/60 border-blue-500/50 text-blue-300'
+                                                : 'bg-purple-900/60 border-purple-500/50 text-purple-300'
+                                        }`}>
+                                            {isScrim ? 'SCRIM' : 'TOURNAMENT'}
+                                        </span>
+
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-900 border border-slate-700 text-[10px] font-semibold text-blue-300">
                                             {t.role === 'organizer' ? (
-                                                <span className="bg-purple-500/10 text-purple-400 text-xs font-black px-4 py-1.5 rounded-full border border-purple-500/20 flex items-center gap-2 uppercase tracking-widest">
-                                                    <Shield className="w-4 h-4" /> Host
-                                                </span>
+                                                <>
+                                                    <Shield className="w-3 h-3 text-purple-400" /> HOST
+                                                </>
                                             ) : (
-                                                <span className="bg-blue-500/10 text-blue-400 text-xs font-black px-4 py-1.5 rounded-full border border-blue-500/20 flex items-center gap-2 uppercase tracking-widest">
-                                                    <User className="w-4 h-4" /> Participant
-                                                </span>
+                                                <>
+                                                    <User className="w-3 h-3 text-blue-400" /> PARTICIPANT
+                                                </>
                                             )}
-                                            <span className="bg-surface text-gray-400 text-xs font-black px-4 py-1.5 rounded-full border border-gray-700 uppercase tracking-widest">{formatGameName(t.game)}</span>
-                                            <span className="bg-brand-500/10 text-brand-300 text-xs font-black px-4 py-1.5 rounded-full border border-brand-500/20 uppercase tracking-widest">{t.teamType}</span>
-                                        </div>
-                                        <h3 
-                                            className="text-xl sm:text-2xl font-black text-white mb-3 hover:text-brand-400 truncate min-w-0 transition cursor-pointer tracking-tighter" 
-                                            onClick={() => {
-                                                navigate(getEventLink(t));
-                                            }}
+                                        </span>
+
+                                        <span className="px-2.5 py-0.5 rounded-full bg-slate-800/80 border border-slate-700 text-[10px] font-bold uppercase text-slate-300">
+                                            {formatGameName(t.game)}
+                                        </span>
+
+                                        <span className="px-2.5 py-0.5 rounded-full bg-slate-800/80 border border-slate-700 text-[10px] font-bold uppercase text-slate-300">
+                                            {t.teamType || 'SOLO'}
+                                        </span>
+                                    </div>
+
+                                    {/* Event Title & Prize */}
+                                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-2.5">
+                                        <h3
+                                            onClick={() => navigate(getEventLink(t))}
+                                            className="text-base sm:text-lg font-black text-white hover:text-purple-300 transition cursor-pointer tracking-wide leading-snug truncate"
                                         >
                                             {t.title}
                                         </h3>
-                                        {t.registration && (
-                                            <div className="flex flex-wrap gap-6 mt-4">
-                                                <div className="text-xs text-gray-400 font-black uppercase tracking-widest">
-                                                    Team: <span className="text-brand-300">{t.registration.teamName || 'SOLO'}</span>
-                                                </div>
-                                                <div className="text-xs text-gray-400 font-black uppercase tracking-widest">
-                                                    UID: <span className="text-brand-300 break-all">{t.registration.inGameId}</span>
-                                                </div>
+                                        <div className="text-sm sm:text-base font-black text-emerald-400 shrink-0">
+                                            {formatCurrency(t.prizePool)}
+                                        </div>
+                                    </div>
+
+                                    {/* Participant Metadata */}
+                                    {t.registration && (
+                                        <div className="flex flex-wrap items-center gap-4 text-xs font-bold text-slate-300 mb-3 uppercase tracking-wider">
+                                            <div className="flex items-center gap-1">
+                                                <span className="text-slate-400">TEAM:</span>
+                                                <span className="text-white font-extrabold">{t.registration.teamName || 'SOLO'}</span>
                                             </div>
+                                            <div className="flex items-center gap-1">
+                                                <span className="text-slate-400">UID:</span>
+                                                <span className="text-emerald-400 font-semibold break-all">{t.registration.inGameId || '[Verified]'}</span>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Status & Schedule Row */}
+                                    <div className="flex flex-wrap items-center gap-3 pt-2.5 border-t border-slate-800/80 text-xs text-slate-300 mb-3">
+                                        <span className={`inline-flex items-center gap-1.5 font-black tracking-wider ${
+                                            isLive
+                                                ? 'text-emerald-400 animate-pulse'
+                                                : isCompleted
+                                                    ? 'text-slate-500'
+                                                    : 'text-cyan-400'
+                                        }`}>
+                                            <span className={`w-2 h-2 rounded-full ${
+                                                isLive ? 'bg-emerald-400 ring-2 ring-emerald-500/30 animate-pulse' : isCompleted ? 'bg-slate-600' : 'bg-cyan-400 ring-2 ring-cyan-500/30'
+                                            }`} />
+                                            {isLive ? 'LIVE NOW' : isCompleted ? 'ENDED' : 'UPCOMING'}
+                                        </span>
+
+                                        {t.startTime && (
+                                            <span className="inline-flex items-center gap-1.5 text-slate-300 font-semibold">
+                                                <Clock className="w-3.5 h-3.5 text-purple-400" />
+                                                <span>{formatDateShort(t.startTime)}</span>
+                                            </span>
                                         )}
-                                        <div className="flex flex-wrap items-center gap-4 mt-4 pt-3 border-t border-gray-900">
-                                            <div className={`text-xs font-black uppercase tracking-widest flex items-center gap-1.5 ${
-                                                isLive ? 'text-emerald-400 animate-pulse' : isCompleted ? 'text-gray-500' : 'text-blue-400'
-                                            }`}>
-                                                <span className={`w-2 h-2 rounded-full ${isLive ? 'bg-emerald-400' : isCompleted ? 'bg-gray-500' : 'bg-blue-400'}`}></span>
-                                                {isLive ? 'LIVE NOW' : isCompleted ? 'ENDED' : 'UPCOMING'}
+                                    </div>
+
+                                    {/* Room Credentials Box */}
+                                    {showRoom && (
+                                        <div className="mt-3 bg-[#080d18] p-3 rounded-xl border border-slate-800 flex flex-wrap sm:flex-nowrap gap-4 sm:gap-8 text-xs font-mono items-center justify-center">
+                                            <div>
+                                                <span className="text-slate-500 uppercase font-black tracking-wider text-[11px]">Room ID:</span>{' '}
+                                                <span className="text-white font-bold select-all ml-2">{t.roomId || 'Pending'}</span>
                                             </div>
-                                            {t.startTime && (
-                                                <div className="text-xs text-gray-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
-                                                    <Clock className="w-3.5 h-3.5 text-brand-500" />
-                                                    <span>{formatDateShort(t.startTime)}</span>
-                                                </div>
-                                            )}
+                                            <div className="hidden sm:block w-px h-4 bg-slate-800" />
+                                            <div>
+                                                <span className="text-slate-500 uppercase font-black tracking-wider text-[11px]">Password:</span>{' '}
+                                                <span className="text-white font-bold select-all ml-2">{t.roomPass || 'Pending'}</span>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="text-right">
-                                        <div className="text-xl font-black text-brand-400">{formatCurrency(t.prizePool)}</div>
-                                    </div>
-                                </div>
-                                {showRoom && (
-                                    <div className="mt-4 sm:mt-8 bg-card/50 p-4 sm:p-6 rounded-2xl border border-gray-800 flex flex-wrap sm:flex-nowrap gap-4 sm:gap-8 text-sm font-mono items-center justify-center">
-                                        <div>
-                                            <span className="text-gray-500 uppercase text-xs font-black tracking-widest">Room ID:</span> <span className="text-white font-black select-all ml-3">{t.roomId || 'Wait'}</span>
-                                        </div>
-                                        <div className="hidden sm:block w-px h-6 bg-surface"></div>
-                                        <div>
-                                            <span className="text-gray-500 uppercase text-xs font-black tracking-widest">Pass:</span> <span className="text-white font-black select-all ml-3">{t.roomPass || 'Wait'}</span>
-                                        </div>
-                                    </div>
-                                )}
-                                <div className="mt-6 sm:mt-8 flex flex-wrap gap-4 sm:gap-6 border-t border-gray-800 pt-6 sm:pt-8">
-                                    <button type="button" onClick={() => {
-                                            navigate(getEventLink(t));
-                                        }} className="flex items-center gap-3 text-xs font-black uppercase tracking-widest text-gray-400 hover:text-white transition touch-target">
-                                        <Eye className="w-5 h-5" /> View Details
-                                    </button>
-                                    {isLive && t.role === 'organizer' && (
-                                        <button type="button" 
-                                            onClick={() => {
-                                                    handleUploadResult(t);
-                                                }}
-                                            className="flex items-center gap-3 text-xs font-black uppercase tracking-widest text-emerald-400 hover:text-white transition touch-target"
-                                        >
-                                            <Upload className="w-5 h-5" /> Upload Result
-                                        </button>
                                     )}
-                                    {isCompleted && (
-                                        <button type="button" 
-                                            onClick={() => {
-                                                    setViewResultTournament(t);
-                                                }}
-                                            className="flex items-center gap-3 text-xs font-black uppercase tracking-widest text-blue-400 hover:text-white transition touch-target"
+
+                                    {/* Action buttons */}
+                                    <div className="mt-4 pt-3 border-t border-slate-800/80 flex flex-wrap items-center gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => navigate(getEventLink(t))}
+                                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-xs font-bold text-slate-200 uppercase tracking-wider transition"
                                         >
-                                            <BarChart className="w-5 h-5" /> View Result
+                                            <Eye className="w-3.5 h-3.5 text-indigo-400" /> View Details
                                         </button>
-                                    )}
-                                </div>
-                            </div>
-                        );
-                    });
-                })()}
-            </div>
+
+                                        {isLive && t.role === 'organizer' && (
+                                            <button
+                                                type="button"
+                                                onClick={() => handleUploadResult(t)}
+                                                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-950/60 border border-emerald-500/40 hover:bg-emerald-800/40 text-xs font-bold text-emerald-300 uppercase tracking-wider transition"
+                                            >
+                                                <Upload className="w-3.5 h-3.5 text-emerald-400" /> Upload Result
+                                            </button>
+                                        )}
+
+                                        {isCompleted && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setViewResultTournament(t)}
+                                                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-950/60 border border-blue-500/40 hover:bg-blue-800/40 text-xs font-bold text-blue-300 uppercase tracking-wider transition"
+                                            >
+                                                <BarChart className="w-3.5 h-3.5 text-blue-400" /> View Result
+                                            </button>
+                                        )}
+                                    </div>
+                                </article>
+                            );
+                        });
+                    })()}
+                </div>
+            </section>
+
             {selectedTournament && (
                 <ResultUploadModal 
                     isOpen={isResultModalOpen}

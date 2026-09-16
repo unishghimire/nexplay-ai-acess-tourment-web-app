@@ -1,0 +1,207 @@
+<!DOCTYPE html><html class="dark" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
+<title>NexPlay - Organizations</title>
+<!-- Tailwind CSS CDN with plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config Customizations -->
+<script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              dark: '#070b14',
+              surface: '#0b1120',
+              card: '#10172a',
+              cardBorder: '#1c2640',
+              accent: '#7c3aed',
+              purple: '#9333ea',
+              cyan: '#06b6d4',
+              textMuted: '#94a3b8'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+<!-- BEGIN: Custom CSS Styles -->
+<style data-purpose="custom-layout">
+    body {
+      background-color: #070b14;
+      color: #f8fafc;
+      -webkit-tap-highlight-color: transparent;
+      font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    }
+
+    /* Scrollbar styling for smooth mobile touch experience */
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #070b14;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 9999px;
+    }
+  </style>
+<style data-purpose="gradients-and-cards">
+    .card-gradient-top {
+      background: linear-gradient(180deg, rgba(88, 28, 135, 0.45) 0%, rgba(15, 23, 42, 0.1) 100%);
+    }
+    .bottom-nav-blur {
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+    .neon-purple-glow {
+      box-shadow: 0 0 15px -2px rgba(168, 85, 247, 0.35);
+    }
+  </style>
+<!-- END: Custom CSS Styles -->
+</head>
+<body class="min-h-screen bg-[#070b14] text-slate-100 flex justify-center selection:bg-purple-600 selection:text-white">
+<!-- Mobile Viewport Shell Container -->
+<div class="w-full max-w-[430px] min-h-screen bg-[#070b14] flex flex-col relative shadow-2xl border-x border-slate-800/40">
+<!-- BEGIN: Header -->
+<header class="sticky top-0 z-40 w-full bg-[#080c16]/95 backdrop-blur-md border-b border-slate-800/80 px-3.5 py-2.5" data-purpose="top-navigation-bar"><div class="flex items-center justify-between gap-2 max-w-lg mx-auto"><a class="flex items-center gap-2 group shrink-0" data-purpose="brand-identity" href="#"><div class="relative w-8 h-8 rounded-lg overflow-hidden bg-[#151c33] p-0.5 border border-purple-500/40 shadow-inner flex items-center justify-center"><img alt="NexPlay Emblem" class="w-full h-full object-contain rounded-md" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAOZ--WIMiCn94sahTfJilIPl0ajYbovAkQqVaq7k3KuOk-tZQ5yBsNXNpPys72plQOqfttoFwIoDO30iDkmrAYZWo5FaEu-GyRmddX8djT4vLfWgPYoYhoJWbsdfDFYo5vFxxsHALP8lPHYqIoQA6-u0veSSwEEDTBRPCMvCqF1_RvXWApu9Z2iIXwnea3m0hxsl-L2la-4ewgI_c28i6-EL67avKWXMXm_7fiEdz0lhl_qwwCfV3dAz52_WDIyGbKQRo"></div><div class="flex tracking-wider font-extrabold text-base"><span class="text-white">NEX</span><span class="text-[#8b5cf6]">PLAY</span></div></a><div class="flex items-center gap-2" data-purpose="header-controls"><button aria-label="Notifications" class="relative p-2 rounded-full text-slate-300 hover:text-white hover:bg-slate-800/60 transition" type="button"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke-linecap="round" stroke-linejoin="round"></path></svg><span class="absolute 1 top-1 right-1 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center border-2 border-[#080c16]">2</span></button><div class="flex items-center gap-1.5 bg-[#171330] border border-purple-600/50 hover:border-purple-500 text-purple-300 px-2.5 py-1 rounded-full text-xs font-semibold shadow-sm shadow-purple-950/40"><svg class="w-3.5 h-3.5 text-purple-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" stroke-linecap="round" stroke-linejoin="round"></path></svg><span class="">Rs. 5K</span></div><button aria-label="User Profile Menu" class="flex items-center gap-1 bg-[#15232d] hover:bg-[#1c303f] border border-cyan-700/50 p-1 pl-1.5 pr-2 rounded-full transition" type="button"><div class="w-5 h-5 rounded-full bg-emerald-950 border border-emerald-500 flex items-center justify-center text-xs">🤖</div><svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round"></path></svg></button><button aria-label="Open Navigation Menu" class="p-1.5 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg" type="button"><svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round" stroke-linejoin="round"></path></svg></button></div></div></header>
+<!-- END: Header -->
+<!-- Main Content Area -->
+<main class="px-4 pt-4 flex-grow flex flex-col space-y-6">
+<!-- BEGIN: Breadcrumb & Back Navigation -->
+<section class="space-y-3" data-purpose="breadcrumbs">
+<nav class="flex items-center gap-2 text-[11px] font-semibold tracking-wider text-slate-400 uppercase">
+<a class="hover:text-slate-200 transition-colors" href="#">HOME</a>
+<span class="text-slate-600">&gt;</span>
+<span class="text-slate-200">ORGANIZATIONS</span>
+</nav>
+<a class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-purple-400 tracking-wider transition-colors" href="#">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path>
+</svg>
+          BACK
+        </a>
+</section>
+<!-- END: Breadcrumb & Back Navigation -->
+<!-- BEGIN: Hero / Page Title Section -->
+<section class="space-y-3" data-purpose="title-section">
+<!-- Title with Violet Organization Icon -->
+<div class="flex items-center gap-2.5">
+<div class="w-9 h-9 rounded-lg bg-purple-950/70 border border-purple-500/40 flex items-center justify-center text-purple-400 flex-shrink-0 shadow-sm shadow-purple-900/30">
+<!-- Organization / Building SVG Icon -->
+<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<h1 class="text-2xl font-black tracking-wider text-white uppercase font-sans">
+            ORGANIZATIONS
+          </h1>
+</div>
+<p class="text-xs leading-relaxed text-slate-400 font-medium">
+          Discover and follow tournament organizers to stay ahead of competitions.
+        </p>
+<!-- Organizers Counter Pill -->
+<div class="pt-1">
+<div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#10192e] border border-slate-700/60 shadow-inner">
+<svg class="w-4 h-4 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
+<path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v1h8v-1zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 16v-1a4.978 4.978 0 00-1.002-3.037A3.992 3.992 0 0118 14v2h-2zM4.002 11.963A4.978 4.978 0 003 15v1H1v-2a3.992 3.992 0 013.002-2.037z"></path>
+</svg>
+<span class="text-xs font-bold tracking-wider text-slate-200 uppercase">4 ORGANIZERS</span>
+</div>
+</div>
+</section>
+<!-- END: Hero / Page Title Section -->
+<!-- Divider -->
+<div class="border-t border-slate-800/80"></div>
+<!-- BEGIN: Search Bar -->
+<section data-purpose="search-box"><div class="p-1.5 rounded-2xl bg-[#0c1322] border border-slate-800 shadow-sm"><div class="relative flex items-center bg-[#070c17] rounded-xl border border-slate-800/80 focus-within:border-purple-500/80 focus-within:shadow-[0_0_12px_rgba(168,85,247,0.25)] transition-all"><div class="absolute left-3.5 pointer-events-none text-slate-500"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path></svg></div><input class="w-full bg-transparent py-2.5 pl-10 pr-12 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-0 border-none font-medium" placeholder="Search by name or organization..." type="text"><div class="absolute right-3 pointer-events-none px-1.5 py-0.5 rounded bg-slate-800/70 border border-slate-700/50 text-[10px] font-semibold text-slate-400">⌘K</div></div></div></section>
+<!-- END: Search Bar -->
+<!-- BEGIN: Featured Organizations Section -->
+<section class="space-y-4 pt-1" data-purpose="featured-organizations"><div class="flex items-center gap-2"><span class="w-3.5 h-[2px] bg-purple-500 rounded-full inline-block shadow-[0_0_8px_#a855f7]"></span><h2 class="text-[11px] font-extrabold uppercase tracking-widest text-slate-400">FEATURED ORGANIZATIONS</h2></div><div class="space-y-3.5"><article class="relative overflow-hidden rounded-2xl bg-[#0e1628] border border-slate-800/90 shadow-lg hover:border-purple-500/30 transition-all"><div class="h-14 w-full card-gradient-top"></div><div class="px-4 pb-4 pt-0 relative -mt-7"><div class="flex items-end justify-between mb-3"><div class="w-14 h-14 rounded-xl bg-[#e11d48] border-2 border-[#0e1628] shadow-[0_4px_16px_rgba(225,29,72,0.35)] flex items-center justify-center flex-shrink-0"><span class="text-white font-black text-xl tracking-tight">NE</span></div><span class="px-3 py-1 rounded-full bg-[#1b2846] text-blue-300 font-bold text-[10px] tracking-wider uppercase border border-blue-500/20 shadow-sm">ORGANIZER</span></div><div class="mb-4"><h3 class="text-base font-extrabold text-white tracking-wide uppercase">NG ESPORTS</h3><p class="text-xs font-semibold text-slate-400">@NG ESPORTS</p></div><div class="flex items-center gap-2"><a class="flex-grow flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#243354] to-[#1f2c49] hover:from-purple-600 hover:to-indigo-600 text-white text-xs font-bold tracking-wider uppercase transition-all shadow-sm border border-slate-700/40 hover:border-purple-400" href="#">PROFILE<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path></svg></a><button aria-label="Follow NG Esports" class="w-10 h-10 rounded-xl bg-[#1a253e] hover:bg-[#223050] border border-slate-700/60 flex items-center justify-center text-slate-300 hover:text-white transition-all flex-shrink-0" type="button"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg></button></div></div></article><article class="relative overflow-hidden rounded-2xl bg-[#0e1628] border border-slate-800/90 shadow-lg hover:border-purple-500/30 transition-all"><div class="h-14 w-full card-gradient-top"></div><div class="px-4 pb-4 pt-0 relative -mt-7"><div class="flex items-end justify-between mb-3"><div class="w-14 h-14 rounded-xl bg-[#141d33] border-2 border-[#0e1628] shadow-lg flex items-center justify-center overflow-hidden flex-shrink-0"><div class="w-full h-full bg-amber-950/40 flex items-center justify-center text-2xl"><span aria-label="Organizer Avatar" role="img" class="">👱‍♀️</span></div></div><span class="px-3 py-1 rounded-full bg-[#1b2846] text-blue-300 font-bold text-[10px] tracking-wider uppercase border border-blue-500/20 shadow-sm">ORGANIZER</span></div><div class="mb-4"><h3 class="text-base font-extrabold text-white tracking-wide uppercase">UNISH GHIMIRE</h3><p class="text-xs font-semibold text-slate-400">@Unish Ghimire</p></div><div class="flex items-center gap-2"><a class="flex-grow flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#243354] to-[#1f2c49] hover:from-purple-600 hover:to-indigo-600 text-white text-xs font-bold tracking-wider uppercase transition-all shadow-sm border border-slate-700/40 hover:border-purple-400" href="#">PROFILE<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path></svg></a><button aria-label="Follow Unish Ghimire" class="w-10 h-10 rounded-xl bg-[#1a253e] hover:bg-[#223050] border border-slate-700/60 flex items-center justify-center text-slate-300 hover:text-white transition-all flex-shrink-0" type="button"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg></button></div></div></article><article class="relative overflow-hidden rounded-2xl bg-[#0e1628] border border-slate-800/90 shadow-lg hover:border-purple-500/30 transition-all"><div class="h-14 w-full card-gradient-top"></div><div class="px-4 pb-4 pt-0 relative -mt-7"><div class="flex items-end justify-between mb-3"><div class="w-14 h-14 rounded-xl bg-[#141d33] border-2 border-[#0e1628] shadow-lg flex items-center justify-center overflow-hidden flex-shrink-0"><div class="w-full h-full bg-orange-950/40 flex items-center justify-center text-2xl"><span aria-label="Organizer Avatar" role="img" class="">🧑‍🦱</span></div></div><span class="px-3 py-1 rounded-full bg-[#1b2846] text-blue-300 font-bold text-[10px] tracking-wider uppercase border border-blue-500/20 shadow-sm">ORGANIZER</span></div><div class="mb-4"><h3 class="text-base font-extrabold text-white tracking-wide uppercase">UNISH GHIMIRE</h3><p class="text-xs font-semibold text-slate-400">@Unish Ghimire</p></div><div class="flex items-center gap-2"><a class="flex-grow flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#243354] to-[#1f2c49] hover:from-purple-600 hover:to-indigo-600 text-white text-xs font-bold tracking-wider uppercase transition-all shadow-sm border border-slate-700/40 hover:border-purple-400" href="#">PROFILE<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path></svg></a><button aria-label="Follow Unish Ghimire" class="w-10 h-10 rounded-xl bg-[#1a253e] hover:bg-[#223050] border border-slate-700/60 flex items-center justify-center text-slate-300 hover:text-white transition-all flex-shrink-0" type="button"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg></button></div></div></article></div></section>
+<!-- END: Featured Organizations Section -->
+<!-- BEGIN: All Organizations Section -->
+<section class="space-y-4 pt-3" data-purpose="all-organizations">
+<!-- Section Title with Dash Accent -->
+<div class="flex items-center gap-2">
+<span class="w-3.5 h-[2px] bg-purple-500 rounded-full inline-block"></span>
+<h2 class="text-[11px] font-extrabold uppercase tracking-widest text-slate-400">
+            ALL ORGANIZATIONS
+          </h2>
+</div>
+<!-- Card 4: NEXPLAY Compact Organization Card -->
+<article class="rounded-2xl bg-[#0c1424] border border-slate-800/90 p-3.5 flex items-center justify-between gap-3 shadow-md">
+<!-- Left Info: Robot Avatar & Titles -->
+<div class="flex items-center gap-3 min-w-0">
+<!-- Teal/Green Robot Avatar -->
+<div class="w-12 h-12 rounded-xl bg-[#0f2d2e] border border-teal-500/40 flex items-center justify-center text-teal-400 flex-shrink-0 shadow-sm">
+<svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
+<path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2M7.5 13A2.5 2.5 0 0 0 5 15.5 2.5 2.5 0 0 0 7.5 18a2.5 2.5 0 0 0 2.5-2.5A2.5 2.5 0 0 0 7.5 13m9 0a2.5 2.5 0 0 0-2.5 2.5 2.5 2.5 0 0 0 2.5 2.5 2.5 2.5 0 0 0 2.5-2.5A2.5 2.5 0 0 0 16.5 13z"></path>
+</svg>
+</div>
+<!-- Labels -->
+<div class="truncate">
+<h3 class="text-sm font-extrabold text-white uppercase tracking-wide truncate">NEXPLAY</h3>
+<p class="text-xs font-semibold text-slate-400 truncate">@NEX PLAY</p>
+</div>
+</div>
+<!-- Right Action Buttons -->
+<div class="flex items-center gap-2 flex-shrink-0">
+<a class="flex items-center gap-1 py-2 px-3.5 rounded-xl bg-[#243354] hover:bg-[#2c3e66] text-white text-xs font-bold tracking-wider uppercase transition-colors" href="#">
+              VIEW
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path>
+</svg>
+</a>
+<button aria-label="Follow NexPlay" class="w-9 h-9 rounded-xl bg-[#1a253e] hover:bg-[#223050] border border-slate-700/60 flex items-center justify-center text-slate-300 hover:text-white transition-colors" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+</div>
+</article>
+</section>
+<!-- END: All Organizations Section -->
+</main>
+<!-- BEGIN: Footer Section -->
+<footer class="w-full bg-[#050811] border-t border-purple-900/40 pt-7 pb-24 px-4 mt-8" data-purpose="unified-nexplay-footer"><div class="max-w-lg mx-auto flex flex-col gap-4"><div><div class="flex items-center gap-2 mb-2"><div class="w-6 h-6 rounded-md overflow-hidden bg-[#151c33] p-0.5 border border-purple-500/40"><img alt="NexPlay Icon" class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBhLNxYdR62hcX1F9QwZ931-rBcSglRoE7sHfvF-X4-Jzn0qmAxNu7vcDFBegPlvRPwqkQIpSvQSKQNaa0XXrhq1C4FtIPTOHhrJ1nRSQlgAwgC6UZ2DqBKop4gAyuVhdbUvGYUYovIvKZMByb6NEm2yMNEpGyBwReP7DLljJIAnFNy_nIcGeCIZ-Z9ZaWEe8_cdrm3h3-8Hp2rOeIpXpszgDyGB6sYBk848kizNNcFbkIP2f30L-loqcvF5jHS_Wehr5Q"></div><span class="font-extrabold text-white text-base">NexPlay</span></div><p class="text-xs text-slate-400 leading-relaxed font-normal">Nepal's esports platform for tournaments, scrims, and competitive gaming.</p></div><div class="flex flex-wrap items-center gap-2.5" data-purpose="community-stats-badges"><div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/90 border border-slate-800 text-xs font-medium text-slate-200"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span><span class="">12+ Players</span></div><div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/90 border border-slate-800 text-xs font-medium text-slate-200"><span class="w-2 h-2 rounded-full bg-cyan-400"></span><span class="">4+ Organizations</span></div></div><div class="flex items-center gap-2.5 pt-1" data-purpose="social-media-links"><a aria-label="Facebook" class="w-8 h-8 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:border-purple-500/50 transition" href="#"><svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M9 8H6v4h3v12h5V12h3.642L18 8h-4V6.333C14 5.374 14.556 5 15.63 5H18V0h-3.808C10.592 0 9 1.582 9 4.615V8z"></path></svg></a><a aria-label="Instagram" class="w-8 h-8 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:border-purple-500/50 transition" href="#"><svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"></path></svg></a><a aria-label="X (Twitter)" class="w-8 h-8 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:border-purple-500/50 transition" href="#"><svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg></a><a aria-label="YouTube" class="w-8 h-8 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:border-purple-500/50 transition" href="#"><svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"></path></svg></a><a aria-label="Discord" class="w-8 h-8 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:border-purple-500/50 transition" href="#"><svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.372-.292a.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.1.246.198.373.292a.077.077 0 0 1-.006.128 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"></path></svg></a></div><div class="grid grid-cols-2 gap-2 mt-1" data-purpose="support-buttons"><a class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-600/40 text-emerald-400 text-xs font-semibold transition" href="#"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" stroke-linecap="round" stroke-linejoin="round"></path></svg>WhatsApp Support</a><a class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-xs font-semibold transition" href="#"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round"></path></svg>Email Us</a></div><div class="border-t border-slate-800/80 pt-3 text-[11px] text-slate-500 flex flex-col gap-1"><div class="">© 2026 NexPlay Esports | Built for gamers</div><div class="flex items-center gap-2"><a class="hover:text-slate-400" href="#">Contact</a><span class="">•</span><a class="hover:text-slate-400" href="#">Terms</a><span class="">•</span><a class="hover:text-slate-400" href="#">Privacy</a></div></div></div></footer>
+<!-- END: Footer Section -->
+<!-- BEGIN: Fixed Mobile Native Bottom Navigation -->
+<nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-[#090e1c]/90 bottom-nav-blur border-t border-slate-800/90 z-50 px-2 py-2" data-purpose="mobile-bottom-tabs"><ul class="flex items-center justify-around"><li class=""><a class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200 transition-colors py-1 px-3" href="#"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg><span class="text-[10px] font-semibold tracking-wider">Home</span></a></li><li class=""><a class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200 transition-colors py-1 px-3" href="#"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg><span class="text-[10px] font-semibold tracking-wider">Games</span></a></li><li class=""><a class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200 transition-colors py-1 px-3" href="#"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg><span class="text-[10px] font-semibold tracking-wider">News</span></a></li><li class=""><a aria-current="page" class="flex flex-col items-center gap-0.5 text-purple-400 transition-colors py-1 px-3 relative font-semibold" href="#"><div class="relative flex flex-col items-center"><svg class="w-5 h-5 text-purple-400" fill="currentColor" viewBox="0 0 20 20"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v1h8v-1zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 16v-1a4.978 4.978 0 00-1.002-3.037A3.992 3.992 0 0118 14v2h-2zM4.002 11.963A4.978 4.978 0 003 15v1H1v-2a3.992 3.992 0 013.002-2.037z"></path></svg></div><span class="text-[10px] font-bold tracking-wider text-purple-400">Orgs</span><span class="w-1.5 h-1.5 rounded-full bg-purple-500 shadow-[0_0_8px_#a855f7]"></span></a></li><li class=""><a class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200 transition-colors py-1 px-3" href="#"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg><span class="text-[10px] font-semibold tracking-wider">Profile</span></a></li></ul></nav>
+<!-- END: Fixed Mobile Native Bottom Navigation -->
+</div>
+<!-- Smooth interactive script for mobile actions -->
+<script data-purpose="interaction-handlers">
+    document.addEventListener('DOMContentLoaded', () => {
+      // Basic accessibility focus retention for search bar
+      const searchInput = document.querySelector('input[type="text"]');
+      if (searchInput) {
+        searchInput.addEventListener('focus', () => {
+          searchInput.parentElement.classList.add('ring-1', 'ring-purple-500');
+        });
+        searchInput.addEventListener('blur', () => {
+          searchInput.parentElement.classList.remove('ring-1', 'ring-purple-500');
+        });
+      }
+    });
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body></html>

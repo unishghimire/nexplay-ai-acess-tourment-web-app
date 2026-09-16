@@ -45,9 +45,11 @@ const Navbar: React.FC = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-[auto_1fr_auto] items-center h-16 sm:h-20 gap-2">
                     {/* Logo */}
-                    <Link to="/" className="flex items-center gap-3 shrink-0 group">
-                        <img src="/logo.png" alt="Nexplay Logo" className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg shrink-0 object-cover shadow-md group-hover:scale-105 transition-transform" loading="eager" />
-                        <span className="text-xl sm:text-2xl font-black tracking-widest text-white leading-none">NEX<span className="text-brand-500">PLAY</span></span>
+                    <Link to="/" className="flex items-center gap-2 sm:gap-3 shrink-0 group">
+                        <div className="relative w-8 h-8 sm:w-10 sm:h-10 rounded-lg overflow-hidden bg-[#151c33] p-0.5 border border-purple-500/40 shadow-inner flex items-center justify-center group-hover:border-purple-400 transition-colors">
+                            <img src="/logo.png" alt="NexPlay Logo" className="w-full h-full rounded-md shrink-0 object-cover group-hover:scale-105 transition-transform" loading="eager" />
+                        </div>
+                        <span className="text-lg sm:text-2xl font-black tracking-widest text-white leading-none">NEX<span className="text-brand-500">PLAY</span></span>
                     </Link>
 
                     {/* Desktop nav links — lives in its own grid column, so it can never overlap
@@ -68,12 +70,11 @@ const Navbar: React.FC = () => {
                     </div>
 
                     {/* Right section */}
-                    <div className="flex items-center justify-end gap-2 sm:gap-4 shrink-0">
+                    <div className="flex items-center justify-end gap-1.5 sm:gap-4 shrink-0">
                         {user ? (
                             <>
                                 <NotificationDropdown />
-                                {/* ponytail: wallet hidden on mobile — already shown in MobileMenu */}
-                                <div className="hidden sm:block">
+                                <div className="flex items-center">
                                     <WalletDisplay balance={(profile?.balance || 0) + (profile?.orgWalletBalance || 0)} onClick={() => navigate('/wallet')} />
                                 </div>
                                 <div>

@@ -75,32 +75,32 @@ export const ScoringInfoCard: React.FC<ScoringInfoCardProps> = ({ tournament, co
 
     if (compact) {
         return (
-            <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-4">
-                <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                        <Target className="w-4 h-4 text-brand-500" />
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Scoring</span>
+            <div className="bg-[#070b14]/70 border border-white/5 rounded-xl p-3 mb-3">
+                <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-1.5">
+                        <Target className="w-3.5 h-3.5 text-purple-400" />
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Scoring</span>
                     </div>
-                    <span className="text-[9px] text-slate-600 font-bold uppercase">{source}</span>
+                    <span className="text-[9px] text-slate-500 font-bold uppercase">{source}</span>
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center justify-between gap-2">
                     <div className="text-center">
-                        <p className="text-xl font-black text-white">{config.killPoints}</p>
-                        <p className="text-[9px] text-slate-500 uppercase font-bold">Per Kill</p>
+                        <p className="text-base font-black text-white">{config.killPoints}</p>
+                        <p className="text-[8px] text-slate-500 uppercase font-bold tracking-wider">Per Kill</p>
                     </div>
-                    <div className="w-px h-8 bg-slate-800" />
+                    <div className="w-px h-6 bg-white/10" />
                     <div className="text-center">
-                        <p className="text-xl font-black text-white">{placements.length}</p>
-                        <p className="text-[9px] text-slate-500 uppercase font-bold">Placements</p>
+                        <p className="text-base font-black text-white">{placements.length}</p>
+                        <p className="text-[8px] text-slate-500 uppercase font-bold tracking-wider">Places</p>
                     </div>
-                    <div className="w-px h-8 bg-slate-800" />
-                    <div className="flex gap-1.5">
+                    <div className="w-px h-6 bg-white/10" />
+                    <div className="flex items-center gap-1.5">
                         {topPlacements.map(p => (
                             <div key={p.pos} className="text-center">
-                                <p className={`text-sm font-black ${p.pos === 1 ? 'text-amber-400' : p.pos === 2 ? 'text-slate-300' : 'text-orange-400'}`}>
+                                <p className={`text-xs font-black ${p.pos === 1 ? 'text-amber-400' : p.pos === 2 ? 'text-slate-300' : 'text-orange-400'}`}>
                                     {p.pts}
                                 </p>
-                                <p className="text-[8px] text-slate-600">#{p.pos}</p>
+                                <p className="text-[8px] text-slate-500 font-bold">#{p.pos}</p>
                             </div>
                         ))}
                         {hasMore && <span className="text-[10px] text-slate-600 self-center">…</span>}

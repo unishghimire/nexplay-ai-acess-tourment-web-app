@@ -38,7 +38,7 @@ import {
 export default function ScrimDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const { showToast } = useNotification();
 
   const [scrim, setScrim] = useState<any | null>(null);
@@ -176,6 +176,7 @@ export default function ScrimDetails() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to leave scrim');
 
+      await refreshProfile().catch(() => {});
       showToast('Successfully released your slot', 'success');
     } catch (err: any) {
       showToast(err.message || 'Failed to leave scrim', 'error');
@@ -582,6 +583,7 @@ export default function ScrimDetails() {
           selectedSlot={selectedSlotForBooking}
           onClose={() => setShowJoinModal(false)}
           onSuccess={(joinedSlot) => {
+            refreshProfile().catch(() => {});
             showToast(`Successfully joined Slot #${joinedSlot}!`, 'success');
           }}
         />

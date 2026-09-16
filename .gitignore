@@ -10,3 +10,5 @@ coverage/
 service-account.json
 *.exe
 scratch/
+.agents/
+

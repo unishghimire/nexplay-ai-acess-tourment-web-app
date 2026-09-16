@@ -31,7 +31,7 @@ const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
     initialSlotNumber,
     onSuccess
 }) => {
-    const { user } = useAuth();
+    const { user, refreshProfile } = useAuth();
     const { showToast } = useNotification();
     const navigate = useNavigate();
 
@@ -258,6 +258,7 @@ const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
             );
             
             showToast(`Joined Successfully in Slot #${confirmedSlot || 'Confirmed'}!`, 'success');
+            await refreshProfile().catch(() => {});
             onSuccess(confirmedSlot, data);
             onClose();
         } catch (e: any) {

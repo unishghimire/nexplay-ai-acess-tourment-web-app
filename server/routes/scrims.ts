@@ -266,6 +266,16 @@ router.post("/api/scrims/:id/join", authenticateToken, rateLimit(15, 60 * 1000),
             orgPendingEarnings: admin.firestore.FieldValue.increment(entryFee),
           }, { merge: true });
         }
+
+        const fundingRef = db.collection("tournament_funding").doc(id);
+        transaction.set(fundingRef, {
+          tournamentId: id,
+          scrimId: id,
+          organizationId: scrimHostId || '',
+          collectedEntryFees: admin.firestore.FieldValue.increment(entryFee),
+          lockedEntryFees: admin.firestore.FieldValue.increment(entryFee),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
       }
 
       // Register participant record
@@ -383,6 +393,13 @@ router.post("/api/scrims/:id/leave", authenticateToken, rateLimit(15, 60 * 1000)
             orgPendingEarnings: admin.firestore.FieldValue.increment(-entryFee),
           }, { merge: true });
         }
+
+        const fundingRef = db.collection("tournament_funding").doc(id);
+        transaction.set(fundingRef, {
+          collectedEntryFees: admin.firestore.FieldValue.increment(-entryFee),
+          lockedEntryFees: admin.firestore.FieldValue.increment(-entryFee),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
       }
 
       if (slotIndex !== -1) {

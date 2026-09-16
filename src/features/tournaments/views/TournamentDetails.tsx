@@ -36,7 +36,7 @@ const getTournamentTab = (value: string | null): TournamentTabId =>
 
 export default function TournamentDetails() {
     const { id } = useParams<{ id: string }>();
-    const { user, profile } = useAuth();
+    const { user, profile, refreshProfile } = useAuth();
     const { showToast } = useNotification();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -628,6 +628,7 @@ export default function TournamentDetails() {
 
     const handleJoinSuccess = (slotNum?: number, joinData?: any) => {
         setIsJoined(true);
+        refreshProfile().catch(() => {});
         if (slotNum) {
             setMySlotNumber(slotNum);
         }
@@ -680,6 +681,7 @@ export default function TournamentDetails() {
             if (!res.ok) throw new Error(data.message || 'Failed to leave tournament');
 
             setIsJoined(false);
+            await refreshProfile().catch(() => {});
             await NotificationService.create(
                 user.uid,
                 'Tournament Left',

@@ -26,7 +26,7 @@ export const JoinScrimModal: React.FC<JoinScrimModalProps> = ({
   onClose,
   onSuccess,
 }) => {
-  const { user, profile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const { showToast } = useNotification();
 
   // Find first available slot if none preselected
@@ -88,6 +88,7 @@ export const JoinScrimModal: React.FC<JoinScrimModalProps> = ({
       }
 
       showToast(`Successfully joined Slot #${slotNumber}!`, 'success');
+      await refreshProfile().catch(() => {});
       onSuccess(slotNumber);
       onClose();
     } catch (err: any) {

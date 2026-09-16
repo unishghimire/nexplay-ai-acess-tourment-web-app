@@ -1,0 +1,403 @@
+<!DOCTYPE html><html class="dark" lang="en" style=""><head></head><body class="bg-brandDark text-slate-100 min-h-screen font-sans selection:bg-brandViolet selection:text-white flex flex-col antialiased"><svg class="inline-defs-container" aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden"></svg>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
+<title>NexPlay Esports - Free Fire Hub</title>
+<!-- Tailwind CSS v3 with Forms & Container Plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brandDark: '#080C15',
+            brandCard: '#0F1626',
+            brandCardBorder: '#1E293B',
+            brandViolet: '#8B5CF6',
+            brandPurple: '#6366F1',
+            brandAmber: '#F59E0B',
+            brandEmerald: '#10B981'
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+<!-- Custom CSS for specialized glow effects and subtle aesthetics -->
+<style data-purpose="custom-styling">
+    @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+    
+    .font-esports {
+      font-family: 'Chakra Petch', sans-serif;
+      letter-spacing: 0.03em;
+    }
+    
+    .glow-amber {
+      box-shadow: 0 0 25px -5px rgba(245, 158, 11, 0.25);
+    }
+    
+    .glow-violet {
+      box-shadow: 0 0 25px -5px rgba(139, 92, 246, 0.28);
+    }
+    
+    .glass-panel {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    
+    /* Smooth touch tap highlight elimination for iOS app feel */
+    * {
+      -webkit-tap-highlight-color: transparent;
+    }
+  </style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap" data-snapdom="injected-import">
+
+<!-- BEGIN: TopNavigationBar -->
+<header class="sticky top-0 z-40 w-full bg-[#080c16]/95 backdrop-blur-md border-b border-slate-800/80 px-3.5 py-2.5" data-purpose="top-navigation-bar">
+<div class="flex items-center justify-between gap-2 max-w-lg mx-auto">
+<a class="flex items-center gap-2 group shrink-0" data-purpose="brand-identity" href="#">
+<div class="relative w-8 h-8 rounded-lg overflow-hidden bg-[#151c33] p-0.5 border border-purple-500/40 shadow-inner flex items-center justify-center">
+<img alt="NexPlay Emblem" class="w-full h-full object-contain rounded-md" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0RW_kjDMqTM9AIot7NAsN-gIb8X86jC0kCp28XJ2FZBlXT3l8KT_Baj2G9owfCtOSKmHDnn0KyeGvvuHv0bmN-uKTA9X2izZMQib5ycgaIZX4o2mD920a4qJirJClDMV7MYXCMxqNzHYNpOErXDEYYJTPynEjkmYVLR9NpfqtL3496FNPbWfrUym3wMgJIT51dIoKboADUuNyUoQgbEx6qlqZGamj5R7j08U-WdWQFqpeke1M3226HOp_ehZvvFO18IU">
+</div>
+<div class="flex tracking-wider font-extrabold text-base">
+<span class="text-white">NEX</span><span class="text-[#8b5cf6]">PLAY</span>
+</div>
+</a>
+<div class="flex items-center gap-2" data-purpose="header-controls">
+<button aria-label="Notifications" class="relative p-2 rounded-full text-slate-300 hover:text-white hover:bg-slate-800/60 transition" type="button">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="absolute 1 top-1 right-1 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center border-2 border-[#080c16]">2</span>
+</button>
+<div class="flex items-center gap-1.5 bg-[#171330] border border-purple-600/50 hover:border-purple-500 text-purple-300 px-2.5 py-1 rounded-full text-xs font-semibold shadow-sm shadow-purple-950/40">
+<svg class="w-3.5 h-3.5 text-purple-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="">Rs. 5K</span>
+</div>
+<button aria-label="User Profile Menu" class="flex items-center gap-1 bg-[#15232d] hover:bg-[#1c303f] border border-cyan-700/50 p-1 pl-1.5 pr-2 rounded-full transition" type="button">
+<div class="w-5 h-5 rounded-full bg-emerald-950 border border-emerald-500 flex items-center justify-center text-xs">
+            🤖
+          </div>
+</button></div></div></header>
+<!-- END: TopNavigationBar -->
+<!-- BEGIN: MainContentWrapper -->
+<main class="flex-1 max-w-md mx-auto w-full px-4 pt-4 pb-28 space-y-5" data-purpose="game-bridge-main">
+<!-- BEGIN: Breadcrumbs & Back Navigation -->
+<section class="space-y-3" data-purpose="navigation-breadcrumbs">
+<!-- Breadcrumb Bar -->
+<nav aria-label="Breadcrumb" class="flex items-center gap-2 text-[11px] font-semibold tracking-wider uppercase text-slate-400">
+<a class="hover:text-brandViolet transition-colors" href="#">Home</a>
+<svg class="w-3 h-3 text-slate-600" fill="currentColor" viewBox="0 0 20 20">
+<path clip-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" fill-rule="evenodd"></path>
+</svg>
+<a class="hover:text-brandViolet transition-colors" href="#">Games</a>
+<svg class="w-3 h-3 text-slate-600" fill="currentColor" viewBox="0 0 20 20">
+<path clip-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" fill-rule="evenodd"></path>
+</svg>
+<span class="text-slate-200 truncate max-w-[140px] font-bold">Free Fire</span>
+</nav>
+<!-- Back to Games Action -->
+<div>
+<a class="inline-flex items-center gap-2 text-xs font-semibold text-slate-300 hover:text-brandViolet bg-slate-800/40 hover:bg-slate-800/70 border border-slate-800 px-3 py-1.5 rounded-lg transition-all" href="#">
+<svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+<path d="M10 19l-7-7m0 0l7-7m-7 7h18" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="">Back to Games</span>
+</a>
+</div>
+</section>
+<!-- END: Breadcrumbs & Back Navigation -->
+<!-- BEGIN: HeroGameHeader -->
+<section class="bg-gradient-to-b from-[#141C2E] to-[#0D1424] border border-slate-800/90 rounded-2xl p-4 shadow-xl relative overflow-hidden" data-purpose="hero-game-badge">
+<!-- Subtle top decorative ambient radial glow -->
+<div class="absolute -top-12 -right-12 w-36 h-36 bg-purple-600/15 rounded-full blur-2xl pointer-events-none"></div>
+<div class="flex items-start gap-3.5 relative z-10">
+<!-- Game Avatar Box with MAX Tag -->
+<div class="relative flex-shrink-0">
+<div class="w-16 h-16 rounded-2xl overflow-hidden border-2 border-indigo-500/40 shadow-lg shadow-purple-950/60 bg-slate-900">
+<!-- Free Fire App Icon SVG / Graphic Illustration -->
+<svg class="w-full h-full" fill="none" viewBox="0 0 100 100">
+<rect fill="#1E293B" height="100" width="100"></rect>
+<defs>
+<linearGradient id="ffMaxGrad" x1="0%" x2="100%" y1="0%" y2="100%">
+<stop offset="0%" stop-color="#3B82F6"></stop>
+<stop offset="50%" stop-color="#8B5CF6"></stop>
+<stop offset="100%" stop-color="#EC4899"></stop>
+</linearGradient>
+</defs>
+<circle cx="50" cy="50" fill="url(#ffMaxGrad)" opacity="0.3" r="45"></circle>
+<!-- Character silhouette / wings motif -->
+<path d="M22 68C22 68 35 75 50 60C65 45 78 30 78 30C78 30 65 35 55 45C45 55 35 60 22 68Z" fill="#60A5FA"></path>
+<path d="M30 75C38 78 48 76 56 70C68 62 82 42 82 42C82 42 70 48 60 55C50 62 40 70 30 75Z" fill="#F43F5E"></path>
+<path d="M50 20L62 38L42 38Z" fill="#FBBF24"></path>
+<!-- Flame / Max symbol -->
+<text fill="#FFFFFF" font-family="'Chakra Petch', sans-serif" font-size="12" font-weight="900" text-anchor="middle" x="50" y="85">GARENA</text>
+</svg>
+</div>
+<!-- MAX Golden Badge Overlay -->
+<div class="absolute -top-1.5 -left-1.5 bg-gradient-to-r from-amber-400 to-amber-600 text-black text-[9px] font-extrabold px-1.5 py-0.5 rounded shadow">
+            MAX
+          </div>
+<!-- Online status dot -->
+<span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-2 border-[#0D1424] rounded-full"></span>
+</div>
+<!-- Title & Subtitle Info -->
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-1.5">
+<h1 class="font-esports font-extrabold text-2xl text-white tracking-wide uppercase leading-tight truncate">
+              FREE FIRE
+            </h1>
+</div>
+<p class="text-[11px] font-bold text-slate-400 tracking-wider uppercase mt-0.5">
+            Choose What You Want To Play
+          </p>
+<!-- Modes / Format Tags -->
+<div class="flex flex-wrap items-center gap-1.5 mt-2.5">
+<span class="text-[10px] font-medium bg-slate-800/90 text-indigo-300 px-2 py-0.5 rounded-md border border-indigo-500/20">
+              Battle Royale
+            </span>
+<span class="text-[10px] font-medium bg-slate-800/90 text-amber-300 px-2 py-0.5 rounded-md border border-amber-500/20">
+              Clash Squad
+            </span>
+<span class="text-[10px] font-medium bg-slate-800/90 text-slate-300 px-2 py-0.5 rounded-md border border-slate-700">
+              Squad 4v4
+            </span>
+</div>
+</div>
+</div>
+<!-- Quick Platform Live Stat Bar -->
+<div class="grid grid-cols-3 gap-2 mt-4 pt-3.5 border-t border-slate-800/80 text-center">
+<div class="bg-slate-900/60 rounded-lg py-1.5 px-2 border border-slate-800/60">
+<div class="text-xs font-bold text-amber-400 font-esports">8 LIVE</div>
+<div class="text-[10px] text-slate-400">Tourneys</div>
+</div>
+<div class="bg-slate-900/60 rounded-lg py-1.5 px-2 border border-slate-800/60">
+<div class="text-xs font-bold text-indigo-400 font-esports">14 ROOMS</div>
+<div class="text-[10px] text-slate-400">Daily Scrims</div>
+</div>
+<div class="bg-slate-900/60 rounded-lg py-1.5 px-2 border border-slate-800/60">
+<div class="text-xs font-bold text-emerald-400 font-esports">NPR 45K</div>
+<div class="text-[10px] text-slate-400">Prize Pool</div>
+</div>
+</div>
+</section>
+<!-- END: HeroGameHeader -->
+<!-- BEGIN: GameFormatSelectionHub -->
+<section class="space-y-4" data-purpose="gateway-cards">
+<div class="flex items-center justify-between px-1">
+<h2 class="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
+<span class="w-1.5 h-3 bg-brandViolet rounded-full"></span>
+          Select Competitive Mode
+        </h2>
+<span class="text-[11px] text-indigo-400 font-semibold">Instant Access</span>
+</div>
+<!-- Card 1: TOURNAMENTS (Amber Theme) -->
+<article class="relative bg-gradient-to-b from-[#161B2E] via-[#101626] to-[#0D1220] rounded-2xl border border-amber-500/30 p-5 shadow-xl glow-amber overflow-hidden group transition-all duration-200 hover:border-amber-400/50" data-purpose="tournaments-card">
+<!-- Top right ambient gold flare -->
+<div class="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none"></div>
+<div class="flex flex-col items-center text-center">
+<!-- Icon Emblem Circle -->
+<div class="w-16 h-16 rounded-2xl bg-gradient-to-b from-amber-500/20 to-amber-950/40 border border-amber-500/40 flex items-center justify-center mb-3.5 shadow-inner">
+<!-- Trophy Icon matching reference -->
+<svg class="w-9 h-9 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.504-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.003 0H9.497m5.003 0a7.5 7.5 0 005.25-7.125V6.75A2.25 2.25 0 0017.5 4.5h-11A2.25 2.25 0 004.25 6.75v.375a7.5 7.5 0 005.25 7.125M19.5 6.75c1.243 0 2.25 1.007 2.25 2.25 0 1.942-1.397 3.559-3.25 3.938M4.5 6.75c-1.243 0-2.25 1.007-2.25 2.25 0 1.942 1.397 3.559 3.25 3.938" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+<!-- Title & Description -->
+<h3 class="font-esports font-bold text-xl text-white uppercase tracking-wider mb-1">
+            Tournaments
+          </h3>
+<p class="text-xs text-slate-300 max-w-xs leading-relaxed font-normal">
+            Compete in organized tournaments with cash prizes, verified brackets, and official refereeing.
+          </p>
+<!-- Per-card benefit chips -->
+<div class="flex items-center gap-2 my-4">
+<span class="inline-flex items-center gap-1 text-[10px] font-semibold bg-amber-500/10 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full">
+              ★ Cash Rewards
+            </span>
+<span class="inline-flex items-center gap-1 text-[10px] font-semibold bg-slate-800/80 text-slate-300 border border-slate-700 px-2 py-0.5 rounded-full">
+              Official Brackets
+            </span>
+<span class="inline-flex items-center gap-1 text-[10px] font-semibold bg-slate-800/80 text-slate-300 border border-slate-700 px-2 py-0.5 rounded-full">
+              E-Certificate
+            </span>
+</div>
+<!-- Primary CTA Button -->
+<a class="w-full flex items-center justify-center gap-2 py-3 px-6 rounded-xl font-esports font-bold text-xs tracking-wider uppercase bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600 text-slate-950 hover:brightness-110 active:scale-[0.98] transition-all shadow-lg shadow-amber-500/25" href="#">
+<span class="">Browse Tournaments</span>
+<svg class="w-4 h-4 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</a>
+</div>
+</article>
+<!-- Card 2: DAILY SCRIMS (Violet Theme) -->
+<article class="relative bg-gradient-to-b from-[#181630] via-[#111226] to-[#0E0F20] rounded-2xl border border-indigo-500/30 p-5 shadow-xl glow-violet overflow-hidden group transition-all duration-200 hover:border-brandViolet/50" data-purpose="scrims-card">
+<!-- Top right ambient violet flare -->
+<div class="absolute top-0 right-0 w-32 h-32 bg-purple-600/15 rounded-full blur-2xl pointer-events-none"></div>
+<div class="flex flex-col items-center text-center">
+<!-- Icon Emblem Circle (Crossed Swords) -->
+<div class="w-16 h-16 rounded-2xl bg-gradient-to-b from-indigo-500/20 to-purple-950/40 border border-indigo-500/40 flex items-center justify-center mb-3.5 shadow-inner">
+<!-- Crossed Swords SVG Icon matching reference -->
+<svg class="w-9 h-9 text-indigo-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" stroke-linecap="round" stroke-linejoin="round"></path>
+<path d="M14.25 9.75l5.25-5.25M4.5 19.5l5.25-5.25" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+<!-- Title & Description -->
+<h3 class="font-esports font-bold text-xl text-white uppercase tracking-wider mb-1">
+            Daily Scrims
+          </h3>
+<p class="text-xs text-slate-300 max-w-xs leading-relaxed font-normal">
+            Join casual practice matches with other teams and sharpen your tactical skills with custom live rooms.
+          </p>
+<!-- Feature tags -->
+<div class="flex items-center gap-2 my-4">
+<span class="inline-flex items-center gap-1 text-[10px] font-semibold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded-full">
+              Custom ID &amp; Pass
+            </span>
+<span class="inline-flex items-center gap-1 text-[10px] font-semibold bg-slate-800/80 text-slate-300 border border-slate-700 px-2 py-0.5 rounded-full">
+              Fast Slot Booking
+            </span>
+<span class="inline-flex items-center gap-1 text-[10px] font-semibold bg-slate-800/80 text-slate-300 border border-slate-700 px-2 py-0.5 rounded-full">
+              Tier 1 &amp; 2
+            </span>
+</div>
+<!-- Primary CTA Button -->
+<a class="w-full flex items-center justify-center gap-2 py-3 px-6 rounded-xl font-esports font-bold text-xs tracking-wider uppercase bg-gradient-to-r from-brandViolet via-indigo-600 to-indigo-700 text-white hover:brightness-110 active:scale-[0.98] transition-all shadow-lg shadow-indigo-600/30" href="#">
+<span class="">Browse Scrims</span>
+<svg class="w-4 h-4 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</a>
+</div>
+</article>
+<!-- Tip Notice Card -->
+<div class="bg-indigo-950/30 border border-indigo-800/40 rounded-xl p-3 flex items-start gap-2.5">
+<svg class="w-5 h-5 text-indigo-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<p class="text-[11px] text-slate-300 leading-snug">
+<strong class="text-white">Pro Tip:</strong> Ensure your in-game Free Fire UID is updated in your profile to receive automated room keys and slot allocations.
+        </p>
+</div>
+</section>
+<!-- END: GameFormatSelectionHub -->
+<!-- BEGIN: BrandFooterSection -->
+<footer class="w-full bg-[#050811] border-t border-purple-900/40 pt-7 pb-24 px-4 mt-8" data-purpose="unified-nexplay-footer">
+<div class="max-w-lg mx-auto flex flex-col gap-4">
+<div>
+<div class="flex items-center gap-2 mb-2">
+<div class="w-6 h-6 rounded-md overflow-hidden bg-[#151c33] p-0.5 border border-purple-500/40">
+<img alt="NexPlay Icon" class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDnYcYXa0t5ZISIIEtqCBvXv-IwiwfUIp0Zleu2XG3PG6QLRTulfWhrkG8HK-kw_DqYSm0FXMOfRnQjRNQGk74DCtNMTDBGGgAnCGpMGrhuyVOeX9J9beQGOtDbrTbLlivzLw6_lTZzwD_qlFKU7QyLBdWuffTwrNhPCuSPsOwznTTAIwymimtc-nFC6ctZWbaWrHwAMEAqUrl2l-3R2tXhjq0Vogb0wz08dwofRUyK-r5vek-ol7Y6e-ceRbWSnzN2i0o">
+</div>
+<span class="font-extrabold text-white text-base">NexPlay</span>
+</div>
+<p class="text-xs text-slate-400 leading-relaxed font-normal">
+          Nepal's esports platform for tournaments, scrims, and competitive gaming.
+        </p>
+</div>
+<div class="flex flex-wrap items-center gap-2.5" data-purpose="community-stats-badges">
+<div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/90 border border-slate-800 text-xs font-medium text-slate-200">
+<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+<span class="">12+ Players</span>
+</div>
+<div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/90 border border-slate-800 text-xs font-medium text-slate-200">
+<span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+<span class="">4+ Organizations</span>
+</div>
+</div>
+<div class="flex items-center gap-2.5 pt-1" data-purpose="social-media-links">
+<a aria-label="Facebook" class="w-8 h-8 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:border-purple-500/50 transition" href="#">
+<svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M9 8H6v4h3v12h5V12h3.642L18 8h-4V6.333C14 5.374 14.556 5 15.63 5H18V0h-3.808C10.592 0 9 1.582 9 4.615V8z"></path></svg>
+</a>
+<a aria-label="Instagram" class="w-8 h-8 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:border-purple-500/50 transition" href="#">
+<svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"></path></svg>
+</a>
+<a aria-label="X (Twitter)" class="w-8 h-8 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:border-purple-500/50 transition" href="#">
+<svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
+</a>
+<a aria-label="YouTube" class="w-8 h-8 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:border-purple-500/50 transition" href="#">
+<svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"></path></svg>
+</a>
+<a aria-label="Discord" class="w-8 h-8 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:border-purple-500/50 transition" href="#">
+<svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.372-.292a.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.1.246.198.373.292a.077.077 0 0 1-.006.128 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"></path></svg>
+</a>
+</div>
+<div class="grid grid-cols-2 gap-2 mt-1" data-purpose="support-buttons">
+<a class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-600/40 text-emerald-400 text-xs font-semibold transition" href="#">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+          WhatsApp Support
+        </a>
+<a class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 text-xs font-semibold transition" href="#">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+          Email Us
+        </a>
+</div>
+<div class="border-t border-slate-800/80 pt-3 text-[11px] text-slate-500 flex flex-col gap-1">
+<div class="">© 2026 NexPlay Esports | Built for gamers</div>
+<div class="flex items-center gap-2">
+<a class="hover:text-slate-400" href="#">Contact</a>
+<span class="">•</span>
+<a class="hover:text-slate-400" href="#">Terms</a>
+<span class="">•</span>
+<a class="hover:text-slate-400" href="#">Privacy</a>
+</div>
+</div>
+</div>
+</footer>
+<!-- END: BrandFooterSection -->
+</main>
+<!-- END: MainContentWrapper -->
+<!-- BEGIN: MobileBottomNavigationDock -->
+<nav class="fixed bottom-0 left-0 right-0 z-50 bg-[#0A0D18]/95 backdrop-blur-lg border-t border-slate-800/90 pb-safe" data-purpose="mobile-bottom-dock">
+<div class="max-w-md mx-auto grid grid-cols-5 py-2 px-1">
+<!-- Tab 1: Home -->
+<a class="flex flex-col items-center justify-center py-1 text-slate-400 hover:text-slate-200 transition-colors" href="#">
+<svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="text-[10px] font-medium tracking-tight">Home</span>
+</a>
+<!-- Tab 2: Games (Active) -->
+<a class="flex flex-col items-center justify-center py-1 text-brandViolet relative" href="#">
+<svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+<path d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.631 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 00-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 01-2.448-2.448 14.9 14.9 0 01.06-.312m-2.24 2.39a4.493 4.493 0 00-1.757 4.306 4.493 4.493 0 004.306-1.758M16.5 9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="text-[10px] font-bold tracking-tight">Games</span>
+<span class="w-1 h-1 bg-brandViolet rounded-full mt-0.5"></span>
+</a>
+<!-- Tab 3: News -->
+<a class="flex flex-col items-center justify-center py-1 text-slate-400 hover:text-slate-200 transition-colors" href="#">
+<svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5M6 7.5h3v3H6v-3z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="text-[10px] font-medium tracking-tight">News</span>
+</a>
+<!-- Tab 4: Orgs -->
+<a class="flex flex-col items-center justify-center py-1 text-slate-400 hover:text-slate-200 transition-colors" href="#">
+<svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="text-[10px] font-medium tracking-tight">Orgs</span>
+</a>
+<!-- Tab 5: Profile -->
+<a class="flex flex-col items-center justify-center py-1 text-slate-400 hover:text-slate-200 transition-colors" href="#">
+<svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="text-[10px] font-medium tracking-tight">Profile</span>
+</a>
+</div>
+</nav>
+<!-- END: MobileBottomNavigationDock -->
+</body></html>

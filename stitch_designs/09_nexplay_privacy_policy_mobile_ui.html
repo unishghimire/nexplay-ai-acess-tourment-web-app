@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>NexPlay - Privacy Policy</title>
+<!-- Tailwind CSS v3 with Forms & Container Queries -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Custom Configuration -->
+<script data-purpose="tailwind-config">
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brandDark: '#080a10',
+            cardBg: '#0f1422',
+            cardBorder: '#1c2438',
+            primaryViolet: '#8b5cf6',
+            accentTeal: '#14b8a6',
+            accentCyan: '#06b6d4',
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+<!-- Phosphor Icons for Esports UI -->
+<script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+<!-- Custom Styles -->
+<style data-purpose="custom-layout">
+    body {
+      background-color: #080a10;
+      color: #e2e8f0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    /* Subtle neon glows */
+    .glow-violet {
+      box-shadow: 0 0 20px -3px rgba(139, 92, 246, 0.25);
+    }
+    .glow-violet-sm {
+      box-shadow: 0 0 12px -2px rgba(139, 92, 246, 0.35);
+    }
+    .glow-shield {
+      box-shadow: 0 0 25px 2px rgba(139, 92, 246, 0.4);
+    }
+    /* Hide scrollbar for neat mobile look */
+    ::-webkit-scrollbar {
+      display: none;
+    }
+    * {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-[#080a10] text-slate-100 antialiased min-h-screen flex justify-center">
+<!-- Mobile Viewport Wrapper (390px iPhone width standard) -->
+<div class="w-full max-w-[420px] bg-[#080a10] min-h-screen relative flex flex-col border-x border-[#161c2e] shadow-2xl">
+<!-- BEGIN: MasterHeader -->
+<header class="sticky top-0 z-40 bg-[#080a10]/95 backdrop-blur-md border-b border-[#182033]" data-purpose="master-header">
+<!-- Top Bar -->
+<div class="px-4 py-3 flex items-center justify-between">
+<!-- Left: Brand Logo & Wordmark -->
+<a class="flex items-center gap-2" data-purpose="brand-identity" href="#">
+<!-- Logo Icon with Purple Border Glow -->
+<div class="w-9 h-9 rounded-xl bg-[#111728] border border-violet-500/40 flex items-center justify-center overflow-hidden p-0.5 glow-violet-sm">
+<img alt="NexPlay Logo" class="w-full h-full object-cover rounded-lg" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAyjOyxDuAzSaLIS3cJFy1SHRoValOau73MFYijf3B_iI-qOnO-3UgZSQuUh6DoORNzOrmNR-3fM6rM-ToLytJsh-nAxxA0MUu39h6YOOKYY241VpnT_nX5eM0WIlm0JyO9BE_hfN6GDBR7RR97ixexuSM-C6S7Nhy0lR2ra8dKUdNHI_X-jQw8CGuDDFmodYe73QZNqJMbNBkH7_6fSO6S_IVj3Y9nY7byOM7sOrRBRyz4G0cE5Nfadm6lIjbPyhB-gPI"/>
+</div>
+<!-- Wordmark -->
+<span class="text-lg font-black tracking-wider uppercase">
+<span class="text-white">NEX</span><span class="text-[#8b5cf6]">PLAY</span>
+</span>
+</a>
+<!-- Right: Action Pills & User Profile -->
+<div class="flex items-center gap-2" data-purpose="header-actions">
+<!-- Notification Bell with Count Badge -->
+<button aria-label="Notifications" class="relative p-2 text-slate-300 hover:text-white rounded-lg active:scale-95 transition-transform">
+<i class="ph ph-bell text-xl"></i>
+<span class="absolute top-1.5 right-1.5 w-4 h-4 bg-rose-600 text-[10px] font-bold text-white rounded-full flex items-center justify-center ring-2 ring-[#080a10]">2</span>
+</button>
+<!-- Wallet Badge -->
+<div class="flex items-center gap-1.5 bg-[#121829] border border-purple-500/40 text-purple-300 px-2.5 py-1 rounded-lg text-xs font-semibold">
+<i class="ph ph-wallet text-sm text-[#8b5cf6]"></i>
+<span>Rs. 5K</span>
+</div>
+<!-- User Robot Avatar with Teal Border & Dropdown -->
+<div class="flex items-center bg-[#121829] border border-emerald-500/40 rounded-lg p-1 gap-1 cursor-pointer">
+<div class="w-6 h-6 rounded bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm">
+<i class="ph ph-robot"></i>
+</div>
+<i class="ph ph-caret-down text-[10px] text-slate-400 pr-0.5"></i>
+</div>
+<!-- Hamburger Menu Icon -->
+<button aria-label="Navigation Menu" class="text-slate-300 hover:text-white p-1 ml-0.5">
+<i class="ph ph-list text-2xl"></i>
+</button>
+</div>
+</div>
+<!-- Breadcrumbs & Back Bar -->
+<div class="px-4 py-2 bg-[#0a0e19] border-t border-[#141b2c] flex items-center justify-between text-xs font-medium tracking-wide">
+<div class="flex items-center gap-1.5 uppercase font-semibold text-[11px]">
+<span class="text-slate-400">HOME</span>
+<span class="text-slate-600">&gt;</span>
+<span class="text-white">LEGAL</span>
+</div>
+<button class="flex items-center gap-1 text-slate-300 hover:text-white uppercase text-[11px] font-bold tracking-wider active:scale-95 transition-transform" onclick="history.back()">
+<i class="ph ph-arrow-left font-bold text-xs"></i>
+<span>BACK</span>
+</button>
+</div>
+</header>
+<!-- END: MasterHeader -->
+<!-- Main Content Stream -->
+<main class="flex-1 px-4 pt-4 pb-12 space-y-4" data-purpose="privacy-policy-content">
+<!-- BEGIN: Hero Card -->
+<section class="relative rounded-2xl bg-gradient-to-b from-[#151c30] to-[#0d1220] border border-violet-500/30 p-5 glow-violet" data-purpose="policy-hero">
+<div class="flex items-center gap-3.5 mb-3">
+<!-- Icon badge: Shield/Lock with Glowing Halo -->
+<div class="w-12 h-12 rounded-2xl bg-violet-600/20 border border-violet-500/60 flex items-center justify-center glow-shield flex-shrink-0">
+<i class="ph-fill ph-shield-check text-2xl text-[#8b5cf6]"></i>
+</div>
+<div>
+<h1 class="text-xl font-black tracking-tight text-white uppercase flex items-center gap-2">
+              Privacy Policy
+            </h1>
+<div class="flex items-center gap-2 mt-0.5">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-violet-500/10 text-violet-300 border border-violet-500/20">
+<i class="ph ph-calendar text-[11px]"></i>
+                Last Updated: October 2025
+              </span>
+</div>
+</div>
+</div>
+<!-- Summary Badge / Intro Tag -->
+<div class="mt-2.5 px-3 py-2 rounded-xl bg-[#090d18] border border-[#1d273f] flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+<p class="text-xs font-medium text-slate-300">
+            Your Data &amp; Privacy at <span class="text-white font-semibold">NexPlay</span>
+</p>
+</div>
+</section>
+<!-- END: Hero Card -->
+<!-- BEGIN: Section 1 Card (Introduction) -->
+<section class="rounded-2xl bg-[#0e1322] border border-[#1a233a] p-4 shadow-sm" data-purpose="section-introduction">
+<div class="flex items-center gap-2.5 mb-2.5">
+<div class="w-7 h-7 rounded-lg bg-violet-500/15 border border-violet-500/30 flex items-center justify-center text-violet-400 text-sm">
+<i class="ph ph-info font-bold"></i>
+</div>
+<h2 class="text-base font-bold text-white tracking-wide">1. Introduction</h2>
+</div>
+<p class="text-[13px] leading-relaxed text-slate-300 font-normal">
+          NexPlay (“we”, “our”, “us”) respects your privacy and is committed to protecting your personal information. This Privacy Policy explains how we collect, use, and safeguard your data when you use our platform for hosting and participating in tournaments and scrims.
+        </p>
+</section>
+<!-- END: Section 1 Card -->
+<!-- BEGIN: Section 2 Card (Information We Collect) -->
+<section class="rounded-2xl bg-[#0e1322] border border-[#1a233a] p-4 shadow-sm space-y-3" data-purpose="section-information-collected">
+<div class="flex items-center gap-2.5 mb-1">
+<div class="w-7 h-7 rounded-lg bg-violet-500/15 border border-violet-500/30 flex items-center justify-center text-violet-400 text-sm">
+<i class="ph ph-database font-bold"></i>
+</div>
+<h2 class="text-base font-bold text-white tracking-wide">2. Information We Collect</h2>
+</div>
+<!-- Sub-item: Account Information -->
+<div class="p-3 rounded-xl bg-[#090d19] border border-[#172138] flex items-start gap-3">
+<div class="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center flex-shrink-0 mt-0.5">
+<i class="ph ph-user-circle text-lg"></i>
+</div>
+<div class="space-y-1">
+<span class="inline-block text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-500/15 text-blue-300 border border-blue-500/30">
+              Account Information
+            </span>
+<p class="text-xs text-slate-300 leading-snug">
+              Username, email address, phone number, and In-Game IDs.
+            </p>
+</div>
+</div>
+<!-- Sub-item: Transaction Data -->
+<div class="p-3 rounded-xl bg-[#090d19] border border-[#172138] flex items-start gap-3">
+<div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0 mt-0.5">
+<i class="ph ph-credit-card text-lg"></i>
+</div>
+<div class="space-y-1">
+<span class="inline-block text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+              Transaction Data
+            </span>
+<p class="text-xs text-slate-300 leading-snug">
+              Details of deposits and withdrawals.
+            </p>
+</div>
+</div>
+<!-- Sub-item: Usage Data -->
+<div class="p-3 rounded-xl bg-[#090d19] border border-[#172138] flex items-start gap-3">
+<div class="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center flex-shrink-0 mt-0.5">
+<i class="ph ph-chart-polar text-lg"></i>
+</div>
+<div class="space-y-1">
+<span class="inline-block text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-purple-500/15 text-purple-300 border border-purple-500/30">
+              Usage Data
+            </span>
+<p class="text-xs text-slate-300 leading-snug">
+              Information about how you interact with our tournaments and features.
+            </p>
+</div>
+</div>
+</section>
+<!-- END: Section 2 Card -->
+<!-- BEGIN: Section 3 Card (How We Use Your Information) -->
+<section class="rounded-2xl bg-[#0e1322] border border-[#1a233a] p-4 shadow-sm" data-purpose="section-data-usage">
+<div class="flex items-center gap-2.5 mb-2.5">
+<div class="w-7 h-7 rounded-lg bg-violet-500/15 border border-violet-500/30 flex items-center justify-center text-violet-400 text-sm">
+<i class="ph ph-gear-six font-bold"></i>
+</div>
+<h2 class="text-base font-bold text-white tracking-wide">3. How We Use Your Information</h2>
+</div>
+<p class="text-[13px] leading-relaxed text-slate-300 font-normal">
+          We use the information we collect to provide, maintain, and improve our services, to process transactions, and to communicate with you about tournaments and updates.
+        </p>
+</section>
+<!-- END: Section 3 Card -->
+<!-- BEGIN: Security Guarantee Card -->
+<div class="rounded-2xl bg-gradient-to-r from-violet-950/40 via-[#10172a] to-slate-900 border border-violet-500/30 p-3.5 flex items-center gap-3 glow-violet-sm" data-purpose="security-callout">
+<div class="w-10 h-10 rounded-xl bg-violet-600/20 border border-violet-400/40 flex items-center justify-center text-violet-300 flex-shrink-0">
+<i class="ph ph-lock-key text-xl"></i>
+</div>
+<div class="text-[11px] leading-relaxed text-slate-200">
+<span class="font-bold text-violet-300 block mb-0.5">End-to-End Encryption</span>
+          Strict Anti-Cheat Data Integrity • Never Sold to Third Parties
+        </div>
+</div>
+<!-- END: Security Guarantee Card -->
+<!-- BEGIN: MasterFooter -->
+<footer class="mt-8 pt-6 pb-28 border-t border-[#161e31] space-y-5" data-purpose="master-footer">
+<!-- Brand Emblem & Slogan -->
+<div class="flex flex-col items-center text-center space-y-2">
+<!-- Emblem badge matching screenshot -->
+<div class="w-11 h-11 rounded-xl bg-[#111728] border border-violet-500/40 flex items-center justify-center overflow-hidden p-1 glow-violet-sm">
+<img alt="NexPlay Logo Emblem" class="w-full h-full object-cover rounded-lg" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAYEn91KD0Ubc8WH1lxxEJTaSGIaiOLUcvd0D0oj_N9jt7AkuXi72HQWvMAjCJzKx70sHgrIQoUbCom6Xx1kkanV_-vmJ6hDQ154xcDydYevrC0oAexrzb7oG3VDRxPiO11uOsVHHZshgv-jWzI6XuhljNOjtB40P3ePrVP_X1VvBV4fEUL4hX5uPqLVe9xZnKig6f8KEqOtIKSLcU87Czm0SP_93PjAXFaAP2Fk2tktnLxGvTDmesA3bHgNvRei-yAy6M"/>
+</div>
+<h3 class="text-base font-black text-white tracking-wide">NexPlay</h3>
+<p class="text-xs text-slate-400 max-w-[280px] leading-relaxed">
+            Nepal's esports platform for tournaments, scrims, and competitive gaming.
+          </p>
+</div>
+<!-- Live Status Indicators -->
+<div class="flex items-center justify-center gap-3">
+<div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#111827] border border-[#1f293d] text-xs font-semibold text-slate-300">
+<span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+<span>12+ Players</span>
+</div>
+<div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#111827] border border-[#1f293d] text-xs font-semibold text-slate-300">
+<span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+<span>4+ Organizations</span>
+</div>
+</div>
+<!-- Support Buttons Row -->
+<div class="grid grid-cols-2 gap-3 pt-1">
+<!-- WhatsApp Support -->
+<a class="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-[#0d2822] hover:bg-[#11352d] border border-emerald-500/30 text-emerald-400 font-bold text-xs tracking-wide transition-colors active:scale-95" href="https://wa.me/" rel="noopener noreferrer" target="_blank">
+<i class="ph ph-whatsapp-logo text-base"></i>
+<span>WhatsApp Support</span>
+</a>
+<!-- Email Us -->
+<a class="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-[#1a182e] hover:bg-[#23203e] border border-purple-500/30 text-purple-300 font-bold text-xs tracking-wide transition-colors active:scale-95" href="mailto:support@nexplay.com">
+<i class="ph ph-envelope-simple text-base"></i>
+<span>Email Us</span>
+</a>
+</div>
+<!-- Social Community Icon Dock -->
+<div class="flex items-center justify-center gap-2.5 pt-1">
+<a aria-label="Facebook" class="w-9 h-9 rounded-xl bg-[#141b2e] border border-[#232d4a] text-slate-300 hover:text-white flex items-center justify-center transition-colors active:scale-95" href="#">
+<i class="ph ph-facebook-logo text-lg"></i>
+</a>
+<a aria-label="Instagram" class="w-9 h-9 rounded-xl bg-[#141b2e] border border-[#232d4a] text-slate-300 hover:text-white flex items-center justify-center transition-colors active:scale-95" href="#">
+<i class="ph ph-instagram-logo text-lg"></i>
+</a>
+<a aria-label="YouTube" class="w-9 h-9 rounded-xl bg-[#141b2e] border border-[#232d4a] text-slate-300 hover:text-white flex items-center justify-center transition-colors active:scale-95" href="#">
+<i class="ph ph-youtube-logo text-lg"></i>
+</a>
+<a aria-label="Discord" class="w-9 h-9 rounded-xl bg-[#141b2e] border border-[#232d4a] text-slate-300 hover:text-white flex items-center justify-center transition-colors active:scale-95" href="#">
+<i class="ph ph-discord-logo text-lg"></i>
+</a>
+</div>
+<!-- Copyright & Legal Links -->
+<div class="text-center pt-2 space-y-1.5 text-[11px] text-slate-500">
+<p>© 2026 NexPlay Esports | Built for gamers</p>
+<div class="flex items-center justify-center gap-3 text-slate-400 font-medium">
+<a class="hover:text-violet-400" href="#">Contact</a>
+<span>•</span>
+<a class="hover:text-violet-400" href="#">Terms</a>
+<span>•</span>
+<a class="text-violet-400 font-semibold" href="#">Privacy</a>
+</div>
+</div>
+</footer>
+<!-- END: MasterFooter -->
+</main>
+<!-- BEGIN: Persistent Native Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 right-0 z-50 bg-[#070911]/95 backdrop-blur-lg border-t border-[#192238] max-w-[420px] mx-auto px-2 py-2" data-purpose="bottom-navigation">
+<div class="grid grid-cols-5 items-center justify-items-center">
+<!-- Tab 1: Home -->
+<a class="flex flex-col items-center gap-1 text-slate-400 hover:text-white py-1 px-2 transition-colors" href="#">
+<i class="ph ph-house text-xl"></i>
+<span class="text-[10px] font-medium tracking-tight">Home</span>
+</a>
+<!-- Tab 2: Games -->
+<a class="flex flex-col items-center gap-1 text-slate-400 hover:text-white py-1 px-2 transition-colors" href="#">
+<i class="ph ph-game-controller text-xl"></i>
+<span class="text-[10px] font-medium tracking-tight">Games</span>
+</a>
+<!-- Tab 3: News -->
+<a class="flex flex-col items-center gap-1 text-slate-400 hover:text-white py-1 px-2 transition-colors" href="#">
+<i class="ph ph-newspaper text-xl"></i>
+<span class="text-[10px] font-medium tracking-tight">News</span>
+</a>
+<!-- Tab 4: Orgs -->
+<a class="flex flex-col items-center gap-1 text-slate-400 hover:text-white py-1 px-2 transition-colors" href="#">
+<i class="ph ph-users-three text-xl"></i>
+<span class="text-[10px] font-medium tracking-tight">Orgs</span>
+</a>
+<!-- Tab 5: Profile (Active tab) -->
+<a class="flex flex-col items-center gap-1 text-purple-400 font-bold py-1 px-2 transition-colors" href="#">
+<i class="ph-fill ph-user text-xl text-[#8b5cf6]"></i>
+<span class="text-[10px] font-bold text-white tracking-tight">Profile</span>
+</a>
+</div>
+</nav>
+<!-- END: Persistent Native Bottom Navigation Bar -->
+</div>
+</body></html>
