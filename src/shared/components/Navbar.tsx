@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Download } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { usePwaInstall } from '../hooks/usePwaInstall';
 import ProfileDropdown from './navbar/ProfileDropdown';
 import WalletDisplay from './navbar/WalletDisplay';
 import NotificationDropdown from './navbar/NotificationDropdown';
@@ -24,6 +25,7 @@ const secondaryLinks = [
 
 const Navbar: React.FC = () => {
     const { user, profile, logout } = useAuth();
+    const { isInstalled, promptInstall } = usePwaInstall();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
@@ -87,6 +89,20 @@ const Navbar: React.FC = () => {
                                     LOGIN
                                 </Link>
                             </div>
+                        )}
+
+                        {/* Mobile App Install Button */}
+                        {!isInstalled && (
+                            <button
+                                type="button"
+                                onClick={() => void promptInstall()}
+                                className="md:hidden inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-gradient-to-r from-purple-600/30 to-indigo-600/30 hover:from-purple-600/40 hover:to-indigo-600/40 border border-purple-500/40 text-purple-300 hover:text-white text-xs font-bold transition shadow-sm active:scale-95 touch-target"
+                                aria-label="Install NexPlay Mobile App"
+                                title="Install NexPlay Mobile App"
+                            >
+                                <Download className="w-3.5 h-3.5 text-purple-400" />
+                                <span className="text-[11px] font-black uppercase tracking-wider">App</span>
+                            </button>
                         )}
 
                         {/* Mobile menu toggle */}

@@ -1,8 +1,9 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Wallet } from 'lucide-react';
+import { Wallet, Smartphone, Download, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { formatCurrency } from '../../utils/utils';
+import { usePwaInstall } from '../../hooks/usePwaInstall';
 
 interface MobileMenuProps {
     isOpen: boolean;
@@ -17,6 +18,7 @@ interface MobileMenuProps {
  */
 const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, navLinks, secondaryLinks = [] }) => {
     const { user, profile, logout } = useAuth();
+    const { isInstalled, promptInstall } = usePwaInstall();
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -28,9 +30,44 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, navLinks, seco
         onClose();
     };
 
+    const handleInstallClick = () => {
+        void promptInstall();
+        onClose();
+    };
+
     return (
         <div className={`lg:hidden absolute top-[100%] left-0 w-full transition-colors duration-300 ease-in-out bg-dark/95 backdrop-blur-xl border-t border-gray-800 ${isOpen ? 'max-h-[calc(100dvh-4rem)] sm:max-h-[calc(100dvh-5rem)] opacity-100 overflow-y-auto' : 'max-h-0 opacity-0 pointer-events-none border-t-0 overflow-hidden'}`}>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 space-y-2" inert={!isOpen}>
+                {/* Native App Installation Action Card */}
+                <div className="mb-3">
+                    {isInstalled ? (
+                        <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                            <span>NexPlay App Installed &amp; Ready</span>
+                        </div>
+                    ) : (
+                        <button
+                            type="button"
+                            onClick={handleInstallClick}
+                            className="w-full flex items-center justify-between p-3 rounded-2xl bg-gradient-to-r from-purple-950/60 to-indigo-950/60 border border-purple-500/40 hover:border-purple-400 text-white transition-all active:scale-[0.98] shadow-lg shadow-purple-950/40 group"
+                        >
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-9 h-9 rounded-xl bg-purple-600/30 border border-purple-400/40 flex items-center justify-center text-purple-300 shrink-0 group-hover:scale-105 transition-transform">
+                                    <Smartphone className="w-4 h-4" />
+                                </div>
+                                <div className="text-left">
+                                    <div className="text-xs font-black uppercase tracking-wider text-white">Install Mobile App</div>
+                                    <div className="text-[10px] text-slate-400">Add to Home Screen for native experience</div>
+                                </div>
+                            </div>
+                            <span className="px-3 py-1.5 rounded-xl bg-purple-600 group-hover:bg-purple-500 text-white text-[11px] font-black uppercase tracking-wider shadow-md shadow-purple-900/50 flex items-center gap-1 shrink-0">
+                                <Download className="w-3 h-3" />
+                                Install
+                            </span>
+                        </button>
+                    )}
+                </div>
+
                 {user && (
                     <div className="flex sm:hidden items-center p-4 gap-4 mb-4 bg-surface/20 rounded-xl border border-gray-800/50">
                         <div className="w-12 h-12 shrink-0 bg-brand-700 rounded-full flex items-center justify-center font-bold text-lg ring-2 ring-brand-500 overflow-hidden">

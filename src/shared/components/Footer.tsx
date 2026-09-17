@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, MessageCircle, ArrowUp } from 'lucide-react';
+import { Mail, MessageCircle, ArrowUp, Download, Smartphone, CheckCircle2, Zap } from 'lucide-react';
 import { collection, getCountFromServer, query, where } from 'firebase/firestore';
 import { db } from '../config/firebase';
+import { usePwaInstall } from '../hooks/usePwaInstall';
 
 const socialLinks = [
     { href: 'https://www.facebook.com/nexplayorg', label: 'Facebook', path: 'M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 2.103-.287 1.564h-3.246v8.245C19.396 23.238 24 18.179 24 12.044c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.628 3.874 10.35 9.101 11.647Z', hoverBg: 'hover:bg-[#1877F2]', hoverBorder: 'hover:border-[#1877F2]', hoverText: '' },
@@ -23,6 +24,7 @@ const BrandIcon: React.FC<{ d: string; className?: string }> = ({ d, className }
 const Footer: React.FC = () => {
     const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
     const [stats, setStats] = useState<{ players: number; orgs: number } | null>(null);
+    const { isInstalled, promptInstall } = usePwaInstall();
 
     // Live community counts via cheap Firestore aggregate queries (no doc reads).
     // Same source of truth as the Orgs browser: users in users_public, orgs = organizer/admin role.
@@ -70,8 +72,48 @@ const Footer: React.FC = () => {
                 </span>
             </div>
 
+            {/* Native Mobile App Card — Always rendered at the footer of every page */}
+            <div className="w-full max-w-md mx-auto mb-6 p-4 rounded-2xl bg-gradient-to-br from-[#120d2b] via-[#0d1326] to-[#08182b] border border-purple-500/40 shadow-xl relative overflow-hidden text-left">
+                <div className="absolute -right-6 -top-6 w-24 h-24 bg-purple-600/20 rounded-full blur-xl pointer-events-none" />
+                <div className="relative z-10 flex items-center gap-3.5 mb-3">
+                    <div className="w-12 h-12 rounded-xl bg-purple-950/90 border border-purple-400/50 p-1 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(168,85,247,0.4)]">
+                        <img src="/logo.png" alt="NexPlay App" className="w-full h-full object-contain" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm font-black text-white uppercase tracking-tight">
+                                NexPlay Native App
+                            </span>
+                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-purple-500/20 border border-purple-500/40 text-purple-300 text-[9px] font-black uppercase tracking-wider">
+                                <Zap className="w-2.5 h-2.5 text-amber-400" /> PWA
+                            </span>
+                        </div>
+                        <p className="text-[11px] text-slate-300 leading-snug mt-0.5">
+                            Fast 60FPS fullscreen esports gameplay, match alerts, and direct wallet access on your device.
+                        </p>
+                    </div>
+                </div>
+
+                {isInstalled ? (
+                    <div className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-400 text-xs font-bold uppercase tracking-wider">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                        <span>NexPlay App Installed &amp; Ready</span>
+                    </div>
+                ) : (
+                    <button
+                        type="button"
+                        onClick={() => void promptInstall()}
+                        className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-black uppercase tracking-wider shadow-lg shadow-purple-900/50 active:scale-[0.98] transition-all touch-target"
+                    >
+                        <Smartphone className="w-4 h-4 text-purple-200" />
+                        <Download className="w-4 h-4 text-purple-200" />
+                        <span>Install Native Mobile App</span>
+                    </button>
+                )}
+            </div>
+
             {/* Contact Action Buttons */}
-            <div className="w-full max-w-xs grid grid-cols-2 gap-2.5 mb-5">
+            <div className="w-full max-w-sm grid grid-cols-2 gap-2.5 mb-5">
                 <a
                     href="https://wa.me/9779767783336"
                     target="_blank"

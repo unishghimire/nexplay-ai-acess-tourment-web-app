@@ -11,6 +11,7 @@ import Footer from './shared/components/Footer';
 import BackButton from './shared/components/BackButton';
 import ScrollToTop from './shared/components/ScrollToTop';
 import MobileBottomNav from './shared/components/MobileBottomNav';
+import InstallAppPrompt from './shared/components/pwa/InstallAppPrompt';
 import ProfileCompletionGuard from './features/auth/components/ProfileCompletionGuard';
 import ProtectedRoute from './shared/components/ProtectedRoute';
 
@@ -173,6 +174,7 @@ const AppContent = () => {
         </ProfileCompletionGuard>
       </main>
       <Footer />
+      <InstallAppPrompt />
       <MobileBottomNav />
     </div>
   );
