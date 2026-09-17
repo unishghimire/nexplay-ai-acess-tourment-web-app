@@ -1,31 +1,21 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Gamepad2, Users, Newspaper, User, Smartphone, Check } from 'lucide-react';
+import { Home, Gamepad2, LayoutDashboard, Users, Newspaper, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { usePwaInstall } from '../hooks/usePwaInstall';
 
 export const MobileBottomNav: React.FC = () => {
     const { user, profile } = useAuth();
-    const { isInstalled, promptInstall, openIOSModal } = usePwaInstall();
     const location = useLocation();
     const pathname = location.pathname;
 
     const isHomeActive = pathname === '/';
     const isGamesActive = pathname === '/games' || pathname.startsWith('/games/');
+    const isDashboardActive = pathname === '/dashboard';
     const isNewsActive = pathname === '/news' || pathname.startsWith('/post/');
     const isOrgsActive = pathname === '/organizations' || pathname.startsWith('/organization/');
     const isProfileActive = user
-        ? (pathname === '/profile' || pathname === '/dashboard' || pathname === '/wallet' || pathname === '/complete-profile')
+        ? (pathname === '/profile' || pathname === '/wallet' || pathname === '/complete-profile')
         : (pathname === '/login' || pathname === '/register');
-
-    const handleInstallClick = async (e: React.MouseEvent) => {
-        e.preventDefault();
-        if (isInstalled) {
-            openIOSModal();
-            return;
-        }
-        await promptInstall();
-    };
 
     return (
         <nav
@@ -77,40 +67,27 @@ export const MobileBottomNav: React.FC = () => {
                     </span>
                 </Link>
 
-                {/* 3. Native App Install Button (Elevated esports style) */}
-                <button
-                    type="button"
-                    onClick={handleInstallClick}
-                    aria-label={isInstalled ? "NexPlay App Installed" : "Install Native NexPlay App"}
-                    title={isInstalled ? "Installed" : "Install App"}
-                    className="flex flex-col items-center justify-center py-1 px-0.5 transition-all duration-200 active:scale-90 select-none group min-h-[48px] relative cursor-pointer"
+                {/* 3. Dashboard */}
+                <Link
+                    to={user ? '/dashboard' : '/login'}
+                    aria-label="Dashboard"
+                    title="Dashboard"
+                    className={`flex flex-col items-center justify-center py-1 px-0.5 transition-all duration-200 active:scale-90 select-none group min-h-[48px] ${
+                        isDashboardActive ? 'text-brand-400 font-bold' : 'text-gray-400 hover:text-slate-200 font-medium'
+                    }`}
                 >
-                    <div className="relative">
-                        <div
-                            className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center transition-all duration-200 ${
-                                isInstalled
-                                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-                                    : 'bg-gradient-to-tr from-purple-600 to-brand-500 text-white shadow-[0_0_12px_rgba(139,92,246,0.6)] group-hover:shadow-[0_0_16px_rgba(139,92,246,0.9)]'
-                            }`}
-                        >
-                            {isInstalled ? (
-                                <Check className="w-4 h-4 text-emerald-400" strokeWidth={2.6} />
-                            ) : (
-                                <Smartphone className="w-4 h-4 text-white animate-pulse" strokeWidth={2.2} />
-                            )}
-                        </div>
-                        {!isInstalled && (
-                            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 border border-[#0a0e17] shadow-[0_0_6px_#34d399]" />
-                        )}
-                    </div>
-                    <span
-                        className={`text-[9px] sm:text-[10px] tracking-tight mt-0.5 font-bold transition-colors truncate max-w-[48px] text-center ${
-                            isInstalled ? 'text-emerald-400' : 'text-brand-300 group-hover:text-white'
+                    <LayoutDashboard
+                        className={`w-5 h-5 mb-0.5 transition-all duration-200 ${
+                            isDashboardActive
+                                ? 'text-brand-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.7)] scale-110'
+                                : 'text-gray-400 group-hover:text-gray-200'
                         }`}
-                    >
-                        {isInstalled ? 'Installed' : 'Native'}
+                        strokeWidth={isDashboardActive ? 2.4 : 1.9}
+                    />
+                    <span className={`text-[8.5px] sm:text-[10px] tracking-tight transition-colors truncate max-w-[52px] text-center ${isDashboardActive ? 'text-brand-400 font-bold' : 'text-gray-400'}`}>
+                        Dashboard
                     </span>
-                </button>
+                </Link>
 
                 {/* 4. News */}
                 <Link
