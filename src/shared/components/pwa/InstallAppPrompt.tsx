@@ -1,10 +1,11 @@
 import React from 'react';
-import { X, Share, PlusSquare, Smartphone } from 'lucide-react';
+import { X, Share, PlusSquare, Smartphone, CheckCircle2 } from 'lucide-react';
 import { usePwaInstall } from '../../hooks/usePwaInstall';
 
 export const InstallAppPrompt: React.FC = () => {
     const {
         isIOS,
+        isInstalled,
         showIOSModal,
         closeIOSModal
     } = usePwaInstall();
@@ -35,14 +36,25 @@ export const InstallAppPrompt: React.FC = () => {
                             </div>
                             <div>
                                 <h3 id="install-modal-title" className="text-base sm:text-lg font-black text-white uppercase tracking-tight">
-                                    Install NexPlay App
+                                    {isInstalled ? 'NexPlay App Installed' : 'Install NexPlay App'}
                                 </h3>
                                 <p className="text-xs text-slate-400">
-                                    {isIOS ? 'Install on iOS Safari' : 'Install on Mobile Browser'}
+                                    {isInstalled ? 'Ready for competitive gaming' : isIOS ? 'Install on iOS Safari' : 'Install on Mobile Browser'}
                                 </p>
                             </div>
                         </div>
 
+                        {isInstalled ? (
+                            <div className="p-4 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 text-center space-y-2">
+                                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto">
+                                    <CheckCircle2 className="w-6 h-6" />
+                                </div>
+                                <p className="text-sm font-bold text-white">App is Installed!</p>
+                                <p className="text-xs text-slate-300">
+                                    NexPlay is ready to use directly from your device home screen or app launcher for the full standalone experience.
+                                </p>
+                            </div>
+                        ) : (
                         <div className="space-y-2.5 pt-1 text-xs text-slate-200">
                             {isIOS ? (
                                 <>
@@ -104,6 +116,7 @@ export const InstallAppPrompt: React.FC = () => {
                                 </>
                             )}
                         </div>
+                        )}
 
                         <button
                             type="button"
