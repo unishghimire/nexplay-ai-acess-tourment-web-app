@@ -1,80 +1,17 @@
 import React from 'react';
-import { Download, X, Share, PlusSquare, Smartphone, Zap } from 'lucide-react';
+import { X, Share, PlusSquare, Smartphone } from 'lucide-react';
 import { usePwaInstall } from '../../hooks/usePwaInstall';
 
 export const InstallAppPrompt: React.FC = () => {
     const {
-        isInstalled,
-        isDismissed,
         isIOS,
         showIOSModal,
-        promptInstall,
-        dismissPrompt,
         closeIOSModal
     } = usePwaInstall();
 
-    // If running in standalone native mode or user explicitly snoozed, hide the floating banner
-    const showFloatingBanner = !isInstalled && !isDismissed;
-
     return (
         <>
-            {/* 1. Floating Native Mobile Installation Banner */}
-            {showFloatingBanner && (
-                <aside
-                    aria-label="Install Mobile App"
-                    className="md:hidden fixed bottom-[68px] inset-x-3 z-40 animate-slide-up"
-                >
-                    <div className="relative bg-[#0c1222]/95 backdrop-blur-xl border border-purple-500/40 rounded-2xl p-3 shadow-[0_10px_35px_rgba(0,0,0,0.85)] flex items-center justify-between gap-2.5 overflow-hidden">
-                        {/* Ambient glow accent */}
-                        <div className="absolute -left-6 -top-6 w-20 h-20 bg-purple-600/20 rounded-full blur-xl pointer-events-none" />
-
-                        {/* App Icon + Text */}
-                        <div className="flex items-center gap-2.5 min-w-0 flex-1 relative z-10">
-                            <div className="w-10 h-10 rounded-xl overflow-hidden bg-gradient-to-br from-purple-900/80 to-indigo-950 border border-purple-400/50 p-1 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(139,92,246,0.35)]">
-                                <img src="/logo.png" alt="NexPlay App" className="w-full h-full object-contain" />
-                            </div>
-                            <div className="min-w-0">
-                                <div className="flex items-center gap-1.5">
-                                    <span className="text-xs font-black text-white tracking-tight uppercase truncate">
-                                        Install NexPlay
-                                    </span>
-                                    <span className="inline-flex items-center gap-0.5 text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                                        <Zap className="w-2.5 h-2.5 text-amber-400" /> App
-                                    </span>
-                                </div>
-                                <p className="text-[10px] text-slate-300 truncate mt-0.5">
-                                    Native 60FPS fullscreen esports experience
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex items-center gap-1.5 shrink-0 relative z-10">
-                            <button
-                                type="button"
-                                onClick={() => void promptInstall()}
-                                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 active:scale-95 text-white font-extrabold text-xs uppercase tracking-wider shadow-[0_0_16px_rgba(139,92,246,0.5)] transition-all touch-target"
-                                aria-label="Install NexPlay Mobile App"
-                            >
-                                <Download className="w-3.5 h-3.5" />
-                                <span>Install</span>
-                            </button>
-
-                            <button
-                                type="button"
-                                onClick={dismissPrompt}
-                                className="w-7 h-7 rounded-lg text-slate-400 hover:text-white flex items-center justify-center hover:bg-white/10 transition-colors"
-                                aria-label="Dismiss install prompt"
-                                title="Dismiss"
-                            >
-                                <X className="w-4 h-4" />
-                            </button>
-                        </div>
-                    </div>
-                </aside>
-            )}
-
-            {/* 2. iOS / Browser "Add to Home Screen" Instructional Modal */}
+            {/* iOS / Browser "Add to Home Screen" Instructional Modal */}
             {showIOSModal && (
                 <div
                     role="dialog"

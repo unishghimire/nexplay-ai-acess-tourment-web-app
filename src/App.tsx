@@ -130,7 +130,7 @@ const AppContent = () => {
       
       <Breadcrumbs />
       <ScrollToTop />
-      <main id="main-content" className="flex-grow container mx-auto px-4 pt-6 sm:pt-8 pb-28 md:pb-24 relative min-h-[80vh]">
+      <main id="main-content" className="flex-grow container mx-auto px-4 pt-6 sm:pt-8 pb-6 sm:pb-8 relative">
         {!isHome && (
           <div className="mb-6">
             <BackButton />
