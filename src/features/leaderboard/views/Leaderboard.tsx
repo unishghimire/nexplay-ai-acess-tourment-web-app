@@ -1,13 +1,20 @@
 import Seo from '../../../shared/components/Seo';
 import React, { useState, useEffect } from 'react';
-import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { collection, query, limit, getDocs } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { UserProfile, Team } from '../../../shared/types/types';
-import { Trophy, Users, ArrowUp, ArrowDown, Minus, Search, ChevronRight, AlertCircle } from 'lucide-react';
+import { Trophy, Users, ArrowUp, ArrowDown, Minus, Search, ChevronRight, AlertCircle, Zap, Award } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { motion } from 'motion/react';
-import { formatCurrency } from '../../../shared/utils/utils';
+import { 
+    formatCurrency, 
+    calculateLevel, 
+    getXPForNextLevel, 
+    getLevelProgress, 
+    getCurrentSeasonId, 
+    formatSeasonLabel 
+} from '../../../shared/utils/utils';
 
 const RankIndicator = ({ change }: { change?: number }) => {
     if (change === undefined || change === 0) return <Minus className="w-3 h-3 text-gray-600" />;
@@ -46,6 +53,9 @@ const PodiumCard = ({ item, rank, type, navigate }: {
     const avatarSeed = (isPlayer ? player?.username || player?.uid : team?.name || team?.id) || 'player';
     const displayName = (isPlayer ? player?.username : team?.name) || 'Anonymous';
     const subLabel = isPlayer ? player?.teamName || 'Free Agent' : team?.tag || 'TEAM';
+    const level = item.level || calculateLevel(item.xp);
+    const xp = item.xp || 0;
+    const progress = getLevelProgress(xp);
 
     return (
         <motion.div 
@@ -78,18 +88,35 @@ const PodiumCard = ({ item, rank, type, navigate }: {
                 </div>
             </div>
 
-            <div className="text-center">
-                <h3 className="text-xl font-black text-white truncate max-w-[180px] mb-2 group-hover:text-brand-400 transition">
+            <div className="text-center w-full">
+                <h3 className="text-xl font-black text-white truncate max-w-[180px] mx-auto mb-2 group-hover:text-brand-400 transition">
                     {displayName}
                 </h3>
-                <div className="flex items-center justify-center gap-2 mb-4">
+                <div className="flex items-center justify-center gap-2 mb-3">
                     <span className="text-xs font-black text-gray-500 uppercase tracking-widest">
                         {subLabel}
                     </span>
                     <RankIndicator change={item.rankChange} />
                 </div>
-                <div className="bg-black px-6 py-2 rounded-full border border-gray-800">
-                    <span className="text-brand-300 font-black tracking-widest">{formatCurrency(item.totalEarnings, 'NPR ')}</span>
+
+                {/* Level & EXP Display */}
+                <div className="flex flex-col items-center gap-1.5 mb-3">
+                    <span className="bg-purple-500/20 text-purple-300 text-xs font-black px-3 py-1 rounded-full border border-purple-500/40 uppercase tracking-widest flex items-center gap-1">
+                        <Zap className="w-3 h-3 text-purple-400" /> LVL {level}
+                    </span>
+                    <div className="w-full max-w-[160px] bg-gray-900 rounded-full h-1.5 overflow-hidden border border-gray-800">
+                        <div 
+                            className="h-full bg-gradient-to-r from-purple-500 to-brand-400 rounded-full"
+                            style={{ width: `${progress}%` }}
+                        />
+                    </div>
+                    <span className="text-[10px] text-gray-400 font-bold">
+                        {xp.toLocaleString()} / {getXPForNextLevel(level).toLocaleString()} XP
+                    </span>
+                </div>
+
+                <div className="bg-black px-5 py-1.5 rounded-full border border-gray-800 inline-block">
+                    <span className="text-brand-300 font-black text-xs tracking-wider">{formatCurrency(item.totalEarnings, 'NPR ')}</span>
                 </div>
             </div>
         </motion.div>
@@ -100,6 +127,7 @@ const Leaderboard: React.FC = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
     const [view, setView] = useState<'players' | 'teams'>('players');
+    const [sortBy, setSortBy] = useState<'level' | 'earnings'>('level');
     const [players, setPlayers] = useState<UserProfile[]>([]);
     const [teams, setTeams] = useState<Team[]>([]);
     const [loading, setLoading] = useState(true);
@@ -117,8 +145,7 @@ const Leaderboard: React.FC = () => {
             if (view === 'players') {
                 const q = query(
                     collection(db, 'users_public'),
-                    orderBy('totalEarnings', 'desc'),
-                    limit(50)
+                    limit(100)
                 );
                 const querySnapshot = await getDocs(q);
                 const playersData = querySnapshot.docs.map(doc => ({
@@ -129,8 +156,7 @@ const Leaderboard: React.FC = () => {
             } else {
                 const q = query(
                     collection(db, 'teams'),
-                    orderBy('totalEarnings', 'desc'),
-                    limit(50)
+                    limit(100)
                 );
                 const querySnapshot = await getDocs(q);
                 const teamsData = querySnapshot.docs.map(doc => ({
@@ -147,13 +173,33 @@ const Leaderboard: React.FC = () => {
         }
     };
 
-    const filteredPlayers = players.filter(p => 
-        (p.username || '').toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const sortLeaderboard = (a: UserProfile | Team, b: UserProfile | Team) => {
+        if (sortBy === 'level') {
+            const levelA = a.level || calculateLevel(a.xp);
+            const levelB = b.level || calculateLevel(b.xp);
+            if (levelB !== levelA) return levelB - levelA;
+            const xpA = a.xp || 0;
+            const xpB = b.xp || 0;
+            if (xpB !== xpA) return xpB - xpA;
+            return (b.totalEarnings || 0) - (a.totalEarnings || 0);
+        } else {
+            const earnA = a.totalEarnings || 0;
+            const earnB = b.totalEarnings || 0;
+            if (earnB !== earnA) return earnB - earnA;
+            const levelA = a.level || calculateLevel(a.xp);
+            const levelB = b.level || calculateLevel(b.xp);
+            if (levelB !== levelA) return levelB - levelA;
+            return (b.xp || 0) - (a.xp || 0);
+        }
+    };
 
-    const filteredTeams = teams.filter(t => 
-        (t.name || '').toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredPlayers = players
+        .filter(p => (p.username || '').toLowerCase().includes(searchQuery.toLowerCase()))
+        .sort(sortLeaderboard);
+
+    const filteredTeams = teams
+        .filter(t => (t.name || '').toLowerCase().includes(searchQuery.toLowerCase()))
+        .sort(sortLeaderboard);
 
     const currentList = view === 'players' ? filteredPlayers : filteredTeams;
     const podium = currentList.slice(0, 3);
@@ -191,11 +237,34 @@ const Leaderboard: React.FC = () => {
             {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-8 mb-8 sm:mb-12">
                 <div>
-                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white uppercase tracking-tighter mb-4">Leaderboard</h1>
-                    <p className="text-gray-400 font-bold">The elite of NexPlay. Updated in real-time.</p>
+                    <div className="flex items-center gap-3 mb-2">
+                        <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white uppercase tracking-tighter">Leaderboard</h1>
+                        <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-300 text-xs font-black uppercase tracking-widest">
+                            <Award className="w-3.5 h-3.5 text-purple-400" /> {formatSeasonLabel(getCurrentSeasonId())}
+                        </span>
+                    </div>
+                    <p className="text-gray-400 font-bold">The elite of NexPlay. Seasonal rank resets every 6 months.</p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-4">
+                <div className="flex flex-wrap items-center gap-3">
+                    {/* Sort Metric Toggle */}
+                    <div className="flex bg-card/50 p-1 rounded-2xl border border-gray-800">
+                        <button 
+                            type="button"
+                            onClick={() => setSortBy('level')}
+                            className={`flex items-center gap-1.5 px-4 py-2 min-h-[40px] rounded-xl font-black uppercase tracking-widest text-xs transition ${sortBy === 'level' ? 'bg-purple-600 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                        >
+                            <Zap className="w-3.5 h-3.5" /> Level & EXP
+                        </button>
+                        <button 
+                            type="button"
+                            onClick={() => setSortBy('earnings')}
+                            className={`flex items-center gap-1.5 px-4 py-2 min-h-[40px] rounded-xl font-black uppercase tracking-widest text-xs transition ${sortBy === 'earnings' ? 'bg-brand-500 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                        >
+                            <Trophy className="w-3.5 h-3.5" /> Earnings
+                        </button>
+                    </div>
+
                     {/* View Toggle */}
                     <div className="flex bg-card/50 p-1.5 rounded-2xl border border-gray-800">
                         <button 
@@ -278,6 +347,8 @@ const Leaderboard: React.FC = () => {
                             const avatarSeed = isPlayerView ? player?.username : team?.name;
                             const displayName = isPlayerView ? player?.username : team?.name;
                             const subLabel = isPlayerView ? player?.teamName || 'Free Agent' : team?.tag || 'TEAM';
+                            const itemLevel = item.level || calculateLevel(item.xp);
+                            const itemXp = item.xp || 0;
                             
                             return (
                                 <motion.div 
@@ -325,7 +396,19 @@ const Leaderboard: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-12">
+                                    <div className="flex items-center gap-4 sm:gap-10">
+                                        {/* Level & XP Badge */}
+                                        <div className="text-right">
+                                            <div className="flex items-center justify-end gap-1.5 mb-1">
+                                                <span className="bg-purple-500/20 text-purple-300 text-[11px] font-black px-2.5 py-0.5 rounded-full border border-purple-500/40 uppercase tracking-widest flex items-center gap-1">
+                                                    <Zap className="w-3 h-3 text-purple-400" /> LVL {itemLevel}
+                                                </span>
+                                            </div>
+                                            <p className="text-[11px] text-gray-400 font-bold">
+                                                {itemXp.toLocaleString()} XP
+                                            </p>
+                                        </div>
+
                                         <div className="text-right hidden sm:block">
                                             <p className="text-xs font-black text-gray-500 uppercase tracking-widest mb-1">Total Earnings</p>
                                             <p className="font-black text-white text-lg">{formatCurrency(item.totalEarnings, 'NPR ')}</p>

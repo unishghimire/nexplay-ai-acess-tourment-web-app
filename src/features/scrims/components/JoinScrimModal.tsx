@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Shield, AlertCircle, CheckCircle2, Trophy, Users, Zap } from 'lucide-react';
-import { auth } from '../../../shared/config/firebase';
+import { auth, db } from '../../../shared/config/firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { formatCurrency } from '../../../shared/utils/utils';
@@ -36,8 +37,27 @@ export const JoinScrimModal: React.FC<JoinScrimModalProps> = ({
   );
   const [teamName, setTeamName] = useState(profile?.teamName || profile?.username || '');
   const [captainDiscord, setCaptainDiscord] = useState(profile?.discord || '');
+  const [teammateUids, setTeammateUids] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!profile?.teamId || scrim.format === 'Solo') return;
+    const fetchTeammates = async () => {
+      try {
+        const q = query(collection(db, 'team_members'), where('teamId', '==', profile.teamId));
+        const snap = await getDocs(q);
+        const uids = snap.docs
+          .map(d => d.data().userId)
+          .filter((uid: string) => uid && uid !== user?.uid);
+        const limitCount = scrim.format === 'Duo' ? 1 : 3;
+        setTeammateUids(uids.slice(0, limitCount));
+      } catch (err) {
+        console.warn('Could not load scrim team members:', err);
+      }
+    };
+    fetchTeammates();
+  }, [profile?.teamId, scrim.format, user?.uid]);
 
   const entryFee = Number(scrim.entryFee) || 0;
   const userBalance = Number(profile?.balance) || 0;
@@ -78,7 +98,8 @@ export const JoinScrimModal: React.FC<JoinScrimModalProps> = ({
           teamName: teamName.trim() || profile?.username || 'Player',
           teamId: profile?.teamId || null,
           teamLogo: profile?.teamLogo || null,
-          captainDiscord: captainDiscord.trim() || null
+          captainDiscord: captainDiscord.trim() || null,
+          teammateUids: scrim.format !== 'Solo' ? teammateUids : []
         })
       });
 

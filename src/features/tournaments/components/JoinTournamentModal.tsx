@@ -224,6 +224,9 @@ const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
         const registeredTeamName = selectedTeam?.name || profile.teamName || 'Registered Team';
         const registeredTeamId = selectedTeam?.id || profile.teamId || user.uid;
         const registeredTeamLogo = selectedTeam?.logoUrl || profile.teamLogo || null;
+        const teammateUids = teammates
+            .map(name => availableMembers.find(m => (m.inGameName || m.username) === name)?.userId)
+            .filter((id): id is string => Boolean(id && id !== user.uid));
 
         setLoading(true);
         try {
@@ -237,6 +240,7 @@ const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
                     tournamentId: tournament.id,
                     slotNumber: selectedSlot ? Number(selectedSlot) : undefined,
                     teammates,
+                    teammateUids,
                     teamId: registeredTeamId,
                     teamName: registeredTeamName,
                     teamLogo: registeredTeamLogo,

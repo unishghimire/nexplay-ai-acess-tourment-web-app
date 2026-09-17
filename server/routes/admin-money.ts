@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { db, admin, authenticateToken, rateLimit } from "../shared.js";
 import { requireAdmin } from "../authz.js";
+import { calculateDepositXP, calculateWithdrawalXP, applyExpWithSeasonCheck } from "../levelSystem.js";
 
 const router = Router();
 
@@ -67,12 +68,56 @@ router.post("/api/admin/transactions/approve",
         const balanceBefore = userDoc.exists ? (userDoc.data()?.balance || 0) : 0;
         let balanceAfter = balanceBefore;
 
+        const userStats = userDoc.exists ? (userDoc.data() || {}) : {};
+
         if (txData.type === "deposit") {
           balanceAfter = balanceBefore + amount;
-          tx.update(userRef, { balance: admin.firestore.FieldValue.increment(amount) });
+          const depositXP = calculateDepositXP(amount);
+          const expUpdate = applyExpWithSeasonCheck(userStats, depositXP);
+
+          const userUpdates: any = {
+            balance: admin.firestore.FieldValue.increment(amount),
+            xp: expUpdate.newXP,
+            level: expUpdate.newLevel,
+            seasonId: expUpdate.seasonId,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          };
+          if (expUpdate.previousSeasonStats) {
+            userUpdates.previousSeasonStats = expUpdate.previousSeasonStats;
+          }
+          tx.update(userRef, userUpdates);
+
+          const pubRef = db.collection("users_public").doc(txData.userId);
+          tx.set(pubRef, {
+            xp: expUpdate.newXP,
+            level: expUpdate.newLevel,
+            seasonId: expUpdate.seasonId,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          }, { merge: true });
         } else if (txData.type === "withdrawal") {
           // Funds were already deducted when withdrawal request was placed.
           balanceAfter = balanceBefore;
+          const withdrawalXP = calculateWithdrawalXP(amount);
+          const expUpdate = applyExpWithSeasonCheck(userStats, withdrawalXP);
+
+          const userUpdates: any = {
+            xp: expUpdate.newXP,
+            level: expUpdate.newLevel,
+            seasonId: expUpdate.seasonId,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          };
+          if (expUpdate.previousSeasonStats) {
+            userUpdates.previousSeasonStats = expUpdate.previousSeasonStats;
+          }
+          tx.update(userRef, userUpdates);
+
+          const pubRef = db.collection("users_public").doc(txData.userId);
+          tx.set(pubRef, {
+            xp: expUpdate.newXP,
+            level: expUpdate.newLevel,
+            seasonId: expUpdate.seasonId,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          }, { merge: true });
         }
 
         tx.update(txRef, {

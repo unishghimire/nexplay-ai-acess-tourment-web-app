@@ -127,7 +127,8 @@ service cloud.firestore {
         // PublicProfile schema fields (firebase-blueprint.json) — present on
         // existing docs, so they must be allowed or every update is denied.
         'points', 'wins', 'tournamentsPlayed', 'winRate', 'rankChange',
-        'isVerified', 'isChampion', 'rank'
+        'isVerified', 'isChampion', 'rank',
+        'xp', 'level', 'seasonId', 'previousSeasonStats'
       ]);
     }
 
@@ -372,8 +373,11 @@ service cloud.firestore {
     // ═══════════════════════════════════════════════════════════════
     match /teams/{teamId} {
       allow read:   if true;
-      allow create: if isVerified() && incoming().ownerId == request.auth.uid;
-      allow update: if (isOwner(existing().ownerId) && incoming().ownerId == existing().ownerId) || isAdmin();
+      allow create: if isVerified() && incoming().ownerId == request.auth.uid &&
+                       (!incoming().keys().hasAny(['xp', 'level', 'seasonId', 'previousSeasonStats', 'totalEarnings']) ||
+                        (incoming().xp == 0 && incoming().level == 1 && incoming().totalEarnings == 0));
+      allow update: if (isOwner(existing().ownerId) && incoming().ownerId == existing().ownerId &&
+                        !incoming().diff(existing()).affectedKeys().hasAny(['xp', 'level', 'seasonId', 'previousSeasonStats', 'totalEarnings'])) || isAdmin();
       allow delete: if isOwner(existing().ownerId) || isAdmin();
     }
 

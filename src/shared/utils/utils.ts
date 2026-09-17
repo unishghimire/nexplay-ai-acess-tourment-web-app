@@ -83,22 +83,133 @@ export const getYoutubeId = (url: string | undefined) => {
     return (match && match[2].length === 11) ? match[2] : null;
 };
 
-export const calculateLevel = (xp: number = 0) => {
-    // Simple level formula: Level = floor(XP / 500) + 1
-    return Math.floor(xp / 500) + 1;
+// ─────────────────────────────────────────────────────────────────────────────
+// 100-LEVEL PROGRESSION SYSTEM (Linear Arithmetic Sequence: 100 + Level * 200)
+// ─────────────────────────────────────────────────────────────────────────────
+export const MAX_LEVEL = 100;
+export const MAX_LEVEL_XP = 20100; // 100 + 100 * 200 = 20,100 EXP
+
+/**
+ * Calculates Level (1–100) based on accumulated EXP.
+ * Exact thresholds (milestone to level up):
+ * - Level 1: 0 - 299 EXP (Target to reach Level 2 is 300 EXP)
+ * - Level 2: 300 - 499 EXP (Target to reach Level 3 is 500 EXP)
+ * - Level 3: 500 - 699 EXP (Target to reach Level 4 is 700 EXP)
+ * - ...
+ * - Level 100: 19,900 - 20,100+ EXP (Capped at 100)
+ */
+export const calculateLevel = (xp: number = 0): number => {
+    const validXP = Math.max(0, Number(xp) || 0);
+    if (validXP < 300) return 1;
+    const lvl = Math.floor((validXP - 100) / 200) + 1;
+    return Math.min(MAX_LEVEL, Math.max(1, lvl));
 };
 
-export const getXPForNextLevel = (level: number) => {
-    // XP needed for level N+1 is N * 500
-    return level * 500;
+/**
+ * Returns the target EXP required to complete the specified level and level up.
+ * Level 1 target = 300, Level 2 = 500, ..., Level 100 = 20,100.
+ */
+export const getXPForNextLevel = (level: number): number => {
+    const validLevel = Math.max(1, Math.floor(Number(level) || 1));
+    if (validLevel >= MAX_LEVEL) return MAX_LEVEL_XP;
+    return 100 + validLevel * 200;
 };
 
-export const getLevelProgress = (xp: number = 0) => {
-    const level = calculateLevel(xp);
-    const currentLevelXP = (level - 1) * 500;
-    const nextLevelXP = level * 500;
-    const progress = ((xp - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100;
+/**
+ * Calculates current progress percentage (0 - 100%) through the active level.
+ */
+export const getLevelProgress = (xp: number = 0): number => {
+    const validXP = Math.max(0, Number(xp) || 0);
+    if (validXP >= MAX_LEVEL_XP) return 100;
+    const level = calculateLevel(validXP);
+    if (level === 1) {
+        const progress = (validXP / 300) * 100;
+        return Math.min(100, Math.max(0, progress));
+    }
+    const prevThreshold = 100 + (level - 1) * 200;
+    const nextThreshold = 100 + level * 200;
+    const progress = ((validXP - prevThreshold) / (nextThreshold - prevThreshold)) * 100;
     return Math.min(100, Math.max(0, progress));
+};
+
+/**
+ * 6-Month Season identifier: YYYY_S1 (Jan–Jun) or YYYY_S2 (Jul–Dec).
+ */
+export const getCurrentSeasonId = (date: Date = new Date()): string => {
+    const year = date.getUTCFullYear();
+    const month = date.getUTCMonth(); // 0 to 11
+    const seasonNum = month < 6 ? 1 : 2;
+    return `${year}_S${seasonNum}`;
+};
+
+export const formatSeasonLabel = (seasonId?: string): string => {
+    if (!seasonId) return 'Season 1';
+    const match = seasonId.match(/^(\d{4})_S([12])$/);
+    if (match) {
+        return `${match[1]} Season ${match[2]}`;
+    }
+    return seasonId;
+};
+
+/**
+ * Calculate EXP from wallet deposits: +100 EXP per Rs. 100 deposited.
+ */
+export const calculateDepositXP = (amount: number): number => {
+    const validAmount = Math.max(0, Number(amount) || 0);
+    return Math.floor(validAmount / 100) * 100;
+};
+
+/**
+ * Calculate EXP from wallet withdrawals: +500 EXP per Rs. 1,000 withdrawn.
+ */
+export const calculateWithdrawalXP = (amount: number): number => {
+    const validAmount = Math.max(0, Number(amount) || 0);
+    return Math.floor(validAmount / 1000) * 500;
+};
+
+export interface SeasonEntityData {
+    xp?: number;
+    level?: number;
+    seasonId?: string;
+    previousSeasonStats?: {
+        seasonId: string;
+        finalLevel: number;
+        finalXP: number;
+    };
+}
+
+/**
+ * Pure helper to compute new XP and Level taking 6-month seasonal reset into account.
+ */
+export const applyExpWithSeasonCheck = (
+    entity: SeasonEntityData,
+    expToAdd: number,
+    now: Date = new Date()
+): {
+    newXP: number;
+    newLevel: number;
+    seasonId: string;
+    previousSeasonStats?: SeasonEntityData['previousSeasonStats'];
+} => {
+    const currentSeason = getCurrentSeasonId(now);
+    const isNewSeason = Boolean(entity.seasonId && entity.seasonId !== currentSeason);
+
+    const previousSeasonStats = isNewSeason ? {
+        seasonId: entity.seasonId!,
+        finalLevel: entity.level || 1,
+        finalXP: entity.xp || 0
+    } : entity.previousSeasonStats;
+
+    const baseXP = isNewSeason ? 0 : (entity.xp || 0);
+    const newXP = baseXP + Math.max(0, expToAdd);
+    const newLevel = calculateLevel(newXP);
+
+    return {
+        newXP,
+        newLevel,
+        seasonId: currentSeason,
+        ...(previousSeasonStats ? { previousSeasonStats } : {})
+    };
 };
 
 const GAME_MODE_LABELS: Record<string, string> = {

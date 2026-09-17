@@ -5,10 +5,19 @@ import { db } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { Team, TeamMember, UserProfile, TeamInvite, TeamActivity } from '../../../shared/types/types';
-import {Users, UserPlus, Settings, LogOut, X, ArrowLeft, Crown, Activity, Globe, Calendar, Trophy, Zap, ChevronRight, Star, Camera, AlertCircle, Check, UserCheck} from 'lucide-react';
+import {Users, UserPlus, Settings, LogOut, X, ArrowLeft, Crown, Activity, Globe, Calendar, Trophy, Zap, ChevronRight, Star, Camera, AlertCircle, Check, UserCheck, Award} from 'lucide-react';
 import { useInvisibleImage } from '../../../shared/hooks/useInvisibleImage';
 import { MediaCategory } from '../../../shared/services/mediaService';
-import { timeAgo, formatDate, formatCurrency } from '../../../shared/utils/utils';
+import { 
+    timeAgo, 
+    formatDate, 
+    formatCurrency, 
+    calculateLevel, 
+    getXPForNextLevel, 
+    getLevelProgress, 
+    getCurrentSeasonId, 
+    formatSeasonLabel 
+} from '../../../shared/utils/utils';
 import Modal from '../../../shared/components/Modal';
 import { Seo } from '../../../shared/components/Seo';
 import { commitFirestoreBatches, type FirestoreBatchOperation } from '../../../shared/utils/firestoreBatches';
@@ -562,12 +571,37 @@ const TeamDetails: React.FC = () => {
                         <div className="flex-grow pb-2 w-full">
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                                 <div>
-                                    <div className="flex items-center gap-3 mb-2">
+                                    <div className="flex items-center gap-3 mb-2 flex-wrap">
                                         <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight">{team.name}</h1>
                                         <span className="bg-brand-500/20 text-brand-400 text-[10px] font-black px-2 py-1 rounded border border-brand-500/30 uppercase tracking-widest">
                                             {team.tag || 'TEAM'}
                                         </span>
+                                        <span className="bg-purple-500/20 text-purple-300 text-xs font-black px-3 py-1 rounded-full border border-purple-500/40 uppercase tracking-widest flex items-center gap-1.5">
+                                            <Zap className="w-3.5 h-3.5 text-purple-400" /> LVL {team.level || calculateLevel(team.xp)}
+                                        </span>
+                                        <span className="bg-card/80 text-gray-400 text-[11px] font-black px-2.5 py-1 rounded-full border border-gray-800 uppercase tracking-widest flex items-center gap-1">
+                                            <Award className="w-3 h-3 text-brand-400" /> {formatSeasonLabel(team.seasonId || getCurrentSeasonId())}
+                                        </span>
                                     </div>
+
+                                    {/* Team Level & EXP Progress Bar */}
+                                    <div className="mb-4 max-w-md bg-dark/60 border border-gray-800/80 rounded-2xl p-3">
+                                        <div className="flex items-center justify-between text-xs font-black uppercase tracking-wider mb-1.5">
+                                            <span className="text-purple-300 flex items-center gap-1.5">
+                                                <Zap className="w-3 h-3 text-purple-400" /> Team Progression
+                                            </span>
+                                            <span className="text-gray-400">
+                                                {(team.xp || 0).toLocaleString()} / {getXPForNextLevel(team.level || calculateLevel(team.xp)).toLocaleString()} XP
+                                            </span>
+                                        </div>
+                                        <div className="w-full bg-black rounded-full h-2 overflow-hidden border border-gray-800">
+                                            <div 
+                                                className="h-full bg-gradient-to-r from-purple-500 to-brand-400 rounded-full transition-all duration-500"
+                                                style={{ width: `${getLevelProgress(team.xp || 0)}%` }}
+                                            />
+                                        </div>
+                                    </div>
+
                                     <div className="flex flex-wrap items-center gap-4 text-sm font-bold text-gray-400 mb-4">
                                         <div className="flex items-center gap-2"><Globe className="w-4 h-4" /> {team.region || 'Global'}</div>
                                         <div className="flex items-center gap-2"><Calendar className="w-4 h-4" /> Founded {team.formationDate ? formatDate(team.formationDate) : 'Recently'}</div>
@@ -644,9 +678,9 @@ const TeamDetails: React.FC = () => {
             {/* Team Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                 {[
-                    { label: 'Team Points', value: team.points || 0, icon: Star, color: 'text-yellow-500' },
+                    { label: 'Team Level', value: `LVL ${team.level || calculateLevel(team.xp)}`, icon: Zap, color: 'text-purple-400' },
+                    { label: 'Team EXP', value: `${(team.xp || 0).toLocaleString()} XP`, icon: Star, color: 'text-yellow-500' },
                     { label: 'Total Wins', value: team.wins || 0, icon: Trophy, color: 'text-brand-500' },
-                    { label: 'Rank Position', value: `#${team.ranking || 'N/A'}`, icon: Zap, color: 'text-purple-500' },
                     { label: 'Total Earnings', value: formatCurrency(team.totalEarnings), icon: Trophy, color: 'text-green-500' }
                 ].map((stat, i) => (
                     <div key={i} className="bg-card p-6 rounded-3xl border border-gray-800 shadow-lg hover:border-gray-700 transition group">
@@ -695,6 +729,11 @@ const TeamDetails: React.FC = () => {
                                                 <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${member.role === 'admin' ? 'bg-brand-500/20 text-brand-400' : 'bg-surface text-gray-500'}`}>
                                                     {member.roleInTeam || (member.userId === team.ownerId ? 'Captain' : 'Member')}
                                                 </span>
+                                                {member.user && (
+                                                    <span className="bg-purple-500/20 text-purple-300 text-[10px] font-black px-1.5 py-0.5 rounded border border-purple-500/30 uppercase tracking-widest flex items-center gap-0.5">
+                                                        <Zap className="w-2.5 h-2.5 text-purple-400" /> LVL {member.user.level || calculateLevel(member.user.xp)}
+                                                    </span>
+                                                )}
                                                 {member.user?.status === 'online' && <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>}
                                             </div>
                                         </div>

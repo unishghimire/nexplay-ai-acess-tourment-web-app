@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db, admin, authenticateToken, rateLimit } from "../shared.js";
 import { commitBatchedWrites } from "../batchedWrites.js";
 import { validatePrizeWinners } from "../prizeValidation.js";
+import { applyExpWithSeasonCheck } from "../levelSystem.js";
 
 const router = Router();
 
@@ -166,18 +167,27 @@ router.post("/api/scrims", authenticateToken, rateLimit(10, 15 * 60 * 1000), asy
 // ─────────────────────────────────────────────────────────────────────────────
 router.post("/api/scrims/:id/join", authenticateToken, rateLimit(15, 60 * 1000), async (req: any, res) => {
   const { id } = req.params;
-  const { slotNumber, teamId, teamName, teamLogo, captainDiscord } = req.body;
+  const { slotNumber, teamId, teamName, teamLogo, captainDiscord, teammateUids } = req.body;
   const userId = req.user.userId;
 
   try {
     const result = await db.runTransaction(async (transaction) => {
       const scrimRef = db.collection("scrims").doc(id);
       const userRef = db.collection("users").doc(userId);
+      const teamRef = (teamId && typeof teamId === 'string' && teamId.trim())
+        ? db.collection("teams").doc(teamId.trim())
+        : null;
+
+      const validTeammateUids: string[] = Array.isArray(teammateUids)
+        ? (teammateUids as any[]).filter(tid => typeof tid === 'string' && tid.trim() && tid !== userId).slice(0, 4)
+        : [];
 
       // 1. ALL READS FIRST (Firestore rule: all reads must precede all writes)
-      const [scrimSnap, userSnap] = await Promise.all([
+      const [scrimSnap, userSnap, teamSnap, ...teammateSnaps] = await Promise.all([
         transaction.get(scrimRef),
-        transaction.get(userRef)
+        transaction.get(userRef),
+        teamRef ? transaction.get(teamRef) : Promise.resolve(null),
+        ...validTeammateUids.map(tid => transaction.get(db.collection("users").doc(tid)))
       ]);
 
       if (!scrimSnap.exists) {
@@ -238,12 +248,72 @@ router.post("/api/scrims/:id/join", authenticateToken, rateLimit(15, 60 * 1000),
       const isNowFull = filledSlots >= totalSlots;
 
       // 2. ALL WRITES AFTER (Strictly no transaction.get allowed past this point)
+      // Award +50 EXP to registering user
+      const userExpUpdate = applyExpWithSeasonCheck(userSnap.data() || {}, 50);
+      const userUpdates: any = {
+        xp: userExpUpdate.newXP,
+        level: userExpUpdate.newLevel,
+        seasonId: userExpUpdate.seasonId,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      };
+      if (userExpUpdate.previousSeasonStats) {
+        userUpdates.previousSeasonStats = userExpUpdate.previousSeasonStats;
+      }
       if (entryFee > 0) {
-        transaction.update(userRef, {
-          balance: admin.firestore.FieldValue.increment(-entryFee),
-          updatedAt: admin.firestore.FieldValue.serverTimestamp()
-        });
+        userUpdates.balance = admin.firestore.FieldValue.increment(-entryFee);
+      }
+      transaction.update(userRef, userUpdates);
 
+      transaction.set(db.collection("users_public").doc(userId), {
+        xp: userExpUpdate.newXP,
+        level: userExpUpdate.newLevel,
+        seasonId: userExpUpdate.seasonId,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+
+      // Award +70 EXP to Team if team is registered
+      if (teamRef && teamSnap && teamSnap.exists) {
+        const teamData = teamSnap.data()!;
+        const teamExpUpdate = applyExpWithSeasonCheck(teamData, 70);
+        const teamUpdates: any = {
+          xp: teamExpUpdate.newXP,
+          level: teamExpUpdate.newLevel,
+          seasonId: teamExpUpdate.seasonId,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        };
+        if (teamExpUpdate.previousSeasonStats) {
+          teamUpdates.previousSeasonStats = teamExpUpdate.previousSeasonStats;
+        }
+        transaction.update(teamRef, teamUpdates);
+      }
+
+      // Award +50 EXP to all participating roster teammates
+      for (let i = 0; i < validTeammateUids.length; i++) {
+        const tmSnap = teammateSnaps[i];
+        if (tmSnap && tmSnap.exists) {
+          const tmId = validTeammateUids[i];
+          const tmData = tmSnap.data()!;
+          const tmExpUpdate = applyExpWithSeasonCheck(tmData, 50);
+          const tmUpdates: any = {
+            xp: tmExpUpdate.newXP,
+            level: tmExpUpdate.newLevel,
+            seasonId: tmExpUpdate.seasonId,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          };
+          if (tmExpUpdate.previousSeasonStats) {
+            tmUpdates.previousSeasonStats = tmExpUpdate.previousSeasonStats;
+          }
+          transaction.update(db.collection("users").doc(tmId), tmUpdates);
+          transaction.set(db.collection("users_public").doc(tmId), {
+            xp: tmExpUpdate.newXP,
+            level: tmExpUpdate.newLevel,
+            seasonId: tmExpUpdate.seasonId,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+        }
+      }
+
+      if (entryFee > 0) {
         const txRef = db.collection("transactions").doc();
         transaction.set(txRef, {
           id: txRef.id,
@@ -280,7 +350,7 @@ router.post("/api/scrims/:id/join", authenticateToken, rateLimit(15, 60 * 1000),
 
       // Register participant record
       const partRef = db.collection("participants").doc(`${id}_${userId}`);
-      transaction.set(partRef, {
+      const partData: any = {
         id: `${id}_${userId}`,
         tournamentId: id,
         scrimId: id,
@@ -291,7 +361,11 @@ router.post("/api/scrims/:id/join", authenticateToken, rateLimit(15, 60 * 1000),
         slotNumber: targetSlot,
         status: "approved",
         createdAt: admin.firestore.FieldValue.serverTimestamp()
-      });
+      };
+      if (validTeammateUids.length > 0) {
+        partData.teammateUids = validTeammateUids;
+      }
+      transaction.set(partRef, partData);
 
       const scrimUpdates: any = {
         slots,
@@ -607,26 +681,73 @@ router.post("/api/scrims/:id/payout", authenticateToken, rateLimit(5, 15 * 60 * 
       }
       const organizerRate = 1 - platformRate;
 
+      // Pre-read Rank 1 Team and Teammate documents (all reads before writes)
+      const rank1Winner = winners.find((w: any) => Number(w.rank) === 1);
+      let rank1TeamRef: FirebaseFirestore.DocumentReference | null = null;
+      let rank1TeammateUids: string[] = [];
+
+      let rank1PartSnap: FirebaseFirestore.DocumentSnapshot | null = null;
+      if (rank1Winner) {
+        const r1UserId = rank1Winner.userId || rank1Winner.captainId || rank1Winner.leaderId;
+        if (r1UserId) {
+          rank1PartSnap = await transaction.get(db.collection("participants").doc(`${id}_${r1UserId}`));
+        }
+      }
+
+      const r1PartData = rank1PartSnap?.data();
+      const r1TeamId = rank1Winner?.teamId || r1PartData?.teamId;
+      if (r1TeamId && typeof r1TeamId === 'string' && r1TeamId.trim()) {
+        rank1TeamRef = db.collection("teams").doc(r1TeamId.trim());
+      }
+      if (Array.isArray(rank1Winner?.teammateUids)) {
+        rank1TeammateUids = (rank1Winner.teammateUids as any[]).filter(tid => typeof tid === 'string' && tid.trim());
+      } else if (Array.isArray(r1PartData?.teammateUids)) {
+        rank1TeammateUids = (r1PartData.teammateUids as any[]).filter(tid => typeof tid === 'string' && tid.trim());
+      }
+
       // Fetch all winner user profiles upfront before ANY writes
-      const userSnaps = await Promise.all(payoutTargets.map(t => transaction.get(t.userRef)));
+      const [userSnaps, teamSnap, ...teammateSnaps] = await Promise.all([
+        Promise.all(payoutTargets.map(t => transaction.get(t.userRef))),
+        rank1TeamRef ? transaction.get(rank1TeamRef) : Promise.resolve(null),
+        ...rank1TeammateUids.map(tid => transaction.get(db.collection("users").doc(tid)))
+      ]);
 
       // 2. ALL WRITES AFTER (No transaction.get allowed after this point)
       for (let i = 0; i < payoutTargets.length; i++) {
         const { winner, targetUserId, prizeAmount, userRef } = payoutTargets[i];
         const userDoc = userSnaps[i];
+        const isRank1 = Number(winner.rank) === 1;
+
         if (userDoc.exists) {
-          transaction.update(userRef, {
+          const userExpUpdate = isRank1 ? applyExpWithSeasonCheck(userDoc.data() || {}, 80) : null;
+          const userUpdates: any = {
             balance: admin.firestore.FieldValue.increment(prizeAmount),
             totalEarnings: admin.firestore.FieldValue.increment(prizeAmount),
             updatedAt: admin.firestore.FieldValue.serverTimestamp()
-          });
-
-          // Sync public profile earnings
-          const pubRef = db.collection("users_public").doc(targetUserId);
-          transaction.set(pubRef, {
+          };
+          const pubUpdates: any = {
             totalEarnings: admin.firestore.FieldValue.increment(prizeAmount),
             updatedAt: admin.firestore.FieldValue.serverTimestamp()
-          }, { merge: true });
+          };
+
+          if (userExpUpdate) {
+            userUpdates.xp = userExpUpdate.newXP;
+            userUpdates.level = userExpUpdate.newLevel;
+            userUpdates.seasonId = userExpUpdate.seasonId;
+            if (userExpUpdate.previousSeasonStats) {
+              userUpdates.previousSeasonStats = userExpUpdate.previousSeasonStats;
+            }
+
+            pubUpdates.xp = userExpUpdate.newXP;
+            pubUpdates.level = userExpUpdate.newLevel;
+            pubUpdates.seasonId = userExpUpdate.seasonId;
+          }
+
+          transaction.update(userRef, userUpdates);
+
+          // Sync public profile earnings and level
+          const pubRef = db.collection("users_public").doc(targetUserId);
+          transaction.set(pubRef, pubUpdates, { merge: true });
         }
 
         const isPerKillRecipient = isPerKill && (Number(winner.kills) > 0 || Number(scrim.rewardPerKill) > 0);
@@ -668,6 +789,48 @@ router.post("/api/scrims/:id/payout", authenticateToken, rateLimit(5, 15 * 60 * 
           read: false,
           timestamp: admin.firestore.FieldValue.serverTimestamp(),
         });
+      }
+
+      // Award Rank 1 Team +100 EXP
+      if (rank1TeamRef && teamSnap && teamSnap.exists) {
+        const teamData = teamSnap.data()!;
+        const teamExpUpdate = applyExpWithSeasonCheck(teamData, 100);
+        const teamUpdates: any = {
+          xp: teamExpUpdate.newXP,
+          level: teamExpUpdate.newLevel,
+          seasonId: teamExpUpdate.seasonId,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        };
+        if (teamExpUpdate.previousSeasonStats) {
+          teamUpdates.previousSeasonStats = teamExpUpdate.previousSeasonStats;
+        }
+        transaction.update(rank1TeamRef, teamUpdates);
+      }
+
+      // Award Rank 1 Teammates +80 EXP
+      for (let i = 0; i < rank1TeammateUids.length; i++) {
+        const tmSnap = teammateSnaps[i];
+        if (tmSnap && tmSnap.exists) {
+          const tmId = rank1TeammateUids[i];
+          const tmData = tmSnap.data()!;
+          const tmExpUpdate = applyExpWithSeasonCheck(tmData, 80);
+          const tmUpdates: any = {
+            xp: tmExpUpdate.newXP,
+            level: tmExpUpdate.newLevel,
+            seasonId: tmExpUpdate.seasonId,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          };
+          if (tmExpUpdate.previousSeasonStats) {
+            tmUpdates.previousSeasonStats = tmExpUpdate.previousSeasonStats;
+          }
+          transaction.update(db.collection("users").doc(tmId), tmUpdates);
+          transaction.set(db.collection("users_public").doc(tmId), {
+            xp: tmExpUpdate.newXP,
+            level: tmExpUpdate.newLevel,
+            seasonId: tmExpUpdate.seasonId,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+        }
       }
 
       const scrimUpdates: any = {

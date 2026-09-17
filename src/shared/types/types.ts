@@ -1,6 +1,13 @@
 import { Timestamp } from 'firebase/firestore';
 import { TournamentMode, RewardConfig, RewardSnapshot, PlayerKillReward, RewardAuditEntry } from './per-kill';
 
+export interface PreviousSeasonStats {
+    seasonId: string;
+    finalLevel: number;
+    finalXP: number;
+    wins?: number;
+}
+
 export interface UserProfile {
     uid: string;
     email: string;
@@ -11,6 +18,8 @@ export interface UserProfile {
     totalEarnings: number;
     xp: number;
     level: number;
+    seasonId?: string;
+    previousSeasonStats?: PreviousSeasonStats;
     inGameId: string;
     inGameName?: string;
     teamName: string;
@@ -169,6 +178,10 @@ export interface Team {
     points?: number;
     wins?: number;
     totalEarnings?: number;
+    xp?: number;
+    level?: number;
+    seasonId?: string;
+    previousSeasonStats?: PreviousSeasonStats;
     players?: string[]; // Array of user IDs
     members?: string[]; // Array of user IDs or member usernames
     captainId?: string;

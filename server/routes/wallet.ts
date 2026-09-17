@@ -3,6 +3,7 @@ import { createHash } from "crypto";
 import { db, admin, authenticateToken, rateLimit } from "../shared.js";
 import { ChunkProcessingError, commitBatchedWrites } from "../batchedWrites.js";
 import { validatePrizeWinners } from "../prizeValidation.js";
+import { applyExpWithSeasonCheck } from "../levelSystem.js";
 
 const router = Router();
 
@@ -247,7 +248,7 @@ router.post("/api/wallet/join-tournament",
   rateLimit(10, 15 * 60 * 1000),
   async (req: any, res) => {
     try {
-      const { tournamentId, slotNumber, teammates, teamId, teamName, teamLogo, selectedPlayers, captainUid } = req.body;
+      const { tournamentId, slotNumber, teammates, teammateUids, teamId, teamName, teamLogo, selectedPlayers, captainUid } = req.body;
       const uid = req.user.userId;
 
       if (!tournamentId || typeof tournamentId !== 'string' || tournamentId.length > 128) {
@@ -322,6 +323,20 @@ router.post("/api/wallet/join-tournament",
           }
         }
 
+        const effectiveTeamId = teamId || uData.teamId || uid;
+        const teamRef = (isTeamEvent && effectiveTeamId && effectiveTeamId !== uid)
+          ? db.collection('teams').doc(effectiveTeamId)
+          : null;
+
+        const validTeammateUids: string[] = (isTeamEvent && Array.isArray(teammateUids))
+          ? (teammateUids as any[]).filter(tid => typeof tid === 'string' && tid.trim() && tid !== uid).slice(0, 4)
+          : [];
+
+        const [teamDoc, ...teammateDocs] = await Promise.all([
+          teamRef ? tx.get(teamRef) : Promise.resolve(null),
+          ...validTeammateUids.map(tid => tx.get(db.collection('users').doc(tid)))
+        ]);
+
         const effectiveEntryFee = Math.max(
           0,
           Math.round(Number(tData.entryFee ?? tData.requirements?.entryFee ?? tData.fee ?? 0))
@@ -351,12 +366,9 @@ router.post("/api/wallet/join-tournament",
         const entryFee = effectiveEntryFee;
         const balanceBefore = uData.balance;
         const balanceAfter = balanceBefore - entryFee;
-        const currentXP = uData.xp || 0;
-        const newXP = currentXP + 50;
-        const newLevel = Math.floor(newXP / 500) + 1;
+        const userExpUpdate = applyExpWithSeasonCheck(uData, 50);
 
         const effectiveTeamName = teamName || uData.teamName || (isTeamEvent ? (uData.username ? `${uData.username}'s Team` : 'Registered Team') : (uData.username || 'Registered Player'));
-        const effectiveTeamId = teamId || uData.teamId || uid;
         const effectiveTeamLogo = (typeof teamLogo === 'string' && teamLogo.trim()) ? teamLogo.trim() : (uData.teamLogo || null);
 
         // Build or normalize slots array
@@ -455,7 +467,67 @@ router.post("/api/wallet/join-tournament",
         }
 
         // 2. ALL WRITES AFTER (No tx.get calls allowed past this point)
-        tx.update(uRef, { balance: balanceAfter, xp: newXP, level: newLevel });
+        const userUpdates: any = {
+          balance: balanceAfter,
+          xp: userExpUpdate.newXP,
+          level: userExpUpdate.newLevel,
+          seasonId: userExpUpdate.seasonId,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        };
+        if (userExpUpdate.previousSeasonStats) {
+          userUpdates.previousSeasonStats = userExpUpdate.previousSeasonStats;
+        }
+        tx.update(uRef, userUpdates);
+
+        tx.set(db.collection('users_public').doc(uid), {
+          xp: userExpUpdate.newXP,
+          level: userExpUpdate.newLevel,
+          seasonId: userExpUpdate.seasonId,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+
+        // Award +70 EXP to Team in Duo/Squad
+        if (teamRef && teamDoc && teamDoc.exists) {
+          const teamData = teamDoc.data()!;
+          const teamExpUpdate = applyExpWithSeasonCheck(teamData, 70);
+          const teamUpdates: any = {
+            xp: teamExpUpdate.newXP,
+            level: teamExpUpdate.newLevel,
+            seasonId: teamExpUpdate.seasonId,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          };
+          if (teamExpUpdate.previousSeasonStats) {
+            teamUpdates.previousSeasonStats = teamExpUpdate.previousSeasonStats;
+          }
+          tx.update(teamRef, teamUpdates);
+        }
+
+        // Award +50 EXP to all participating roster teammates in Duo/Squad
+        for (let i = 0; i < validTeammateUids.length; i++) {
+          const tmSnap = teammateDocs[i];
+          if (tmSnap && tmSnap.exists) {
+            const tmId = validTeammateUids[i];
+            const tmData = tmSnap.data()!;
+            const tmExpUpdate = applyExpWithSeasonCheck(tmData, 50);
+            const tmUpdates: any = {
+              xp: tmExpUpdate.newXP,
+              level: tmExpUpdate.newLevel,
+              seasonId: tmExpUpdate.seasonId,
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            };
+            if (tmExpUpdate.previousSeasonStats) {
+              tmUpdates.previousSeasonStats = tmExpUpdate.previousSeasonStats;
+            }
+            tx.update(db.collection('users').doc(tmId), tmUpdates);
+            tx.set(db.collection('users_public').doc(tmId), {
+              xp: tmExpUpdate.newXP,
+              level: tmExpUpdate.newLevel,
+              seasonId: tmExpUpdate.seasonId,
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            }, { merge: true });
+          }
+        }
+
         tx.update(targetRef, tournamentUpdates);
 
         const participantData: any = {
@@ -475,6 +547,9 @@ router.post("/api/wallet/join-tournament",
         };
         if (Array.isArray(teammates) && teammates.length > 0) {
           participantData.teammates = teammates.slice(0, 4);
+        }
+        if (validTeammateUids.length > 0) {
+          participantData.teammateUids = validTeammateUids;
         }
         if (isScrim) {
           participantData.captainUid = validatedCaptainUid;
@@ -1004,17 +1079,43 @@ router.post("/api/wallet/distribute-prizes",
         }
         const organizerRate = 1 - platformRate;
         const winnerProfiles = new Map<string, FirebaseFirestore.DocumentSnapshot>();
+        const winnerParticipants = new Map<string, FirebaseFirestore.DocumentSnapshot>();
         for (const winner of winners) {
           const userDoc = await tx.get(db.collection('users').doc(winner.userId));
           if (!userDoc.exists) throw new Error(`Winner not found: ${winner.userId}`);
           winnerProfiles.set(winner.userId, userDoc);
 
-          // A winner must be an approved participant of this tournament â€”
+          // A winner must be an approved participant of this tournament —
           // prevents hosts from paying arbitrary accounts (or themselves).
           const partDoc = await tx.get(db.collection('participants').doc(`${tournamentId}_${winner.userId}`));
           if (!partDoc.exists) throw new Error(`Winner is not a participant: ${winner.userId}`);
           if ((partDoc.data()?.status ?? 'pending') !== 'approved') {
             throw new Error(`Winner is not an approved participant: ${winner.userId}`);
+          }
+          winnerParticipants.set(winner.userId, partDoc);
+        }
+
+        // Pre-read Rank 1 Team and Teammate documents (all reads before writes)
+        const rank1Winner = winners.find((w: any) => w.rank === 1);
+        let rank1TeamDoc: FirebaseFirestore.DocumentSnapshot | null = null;
+        let rank1TeamRef: FirebaseFirestore.DocumentReference | null = null;
+        const rank1TeammateDocs: FirebaseFirestore.DocumentSnapshot[] = [];
+        let rank1TeammateUids: string[] = [];
+
+        if (rank1Winner) {
+          const r1PartDoc = winnerParticipants.get(rank1Winner.userId);
+          const r1PartData = r1PartDoc?.data();
+          const r1TeamId = rank1Winner.teamId || r1PartData?.teamId;
+          if (r1TeamId && typeof r1TeamId === 'string' && r1TeamId.trim() && r1TeamId !== rank1Winner.userId) {
+            rank1TeamRef = db.collection('teams').doc(r1TeamId.trim());
+            rank1TeamDoc = await tx.get(rank1TeamRef);
+          }
+          if (Array.isArray(r1PartData?.teammateUids)) {
+            rank1TeammateUids = (r1PartData.teammateUids as any[]).filter(id => typeof id === 'string' && id.trim() && id !== rank1Winner.userId);
+            for (const tmId of rank1TeammateUids) {
+              const tmDoc = await tx.get(db.collection('users').doc(tmId));
+              rank1TeammateDocs.push(tmDoc);
+            }
           }
         }
 
@@ -1095,18 +1196,37 @@ router.post("/api/wallet/distribute-prizes",
           const uDoc = winnerProfiles.get(winner.userId)!;
           const balanceBefore = uDoc.data()?.balance || 0;
           const balanceAfter = balanceBefore + winner.prize;
+          const isRank1 = winner.rank === 1;
 
-          tx.update(uRef, {
+          const userUpdates: any = {
             balance: admin.firestore.FieldValue.increment(winner.prize),
-            totalEarnings: admin.firestore.FieldValue.increment(winner.prize)
-          });
+            totalEarnings: admin.firestore.FieldValue.increment(winner.prize),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          };
+          const pubUpdates: any = {
+            totalEarnings: admin.firestore.FieldValue.increment(winner.prize),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          };
+
+          if (isRank1) {
+            const expUpdate = applyExpWithSeasonCheck(uDoc.data() || {}, 80);
+            userUpdates.xp = expUpdate.newXP;
+            userUpdates.level = expUpdate.newLevel;
+            userUpdates.seasonId = expUpdate.seasonId;
+            if (expUpdate.previousSeasonStats) {
+              userUpdates.previousSeasonStats = expUpdate.previousSeasonStats;
+            }
+
+            pubUpdates.xp = expUpdate.newXP;
+            pubUpdates.level = expUpdate.newLevel;
+            pubUpdates.seasonId = expUpdate.seasonId;
+          }
+
+          tx.update(uRef, userUpdates);
 
           // Update public profile
           const pubRef = db.collection('users_public').doc(winner.userId);
-          tx.set(pubRef, {
-            totalEarnings: admin.firestore.FieldValue.increment(winner.prize),
-            updatedAt: admin.firestore.FieldValue.serverTimestamp()
-          }, { merge: true });
+          tx.set(pubRef, pubUpdates, { merge: true });
 
           if (winner.prize > 0) {
             const txRef = db.collection('transactions').doc();
@@ -1137,6 +1257,48 @@ router.post("/api/wallet/distribute-prizes",
               read: false,
               timestamp: admin.firestore.FieldValue.serverTimestamp(),
             });
+          }
+        }
+
+        // Award Rank 1 Team +100 EXP
+        if (rank1TeamRef && rank1TeamDoc && rank1TeamDoc.exists) {
+          const teamData = rank1TeamDoc.data()!;
+          const teamExpUpdate = applyExpWithSeasonCheck(teamData, 100);
+          const teamUpdates: any = {
+            xp: teamExpUpdate.newXP,
+            level: teamExpUpdate.newLevel,
+            seasonId: teamExpUpdate.seasonId,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          };
+          if (teamExpUpdate.previousSeasonStats) {
+            teamUpdates.previousSeasonStats = teamExpUpdate.previousSeasonStats;
+          }
+          tx.update(rank1TeamRef, teamUpdates);
+        }
+
+        // Award Rank 1 Teammates +80 EXP
+        for (let i = 0; i < rank1TeammateUids.length; i++) {
+          const tmSnap = rank1TeammateDocs[i];
+          if (tmSnap && tmSnap.exists) {
+            const tmId = rank1TeammateUids[i];
+            const tmData = tmSnap.data()!;
+            const tmExpUpdate = applyExpWithSeasonCheck(tmData, 80);
+            const tmUpdates: any = {
+              xp: tmExpUpdate.newXP,
+              level: tmExpUpdate.newLevel,
+              seasonId: tmExpUpdate.seasonId,
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            };
+            if (tmExpUpdate.previousSeasonStats) {
+              tmUpdates.previousSeasonStats = tmExpUpdate.previousSeasonStats;
+            }
+            tx.update(db.collection('users').doc(tmId), tmUpdates);
+            tx.set(db.collection('users_public').doc(tmId), {
+              xp: tmExpUpdate.newXP,
+              level: tmExpUpdate.newLevel,
+              seasonId: tmExpUpdate.seasonId,
+              updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            }, { merge: true });
           }
         }
 
