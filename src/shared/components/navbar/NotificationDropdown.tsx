@@ -48,12 +48,12 @@ const NotificationDropdown: React.FC = () => {
                 aria-expanded={isOpen}
                 aria-haspopup="true"
                 aria-label={unreadCount > 0 ? `Notifications (${unreadCount} unread)` : 'Notifications'}
-                className="text-gray-400 hover:text-white transition-colors relative w-11 h-11 rounded-full hover:bg-white/5 flex items-center justify-center shrink-0"
+                className="text-gray-400 hover:text-white transition-colors relative w-8 h-8 sm:w-9 sm:h-9 md:w-11 md:h-11 rounded-full hover:bg-white/5 flex items-center justify-center shrink-0"
             >
-                <Bell className="w-5 h-5" aria-hidden="true" />
+                <Bell className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
                 {unreadCount > 0 && (
                     <span
-                        className="absolute top-1 right-1 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center border-2 border-dark"
+                        className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 bg-red-500 text-white text-[9px] sm:text-[10px] font-bold rounded-full w-3.5 h-3.5 sm:w-4 sm:h-4 flex items-center justify-center border-2 border-dark"
                         aria-label={`${unreadCount} unread notifications`}
                     >
                         {unreadCount > 9 ? '9+' : unreadCount}

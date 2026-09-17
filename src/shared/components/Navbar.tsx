@@ -42,14 +42,14 @@ const Navbar: React.FC = () => {
 
     return (
         <nav aria-label="Main navigation" className="sticky top-0 z-50 bg-dark/90 backdrop-blur-xl border-b border-gray-800 transition-colors duration-200">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="grid grid-cols-[auto_1fr_auto] items-center h-16 sm:h-20 gap-2">
+            <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8">
+                <div className="grid grid-cols-[auto_1fr_auto] items-center h-14 sm:h-20 gap-1 sm:gap-2">
                     {/* Logo */}
-                    <Link to="/" className="flex items-center gap-2 sm:gap-3 shrink-0 group">
-                        <div className="relative w-8 h-8 sm:w-10 sm:h-10 rounded-lg overflow-hidden bg-[#151c33] p-0.5 border border-purple-500/40 shadow-inner flex items-center justify-center group-hover:border-purple-400 transition-colors">
+                    <Link to="/" className="flex items-center gap-1.5 sm:gap-3 shrink-0 group">
+                        <div className="relative w-7 h-7 sm:w-10 sm:h-10 rounded-lg overflow-hidden bg-[#151c33] p-0.5 border border-purple-500/40 shadow-inner flex items-center justify-center group-hover:border-purple-400 transition-colors">
                             <img src="/logo.png" alt="NexPlay Logo" className="w-full h-full rounded-md shrink-0 object-cover group-hover:scale-105 transition-transform" loading="eager" />
                         </div>
-                        <span className="text-lg sm:text-2xl font-black tracking-widest text-white leading-none">NEX<span className="text-brand-500">PLAY</span></span>
+                        <span className="text-base sm:text-2xl font-black tracking-wider sm:tracking-widest text-white leading-none">NEX<span className="text-brand-500">PLAY</span></span>
                     </Link>
 
                     {/* Desktop nav links — lives in its own grid column, so it can never overlap
@@ -70,7 +70,7 @@ const Navbar: React.FC = () => {
                     </div>
 
                     {/* Right section */}
-                    <div className="flex items-center justify-end gap-1.5 sm:gap-4 shrink-0">
+                    <div className="flex items-center justify-end gap-1 sm:gap-2.5 md:gap-4 shrink-0">
                         {user ? (
                             <>
                                 <NotificationDropdown />
@@ -83,7 +83,7 @@ const Navbar: React.FC = () => {
                             </>
                         ) : (
                             <div>
-                                <Link to="/login" className="bg-brand-500 hover:bg-brand-600 text-white h-9 px-3.5 sm:h-11 sm:px-6 flex items-center justify-center rounded-full font-black tracking-widest text-xs sm:text-sm transition-colors shadow-lg hover:shadow-brand-500/25 whitespace-nowrap shrink-0">
+                                <Link to="/login" className="bg-brand-500 hover:bg-brand-600 text-white h-8 sm:h-11 px-3 sm:px-6 flex items-center justify-center rounded-full font-black tracking-wider sm:tracking-widest text-xs sm:text-sm transition-colors shadow-lg hover:shadow-brand-500/25 whitespace-nowrap shrink-0">
                                     LOGIN
                                 </Link>
                             </div>
@@ -91,11 +91,11 @@ const Navbar: React.FC = () => {
                         {/* Mobile menu toggle */}
                         <button
                             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                            className="md:hidden text-gray-400 hover:text-white transition-colors w-11 h-11 flex items-center justify-center shrink-0"
+                            className="md:hidden text-gray-400 hover:text-white transition-colors w-8 h-8 sm:w-10 sm:h-10 md:w-11 md:h-11 flex items-center justify-center shrink-0"
                             aria-label="Toggle menu"
                             aria-expanded={isMobileMenuOpen}
                         >
-                            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                            {isMobileMenuOpen ? <X className="w-5 h-5 sm:w-6 sm:h-6" /> : <Menu className="w-5 h-5 sm:w-6 sm:h-6" />}
                         </button>
                     </div>
                 </div>

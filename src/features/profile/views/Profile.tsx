@@ -304,7 +304,7 @@ const Profile: React.FC = () => {
     };
 
     return (
-        <div className="max-w-4xl mx-auto animate-fade-in pb-20 px-1 sm:px-0">
+        <div className="max-w-4xl mx-auto animate-fade-in pb-20 px-2.5 sm:px-4 md:px-6">
             <Seo title="Profile | NexPlay" description="Your profile settings" noindex />
 
             {/* Header Card */}

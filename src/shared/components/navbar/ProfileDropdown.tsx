@@ -47,13 +47,13 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ username, avatarUrl, 
         aria-expanded={isOpen}
         aria-haspopup="menu"
         aria-label={`${username}'s profile menu`}
-        className="flex items-center justify-center h-11 gap-2 text-sm font-medium text-gray-300 hover:text-white transition bg-surface/50 px-3 md:px-4 rounded-full border border-gray-700 whitespace-nowrap shrink-0"
+        className="flex items-center justify-center h-8 sm:h-9 md:h-11 gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium text-gray-300 hover:text-white transition bg-surface/50 px-1.5 sm:px-2.5 md:px-4 rounded-full border border-gray-700 whitespace-nowrap shrink-0"
       >
         <div className="w-6 h-6 shrink-0 bg-brand-700 rounded-full flex items-center justify-center font-bold text-xs ring-2 ring-gray-800 overflow-hidden">
           {avatarUrl ? <img src={avatarUrl || undefined} className="w-full h-full object-cover" alt="" loading="lazy" /> : username[0].toUpperCase()}
         </div>
         <span className="hidden md:block truncate max-w-[80px] font-bold">{username}</span>
-        <ChevronDown className="w-4 h-4 text-gray-500 shrink-0" aria-hidden="true" />
+        <ChevronDown className="hidden sm:block w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-500 shrink-0" aria-hidden="true" />
       </button>
 
       {isOpen && (

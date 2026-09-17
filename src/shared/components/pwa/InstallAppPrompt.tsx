@@ -17,7 +17,7 @@ export const InstallAppPrompt: React.FC = () => {
                     role="dialog"
                     aria-modal="true"
                     aria-labelledby="install-modal-title"
-                    className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-sm animate-fade-in"
+                    className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-sm animate-fade-in"
                 >
                     <div className="bg-[#0f172a] border border-purple-500/30 rounded-3xl p-5 sm:p-6 w-full max-w-md shadow-2xl space-y-4 animate-slide-up relative">
                         <button

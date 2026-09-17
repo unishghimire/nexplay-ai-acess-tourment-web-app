@@ -301,68 +301,68 @@ const Wallet: React.FC = () => {
                 )}
 
                 {/* 3-Action Quick Buttons Grid (Matching Stitch Screen 14) */}
-                <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-3">
                     <button 
                         type="button" 
                         onClick={() => setActiveModal('deposit')}
-                        className="bg-gradient-to-r from-[#8253F5] to-indigo-700 hover:from-[#7340ea] active:scale-95 transition-all py-3 px-2 rounded-xl flex flex-col items-center justify-center text-white shadow-md glow-purple border border-purple-400/30 group cursor-pointer"
+                        className="bg-gradient-to-r from-[#8253F5] to-indigo-700 hover:from-[#7340ea] active:scale-95 transition-all py-2.5 sm:py-3 px-1 sm:px-2 rounded-xl flex flex-col items-center justify-center text-white shadow-md glow-purple border border-purple-400/30 group cursor-pointer"
                     >
-                        <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center mb-1 group-hover:scale-110 transition-transform">
-                            <ArrowDownRight className="w-4 h-4 text-white stroke-[2.5]" />
+                        <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-white/20 flex items-center justify-center mb-1 group-hover:scale-110 transition-transform">
+                            <ArrowDownRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white stroke-[2.5]" />
                         </div>
-                        <span className="text-[10px] sm:text-xs font-bold tracking-wider uppercase">Add Money</span>
+                        <span className="text-[9px] sm:text-xs font-bold tracking-tight sm:tracking-wider uppercase">Add Money</span>
                     </button>
                     <button 
                         type="button" 
                         onClick={() => setActiveModal('withdraw')}
-                        className="bg-[#111728] hover:bg-[#182038] border border-slate-700/80 active:scale-95 transition-all py-3 px-2 rounded-xl flex flex-col items-center justify-center group cursor-pointer"
+                        className="bg-[#111728] hover:bg-[#182038] border border-slate-700/80 active:scale-95 transition-all py-2.5 sm:py-3 px-1 sm:px-2 rounded-xl flex flex-col items-center justify-center group cursor-pointer"
                     >
-                        <div className="w-7 h-7 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 mb-1 group-hover:scale-110 transition-transform">
-                            <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
+                        <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 mb-1 group-hover:scale-110 transition-transform">
+                            <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.5]" />
                         </div>
-                        <span className="text-[10px] sm:text-xs font-bold tracking-wider text-slate-200 group-hover:text-white uppercase">Withdraw</span>
+                        <span className="text-[9px] sm:text-xs font-bold tracking-tight sm:tracking-wider text-slate-200 group-hover:text-white uppercase">Withdraw</span>
                     </button>
                     <button 
                         type="button" 
                         onClick={() => setIsPromoModalOpen(true)}
-                        className="bg-[#111728] hover:bg-[#182038] border border-slate-700/80 active:scale-95 transition-all py-3 px-2 rounded-xl flex flex-col items-center justify-center group cursor-pointer"
+                        className="bg-[#111728] hover:bg-[#182038] border border-slate-700/80 active:scale-95 transition-all py-2.5 sm:py-3 px-1 sm:px-2 rounded-xl flex flex-col items-center justify-center group cursor-pointer"
                     >
-                        <div className="w-7 h-7 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-300 mb-1 group-hover:scale-110 transition-transform">
-                            <Gift className="w-4 h-4" />
+                        <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-300 mb-1 group-hover:scale-110 transition-transform">
+                            <Gift className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         </div>
-                        <span className="text-[10px] sm:text-xs font-bold tracking-wider text-slate-200 group-hover:text-white uppercase">Redeem</span>
+                        <span className="text-[9px] sm:text-xs font-bold tracking-tight sm:tracking-wider text-slate-200 group-hover:text-white uppercase">Redeem</span>
                     </button>
                 </div>
             </section>
 
             {/* Financial Metrics Summary (Stitch Screen 14) */}
-            <section className="grid grid-cols-3 gap-2 sm:gap-3" data-purpose="financial-metrics">
-                <div className="bg-[#111728] border border-[#1C253E] rounded-xl p-3 flex flex-col justify-between space-y-1.5">
+            <section className="grid grid-cols-3 gap-1.5 sm:gap-3" data-purpose="financial-metrics">
+                <div className="bg-[#111728] border border-[#1C253E] rounded-xl p-2 sm:p-3 flex flex-col justify-between space-y-1 sm:space-y-1.5">
                     <div className="flex items-center justify-between">
-                        <span className="text-[9px] sm:text-[10px] font-bold tracking-wide text-slate-400 uppercase">Deposits</span>
-                        <div className="w-5 h-5 rounded bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
-                            <ArrowDownRight className="w-3 h-3 stroke-[2.5]" />
+                        <span className="text-[8px] sm:text-[10px] font-bold tracking-tight sm:tracking-wide text-slate-400 uppercase">Deposits</span>
+                        <div className="w-4 h-4 sm:w-5 sm:h-5 rounded bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
+                            <ArrowDownRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 stroke-[2.5]" />
                         </div>
                     </div>
-                    <p className="text-sm sm:text-base font-black text-white">{formatCurrency(analytics.recentDeposits)}</p>
+                    <p className="text-xs sm:text-base font-black text-white truncate">{formatCurrency(analytics.recentDeposits)}</p>
                 </div>
-                <div className="bg-[#111728] border border-[#1C253E] rounded-xl p-3 flex flex-col justify-between space-y-1.5">
+                <div className="bg-[#111728] border border-[#1C253E] rounded-xl p-2 sm:p-3 flex flex-col justify-between space-y-1 sm:space-y-1.5">
                     <div className="flex items-center justify-between">
-                        <span className="text-[9px] sm:text-[10px] font-bold tracking-wide text-slate-400 uppercase">Withdrawals</span>
-                        <div className="w-5 h-5 rounded bg-rose-500/10 text-rose-400 flex items-center justify-center shrink-0">
-                            <ArrowUpRight className="w-3 h-3 stroke-[2.5]" />
+                        <span className="text-[8px] sm:text-[10px] font-bold tracking-tight sm:tracking-wide text-slate-400 uppercase">Withdrawals</span>
+                        <div className="w-4 h-4 sm:w-5 sm:h-5 rounded bg-rose-500/10 text-rose-400 flex items-center justify-center shrink-0">
+                            <ArrowUpRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 stroke-[2.5]" />
                         </div>
                     </div>
-                    <p className="text-sm sm:text-base font-black text-white">{formatCurrency(analytics.recentWithdrawals)}</p>
+                    <p className="text-xs sm:text-base font-black text-white truncate">{formatCurrency(analytics.recentWithdrawals)}</p>
                 </div>
-                <div className="bg-[#111728] border border-[#1C253E] rounded-xl p-3 flex flex-col justify-between space-y-1.5">
+                <div className="bg-[#111728] border border-[#1C253E] rounded-xl p-2 sm:p-3 flex flex-col justify-between space-y-1 sm:space-y-1.5">
                     <div className="flex items-center justify-between">
-                        <span className="text-[9px] sm:text-[10px] font-bold tracking-wide text-slate-400 uppercase">Earnings</span>
-                        <div className="w-5 h-5 rounded bg-purple-500/10 text-purple-400 flex items-center justify-center shrink-0">
-                            <TrendingUp className="w-3 h-3" />
+                        <span className="text-[8px] sm:text-[10px] font-bold tracking-tight sm:tracking-wide text-slate-400 uppercase">Earnings</span>
+                        <div className="w-4 h-4 sm:w-5 sm:h-5 rounded bg-purple-500/10 text-purple-400 flex items-center justify-center shrink-0">
+                            <TrendingUp className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                         </div>
                     </div>
-                    <p className="text-sm sm:text-base font-black text-white">{formatCurrency(profile.totalEarnings || 0)}</p>
+                    <p className="text-xs sm:text-base font-black text-white truncate">{formatCurrency(profile.totalEarnings || 0)}</p>
                 </div>
             </section>
 

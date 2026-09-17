@@ -36,7 +36,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, navLinks, seco
     };
 
     return (
-        <div className={`lg:hidden absolute top-[100%] left-0 w-full transition-colors duration-300 ease-in-out bg-dark/95 backdrop-blur-xl border-t border-gray-800 ${isOpen ? 'max-h-[calc(100dvh-4rem)] sm:max-h-[calc(100dvh-5rem)] opacity-100 overflow-y-auto' : 'max-h-0 opacity-0 pointer-events-none border-t-0 overflow-hidden'}`}>
+        <div className={`md:hidden absolute top-[100%] left-0 w-full transition-colors duration-300 ease-in-out bg-dark/95 backdrop-blur-xl border-t border-gray-800 ${isOpen ? 'max-h-[calc(100dvh-4rem)] sm:max-h-[calc(100dvh-5rem)] opacity-100 overflow-y-auto' : 'max-h-0 opacity-0 pointer-events-none border-t-0 overflow-hidden'}`}>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 space-y-2" inert={!isOpen}>
                 {/* Native App Installation Action Card */}
                 <div className="mb-3">
