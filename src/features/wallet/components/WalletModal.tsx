@@ -264,7 +264,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
     if (settings?.minWithdrawal && amount < settings.minWithdrawal) {
       return showToast(`Minimum withdrawal amount is ${formatCurrency(settings.minWithdrawal)}`, 'error');
     }
-    const totalAvailable = (profile?.balance || 0) + (profile?.orgWalletBalance || 0);
+    const totalAvailable = profile?.balance || 0;
     if (amount > totalAvailable) return showToast('Insufficient balance', 'error');
 
     setIsSubmitting(true);
@@ -675,7 +675,7 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
               <div className="bg-dark p-4 rounded-2xl border border-gray-800 text-center">
                 <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mb-1">Available Balance</p>
                 <p className="text-2xl font-black text-brand-400">
-                  {formatCurrency((profile?.balance || 0) + (profile?.orgWalletBalance || 0))}
+                  {formatCurrency(profile?.balance || 0)}
                 </p>
               </div>
               <div className="space-y-4">

@@ -271,9 +271,6 @@ export default function GroupStandingsView({ tournament, participants }: GroupSt
     const groups = tournament.groups ?? [];
     const currentTeamId = profile?.teamId || profile?.uid;
 
-    // Access control: organizer/admin sees all, player sees only their group
-    const isOrganizer = profile?.uid === tournament.hostUid || profile?.role === 'admin' || profile?.role === 'organizer';
-
     // Find which group the current player is in
     const myGroup = useMemo(() =>
         groups.find(g => g.teams.some(t => t.id === currentTeamId)) ?? null,
@@ -304,7 +301,7 @@ export default function GroupStandingsView({ tournament, participants }: GroupSt
 
     // Is the tournament past the group stage? If so, reveal all groups.
     const isPastGroupStage = tournament.stage === 'knockout' || tournament.status === 'completed';
-    const canSeeAllGroups = isOrganizer || isPastGroupStage;
+    const canSeeAllGroups = isPastGroupStage;
 
     const copy = (value: string, key: string) => {
         navigator.clipboard.writeText(value);
@@ -341,8 +338,8 @@ export default function GroupStandingsView({ tournament, participants }: GroupSt
         );
     }
 
-    // ── Privacy Gate 2: Non-participants cannot view groups ──
-    if (!myGroup && !isOrganizer) {
+    // ── Privacy Gate 2: Non-participants cannot view groups while active ──
+    if (!myGroup && !canSeeAllGroups) {
         return (
             <div className="text-center py-16 bg-card/50 rounded-3xl border border-dashed border-gray-800 p-8">
                 <Shield className="w-12 h-12 text-gray-600 mx-auto mb-4" />
@@ -407,12 +404,12 @@ export default function GroupStandingsView({ tournament, participants }: GroupSt
                 />
             )}
 
-            {/* ── Organizer / Admin View: All other groups ── */}
-            {isOrganizer && groups.filter(g => g.id !== myGroup?.id).length > 0 && (
+            {/* ── Public view for completed / knockout stages: All other groups ── */}
+            {canSeeAllGroups && groups.filter(g => g.id !== myGroup?.id).length > 0 && (
                 <div>
                     <div className="text-xs font-black text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-3">
                         <span className="inline-block w-6 h-px bg-surface" />
-                        All Tournament Groups (Organizer View)
+                        All Tournament Groups
                     </div>
                     <div className="space-y-6">
                         {groups

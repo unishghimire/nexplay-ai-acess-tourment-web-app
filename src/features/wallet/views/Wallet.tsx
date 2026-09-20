@@ -226,8 +226,6 @@ const Wallet: React.FC = () => {
 
     if (!user || !profile) return null;
 
-    const isOrg = profile.role === 'organizer' || profile.role === 'admin';
-
     // Premium UI Render
     return (
         <div className="max-w-5xl mx-auto space-y-6 animate-fade-in pb-20 px-4 xl:px-0" data-purpose="wallet-screen">
@@ -259,7 +257,7 @@ const Wallet: React.FC = () => {
                             </span>
                         </div>
                         <p className="text-2xl sm:text-4xl md:text-5xl font-black tracking-tight text-white">
-                            {formatCurrency(Number(profile.balance || 0) + Number(profile.orgWalletBalance || 0))}
+                            {formatCurrency(Number(profile.balance || 0))}
                         </p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -278,27 +276,6 @@ const Wallet: React.FC = () => {
                         </div>
                     </div>
                 </div>
-
-                {isOrg && (
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3.5 bg-[#111728] border border-[#1C253E] rounded-xl">
-                        <div>
-                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">Org Available</span>
-                            <span className="text-base sm:text-lg font-black text-emerald-400">{formatCurrency(profile.orgWalletBalance || 0)}</span>
-                        </div>
-                        <div>
-                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">Prize Escrow</span>
-                            <span className="text-base sm:text-lg font-black text-amber-400">{formatCurrency(profile.reservedBalance || 0)}</span>
-                        </div>
-                        <div>
-                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">Locked Entry Fees</span>
-                            <span className="text-base sm:text-lg font-black text-cyan-400">{formatCurrency((profile as any).orgTournamentsLockedBalance || 0)}</span>
-                        </div>
-                        <div>
-                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">Pending Earnings</span>
-                            <span className="text-base sm:text-lg font-black text-white">{formatCurrency(profile.orgPendingEarnings || 0)}</span>
-                        </div>
-                    </div>
-                )}
 
                 {/* 3-Action Quick Buttons Grid (Matching Stitch Screen 14) */}
                 <div className="grid grid-cols-3 gap-1.5 sm:gap-3">

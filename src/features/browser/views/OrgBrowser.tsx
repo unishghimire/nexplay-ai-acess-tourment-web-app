@@ -4,9 +4,10 @@ import { collection, query, getDocs, where, addDoc, deleteDoc, doc, limit, start
 import { db } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
-import { Search, UserPlus, UserMinus, Building2, ChevronRight, Users } from 'lucide-react';
+import { Search, UserPlus, UserMinus, Building2, ChevronRight, Users, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
+import { calculateLevel, getLevelProgress, getXPForNextLevel } from '../../../shared/utils/utils';
 
 const OrgBrowser: React.FC = () => {
     const { user } = useAuth();
@@ -275,7 +276,29 @@ const OrgBrowser: React.FC = () => {
                                                 <h3 className="text-base font-extrabold text-white tracking-wide uppercase truncate group-hover:text-purple-300 transition">
                                                     {org.orgName || org.username}
                                                 </h3>
-                                                <p className="text-xs font-semibold text-slate-400 truncate mb-4">@{org.username}</p>
+                                                <p className="text-xs font-semibold text-slate-400 truncate mb-2.5">@{org.username}</p>
+
+                                                {/* Organization Level & EXP Progress */}
+                                                <div className="space-y-1.5 mb-3 bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80">
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-black text-[10px] tracking-wider uppercase border border-purple-500/40 flex items-center gap-1">
+                                                            <Zap className="w-3 h-3 text-purple-400" /> LVL {org.level || calculateLevel(org.xp)}
+                                                        </span>
+                                                        <span className="text-[10px] text-purple-300/80 font-bold uppercase tracking-wider">
+                                                            Tier {org.level || calculateLevel(org.xp)} Organizer
+                                                        </span>
+                                                    </div>
+                                                    <div className="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-slate-800">
+                                                        <div 
+                                                            className="h-full bg-gradient-to-r from-purple-500 to-indigo-400 rounded-full"
+                                                            style={{ width: `${Math.max(5, getLevelProgress(org.xp || 0))}%` }}
+                                                        />
+                                                    </div>
+                                                    <div className="flex justify-between text-[9px] text-slate-400 font-semibold">
+                                                        <span>{(org.xp || 0).toLocaleString()} XP</span>
+                                                        <span>{getXPForNextLevel(org.level || calculateLevel(org.xp)).toLocaleString()} XP</span>
+                                                    </div>
+                                                </div>
                                             </div>
 
                                             <div className="flex items-center gap-2 pt-2 border-t border-slate-800/60">
@@ -341,7 +364,12 @@ const OrgBrowser: React.FC = () => {
                                             <h3 className="text-sm font-extrabold text-white uppercase tracking-wide truncate group-hover:text-purple-300 transition">
                                                 {org.orgName || org.username}
                                             </h3>
-                                            <p className="text-xs font-semibold text-slate-400 truncate">@{org.username}</p>
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <p className="text-xs font-semibold text-slate-400 truncate">@{org.username}</p>
+                                                <span className="px-2 py-0.2 rounded bg-purple-500/20 text-purple-300 font-black text-[10px] tracking-wider uppercase border border-purple-500/30 flex items-center gap-0.5">
+                                                    <Zap className="w-2.5 h-2.5 text-purple-400" /> LVL {org.level || calculateLevel(org.xp)}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
 

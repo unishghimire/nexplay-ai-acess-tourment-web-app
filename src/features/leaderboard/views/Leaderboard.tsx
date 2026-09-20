@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { collection, query, limit, getDocs } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { UserProfile, Team } from '../../../shared/types/types';
-import { Trophy, Users, ArrowUp, ArrowDown, Minus, Search, ChevronRight, AlertCircle, Zap, Award } from 'lucide-react';
+import { Trophy, Users, ArrowUp, ArrowDown, Minus, Search, ChevronRight, AlertCircle, Zap, Award, Building2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { motion } from 'motion/react';
@@ -35,7 +35,7 @@ const RankIndicator = ({ change }: { change?: number }) => {
 const PodiumCard = ({ item, rank, type, navigate }: { 
     item: UserProfile | Team; 
     rank: number; 
-    type: 'player' | 'team'; 
+    type: 'player' | 'team' | 'organization'; 
     navigate: (path: string) => void;
 }) => {
     const isFirst = rank === 1;
@@ -46,13 +46,14 @@ const PodiumCard = ({ item, rank, type, navigate }: {
     const shadowColor = isFirst ? 'shadow-amber-500/20' : isSecond ? 'shadow-gray-500/20' : 'shadow-amber-800/20';
 
     const isPlayer = type === 'player';
-    const player = isPlayer ? (item as UserProfile) : null;
-    const team = !isPlayer ? (item as Team) : null;
-    const itemId = isPlayer ? player!.uid : team!.id;
-    const avatarUrl = isPlayer ? player?.profilePicUrl : team?.logoUrl;
-    const avatarSeed = (isPlayer ? player?.username || player?.uid : team?.name || team?.id) || 'player';
-    const displayName = (isPlayer ? player?.username : team?.name) || 'Anonymous';
-    const subLabel = isPlayer ? player?.teamName || 'Free Agent' : team?.tag || 'TEAM';
+    const isOrg = type === 'organization';
+    const player = (isPlayer || isOrg) ? (item as UserProfile) : null;
+    const team = (!isPlayer && !isOrg) ? (item as Team) : null;
+    const itemId = (isPlayer || isOrg) ? player!.uid : team!.id;
+    const avatarUrl = (isPlayer || isOrg) ? player?.profilePicUrl : team?.logoUrl;
+    const avatarSeed = (isPlayer ? player?.username || player?.uid : isOrg ? player?.orgName || player?.username || player?.uid : team?.name || team?.id) || 'entity';
+    const displayName = (isPlayer ? player?.username : isOrg ? (player?.orgName || player?.username) : team?.name) || 'Anonymous';
+    const subLabel = isPlayer ? (player?.teamName || 'Free Agent') : isOrg ? 'ORGANIZATION' : (team?.tag || 'TEAM');
     const level = item.level || calculateLevel(item.xp);
     const xp = item.xp || 0;
     const progress = getLevelProgress(xp);
@@ -63,7 +64,7 @@ const PodiumCard = ({ item, rank, type, navigate }: {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: rank * 0.1 }}
             onClick={() => {
-                navigate(isPlayer ? `/user/${itemId}` : `/team/${itemId}`);
+                navigate((isPlayer || isOrg) ? `/user/${itemId}` : `/team/${itemId}`);
             }}
             className={`relative flex flex-col items-center p-4 sm:p-8 rounded-2xl sm:rounded-3xl border ${borderColor} bg-gradient-to-b ${bgColor} to-black ${shadowColor} shadow-2xl cursor-pointer group hover:border-brand-500/50 transition-colors duration-300 hover:-translate-y-2`}
         >
@@ -126,10 +127,11 @@ const PodiumCard = ({ item, rank, type, navigate }: {
 const Leaderboard: React.FC = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
-    const [view, setView] = useState<'players' | 'teams'>('players');
+    const [view, setView] = useState<'players' | 'teams' | 'organizations'>('players');
     const [sortBy, setSortBy] = useState<'level' | 'earnings'>('level');
     const [players, setPlayers] = useState<UserProfile[]>([]);
     const [teams, setTeams] = useState<Team[]>([]);
+    const [organizations, setOrganizations] = useState<UserProfile[]>([]);
     const [loading, setLoading] = useState(true);
     const [fetchError, setFetchError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
@@ -151,9 +153,9 @@ const Leaderboard: React.FC = () => {
                 const playersData = querySnapshot.docs.map(doc => ({
                     uid: doc.id,
                     ...doc.data()
-                } as UserProfile));
+                } as UserProfile)).filter(p => p.role !== 'organizer');
                 setPlayers(playersData);
-            } else {
+            } else if (view === 'teams') {
                 const q = query(
                     collection(db, 'teams'),
                     limit(100)
@@ -164,6 +166,19 @@ const Leaderboard: React.FC = () => {
                     ...doc.data()
                 } as Team));
                 setTeams(teamsData);
+            } else {
+                const q = query(
+                    collection(db, 'users_public'),
+                    limit(100)
+                );
+                const querySnapshot = await getDocs(q);
+                const orgsData = querySnapshot.docs
+                    .map(doc => ({
+                        uid: doc.id,
+                        ...doc.data()
+                    } as UserProfile))
+                    .filter(p => p.role === 'organizer' || p.role === 'admin' || Boolean(p.orgName && p.orgName.trim() !== ''));
+                setOrganizations(orgsData);
             }
         } catch (error: any) {
             console.error("Error fetching leaderboard:", error);
@@ -201,7 +216,11 @@ const Leaderboard: React.FC = () => {
         .filter(t => (t.name || '').toLowerCase().includes(searchQuery.toLowerCase()))
         .sort(sortLeaderboard);
 
-    const currentList = view === 'players' ? filteredPlayers : filteredTeams;
+    const filteredOrgs = organizations
+        .filter(o => ((o.orgName || o.username || '').toLowerCase()).includes(searchQuery.toLowerCase()))
+        .sort(sortLeaderboard);
+
+    const currentList = view === 'players' ? filteredPlayers : view === 'teams' ? filteredTeams : filteredOrgs;
     const podium = currentList.slice(0, 3);
     const rest = currentList.slice(3);
 
@@ -271,7 +290,7 @@ const Leaderboard: React.FC = () => {
                             type="button"
                             aria-pressed={view === 'players'}
                             onClick={() => setView('players')}
-                            className={`flex items-center gap-2 px-6 py-2.5 min-h-[44px] rounded-xl font-black uppercase tracking-widest text-xs transition ${view === 'players' ? 'bg-brand-500 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}
+                            className={`flex items-center gap-2 px-4 sm:px-6 py-2.5 min-h-[44px] rounded-xl font-black uppercase tracking-widest text-xs transition ${view === 'players' ? 'bg-brand-500 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}
                         >
                             <Users className="w-4 h-4" /> Players
                         </button>
@@ -279,9 +298,17 @@ const Leaderboard: React.FC = () => {
                             type="button"
                             aria-pressed={view === 'teams'}
                             onClick={() => setView('teams')}
-                            className={`flex items-center gap-2 px-6 py-2.5 min-h-[44px] rounded-xl font-black uppercase tracking-widest text-xs transition ${view === 'teams' ? 'bg-brand-500 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}
+                            className={`flex items-center gap-2 px-4 sm:px-6 py-2.5 min-h-[44px] rounded-xl font-black uppercase tracking-widest text-xs transition ${view === 'teams' ? 'bg-brand-500 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}
                         >
                             <Trophy className="w-4 h-4" /> Teams
+                        </button>
+                        <button 
+                            type="button"
+                            aria-pressed={view === 'organizations'}
+                            onClick={() => setView('organizations')}
+                            className={`flex items-center gap-2 px-4 sm:px-6 py-2.5 min-h-[44px] rounded-xl font-black uppercase tracking-widest text-xs transition ${view === 'organizations' ? 'bg-brand-500 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}
+                        >
+                            <Building2 className="w-4 h-4" /> Orgs
                         </button>
                     </div>
                 </div>
@@ -323,11 +350,11 @@ const Leaderboard: React.FC = () => {
                     {currentList.length > 0 && (
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-8 mb-8 sm:mb-16 items-end">
                             {/* 2nd Place */}
-                            {podium[1] && <PodiumCard item={podium[1]} rank={2} type={view === 'players' ? 'player' : 'team'} navigate={navigate} />}
+                            {podium[1] && <PodiumCard item={podium[1]} rank={2} type={view === 'players' ? 'player' : view === 'organizations' ? 'organization' : 'team'} navigate={navigate} />}
                             {/* 1st Place */}
-                            {podium[0] && <PodiumCard item={podium[0]} rank={1} type={view === 'players' ? 'player' : 'team'} navigate={navigate} />}
+                            {podium[0] && <PodiumCard item={podium[0]} rank={1} type={view === 'players' ? 'player' : view === 'organizations' ? 'organization' : 'team'} navigate={navigate} />}
                             {/* 3rd Place */}
-                            {podium[2] && <PodiumCard item={podium[2]} rank={3} type={view === 'players' ? 'player' : 'team'} navigate={navigate} />}
+                            {podium[2] && <PodiumCard item={podium[2]} rank={3} type={view === 'players' ? 'player' : view === 'organizations' ? 'organization' : 'team'} navigate={navigate} />}
                         </div>
                     )}
 
@@ -339,14 +366,15 @@ const Leaderboard: React.FC = () => {
                         {rest.map((item, index) => {
                             const rank = index + 4;
                             const isPlayerView = view === 'players';
-                            const player = isPlayerView ? (item as UserProfile) : null;
-                            const team = !isPlayerView ? (item as Team) : null;
-                            const itemId = isPlayerView ? player!.uid : team!.id;
-                            const isUser = isPlayerView && player?.uid === user?.uid;
-                            const avatarUrl = isPlayerView ? player?.profilePicUrl : team?.logoUrl;
-                            const avatarSeed = isPlayerView ? player?.username : team?.name;
-                            const displayName = isPlayerView ? player?.username : team?.name;
-                            const subLabel = isPlayerView ? player?.teamName || 'Free Agent' : team?.tag || 'TEAM';
+                            const isOrgView = view === 'organizations';
+                            const player = (isPlayerView || isOrgView) ? (item as UserProfile) : null;
+                            const team = (!isPlayerView && !isOrgView) ? (item as Team) : null;
+                            const itemId = (isPlayerView || isOrgView) ? player!.uid : team!.id;
+                            const isUser = (isPlayerView || isOrgView) && player?.uid === user?.uid;
+                            const avatarUrl = (isPlayerView || isOrgView) ? player?.profilePicUrl : team?.logoUrl;
+                            const avatarSeed = isPlayerView ? player?.username : isOrgView ? (player?.orgName || player?.username) : team?.name;
+                            const displayName = isPlayerView ? player?.username : isOrgView ? (player?.orgName || player?.username) : team?.name;
+                            const subLabel = isPlayerView ? (player?.teamName || 'Free Agent') : isOrgView ? 'ORGANIZATION' : (team?.tag || 'TEAM');
                             const itemLevel = item.level || calculateLevel(item.xp);
                             const itemXp = item.xp || 0;
                             
@@ -357,7 +385,7 @@ const Leaderboard: React.FC = () => {
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: index * 0.05 }}
                                     onClick={() => {
-                                        navigate(isPlayerView ? `/user/${itemId}` : `/team/${itemId}`);
+                                        navigate((isPlayerView || isOrgView) ? `/user/${itemId}` : `/team/${itemId}`);
                                     }}
                                     className={`flex items-center justify-between p-4 sm:p-6 rounded-2xl sm:rounded-3xl border transition cursor-pointer group ${isUser ? 'bg-brand-500/10 border-brand-500/50' : 'bg-card/50 border-gray-800 hover:border-gray-700 hover:bg-card'}`}
                                 >

@@ -56,9 +56,7 @@ export default function TournamentDetails() {
     const [showPassword, setShowPassword] = useState(false);
     const [roomCreds, setRoomCreds] = useState<{ roomId?: string; roomPass?: string } | null>(null);
     const [hostProfile, setHostProfile] = useState<UserProfile | null>(null);
-    const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [showDisputeModal, setShowDisputeModal] = useState(false);
-    const [isDeleting, setIsDeleting] = useState(false);
     const [mySlotNumber, setMySlotNumber] = useState<number | null>(null);
     const [selectedSlotForBooking, setSelectedSlotForBooking] = useState<number | null>(null);
 
@@ -231,18 +229,6 @@ export default function TournamentDetails() {
         (tournament?.manualResults && tournament.manualResults.length > 0) ||
         (tournament?.winners && tournament.winners.length > 0) ||
         ((tournament as any)?.results && (tournament as any).results.length > 0)
-    );
-
-    const isHostOrAdmin = Boolean(
-        (user && tournament && (
-            tournament.hostUid === user.uid ||
-            (tournament as any).orgId === user.uid ||
-            (tournament as any).hostId === user.uid ||
-            (tournament as any).userId === user.uid ||
-            (tournament as any).createdBy === user.uid
-        )) ||
-        profile?.role === 'admin' ||
-        user?.role === 'admin'
     );
 
     const isAwaitingFunding = Boolean(
@@ -552,33 +538,6 @@ export default function TournamentDetails() {
         });
     }, [effectiveParticipants, searchTerm]);
 
-    const handleActivateFunding = async () => {
-        if (!tournament || !id) return;
-        try {
-            const token = await auth.currentUser?.getIdToken();
-            if (!token) {
-                showToast("Please sign in to activate tournament", "error");
-                return;
-            }
-            const res = await fetch(`/api/tournaments/${id}/activate`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await res.json().catch(() => ({}));
-            if (res.ok && data.success) {
-                showToast(data.message || "Tournament activated and prize funds locked in escrow!", "success");
-                const docSnap = await getDoc(doc(db, 'tournaments', id));
-                if (docSnap.exists()) {
-                    setTournament({ id: docSnap.id, ...docSnap.data() } as Tournament);
-                }
-            } else {
-                showToast(data.message || "Failed to activate tournament", "error");
-            }
-        } catch (err: any) {
-            showToast(err.message || "Failed to activate tournament", "error");
-        }
-    };
-
     const handleClaimSlot = (slotNum: number) => {
         if (!user) {
             showToast("Please login to join and book a slot!", "warning");
@@ -708,35 +667,9 @@ export default function TournamentDetails() {
         }
     };
 
-    const handleDeleteTournament = async () => {
-        if (!id || isDeleting || !tournament) return;
-        setIsDeleting(true);
-        try {
-            const token = await auth.currentUser?.getIdToken();
-            if (!token) throw new Error("Authentication required");
-
-            const res = await fetch(`/api/tournaments/${id}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (!res.ok) {
-                const errData = await res.json().catch(() => ({}));
-                throw new Error(errData.message || 'Failed to delete tournament');
-            }
-
-            showToast('Tournament deleted successfully', 'success');
-            setShowDeleteModal(false);
-            navigate('/tournaments');
-        } catch (err: any) {
-            showToast(err.message || 'Failed to delete tournament', 'error');
-        } finally {
-            setIsDeleting(false);
-        }
-    };
-
     // Real-time room credentials live subscription (millisecond latency sync from Org Panel / RTDB)
     useEffect(() => {
-        if (!tournament || (!isJoined && !isHostOrAdmin) || !user) {
+        if (!tournament || !isJoined || !user) {
             setRoomCreds(null);
             return;
         }
@@ -757,7 +690,7 @@ export default function TournamentDetails() {
         return () => {
             unsubscribe();
         };
-    }, [tournament?.id, tournament?.status, isJoined, isHostOrAdmin, user?.uid, isEventScrim, eventCollection]);
+    }, [tournament?.id, tournament?.status, isJoined, user?.uid, isEventScrim, eventCollection]);
 
     if (loading) {
         return (
@@ -776,7 +709,7 @@ export default function TournamentDetails() {
     const effectiveRoomId = roomCreds?.roomId || (tournament as any)?.roomId || (tournament as any)?.roomDetails?.roomId;
     const effectiveRoomPass = roomCreds?.roomPass || (tournament as any)?.roomPass || (tournament as any)?.roomPassword || (tournament as any)?.roomDetails?.roomPass || (tournament as any)?.roomDetails?.roomPassword;
     const hasRoomCreds = Boolean(effectiveRoomId || effectiveRoomPass);
-    const showRoom = (isJoined || isHostOrAdmin) && (
+    const showRoom = isJoined && (
         hasRoomCreds || 
         tournament.status === 'live' ||
         tournament.status === 'upcoming' ||
@@ -1726,32 +1659,14 @@ export default function TournamentDetails() {
                                 )}
                             </div>
                         ) : isAwaitingFunding ? (
-                            tournament.hostUid === profile?.uid ? (
-                                <div className="space-y-3 p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl text-center">
-                                    <AlertTriangle className="w-6 h-6 text-amber-400 mx-auto" />
-                                    <div>
-                                        <div className="text-xs font-black text-amber-300 uppercase tracking-wider">Funding Required: Rs. {(tournament.prizePool || 0).toLocaleString()}</div>
-                                        <p className="text-[11px] text-gray-400 mt-1">Available Org Wallet: Rs. {((profile?.orgWalletBalance || 0) + (profile?.balance || 0)).toLocaleString()}</p>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={handleActivateFunding}
-                                        className="w-full bg-amber-600 hover:bg-amber-500 text-white py-3.5 rounded-xl text-xs font-black uppercase tracking-wider transition shadow-lg shadow-amber-600/20 flex items-center justify-center gap-2"
-                                    >
-                                        <Lock className="w-4 h-4" />
-                                        Activate & Reserve Prize Funds
-                                    </button>
-                                </div>
-                            ) : (
-                                <div className="p-4 bg-slate-900/60 border border-amber-500/20 rounded-2xl text-center space-y-2">
-                                    <Clock className="w-6 h-6 text-amber-400 mx-auto" />
-                                    <div className="text-xs font-black text-amber-300 uppercase tracking-wider">Awaiting Organizer Funding</div>
-                                    <p className="text-[11px] text-gray-400">Registration will open once the tournament prize funds are secured in escrow by the organizer.</p>
-                                    <button type="button" disabled className="w-full bg-amber-500/10 text-amber-400/60 py-3 rounded-xl text-xs font-black uppercase tracking-widest cursor-not-allowed border border-amber-500/20">
-                                        Registration Locked
-                                    </button>
-                                </div>
-                            )
+                            <div className="p-4 bg-slate-900/60 border border-amber-500/20 rounded-2xl text-center space-y-2">
+                                <Clock className="w-6 h-6 text-amber-400 mx-auto" />
+                                <div className="text-xs font-black text-amber-300 uppercase tracking-wider">Awaiting Organizer Funding</div>
+                                <p className="text-[11px] text-gray-400">Registration will open once the tournament prize funds are secured in escrow by the organizer.</p>
+                                <button type="button" disabled className="w-full bg-amber-500/10 text-amber-400/60 py-3 rounded-xl text-xs font-black uppercase tracking-widest cursor-not-allowed border border-amber-500/20">
+                                    Registration Locked
+                                </button>
+                            </div>
                         ) : filledCount >= totalCount ? (
                             <button type="button" disabled className="w-full bg-red-900/20 text-red-500 border border-red-900/50 py-4 sm:py-5 rounded-2xl text-xs sm:text-sm font-black uppercase tracking-widest cursor-not-allowed">
                                 Tournament Full
@@ -1813,50 +1728,6 @@ export default function TournamentDetails() {
                     onClose={() => setIsResultModalOpen(false)}
                     tournament={tournament}
                 />
-            )}
-
-            {/* Host / Admin Delete Confirmation Modal */}
-            {showDeleteModal && tournament && (
-                <Modal
-                    isOpen={showDeleteModal}
-                    onClose={() => setShowDeleteModal(false)}
-                    title={isEventScrim ? "Delete Scrim" : "Delete Tournament"}
-                >
-                    <div className="p-6 text-center">
-                        <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <Trash2 className="w-8 h-8 text-red-500" />
-                        </div>
-                        <h3 className="text-lg font-bold text-white mb-2">
-                            Permanently delete "{tournament.title}"?
-                        </h3>
-                        <p className="text-sm text-gray-400 mb-6">
-                            This action cannot be undone. All match credentials, participant registrations, and bracket records will be permanently removed.
-                        </p>
-                        <div className="flex gap-3">
-                            <button
-                                type="button"
-                                onClick={() => setShowDeleteModal(false)}
-                                disabled={isDeleting}
-                                className="flex-1 bg-card hover:bg-surface text-white py-3 rounded-lg font-medium text-sm border border-gray-800 transition-colors min-h-[44px]"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="button"
-                                onClick={handleDeleteTournament}
-                                disabled={isDeleting}
-                                className="flex-1 bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg font-medium text-sm transition-colors min-h-[44px] flex items-center justify-center gap-2"
-                            >
-                                {isDeleting ? (
-                                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                ) : (
-                                    <Trash2 className="w-4 h-4" />
-                                )}
-                                <span>{isDeleting ? "Deleting..." : "Confirm Delete"}</span>
-                            </button>
-                        </div>
-                    </div>
-                </Modal>
             )}
 
             {/* Tournament / Scrim Player Dispute Modal */}

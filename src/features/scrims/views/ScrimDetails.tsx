@@ -5,12 +5,11 @@ import { db, auth } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { Seo } from '../../../shared/components/Seo';
-import { SlotGrid } from '../components/SlotGrid';
+import { SlotGrid } from '../../tournaments/components/SlotGrid';
 import { JoinScrimModal } from '../components/JoinScrimModal';
-import { DispatchRoomModal } from '../components/DispatchRoomModal';
-import ScrimResultsTable from '../components/ScrimResultsTable';
-import PerKillLeaderboard from '../components/PerKillLeaderboard';
-import PerKillResultView from '../components/PerKillResultView';
+import ScrimResultsTable from '../../tournaments/components/ScrimResultsTable';
+import PerKillLeaderboard from '../../tournaments/components/PerKillLeaderboard';
+import PerKillResultView from '../../tournaments/components/PerKillResultView';
 import ScoringInfoCard from '../../tournaments/components/ScoringInfoCard';
 import { subscribeRoomCredentials, RoomCredentials } from '../../../shared/services/roomCredentials';
 import { formatCurrency, formatDate, formatGameName, toDateSafe } from '../../../shared/utils/utils';
@@ -47,9 +46,6 @@ export default function ScrimDetails() {
 
   const [selectedSlotForBooking, setSelectedSlotForBooking] = useState<number | null>(null);
   const [showJoinModal, setShowJoinModal] = useState(false);
-  const [showDispatchModal, setShowDispatchModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
 
   const [roomCreds, setRoomCreds] = useState<RoomCredentials | null>(null);
@@ -139,14 +135,6 @@ export default function ScrimDetails() {
   const isJoined = Boolean(mySlot);
   const mySlotNumber = mySlot?.slotNumber || null;
 
-  const isHostOrAdmin = Boolean(
-    user &&
-      scrim &&
-      (scrim.hostUid === user.uid ||
-        scrim.orgId === user.uid ||
-        profile?.role === 'admin')
-  );
-
   const handleCopy = (text: string, field: 'id' | 'pass') => {
     navigator.clipboard.writeText(text);
     setCopiedField(field);
@@ -182,33 +170,6 @@ export default function ScrimDetails() {
       showToast(err.message || 'Failed to leave scrim', 'error');
     } finally {
       setIsLeaving(false);
-    }
-  };
-
-  const handleDeleteScrim = async () => {
-    if (!id || isDeleting) return;
-    setIsDeleting(true);
-    try {
-      const token = await auth.currentUser?.getIdToken();
-      if (!token) throw new Error('Authentication required');
-
-      const res = await fetch(`/api/scrims/${id}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to delete scrim');
-
-      showToast('Scrim deleted successfully', 'success');
-      navigate('/scrims', { replace: true });
-    } catch (err: any) {
-      showToast(err.message || 'Failed to delete scrim', 'error');
-    } finally {
-      setIsDeleting(false);
-      setShowDeleteModal(false);
     }
   };
 
@@ -394,44 +355,8 @@ export default function ScrimDetails() {
         </div>
       </div>
 
-      {/* Host Controls Banner */}
-      {isHostOrAdmin && (
-        <div className="bg-surface/50 border border-brand-500/30 rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg shadow-black/40">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-brand-500/20 border border-brand-500/40 flex items-center justify-center text-brand-400">
-              <Shield className="w-5 h-5" />
-            </div>
-            <div>
-              <h4 className="text-sm font-black text-white uppercase tracking-wider">
-                Organizer Control Dashboard
-              </h4>
-              <p className="text-xs text-gray-400">
-                You are the host of this scrim lobby. Dispatch match credentials or manage slots.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 w-full sm:w-auto">
-            <button
-              onClick={() => setShowDispatchModal(true)}
-              className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-black font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-colors"
-            >
-              <Key className="w-4 h-4" />
-              <span>Dispatch Room ID/Pass</span>
-            </button>
-            <button
-              onClick={() => setShowDeleteModal(true)}
-              className="px-3 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 transition-colors"
-              title="Delete Scrim"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Room Credentials Box (For Joined Participants & Host) */}
-      {(isJoined || isHostOrAdmin) && (
+      {/* Room Credentials Box (For Joined Participants) */}
+      {isJoined && (
         <div className="bg-gradient-to-r from-brand-950/40 via-dark-900 to-dark-900 border-2 border-brand-500/40 rounded-3xl p-6 shadow-xl">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-800 pb-4 mb-4">
             <div className="flex items-center gap-3">
@@ -587,53 +512,6 @@ export default function ScrimDetails() {
             showToast(`Successfully joined Slot #${joinedSlot}!`, 'success');
           }}
         />
-      )}
-
-      {showDispatchModal && (
-        <DispatchRoomModal
-          scrimId={scrim.id}
-          scrimTitle={scrim.title}
-          initialRoomId={roomCreds?.roomId || ''}
-          initialRoomPass={roomCreds?.roomPass || ''}
-          initialStreamUrl={scrim.ytLink || ''}
-          onClose={() => setShowDispatchModal(false)}
-          onSuccess={(rId, rPass, sUrl) => {
-            setRoomCreds({ roomId: rId, roomPass: rPass, streamUrl: sUrl });
-          }}
-        />
-      )}
-
-      {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-          <div className="bg-dark-900 border border-gray-800 rounded-3xl w-full max-w-sm p-6 space-y-4 shadow-2xl animate-scale-up">
-            <div className="w-12 h-12 rounded-2xl bg-red-500/20 text-red-400 flex items-center justify-center mx-auto">
-              <Trash2 className="w-6 h-6" />
-            </div>
-            <div className="text-center">
-              <h3 className="text-lg font-black text-white uppercase tracking-wider">
-                Delete Scrim?
-              </h3>
-              <p className="text-xs text-gray-400 mt-1 font-medium">
-                Are you sure you want to delete &quot;{scrim.title}&quot;? This action cannot be undone.
-              </p>
-            </div>
-            <div className="flex gap-3 pt-2">
-              <button
-                onClick={() => setShowDeleteModal(false)}
-                className="flex-1 py-3 bg-surface hover:bg-surface-hover text-gray-300 font-black text-xs uppercase tracking-wider rounded-xl transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeleteScrim}
-                disabled={isDeleting}
-                className="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-red-500/20 transition-colors"
-              >
-                {isDeleting ? 'Deleting...' : 'Delete'}
-              </button>
-            </div>
-          </div>
-        </div>
       )}
     </div>
   );

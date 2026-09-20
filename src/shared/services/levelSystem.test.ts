@@ -183,6 +183,49 @@ for (const lvl of [1, 10, 25, 50, 75, 99, 100]) {
     }
 }
 
+// ── Organization Level & Hosting Rewards ──
+console.log('\n── Organization Level & Hosting Rewards ──');
+
+// Organizer completing 1 tournament (+150 EXP)
+const orgTourney1 = applyExpWithSeasonCheck(
+    { xp: 0, level: 1, seasonId: '2026_S2' },
+    150,
+    new Date(Date.UTC(2026, 7, 15))
+);
+assert('Org 1st tournament: newXP = 150', orgTourney1.newXP, 150);
+assert('Org 1st tournament: level = 1', orgTourney1.newLevel, 1);
+
+// Organizer completing 2nd tournament (+150 EXP) -> 300 EXP = Level 2!
+const orgTourney2 = applyExpWithSeasonCheck(
+    { xp: orgTourney1.newXP, level: orgTourney1.newLevel, seasonId: orgTourney1.seasonId },
+    150,
+    new Date(Date.UTC(2026, 7, 15))
+);
+assert('Org 2nd tournament: newXP = 300', orgTourney2.newXP, 300);
+assert('Org 2nd tournament: level = 2 (Level up!)', orgTourney2.newLevel, 2);
+
+// Organizer completing 1 scrim (+100 EXP)
+const orgScrim1 = applyExpWithSeasonCheck(
+    { xp: orgTourney2.newXP, level: orgTourney2.newLevel, seasonId: orgTourney2.seasonId },
+    100,
+    new Date(Date.UTC(2026, 7, 15))
+);
+assert('Org 1st scrim: newXP = 400', orgScrim1.newXP, 400);
+assert('Org 1st scrim: level = 2', orgScrim1.newLevel, 2);
+
+// Organization seasonal rollover
+const orgSeasonRollover = applyExpWithSeasonCheck(
+    { xp: 4500, level: 23, seasonId: '2026_S1' },
+    150,
+    new Date(Date.UTC(2026, 8, 1)) // September 2026 = S2
+);
+assert('Org seasonal reset: newXP = 150', orgSeasonRollover.newXP, 150);
+assert('Org seasonal reset: newLevel = 1', orgSeasonRollover.newLevel, 1);
+assert('Org seasonal reset: seasonId = 2026_S2', orgSeasonRollover.seasonId, '2026_S2');
+assert('Org seasonal reset: previous seasonId = 2026_S1', orgSeasonRollover.previousSeasonStats?.seasonId, '2026_S1');
+assert('Org seasonal reset: previous finalLevel = 23', orgSeasonRollover.previousSeasonStats?.finalLevel, 23);
+assert('Org seasonal reset: previous finalXP = 4500', orgSeasonRollover.previousSeasonStats?.finalXP, 4500);
+
 // ── Summary ──
 console.log('\n══════════════════════════════');
 console.log(`  TOTAL: ${passed + failed}  |  ✓ PASSED: ${passed}  |  ✗ FAILED: ${failed}`);

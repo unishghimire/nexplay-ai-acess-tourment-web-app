@@ -1,6 +1,5 @@
 import { Router } from "express";
 import { db, admin, authenticateToken, rateLimit } from "../shared.js";
-import { requireAdmin, requireOrganizer } from "../authz.js";
 
 const router = Router();
 
@@ -83,98 +82,6 @@ router.post(
       });
     } catch (error: any) {
       console.error("Error filing dispute:", error);
-      res.status(500).json({ success: false, message: error.message || "Internal server error" });
-    }
-  }
-);
-
-// GET /api/disputes — List disputes for organizer or admin
-router.get(
-  "/api/disputes",
-  authenticateToken,
-  requireOrganizer,
-  rateLimit(20, 60 * 1000),
-  async (req: any, res) => {
-    try {
-      const uid = req.user.userId;
-      const isAdmin = req.user.role === "admin";
-      const { tournamentId, status, disputeType } = req.query;
-
-      let q: FirebaseFirestore.Query = db.collection("disputes");
-
-      if (disputeType && typeof disputeType === "string") {
-        q = q.where("disputeType", "==", disputeType);
-      }
-
-      if (tournamentId && typeof tournamentId === "string") {
-        q = q.where("tournamentId", "==", tournamentId);
-      } else if (!isAdmin) {
-        // Organizers only see disputes for their own hosted tournaments (never payment disputes)
-        q = q.where("organizerId", "==", uid);
-      }
-
-      if (status && typeof status === "string") {
-        q = q.where("status", "==", status);
-      }
-
-      const snap = await q.limit(100).get();
-      const disputes = snap.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
-
-      res.json({ success: true, count: disputes.length, disputes });
-    } catch (error: any) {
-      console.error("Error fetching disputes:", error);
-      res.status(500).json({ success: false, message: error.message || "Internal server error" });
-    }
-  }
-);
-
-// POST /api/disputes/:id/resolve — Resolve dispute with action ('warn' | 'ban' | 'dismiss')
-router.post(
-  "/api/disputes/:id/resolve",
-  authenticateToken,
-  requireOrganizer,
-  rateLimit(10, 60 * 1000),
-  async (req: any, res) => {
-    try {
-      const { id } = req.params;
-      const { action } = req.body;
-      const uid = req.user.userId;
-      const isAdmin = req.user.role === "admin";
-
-      if (!action || !["warn", "ban", "dismiss"].includes(action)) {
-        return res.status(400).json({ success: false, message: "Action must be 'warn', 'ban', or 'dismiss'" });
-      }
-
-      const disputeRef = db.collection("disputes").doc(id);
-      const disputeSnap = await disputeRef.get();
-      if (!disputeSnap.exists) {
-        return res.status(404).json({ success: false, message: "Dispute not found" });
-      }
-
-      const dispute = disputeSnap.data()!;
-      if (dispute.disputeType === "payment" && !isAdmin) {
-        return res.status(403).json({ success: false, message: "Only platform administrators can resolve payment disputes" });
-      }
-      if (!isAdmin && dispute.organizerId !== uid) {
-        return res.status(403).json({ success: false, message: "Unauthorized — you do not own this tournament dispute" });
-      }
-
-      const resolutionStatus = action === "dismiss" ? "dismissed" : "resolved";
-      await disputeRef.update({
-        status: resolutionStatus,
-        resolutionAction: action,
-        resolvedAt: admin.firestore.FieldValue.serverTimestamp(),
-        resolvedBy: uid,
-      });
-
-      res.json({
-        success: true,
-        message: `Dispute ${resolutionStatus} with action: ${action}`,
-        disputeId: id,
-        status: resolutionStatus,
-      });
-    } catch (error: any) {
-      console.error("Error resolving dispute:", error);
       res.status(500).json({ success: false, message: error.message || "Internal server error" });
     }
   }

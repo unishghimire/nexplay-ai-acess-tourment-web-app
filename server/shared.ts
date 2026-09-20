@@ -2,16 +2,10 @@ import path from "path";
 import { fileURLToPath } from "url";
 import admin from "firebase-admin";
 import dotenv from "dotenv";
-import { GoogleGenAI, Type } from "@google/genai";
 import fs from "fs";
 import multer from "multer";
 import { getFirestore } from "firebase-admin/firestore";
 dotenv.config();
-
-export const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-  httpOptions: { headers: { 'User-Agent': "aistudio-build" } }
-});
 
 let filename = process.cwd();
 let dirname = process.cwd();
@@ -117,8 +111,7 @@ export const db = firebaseConfig.firestoreDatabaseId
 export const firestoreAdmin = db;
 export const rtdb = admin.database(firebaseApp);
 export const rtdbAdmin = rtdb;
-export const bucket = admin.storage().bucket();
-export { admin, Type };
+export { admin };
 
 export const mapCategoryToFolder = (category: string): string => {
   switch (category) {

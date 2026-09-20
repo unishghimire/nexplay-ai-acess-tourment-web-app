@@ -20,7 +20,7 @@
     },
     "live_rooms": {
       "$tournamentId": {
-        ".read": "auth != null",
+        ".read": "auth != null && (auth.token.role === 'admin' || auth.token.role === 'organizer')",
         ".write": "auth != null && (auth.token.role === 'admin' || auth.token.role === 'organizer')"
       }
     },

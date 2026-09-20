@@ -7,7 +7,16 @@ import { useAuth } from '../../../shared/context/AuthContext';
 import { UserProfile, Team, Tournament, OrgPost, MatchHistory } from '../../../shared/types/types';
 import {Trophy, Briefcase, Users, ArrowLeft, CheckCircle2, Copy, UserPlus, UserMinus, Calendar, Share2, MessageSquare, Star, Activity, Award, Zap, ChevronRight} from 'lucide-react';
 import { useNotification } from '../../../shared/context/NotificationContext';
-import { formatDate, timeAgo, formatCurrency } from '../../../shared/utils/utils';
+import { 
+    formatDate, 
+    timeAgo, 
+    formatCurrency, 
+    calculateLevel, 
+    getLevelProgress, 
+    getXPForNextLevel, 
+    getCurrentSeasonId, 
+    formatSeasonLabel 
+} from '../../../shared/utils/utils';
 
 const PublicProfile: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -249,16 +258,42 @@ const PublicProfile: React.FC = () => {
                                         {profile.isChampion && <Award className="w-6 h-6 text-yellow-500" />}
                                     </div>
                                     
-                                    <div className="flex flex-wrap items-center gap-3 mb-4">
+                                    <div className="flex flex-wrap items-center gap-3 mb-3">
                                         <span className="text-xs font-black uppercase tracking-widest bg-brand-500/20 text-brand-400 px-3 py-1 rounded-full border border-brand-500/30 flex items-center gap-1">
                                             <Zap className="w-3 h-3" /> Rank #{profile.rank || 'Unranked'}
                                         </span>
                                         <span className="text-xs font-black uppercase tracking-widest bg-surface text-gray-400 px-3 py-1 rounded-full border border-gray-700">
                                             {profile.role}
                                         </span>
+                                        <span className="text-xs font-black uppercase tracking-widest bg-purple-500/10 text-purple-300 px-3 py-1 rounded-full border border-purple-500/30 flex items-center gap-1">
+                                            <Award className="w-3 h-3 text-purple-400" /> {formatSeasonLabel(profile.seasonId || getCurrentSeasonId())}
+                                        </span>
                                         <button type="button" onClick={handleCopyId} className="text-xs font-mono text-gray-500 hover:text-white transition bg-dark px-3 py-1 rounded-full border border-gray-800 flex items-center gap-2">
                                             ID: {id?.slice(0, 8)}... {copiedId ? <CheckCircle2 className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
                                         </button>
+                                    </div>
+
+                                    {/* Level & EXP Progress Bar */}
+                                    <div className="mb-4 max-w-md bg-[#0c1220]/80 p-3 rounded-2xl border border-slate-800/90 shadow-inner">
+                                        <div className="flex items-center justify-between mb-1.5">
+                                            <div className="flex items-center gap-2">
+                                                <span className="bg-purple-500/20 text-purple-300 text-xs font-black px-2.5 py-0.5 rounded-full border border-purple-500/40 uppercase tracking-widest flex items-center gap-1">
+                                                    <Zap className="w-3 h-3 text-purple-400" /> LVL {profile.level || calculateLevel(profile.xp)}
+                                                </span>
+                                                <span className="text-xs text-purple-300/80 font-bold uppercase tracking-wider">
+                                                    Tier {profile.level || calculateLevel(profile.xp)} {profile.role === 'organizer' ? 'Organizer' : 'Challenger'}
+                                                </span>
+                                            </div>
+                                            <span className="text-[11px] font-mono text-slate-400 font-semibold">
+                                                {(profile.xp || 0).toLocaleString()} / {getXPForNextLevel(profile.level || calculateLevel(profile.xp)).toLocaleString()} XP
+                                            </span>
+                                        </div>
+                                        <div className="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-800">
+                                            <div 
+                                                className="h-full bg-gradient-to-r from-purple-500 to-indigo-400 rounded-full transition-all duration-700"
+                                                style={{ width: `${Math.max(5, getLevelProgress(profile.xp || 0))}%` }}
+                                            />
+                                        </div>
                                     </div>
 
                                     <div className="flex items-center gap-6 text-sm font-bold text-gray-400">

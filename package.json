@@ -21,18 +21,15 @@
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
     "type-check": "tsc --noEmit",
-    "test": "tsx src/shared/constants/finance.test.ts && tsx src/shared/services/scrimsService.test.ts && tsx src/shared/services/tournamentEngine.test.ts && tsx src/shared/services/scoringEngine.test.ts && tsx src/shared/services/perKillEngine.test.ts && tsx src/shared/components/Seo.test.ts && tsx src/shared/utils/scrimSlots.test.ts && tsx src/shared/utils/eventFilter.test.ts && tsx server/authz.test.ts && tsx server/prizeValidation.test.ts && tsx server/safeUrlFetch.test.ts && tsx server/authPolicy.test.ts && tsx server/batchedWrites.test.ts && tsx server/seo.test.ts && tsx server/realtimeSync.test.ts && tsx server/recaptcha.test.ts && tsx tools/verify-wallet-logic.ts && tsx tools/tournament-tools.test.ts && tsx src/shared/services/e2eSimulation.test.ts && tsx tools/live-preview-audit.ts && tsx tools/verify-org-admin-full.ts && tsx tools/high-concurrency-audit.ts && tsx tools/multi-tier-scrim-test.ts && tsx tools/scrim-engines-audit.ts && tsx tools/master-platform-audit.ts && tsx tools/test-data-flow.ts && tsx src/shared/services/levelSystem.test.ts",
+    "test": "tsx src/shared/constants/finance.test.ts && tsx src/shared/services/scrimsService.test.ts && tsx src/shared/services/tournamentEngine.test.ts && tsx src/shared/services/scoringEngine.test.ts && tsx src/shared/services/perKillEngine.test.ts && tsx src/shared/components/Seo.test.ts && tsx src/shared/utils/scrimSlots.test.ts && tsx src/shared/utils/eventFilter.test.ts && tsx server/authz.test.ts && tsx server/prizeValidation.test.ts && tsx server/safeUrlFetch.test.ts && tsx server/authPolicy.test.ts && tsx server/batchedWrites.test.ts && tsx server/seo.test.ts && tsx server/realtimeSync.test.ts && tsx server/recaptcha.test.ts && tsx tools/verify-wallet-logic.ts && tsx tools/tournament-tools.test.ts && tsx src/shared/services/e2eSimulation.test.ts && tsx tools/live-preview-audit.ts && tsx tools/high-concurrency-audit.ts && tsx tools/multi-tier-scrim-test.ts && tsx tools/scrim-engines-audit.ts && tsx tools/master-platform-audit.ts && tsx tools/test-data-flow.ts && tsx src/shared/services/levelSystem.test.ts",
     "test:flow": "tsx tools/test-data-flow.ts",
     "start": "NODE_ENV=production tsx server.ts",
     "deploy:indexes": "firebase deploy --only firestore:indexes"
   },
   "dependencies": {
-    "@google/genai": "^1.29.0",
-    "@hello-pangea/dnd": "^18.0.1",
     "@tailwindcss/vite": "^4.1.14",
     "@vitejs/plugin-react": "^5.0.4",
     "browser-image-compression": "^2.0.2",
-    "cloudinary": "^2.10.0",
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
     "firebase": "^12.11.0",
@@ -43,8 +40,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-helmet-async": "^3.0.0",
-    "react-router-dom": "^7.18.2",
-    "zustand": "^5.0.13"
+    "react-router-dom": "^7.18.2"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",

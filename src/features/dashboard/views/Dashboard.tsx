@@ -3,22 +3,31 @@ import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { Tournament } from '../../../shared/types/types';
-import { formatCurrency, formatDateShort, formatGameName, toDateSafe, isTournamentEvent, isScrimEvent } from '../../../shared/utils/utils';
+import { 
+    formatCurrency, 
+    formatDateShort, 
+    formatGameName, 
+    toDateSafe, 
+    isTournamentEvent, 
+    isScrimEvent,
+    calculateLevel,
+    getLevelProgress,
+    getXPForNextLevel,
+    getCurrentSeasonId,
+    formatSeasonLabel
+} from '../../../shared/utils/utils';
 import { useNavigate } from 'react-router-dom';
-import { Trophy, Eye, Upload, BarChart, User, Shield, Users, AlertCircle, Calendar, Clock, Swords } from 'lucide-react';
-import ResultUploadModal from '../../results/components/ResultUploadModal';
+import { Trophy, Eye, BarChart, User, Shield, Users, AlertCircle, Calendar, Clock, Swords, Zap, Award } from 'lucide-react';
 import TournamentResultModal from '../../tournaments/components/TournamentResultModal';
 import { Seo } from '../../../shared/components/Seo';
 import { fetchRoomCredentials } from '../../../shared/services/roomCredentials';
 
 const Dashboard: React.FC = () => {
     const { user, profile } = useAuth();
-    const [myTournaments, setMyTournaments] = useState<(Tournament & { role: 'participant' | 'organizer'; registration?: any })[]>([]);
+    const [myTournaments, setMyTournaments] = useState<(Tournament & { registration?: any })[]>([]);
     const [dashboardFilter, setDashboardFilter] = useState<'all' | 'tournaments' | 'scrims'>('all');
     const [loading, setLoading] = useState(true);
     const [fetchError, setFetchError] = useState<string | null>(null);
-    const [selectedTournament, setSelectedTournament] = useState<Tournament | null>(null);
-    const [isResultModalOpen, setIsResultModalOpen] = useState(false);
     const [viewResultTournament, setViewResultTournament] = useState<Tournament | null>(null);
     const navigate = useNavigate();
 
@@ -91,30 +100,8 @@ const Dashboard: React.FC = () => {
                 }
             }
 
-            // Fetch Hosted Tournaments and Scrims if organizer/admin
-            let hostedTours: (Tournament & { role: 'participant' | 'organizer'; registration?: any })[] = [];
-            if (profile?.role === 'organizer' || profile?.role === 'admin') {
-                const [hostedTourSnap, hostedScrimSnap] = await Promise.all([
-                    getDocs(query(collection(db, 'tournaments'), where('hostUid', '==', user.uid))),
-                    getDocs(query(collection(db, 'scrims'), where('hostUid', '==', user.uid)))
-                ]);
-                const tours = hostedTourSnap.docs
-                    .map(d => ({ id: d.id, ...d.data(), role: 'organizer' } as Tournament & { role: 'participant' | 'organizer'; registration?: any }))
-                    .filter(isTournamentEvent);
-                const scrimEvents = hostedScrimSnap.docs
-                    .map(d => ({ id: d.id, ...d.data(), role: 'organizer', matchType: 'scrims' } as Tournament & { role: 'participant' | 'organizer'; registration?: any }))
-                    .filter(isScrimEvent);
-                hostedTours = [...tours, ...scrimEvents];
-                hostedTours.sort((a, b) => {
-                    const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
-                    const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
-                    return bTime - aTime;
-                });
-            }
-
-            // Merge and remove duplicates (if any)
-            const allTours = [...hostedTours, ...joinedTours];
-            const uniqueTours = allTours.filter((t, index, self) => 
+            // Only joined tournaments are shown in player dashboard
+            const uniqueTours = joinedTours.filter((t, index, self) => 
                 index === self.findIndex((m) => m.id === t.id)
             );
             
@@ -136,11 +123,6 @@ const Dashboard: React.FC = () => {
     useEffect(() => {
         fetchAllData();
     }, [user, profile]);
-
-    const handleUploadResult = (t: Tournament) => {
-        setSelectedTournament(t);
-        setIsResultModalOpen(true);
-    };
 
     if (loading) {
         return (
@@ -173,11 +155,47 @@ const Dashboard: React.FC = () => {
             <Seo title="Dashboard | NexPlay" description="Your personal esports dashboard" noindex />
 
             {/* Dashboard Header */}
-            <header className="space-y-1" data-purpose="dashboard-heading">
-                <div className="inline-block bg-[#162a63] border border-blue-500/40 px-3.5 py-1 rounded-lg shadow-sm">
-                    <h1 className="text-xl sm:text-2xl font-black text-white tracking-wider uppercase">MY DASHBOARD</h1>
+            <header className="flex flex-col md:flex-row md:items-center justify-between gap-4" data-purpose="dashboard-heading">
+                <div className="space-y-1">
+                    <div className="flex items-center gap-3 flex-wrap">
+                        <div className="inline-block bg-[#162a63] border border-blue-500/40 px-3.5 py-1 rounded-lg shadow-sm">
+                            <h1 className="text-xl sm:text-2xl font-black text-white tracking-wider uppercase">MY DASHBOARD</h1>
+                        </div>
+                        <span className="px-2.5 py-1 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-300 text-[11px] font-black uppercase tracking-wider flex items-center gap-1">
+                            <Award className="w-3.5 h-3.5 text-purple-400" /> {formatSeasonLabel(profile?.seasonId || getCurrentSeasonId())}
+                        </span>
+                    </div>
+                    <p className="text-xs sm:text-sm text-slate-400 font-medium">Manage your competitive events and shortcuts</p>
                 </div>
-                <p className="text-xs sm:text-sm text-slate-400 font-medium">Manage your competitive events and shortcuts</p>
+
+                {/* Player/Org Level & EXP Progress Card */}
+                {profile && (
+                    <div 
+                        onClick={() => navigate('/profile')}
+                        className="bg-gradient-to-r from-[#11192e] to-[#0d1527] border border-slate-800 hover:border-purple-500/40 p-3 sm:px-4 sm:py-2.5 rounded-2xl shadow-lg flex items-center gap-4 cursor-pointer group transition-all"
+                    >
+                        <div className="flex flex-col">
+                            <div className="flex items-center gap-2 mb-1">
+                                <span className="bg-purple-500/20 text-purple-300 text-xs font-black px-2 py-0.5 rounded-md border border-purple-500/40 uppercase tracking-widest flex items-center gap-1">
+                                    <Zap className="w-3 h-3 text-purple-400" /> LVL {profile.level || calculateLevel(profile.xp)}
+                                </span>
+                                <span className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">
+                                    Tier {profile.level || calculateLevel(profile.xp)} Challenger
+                                </span>
+                            </div>
+                            <div className="w-36 sm:w-44 bg-slate-900 rounded-full h-1.5 overflow-hidden border border-slate-800 mb-0.5">
+                                <div 
+                                    className="h-full bg-gradient-to-r from-purple-500 to-indigo-400 rounded-full"
+                                    style={{ width: `${Math.max(5, getLevelProgress(profile.xp || 0))}%` }}
+                                />
+                            </div>
+                            <div className="flex justify-between text-[9px] text-slate-400 font-semibold font-mono">
+                                <span>{(profile.xp || 0).toLocaleString()} XP</span>
+                                <span>{getXPForNextLevel(profile.level || calculateLevel(profile.xp)).toLocaleString()} XP</span>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </header>
 
             {/* Quick Actions Grid (2x2 on mobile, 4-col on md+) */}
@@ -296,15 +314,7 @@ const Dashboard: React.FC = () => {
                                         </span>
 
                                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-900 border border-slate-700 text-[10px] font-semibold text-blue-300">
-                                            {t.role === 'organizer' ? (
-                                                <>
-                                                    <Shield className="w-3 h-3 text-purple-400" /> HOST
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <User className="w-3 h-3 text-blue-400" /> PARTICIPANT
-                                                </>
-                                            )}
+                                            <User className="w-3 h-3 text-blue-400" /> PARTICIPANT
                                         </span>
 
                                         <span className="px-2.5 py-0.5 rounded-full bg-slate-800/80 border border-slate-700 text-[10px] font-bold uppercase text-slate-300">
@@ -391,16 +401,6 @@ const Dashboard: React.FC = () => {
                                             <Eye className="w-3.5 h-3.5 text-indigo-400" /> View Details
                                         </button>
 
-                                        {isLive && t.role === 'organizer' && (
-                                            <button
-                                                type="button"
-                                                onClick={() => handleUploadResult(t)}
-                                                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-950/60 border border-emerald-500/40 hover:bg-emerald-800/40 text-xs font-bold text-emerald-300 uppercase tracking-wider transition"
-                                            >
-                                                <Upload className="w-3.5 h-3.5 text-emerald-400" /> Upload Result
-                                            </button>
-                                        )}
-
                                         {isCompleted && (
                                             <button
                                                 type="button"
@@ -417,15 +417,6 @@ const Dashboard: React.FC = () => {
                     })()}
                 </div>
             </section>
-
-            {selectedTournament && (
-                <ResultUploadModal 
-                    isOpen={isResultModalOpen}
-                    onClose={() => setIsResultModalOpen(false)}
-                    tournament={selectedTournament}
-                    onSuccess={fetchAllData}
-                />
-            )}
 
             {viewResultTournament && (
                 <TournamentResultModal

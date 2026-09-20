@@ -75,7 +75,7 @@ const Navbar: React.FC = () => {
                             <>
                                 <NotificationDropdown />
                                 <div className="flex items-center">
-                                    <WalletDisplay balance={(profile?.balance || 0) + (profile?.orgWalletBalance || 0)} onClick={() => navigate('/wallet')} />
+                                    <WalletDisplay balance={profile?.balance || 0} onClick={() => navigate('/wallet')} />
                                 </div>
                                 <div>
                                     <ProfileDropdown username={profile?.username || 'User'} avatarUrl={profile?.profilePicUrl} onLogout={handleLogout} />
