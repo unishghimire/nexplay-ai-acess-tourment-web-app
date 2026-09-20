@@ -1,5 +1,5 @@
 import { collection, addDoc, serverTimestamp, query, where, orderBy, limit, onSnapshot, doc, updateDoc, getDocs, getDoc } from 'firebase/firestore';
-import { db } from '../config/firebase';
+import { db, auth } from '../config/firebase';
 import { Notification } from '../types/types';
 
 export interface NotificationCreateOptions {
@@ -52,6 +52,28 @@ export const NotificationService = {
                 link: targetLink || null,
                 timestamp: serverTimestamp()
             });
+
+            // Dispatch live push notification via server in background (fire-and-forget)
+            try {
+                const idToken = await auth.currentUser?.getIdToken();
+                if (idToken) {
+                    fetch('/api/notifications/send-push', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${idToken}`,
+                        },
+                        body: JSON.stringify({
+                            targetUserId: targetUid,
+                            title: targetTitle,
+                            body: targetMessage,
+                            link: targetLink || '/',
+                        }),
+                    }).catch(() => null);
+                }
+            } catch (pushErr) {
+                // Silently ignore push delivery errors so in-app notification is unaffected
+            }
         } catch (error) {
             console.error("Error creating notification:", error);
         }
@@ -182,6 +204,30 @@ export const NotificationService = {
                 }).catch(() => null)
             );
             await Promise.all(promises);
+
+            // Dispatch live push notifications to participants in background
+            try {
+                const idToken = await auth.currentUser?.getIdToken();
+                if (idToken) {
+                    Array.from(recipientUids).forEach(uid => {
+                        fetch('/api/notifications/send-push', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${idToken}`,
+                            },
+                            body: JSON.stringify({
+                                targetUserId: uid,
+                                title,
+                                body: message,
+                                link: link || '/',
+                            }),
+                        }).catch(() => null);
+                    });
+                }
+            } catch (pushErr) {
+                // Silently ignore push delivery errors
+            }
         } catch (error) {
             console.error("Error notifying participants:", error);
         }

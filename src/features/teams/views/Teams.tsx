@@ -1,6 +1,6 @@
 import Seo from '../../../shared/components/Seo';
 import React, { useState, useEffect } from 'react';
-import { collection, query, getDocs, serverTimestamp, where, doc, orderBy, limit, writeBatch, startAfter, QueryDocumentSnapshot } from 'firebase/firestore';
+import { collection, query, getDocs, getDoc, serverTimestamp, where, doc, orderBy, limit, writeBatch, startAfter, QueryDocumentSnapshot } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
@@ -77,12 +77,39 @@ const Teams: React.FC = () => {
             setTeams(allTeams);
 
             if (user) {
-                // Fetch my teams
-                const memberQ = query(collection(db, 'team_members'), where('userId', '==', user.uid));
-                const memberSnap = await getDocs(memberQ);
-                const myTeamIds = memberSnap.docs.map(d => d.data().teamId);
-                
-                setMyTeams(allTeams.filter(t => myTeamIds.includes(t.id) || t.ownerId === user.uid));
+                // Fetch user's teams directly so they are never omitted by pagination
+                try {
+                    const memberQ = query(collection(db, 'team_members'), where('userId', '==', user.uid));
+                    const memberSnap = await getDocs(memberQ);
+                    const myTeamIds = Array.from(new Set(memberSnap.docs.map(d => d.data().teamId).filter(Boolean)));
+
+                    const ownerQ = query(collection(db, 'teams'), where('ownerId', '==', user.uid));
+                    const ownerSnap = await getDocs(ownerQ);
+                    const ownedTeams = ownerSnap.docs.map(d => ({ id: d.id, ...d.data() } as Team));
+
+                    const fetchedTeamPromises = myTeamIds
+                        .filter(id => !ownedTeams.some(t => t.id === id))
+                        .map(async (id) => {
+                            const cached = allTeams.find(t => t.id === id);
+                            if (cached) return cached;
+                            const tSnap = await getDoc(doc(db, 'teams', id));
+                            return tSnap.exists() ? ({ id: tSnap.id, ...tSnap.data() } as Team) : null;
+                        });
+
+                    const memberTeams = (await Promise.all(fetchedTeamPromises)).filter(Boolean) as Team[];
+                    const combinedMyTeams = [...ownedTeams, ...memberTeams];
+                    const seen = new Set<string>();
+                    setMyTeams(combinedMyTeams.filter(t => {
+                        if (seen.has(t.id)) return false;
+                        seen.add(t.id);
+                        return true;
+                    }));
+                } catch (myTeamsErr) {
+                    console.error("Error fetching user teams:", myTeamsErr);
+                    setMyTeams(allTeams.filter(t => t.ownerId === user.uid));
+                }
+            } else {
+                setMyTeams([]);
             }
         } catch (error: any) {
             console.error("Error fetching teams:", error);

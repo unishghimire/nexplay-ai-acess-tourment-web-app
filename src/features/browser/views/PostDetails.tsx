@@ -48,7 +48,7 @@ const PostDetails: React.FC = () => {
         try {
             await deleteDoc(doc(db, 'org_posts', id));
             showToast('Post deleted successfully', 'success');
-            navigate(`/user/${post.orgId}`);
+            navigate(`/organizations/${post.orgId}`);
         } catch (error) {
             console.error("Error deleting post:", error);
             showToast('Failed to delete post', 'error');
@@ -98,7 +98,7 @@ const PostDetails: React.FC = () => {
                 }}
             />
 
-            <Link to={`/user/${post.orgId}`} className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition mb-6 font-bold text-sm">
+            <Link to={`/organizations/${post.orgId}`} className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition mb-6 font-bold text-sm">
                 <ArrowLeft className="w-4 h-4" /> Back to Profile
             </Link>
 
@@ -112,7 +112,7 @@ const PostDetails: React.FC = () => {
                 
                 <div className={`p-8 ${post.imageUrl ? '-mt-20 relative z-10' : ''}`}>
                     <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-                        <Link to={`/user/${post.orgId}`} className="flex items-center gap-3 group">
+                        <Link to={`/organizations/${post.orgId}`} className="flex items-center gap-3 group">
                             <div className="w-10 h-10 rounded-full bg-dark border-2 border-gray-700 overflow-hidden group-hover:border-brand-500 transition">
                                 {post.orgAvatar ? (
                                     <img src={post.orgAvatar || undefined} alt={post.orgName} className="w-full h-full object-cover" loading="lazy" />

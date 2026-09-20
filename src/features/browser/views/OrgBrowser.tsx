@@ -1,16 +1,17 @@
 import Seo from '../../../shared/components/Seo';
 import React, { useState, useEffect } from 'react';
-import { collection, query, getDocs, where, addDoc, deleteDoc, doc, limit, startAfter, QueryDocumentSnapshot } from 'firebase/firestore';
+import { collection, query, getDocs, where, addDoc, deleteDoc, doc, limit, startAfter, QueryDocumentSnapshot, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
+import { NotificationService } from '../../../shared/services/NotificationService';
 import { Search, UserPlus, UserMinus, Building2, ChevronRight, Users, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { calculateLevel, getLevelProgress, getXPForNextLevel } from '../../../shared/utils/utils';
 
 const OrgBrowser: React.FC = () => {
-    const { user } = useAuth();
+    const { user, profile } = useAuth();
     const { showToast } = useNotification();
     const [orgs, setOrgs] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -132,13 +133,32 @@ const OrgBrowser: React.FC = () => {
                 await addDoc(collection(db, 'follows'), {
                     followerId: user.uid,
                     followingId: orgId,
-                    createdAt: new Date()
+                    createdAt: serverTimestamp()
                 });
                 setFollowing(prev => new Set(prev).add(orgId));
                 showToast('Following', 'success');
-            }        } catch (error: any) {
+
+                // Send notification to the organization
+                try {
+                    const followerName = profile?.username || user.username || user.email?.split('@')[0] || 'A player';
+                    await NotificationService.create(
+                        orgId,
+                        'New Follower',
+                        `${followerName} started following your organization`,
+                        'info',
+                        `/user/${user.uid}`
+                    );
+                } catch (notifErr) {
+                    console.error('Failed to send follow notification:', notifErr);
+                }
+            }
+        } catch (error: any) {
             console.error('FollowToggleFailed:', error);
-            showToast('Action failed. Try again.', 'error');
+            if (error?.code === 'permission-denied') {
+                showToast('Permission denied. Please verify your email or sign in again.', 'error');
+            } else {
+                showToast('Action failed. Try again.', 'error');
+            }
         } finally {
             setTogglingId(null);
         }

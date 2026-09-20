@@ -161,8 +161,41 @@ const Wallet: React.FC = () => {
 
     const handleReportDispute = async () => {
         if (!selectedTxForDispute || !disputeReason.trim() || !user) return;
+        if (disputeReason.trim().length < 5) {
+            showToast('Please provide a reason with at least 5 characters', 'warning');
+            return;
+        }
         setIsSubmittingDispute(true);
         try {
+            const token = await auth.currentUser?.getIdToken();
+            const res = await fetch('/api/disputes', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    disputeType: 'payment',
+                    transactionId: selectedTxForDispute.id,
+                    refId: selectedTxForDispute.refId || selectedTxForDispute.id,
+                    amount: selectedTxForDispute.amount,
+                    type: selectedTxForDispute.type,
+                    reason: disputeReason.trim()
+                })
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                if (data.success) {
+                    showToast('Payment dispute reported successfully. Our support team will review your transaction.', 'success');
+                    setDisputeModalOpen(false);
+                    setDisputeReason('');
+                    setSelectedTxForDispute(null);
+                    return;
+                }
+            }
+
+            // Fallback to direct Firestore document write if server API is unavailable
             await addDoc(collection(db, 'disputes'), {
                 disputeType: 'payment',
                 transactionId: selectedTxForDispute.id,
@@ -186,6 +219,7 @@ const Wallet: React.FC = () => {
             setDisputeReason('');
             setSelectedTxForDispute(null);
         } catch (error: any) {
+            console.error("Error reporting dispute:", error);
             showToast(error.message || 'Failed to report payment dispute', 'error');
         } finally {
             setIsSubmittingDispute(false);

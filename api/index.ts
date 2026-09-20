@@ -9,6 +9,7 @@ import walletRoutes from "../server/routes/wallet.js";
 import disputesRoutes from "../server/routes/disputes.js";
 import healthRoutes from "../server/routes/health.js";
 import organizationRoutes from "../server/routes/organizations.js";
+import notificationsRoutes from "../server/routes/notifications.js";
 import { generateSitemapXml } from "../server/seo.js";
 
 const app = express();
@@ -64,6 +65,7 @@ app.use(walletRoutes);
 app.use(disputesRoutes);
 app.use(healthRoutes);
 app.use(organizationRoutes);
+app.use(notificationsRoutes);
 
 // Dynamic Sitemap for SEO
 app.get("/sitemap.xml", async (req, res) => {

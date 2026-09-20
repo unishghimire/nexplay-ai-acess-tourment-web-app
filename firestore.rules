@@ -201,6 +201,13 @@ service cloud.firestore {
     }
 
     // ═══════════════════════════════════════════════════════════════
+    // FCM DEVICE TOKENS — PWA Web Push notification delivery
+    // ═══════════════════════════════════════════════════════════════
+    match /users/{userId}/fcm_tokens/{tokenId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+    }
+
+    // ═══════════════════════════════════════════════════════════════
     // ORGANIZATIONS — public read, admin/org-panel write
     // ═══════════════════════════════════════════════════════════════
     match /organizations/{orgId} {

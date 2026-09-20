@@ -12,7 +12,7 @@ export const MobileBottomNav: React.FC = () => {
     const isGamesActive = pathname === '/games' || pathname.startsWith('/games/');
     const isDashboardActive = pathname === '/dashboard';
     const isNewsActive = pathname === '/news' || pathname.startsWith('/post/');
-    const isOrgsActive = pathname === '/organizations' || pathname.startsWith('/organization/');
+    const isOrgsActive = pathname === '/organizations' || pathname.startsWith('/organizations/') || pathname.startsWith('/organization/');
     const isProfileActive = user
         ? (pathname === '/profile' || pathname === '/wallet' || pathname === '/complete-profile')
         : (pathname === '/login' || pathname === '/register');

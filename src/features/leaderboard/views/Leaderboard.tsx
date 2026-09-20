@@ -64,7 +64,9 @@ const PodiumCard = ({ item, rank, type, navigate }: {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: rank * 0.1 }}
             onClick={() => {
-                navigate((isPlayer || isOrg) ? `/user/${itemId}` : `/team/${itemId}`);
+                if (isOrg) navigate(`/organizations/${itemId}`);
+                else if (isPlayer) navigate(`/user/${itemId}`);
+                else navigate(`/team/${itemId}`);
             }}
             className={`relative flex flex-col items-center p-4 sm:p-8 rounded-2xl sm:rounded-3xl border ${borderColor} bg-gradient-to-b ${bgColor} to-black ${shadowColor} shadow-2xl cursor-pointer group hover:border-brand-500/50 transition-colors duration-300 hover:-translate-y-2`}
         >
@@ -385,7 +387,9 @@ const Leaderboard: React.FC = () => {
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: index * 0.05 }}
                                     onClick={() => {
-                                        navigate((isPlayerView || isOrgView) ? `/user/${itemId}` : `/team/${itemId}`);
+                                        if (isOrgView) navigate(`/organizations/${itemId}`);
+                                        else if (isPlayerView) navigate(`/user/${itemId}`);
+                                        else navigate(`/team/${itemId}`);
                                     }}
                                     className={`flex items-center justify-between p-4 sm:p-6 rounded-2xl sm:rounded-3xl border transition cursor-pointer group ${isUser ? 'bg-brand-500/10 border-brand-500/50' : 'bg-card/50 border-gray-800 hover:border-gray-700 hover:bg-card'}`}
                                 >

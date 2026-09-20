@@ -138,8 +138,10 @@ const TeamDetails: React.FC = () => {
             if (user) {
                 try {
                     let invitesQ;
-                    if (user.uid === teamData.ownerId || profile?.role === 'admin') {
+                    if (profile?.role === 'admin') {
                         invitesQ = query(collection(db, 'team_invites'), where('teamId', '==', id), where('status', '==', 'pending'));
+                    } else if (user.uid === teamData.ownerId) {
+                        invitesQ = query(collection(db, 'team_invites'), where('teamId', '==', id), where('inviterId', '==', user.uid), where('status', '==', 'pending'));
                     } else {
                         invitesQ = query(collection(db, 'team_invites'), where('teamId', '==', id), where('inviteeId', '==', user.uid), where('status', '==', 'pending'));
                     }
@@ -433,7 +435,12 @@ const TeamDetails: React.FC = () => {
                     }));
                 }
             });
-            const invitesQ = query(collection(db, 'team_invites'), where('teamId', '==', team.id));
+            let invitesQ;
+            if (profile?.role === 'admin') {
+                invitesQ = query(collection(db, 'team_invites'), where('teamId', '==', team.id));
+            } else {
+                invitesQ = query(collection(db, 'team_invites'), where('teamId', '==', team.id), where('inviterId', '==', user.uid));
+            }
             const invitesSnap = await getDocs(invitesQ);
             invitesSnap.docs.forEach(invite => operations.push(batch => batch.delete(invite.ref)));
             const activityQ = query(collection(db, 'team_activity'), where('teamId', '==', team.id));

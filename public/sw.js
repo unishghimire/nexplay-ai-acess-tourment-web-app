@@ -84,3 +84,68 @@ self.addEventListener('fetch', (event) => {
       })
   );
 });
+
+// ═══════════════════════════════════════════════════════════════
+// PUSH NOTIFICATIONS: Background delivery to native mobile/desktop
+// ═══════════════════════════════════════════════════════════════
+self.addEventListener('push', (event) => {
+  let payload = {};
+  if (event.data) {
+    try {
+      payload = event.data.json();
+    } catch (e) {
+      payload = { title: 'NexPlay Esports', body: event.data.text() };
+    }
+  }
+
+  const notificationData = payload.notification || payload;
+  const title = notificationData.title || 'NexPlay Esports';
+  const body = notificationData.body || payload.message || 'You have a new esports notification!';
+  const icon = notificationData.icon || '/logo.png';
+  const badge = notificationData.badge || '/favicon-32x32.png';
+  const targetUrl = payload.data?.url || payload.url || payload.link || '/';
+
+  const options = {
+    body,
+    icon,
+    badge,
+    data: {
+      url: targetUrl,
+      timestamp: Date.now()
+    },
+    vibrate: [200, 100, 200, 100, 200],
+    tag: payload.tag || `nexplay-${Date.now()}`,
+    renotify: true,
+    actions: [
+      { action: 'open', title: 'View Details' }
+    ]
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(title, options)
+  );
+});
+
+// Handle notification tap / click to focus existing window or open target route
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = event.notification.data?.url || '/';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // If a window is already open, focus it and navigate
+      for (const client of clientList) {
+        if (client.url && 'focus' in client) {
+          if (targetUrl && targetUrl !== '/') {
+            client.navigate(targetUrl);
+          }
+          return client.focus();
+        }
+      }
+      // If no window is open, open a new window to the target URL
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
+    })
+  );
+});

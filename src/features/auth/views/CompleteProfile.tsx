@@ -25,7 +25,14 @@ const CompleteProfile: React.FC = () => {
         }
     }, [profile, navigate]);
 
-    if (!user || !profile) return null;
+    if (!user || !profile) {
+        return (
+            <div className="min-h-[60vh] flex flex-col items-center justify-center">
+                <div className="w-12 h-12 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                <p className="text-xs text-gray-500 font-black uppercase tracking-widest">Loading Profile...</p>
+            </div>
+        );
+    }
     if (profile?.inGameId && profile?.inGameName) return null;
 
     const handleSave = async (e: React.FormEvent) => {

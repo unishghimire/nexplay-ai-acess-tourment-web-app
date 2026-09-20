@@ -11,10 +11,11 @@ import Modal from '../../../shared/components/Modal';
 import { useInvisibleImage } from '../../../shared/hooks/useInvisibleImage';
 import { MediaCategory } from '../../../shared/services/mediaService';
 import { DEFAULT_AVATAR, NEXPLAY_LOGO, PRESET_AVATARS, PRESET_PLAYER_BANNERS } from '../../../shared/constants/constants';
-import { User, Mail, Phone, Shield, Trophy, Wallet as WalletIcon, Save, Info, Briefcase, Users, Hash, Clock, ArrowDown, ArrowUp, Copy, CheckCircle2, Image as ImageIcon, Settings as SettingsIcon, X } from 'lucide-react';
+import { User, Mail, Phone, Shield, Trophy, Wallet as WalletIcon, Save, Info, Briefcase, Users, Hash, Clock, ArrowDown, ArrowUp, Copy, CheckCircle2, Image as ImageIcon, Settings as SettingsIcon, X, BellRing, Smartphone } from 'lucide-react';
 import { Transaction } from '../../../shared/types/types';
 import { useSiteSettings } from '../../../shared/context/SiteSettingsContext';
 import { Seo } from '../../../shared/components/Seo';
+import { isPushSupported, getPushPermissionState, requestPushPermissionAndToken, unregisterPushToken, sendTestPushNotification } from '../../../shared/services/pushNotificationService';
 
 const Profile: React.FC = () => {
     const navigate = useNavigate();
@@ -50,6 +51,9 @@ const Profile: React.FC = () => {
     const [showSettingsModal, setShowSettingsModal] = useState(false);
     const [newEmail, setNewEmail] = useState('');
     const [isUpdatingEmail, setIsUpdatingEmail] = useState(false);
+    const [pushPermission, setPushPermission] = useState(getPushPermissionState());
+    const [isTogglingPush, setIsTogglingPush] = useState(false);
+    const [isSendingTestPush, setIsSendingTestPush] = useState(false);
     const { settings: siteSettings } = useSiteSettings();
 
     const { handlePaste, handleDrop, handleDragOver, processAndUpload } = useInvisibleImage({
@@ -62,9 +66,15 @@ const Profile: React.FC = () => {
         onUploadSuccess: async (url) => {
             if (!user) return;
             try {
-                await updateDoc(doc(db, 'users', user.uid), {
+                const batch = writeBatch(db);
+                batch.update(doc(db, 'users', user.uid), {
                     profilePicUrl: url
                 });
+                batch.set(doc(db, 'users_public', user.uid), {
+                    profilePicUrl: url,
+                    updatedAt: serverTimestamp()
+                }, { merge: true });
+                await batch.commit();
                 showToast('Profile picture updated!', 'success');
             } catch (err: any) {
                 showToast('Error updating profile picture', 'error');
@@ -289,12 +299,81 @@ const Profile: React.FC = () => {
         }
     };
 
+    const handleAvatarSelect = async (url: string) => {
+        if (!user) return;
+        try {
+            const batch = writeBatch(db);
+            batch.update(doc(db, 'users', user.uid), {
+                profilePicUrl: url
+            });
+            batch.set(doc(db, 'users_public', user.uid), {
+                profilePicUrl: url,
+                updatedAt: serverTimestamp()
+            }, { merge: true });
+            await batch.commit();
+            setShowPresetModal(false);
+            showToast('Avatar updated!', 'success');
+        } catch (error: any) {
+            console.error("Error updating avatar:", error);
+            showToast('Failed to update avatar', 'error');
+        }
+    };
+
+    const handleTogglePush = async () => {
+        if (!user) return;
+        setIsTogglingPush(true);
+        try {
+            if (pushPermission === 'granted') {
+                await unregisterPushToken(user.uid);
+                setPushPermission('default');
+                showToast('Push notifications disabled on this device.', 'info');
+            } else {
+                const res = await requestPushPermissionAndToken(user.uid);
+                if (res.success) {
+                    setPushPermission('granted');
+                    showToast('Push notifications enabled! You will receive live match and event alerts.', 'success');
+                } else if (res.reason === 'denied') {
+                    setPushPermission('denied');
+                    showToast('Notifications are blocked in browser settings.', 'warning');
+                } else {
+                    showToast('Could not enable push notifications.', 'error');
+                }
+            }
+        } catch (e: any) {
+            showToast('Error updating notification preferences', 'error');
+        } finally {
+            setIsTogglingPush(false);
+        }
+    };
+
+    const handleTestPush = async () => {
+        setIsSendingTestPush(true);
+        try {
+            const res = await sendTestPushNotification();
+            if (res.success) {
+                showToast('Test push notification sent! Check your device.', 'success');
+            } else {
+                showToast(res.message, 'error');
+            }
+        } catch (e: any) {
+            showToast('Failed to send test push notification', 'error');
+        } finally {
+            setIsSendingTestPush(false);
+        }
+    };
+
     const handleBannerSelect = async (url: string) => {
         if (!user) return;
         try {
-            await updateDoc(doc(db, 'users', user.uid), {
+            const batch = writeBatch(db);
+            batch.update(doc(db, 'users', user.uid), {
                 bannerUrl: url
             });
+            batch.set(doc(db, 'users_public', user.uid), {
+                bannerUrl: url,
+                updatedAt: serverTimestamp()
+            }, { merge: true });
+            await batch.commit();
             setShowBannerPresetModal(false);
             showToast('Banner updated!', 'success');
         } catch (error: any) {
@@ -898,6 +977,71 @@ const Profile: React.FC = () => {
                         </div>
                     </div>
 
+                    {/* Device Push Notifications (PWA Web Push) */}
+                    <div className="pt-8 border-t border-gray-800">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                                <BellRing className="text-brand-500 w-5 h-5" />
+                                <h3 className="font-black text-white uppercase tracking-widest text-sm sm:text-base">Device Push Notifications</h3>
+                            </div>
+                            <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${
+                                pushPermission === 'granted'
+                                    ? 'bg-emerald-950/60 border-emerald-500/50 text-emerald-400'
+                                    : pushPermission === 'denied'
+                                    ? 'bg-red-950/60 border-red-500/50 text-red-400'
+                                    : 'bg-purple-950/60 border-purple-500/50 text-purple-400'
+                            }`}>
+                                {pushPermission === 'granted' ? 'Active' : pushPermission === 'denied' ? 'Blocked' : 'Inactive'}
+                            </span>
+                        </div>
+                        <div className="bg-card/50 p-5 rounded-2xl border border-gray-800 space-y-4">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <div className="space-y-1">
+                                    <p className="text-xs text-white font-bold flex items-center gap-2">
+                                        <Smartphone className="w-4 h-4 text-brand-400" />
+                                        Native Mobile & Desktop Alerts (PWA)
+                                    </p>
+                                    <p className="text-xs text-gray-400 leading-relaxed max-w-xl">
+                                        Receive live match room credentials, tournament schedules, scrim announcements, and team invitations directly on your phone or desktop screen.
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-2 shrink-0">
+                                    {pushPermission === 'granted' && (
+                                        <button
+                                            type="button"
+                                            onClick={handleTestPush}
+                                            disabled={isSendingTestPush}
+                                            className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 transition flex items-center gap-1.5"
+                                        >
+                                            {isSendingTestPush ? 'Sending...' : 'Test Alert'}
+                                        </button>
+                                    )}
+                                    <button
+                                        type="button"
+                                        onClick={handleTogglePush}
+                                        disabled={isTogglingPush || !isPushSupported()}
+                                        className={`px-4 py-2 text-xs font-black uppercase tracking-widest rounded-xl transition ${
+                                            pushPermission === 'granted'
+                                                ? 'bg-red-900/30 hover:bg-red-900/50 text-red-300 border border-red-500/30'
+                                                : 'bg-brand-600 hover:bg-brand-500 text-white shadow-lg shadow-brand-600/20'
+                                        }`}
+                                    >
+                                        {isTogglingPush
+                                            ? 'Updating...'
+                                            : pushPermission === 'granted'
+                                            ? 'Disable'
+                                            : 'Enable Alerts'}
+                                    </button>
+                                </div>
+                            </div>
+                            {pushPermission === 'denied' && (
+                                <p className="text-[11px] text-amber-400 bg-amber-950/40 border border-amber-500/30 p-2.5 rounded-xl font-medium">
+                                    Notifications are blocked in your browser. Please tap the lock/info icon in your browser URL bar to allow notifications for NexPlay.
+                                </p>
+                            )}
+                        </div>
+                    </div>
+
                     {/* Organizer Application */}
                     {profile.role === 'player' && (profile.orgStatus === 'pending' || profile.orgStatus === 'rejected' || !profile.orgStatus) && (siteSettings?.isOrgFormOpen ?? true) && (
                         <div className="pt-8 border-t border-gray-800">
@@ -1007,6 +1151,23 @@ const Profile: React.FC = () => {
                             key={index}
                             onClick={() => handleBannerSelect(url)}
                             className="relative group rounded-xl overflow-hidden border-2 border-transparent hover:border-brand-500 transition-colors aspect-video"
+                        >
+                            <img src={url || undefined} alt={`Avatar preset ${index + 1}`} className="w-full h-full object-cover" loading="lazy" />
+                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <span className="text-xs font-black uppercase tracking-widest text-white bg-brand-500 px-3 py-1 rounded-full">Select</span>
+                            </div>
+                        </button>
+                    ))}
+                </div>
+            </Modal>
+
+            <Modal isOpen={showPresetModal} onClose={() => setShowPresetModal(false)} title="Choose Avatar Preset">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-h-[60vh] overflow-y-auto p-2 custom-scrollbar">
+                    {PRESET_AVATARS.map((url, index) => (
+                        <button
+                            key={index}
+                            onClick={() => handleAvatarSelect(url)}
+                            className="relative group rounded-2xl overflow-hidden border-2 border-transparent hover:border-brand-500 transition-colors aspect-square bg-slate-900"
                         >
                             <img src={url || undefined} alt={`Avatar preset ${index + 1}`} className="w-full h-full object-cover" loading="lazy" />
                             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">

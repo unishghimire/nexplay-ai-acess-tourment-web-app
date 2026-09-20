@@ -1,19 +1,54 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell } from 'lucide-react';
+import { Bell, BellRing } from 'lucide-react';
 import { Notification } from '../../types/types';
 import { useNotifications } from '../../hooks/useNotifications';
 import { useClickOutside } from '../../hooks/useClickOutside';
+import { useAuth } from '../../context/AuthContext';
+import { useNotification } from '../../context/NotificationContext';
+import { isPushSupported, getPushPermissionState, requestPushPermissionAndToken } from '../../services/pushNotificationService';
 
 /**
  * Notification bell + dropdown panel. Self-contained: manages its own
  * open/close state, subscriptions, and click-outside dismissal.
  */
 const NotificationDropdown: React.FC = () => {
+    const { user } = useAuth();
+    const { showToast } = useNotification();
     const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
     const [isOpen, setIsOpen] = useState(false);
+    const [pushPermission, setPushPermission] = useState(getPushPermissionState());
+    const [isEnablingPush, setIsEnablingPush] = useState(false);
     const navigate = useNavigate();
     const ref = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        setPushPermission(getPushPermissionState());
+    }, [isOpen]);
+
+    const handleEnablePush = async () => {
+        if (!user) {
+            showToast('Please sign in to enable push notifications', 'warning');
+            return;
+        }
+        setIsEnablingPush(true);
+        try {
+            const result = await requestPushPermissionAndToken(user.uid);
+            if (result.success) {
+                setPushPermission('granted');
+                showToast('Push notifications enabled! You will receive live alerts.', 'success');
+            } else if (result.reason === 'denied') {
+                setPushPermission('denied');
+                showToast('Notifications are blocked in your browser settings.', 'warning');
+            } else {
+                showToast('Could not enable push notifications. Try again later.', 'error');
+            }
+        } catch (err: any) {
+            showToast('Failed to enable push notifications', 'error');
+        } finally {
+            setIsEnablingPush(false);
+        }
+    };
 
     useClickOutside(ref, () => { if (isOpen) setIsOpen(false); });
 
@@ -69,6 +104,23 @@ const NotificationDropdown: React.FC = () => {
                             Mark all as read
                         </button>
                     </div>
+
+                    {user && isPushSupported() && pushPermission === 'default' && (
+                        <div className="bg-gradient-to-r from-purple-950/70 to-indigo-950/70 border-b border-purple-500/30 p-3 flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 min-w-0">
+                                <BellRing className="w-4 h-4 text-purple-400 shrink-0 animate-pulse" />
+                                <span className="text-[11px] text-slate-300 font-semibold leading-tight truncate">Enable mobile push alerts for rooms & invites</span>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleEnablePush}
+                                disabled={isEnablingPush}
+                                className="bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1.5 rounded-lg shrink-0 transition"
+                            >
+                                {isEnablingPush ? '...' : 'Enable'}
+                            </button>
+                        </div>
+                    )}
                     <div className="max-h-[320px] overflow-y-auto custom-scrollbar">
                         {notifications.length > 0 ? (
                             notifications.map(n => (

@@ -60,18 +60,34 @@ const Results: React.FC = () => {
             setLoading(true);
             setFetchError(null);
             try {
+                const tourQuery = query(
+                    collection(db, 'tournaments'),
+                    where('status', '==', 'completed'),
+                    orderBy('startTime', 'desc'),
+                    limit(PAGE_SIZE)
+                );
+
+                const fetchScrims = async () => {
+                    try {
+                        return await getDocs(query(
+                            collection(db, 'scrims'),
+                            where('status', '==', 'completed'),
+                            orderBy('startTime', 'desc'),
+                            limit(PAGE_SIZE)
+                        ));
+                    } catch (e) {
+                        console.warn("Scrims ordered query failed, falling back to unordered:", e);
+                        return await getDocs(query(
+                            collection(db, 'scrims'),
+                            where('status', '==', 'completed'),
+                            limit(PAGE_SIZE)
+                        ));
+                    }
+                };
+
                 const [resultsSnap, scrimsSnap] = await Promise.all([
-                    getDocs(query(
-                        collection(db, 'tournaments'),
-                        where('status', '==', 'completed'),
-                        orderBy('startTime', 'desc'),
-                        limit(PAGE_SIZE)
-                    )),
-                    getDocs(query(
-                        collection(db, 'scrims'),
-                        where('status', '==', 'completed'),
-                        limit(PAGE_SIZE)
-                    ))
+                    getDocs(tourQuery),
+                    fetchScrims()
                 ]);
 
                 setTourLastDoc(resultsSnap.docs.length > 0 ? resultsSnap.docs[resultsSnap.docs.length - 1] : null);
@@ -124,12 +140,26 @@ const Results: React.FC = () => {
             }
 
             if (scrimLastDoc) {
-                promises.push(getDocs(query(
-                    collection(db, 'scrims'),
-                    where('status', '==', 'completed'),
-                    startAfter(scrimLastDoc),
-                    limit(PAGE_SIZE)
-                )));
+                const fetchMoreScrims = async () => {
+                    try {
+                        return await getDocs(query(
+                            collection(db, 'scrims'),
+                            where('status', '==', 'completed'),
+                            orderBy('startTime', 'desc'),
+                            startAfter(scrimLastDoc),
+                            limit(PAGE_SIZE)
+                        ));
+                    } catch (e) {
+                        console.warn("Scrims more ordered query failed, falling back to unordered:", e);
+                        return await getDocs(query(
+                            collection(db, 'scrims'),
+                            where('status', '==', 'completed'),
+                            startAfter(scrimLastDoc),
+                            limit(PAGE_SIZE)
+                        ));
+                    }
+                };
+                promises.push(fetchMoreScrims());
             } else {
                 promises.push(Promise.resolve({ docs: [] }));
             }

@@ -34,6 +34,7 @@ import {
 import { db } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
+import { NotificationService } from '../../../shared/services/NotificationService';
 import Seo from '../../../shared/components/Seo';
 import TournamentCard from '../../tournaments/components/TournamentCard';
 import { 
@@ -101,7 +102,7 @@ type TabType = 'overview' | 'running' | 'upcoming' | 'completed' | 'stats';
 const OrganizationProfile: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { user, profile } = useAuth();
     const { showToast } = useNotification();
 
     const [organization, setOrganization] = useState<PublicOrganization | null>(null);
@@ -207,19 +208,21 @@ const OrganizationProfile: React.FC = () => {
                 showToast(`Now following ${organization?.name || 'organization'}`, 'success');
 
                 // Send notification to organizer
-                await addDoc(collection(db, 'notifications'), {
-                    userId: id,
-                    title: 'New Follower',
-                    message: `${user.username || user.email?.split('@')[0] || 'A player'} is now following your organization`,
-                    type: 'info',
-                    read: false,
-                    link: `/organizations/${id}`,
-                    createdAt: serverTimestamp()
-                });
+                await NotificationService.create(
+                    id,
+                    'New Follower',
+                    `${profile?.username || user.username || user.email?.split('@')[0] || 'A player'} is now following your organization`,
+                    'info',
+                    `/organizations/${id}`
+                );
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error toggling follow:', error);
-            showToast('Could not update follow status. Try again.', 'error');
+            if (error?.code === 'permission-denied') {
+                showToast('Please verify your email address to follow organizations.', 'warning');
+            } else {
+                showToast('Could not update follow status. Try again.', 'error');
+            }
         } finally {
             setFollowLoading(false);
         }
@@ -305,6 +308,15 @@ const OrganizationProfile: React.FC = () => {
     const xp = organization.xp || 0;
     const progress = getLevelProgress(xp);
     const xpNext = getXPForNextLevel(level);
+
+    // Sanitize all external links to prevent XSS / malicious schemes
+    const sanitizedDiscord = organization.socialLinks?.discord ? sanitizeExternalUrl(organization.socialLinks.discord) : null;
+    const sanitizedYoutube = organization.socialLinks?.youtube ? sanitizeExternalUrl(organization.socialLinks.youtube) : null;
+    const sanitizedTwitter = organization.socialLinks?.twitter ? sanitizeExternalUrl(organization.socialLinks.twitter) : null;
+    const sanitizedFacebook = organization.socialLinks?.facebook ? sanitizeExternalUrl(organization.socialLinks.facebook) : null;
+    const sanitizedInstagram = organization.socialLinks?.instagram ? sanitizeExternalUrl(organization.socialLinks.instagram) : null;
+    const sanitizedWebsite = organization.website ? sanitizeExternalUrl(organization.website) : null;
+    const hasSocialLinks = Boolean(sanitizedDiscord || sanitizedYoutube || sanitizedTwitter || sanitizedFacebook || sanitizedInstagram || sanitizedWebsite);
 
     return (
         <>
@@ -582,15 +594,15 @@ const OrganizationProfile: React.FC = () => {
                                 </div>
 
                                 {/* Social Links Section */}
-                                {organization.socialLinks && Object.values(organization.socialLinks).some(Boolean) && (
+                                {hasSocialLinks && (
                                     <div className="p-6 rounded-2xl bg-[#0c1322] border border-slate-800/90 shadow-sm space-y-3">
                                         <h2 className="text-sm font-black uppercase tracking-widest text-white flex items-center gap-2">
                                             <Globe className="w-4 h-4 text-purple-400" /> Connect & Follow
                                         </h2>
                                         <div className="flex flex-col gap-2 pt-1">
-                                            {organization.socialLinks.discord && (
+                                            {sanitizedDiscord && (
                                                 <a
-                                                    href={organization.socialLinks.discord}
+                                                    href={sanitizedDiscord}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="flex items-center justify-between p-2.5 rounded-xl bg-[#5865F2]/10 hover:bg-[#5865F2]/20 border border-[#5865F2]/30 text-[#8ea1e1] hover:text-white text-xs font-bold transition"
@@ -602,9 +614,9 @@ const OrganizationProfile: React.FC = () => {
                                                 </a>
                                             )}
 
-                                            {organization.socialLinks.youtube && (
+                                            {sanitizedYoutube && (
                                                 <a
-                                                    href={organization.socialLinks.youtube}
+                                                    href={sanitizedYoutube}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="flex items-center justify-between p-2.5 rounded-xl bg-[#FF0000]/10 hover:bg-[#FF0000]/20 border border-[#FF0000]/30 text-[#ff8080] hover:text-white text-xs font-bold transition"
@@ -616,9 +628,9 @@ const OrganizationProfile: React.FC = () => {
                                                 </a>
                                             )}
 
-                                            {organization.socialLinks.twitter && (
+                                            {sanitizedTwitter && (
                                                 <a
-                                                    href={organization.socialLinks.twitter}
+                                                    href={sanitizedTwitter}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="flex items-center justify-between p-2.5 rounded-xl bg-slate-800/40 hover:bg-slate-800/70 border border-slate-700/60 text-slate-300 hover:text-white text-xs font-bold transition"
@@ -630,9 +642,9 @@ const OrganizationProfile: React.FC = () => {
                                                 </a>
                                             )}
 
-                                            {organization.socialLinks.facebook && (
+                                            {sanitizedFacebook && (
                                                 <a
-                                                    href={organization.socialLinks.facebook}
+                                                    href={sanitizedFacebook}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="flex items-center justify-between p-2.5 rounded-xl bg-[#1877F2]/10 hover:bg-[#1877F2]/20 border border-[#1877F2]/30 text-[#82b4ff] hover:text-white text-xs font-bold transition"
@@ -644,9 +656,9 @@ const OrganizationProfile: React.FC = () => {
                                                 </a>
                                             )}
 
-                                            {organization.socialLinks.instagram && (
+                                            {sanitizedInstagram && (
                                                 <a
-                                                    href={organization.socialLinks.instagram}
+                                                    href={sanitizedInstagram}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="flex items-center justify-between p-2.5 rounded-xl bg-[#E4405F]/10 hover:bg-[#E4405F]/20 border border-[#E4405F]/30 text-[#f78ca0] hover:text-white text-xs font-bold transition"
@@ -658,9 +670,9 @@ const OrganizationProfile: React.FC = () => {
                                                 </a>
                                             )}
 
-                                            {organization.website && (
+                                            {sanitizedWebsite && (
                                                 <a
-                                                    href={organization.website}
+                                                    href={sanitizedWebsite}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="flex items-center justify-between p-2.5 rounded-xl bg-purple-950/20 hover:bg-purple-900/30 border border-purple-500/30 text-purple-300 hover:text-white text-xs font-bold transition"
