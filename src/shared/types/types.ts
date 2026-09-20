@@ -62,6 +62,52 @@ export interface UserProfile {
     resultPresets?: { id: string; name: string; config: ResultTemplateConfig }[];
 }
 
+export interface OrganizationSocialLinks {
+    discord?: string;
+    youtube?: string;
+    facebook?: string;
+    instagram?: string;
+    tiktok?: string;
+    twitter?: string;
+    website?: string;
+}
+
+export interface OrganizationPublicStats {
+    totalTournaments: number;
+    runningTournaments: number;
+    upcomingTournaments: number;
+    completedTournaments: number;
+    totalPrizePool: number;
+    totalSlots: number;
+    filledSlots: number;
+    publishedWinners: number;
+}
+
+export interface PublicOrganization {
+    id: string;
+    name: string;
+    slug?: string;
+    username?: string;
+    logoUrl?: string;
+    bannerUrl?: string;
+    description?: string;
+    tagline?: string;
+    country?: string;
+    region?: string;
+    website?: string;
+    socialLinks?: OrganizationSocialLinks;
+    isVerified?: boolean;
+    isPublic?: boolean;
+    role?: 'organizer' | 'admin';
+    isPowerOrganizer?: boolean;
+    level?: number;
+    xp?: number;
+    createdAt?: Timestamp | any;
+    establishedDate?: string;
+    followersCount?: number;
+    publicStats?: OrganizationPublicStats;
+}
+
 export interface PrizeDistribution {
     id: string; // Unique ID for drag-and-drop
     rank: number;

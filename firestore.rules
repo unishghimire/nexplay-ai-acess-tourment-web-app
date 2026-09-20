@@ -201,6 +201,15 @@ service cloud.firestore {
     }
 
     // ═══════════════════════════════════════════════════════════════
+    // ORGANIZATIONS — public read, admin/org-panel write
+    // ═══════════════════════════════════════════════════════════════
+    match /organizations/{orgId} {
+      allow get:  if isValidId(orgId);
+      allow list: if true;
+      allow write: if isAdmin();
+    }
+
+    // ═══════════════════════════════════════════════════════════════
     // TOURNAMENTS — organizer create/manage, public read
     // ═══════════════════════════════════════════════════════════════
     match /tournaments/{tournamentId} {

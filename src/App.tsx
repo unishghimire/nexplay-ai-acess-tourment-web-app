@@ -51,6 +51,7 @@ const Terms = lazyWithRetry(() => import('./features/home/views/Terms'));
 const Teams = lazyWithRetry(() => import('./features/teams/views/Teams'));
 const TeamDetails = lazyWithRetry(() => import('./features/teams/views/TeamDetails'));
 const OrgBrowser = lazyWithRetry(() => import('./features/browser/views/OrgBrowser'));
+const OrganizationProfile = lazyWithRetry(() => import('./features/organizations/views/OrganizationProfile'));
 const PublicProfile = lazyWithRetry(() => import('./features/profile/views/PublicProfile'));
 const CompleteProfile = lazyWithRetry(() => import('./features/auth/views/CompleteProfile'));
 const PostDetails = lazyWithRetry(() => import('./features/browser/views/PostDetails'));
@@ -157,6 +158,7 @@ const AppContent = () => {
               <Route path="/user/:id" element={<PublicProfile />} />
               <Route path="/profile/:id" element={<ProfileRedirect />} />
               <Route path="/organization/:id" element={<OrgRedirect />} />
+              <Route path="/organizations/:id" element={<OrganizationProfile />} />
               <Route path="/organizations" element={<OrgBrowser />} />
               <Route path="/news" element={<News />} />
               <Route path="/teams" element={<Teams />} />
@@ -192,10 +194,10 @@ function ProfileRedirect() {
     return <Navigate to={`/user/${id}`} replace />;
 }
 
-// Redirect /organization/:id to /user/:id for SEO canonical consistency
+// Redirect legacy /organization/:id to /organizations/:id for SEO canonical consistency
 function OrgRedirect() {
     const { id } = useParams<{ id: string }>();
-    return <Navigate to={`/user/${id}`} replace />;
+    return <Navigate to={`/organizations/${id}`} replace />;
 }
 
 

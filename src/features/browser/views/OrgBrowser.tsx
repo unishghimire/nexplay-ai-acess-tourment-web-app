@@ -303,7 +303,7 @@ const OrgBrowser: React.FC = () => {
 
                                             <div className="flex items-center gap-2 pt-2 border-t border-slate-800/60">
                                                 <Link
-                                                    to={`/user/${org.uid}`}
+                                                    to={`/organizations/${org.uid}`}
                                                     className="flex-grow flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#243354] to-[#1f2c49] hover:from-purple-600 hover:to-indigo-600 text-white text-xs font-bold tracking-wider uppercase transition-all shadow-sm border border-slate-700/40 hover:border-purple-400"
                                                 >
                                                     PROFILE <ChevronRight className="w-3.5 h-3.5" />
@@ -375,7 +375,7 @@ const OrgBrowser: React.FC = () => {
 
                                     <div className="flex items-center gap-2 shrink-0">
                                         <Link
-                                            to={`/user/${org.uid}`}
+                                            to={`/organizations/${org.uid}`}
                                             className="flex items-center gap-1 py-2 px-3.5 rounded-xl bg-[#243354] hover:bg-[#2c3e66] text-white text-xs font-bold tracking-wider uppercase transition-colors"
                                         >
                                             VIEW <ChevronRight className="w-3 h-3" />

@@ -48,7 +48,9 @@ const Breadcrumbs: React.FC = () => {
         },
         ...pathnames.map((value, index) => {
             const to = `/${pathnames.slice(0, index + 1).join('/')}`;
-            const label = breadcrumbNameMap[value] || value.replace(/-/g, ' ');
+            const label = (index === 1 && (pathnames[0] === 'organizations' || pathnames[0] === 'organization'))
+                ? 'Profile'
+                : (breadcrumbNameMap[value] || value.replace(/-/g, ' '));
             return {
                 '@type': 'ListItem',
                 position: index + 2,
