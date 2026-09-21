@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { db, auth } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
@@ -32,11 +32,22 @@ import {
   MapPin,
   ExternalLink,
   Target,
+  Info,
+  CheckCircle2,
 } from 'lucide-react';
+
+const SCRIM_TABS = [
+  { id: 'details', label: 'Details', icon: Info },
+  { id: 'results', label: 'Results', icon: Trophy },
+  { id: 'slot', label: 'Slot', icon: Users },
+] as const;
+
+type ScrimTab = (typeof SCRIM_TABS)[number]['id'];
 
 export default function ScrimDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user, profile, refreshProfile } = useAuth();
   const { showToast } = useNotification();
 
@@ -50,6 +61,24 @@ export default function ScrimDetails() {
 
   const [roomCreds, setRoomCreds] = useState<RoomCredentials | null>(null);
   const [copiedField, setCopiedField] = useState<'id' | 'pass' | null>(null);
+
+  // Tab navigation derived from URL search param with fallback to 'details'
+  const activeTab: ScrimTab = useMemo(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam === 'results' || tabParam === 'slot') return tabParam;
+    return 'details';
+  }, [searchParams]);
+
+  const handleTabChange = (newTab: ScrimTab) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.set('tab', newTab);
+        return next;
+      },
+      { replace: false }
+    );
+  };
 
   const isPerKill = Boolean(
     scrim?.tournamentMode === 'PER_KILL_REWARD' ||
@@ -223,14 +252,14 @@ export default function ScrimDetails() {
       : 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=1600&q=80');
 
   return (
-    <div className="animate-fade-in max-w-7xl mx-auto p-4 sm:p-6 md:p-8 space-y-8">
+    <div className="animate-fade-in max-w-7xl mx-auto p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8 pb-28 sm:pb-32">
       <Seo
         title={`${scrim.title} | Daily Esports Scrim Nepal`}
         description={`Join ${scrim.title} practice scrim on NexPlay. Map: ${scrim.map || 'Bermuda'}. Format: ${format}. Entry: ${entryFee === 0 ? 'FREE' : 'Rs. ' + entryFee}.`}
         canonicalPath={`/scrims/${scrim.id}`}
       />
 
-      {/* Hero Banner Header */}
+      {/* Hero Banner Header (Stable across all tabs) */}
       <div className="relative rounded-3xl overflow-hidden border border-gray-800 bg-surface/30 shadow-2xl">
         <div className="h-64 sm:h-80 w-full relative">
           <img
@@ -355,93 +384,233 @@ export default function ScrimDetails() {
         </div>
       </div>
 
-      {/* Room Credentials Box (For Joined Participants) */}
-      {isJoined && (
-        <div className="bg-gradient-to-r from-brand-950/40 via-dark-900 to-dark-900 border-2 border-brand-500/40 rounded-3xl p-6 shadow-xl">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-800 pb-4 mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-brand-500/20 border border-brand-500/40 flex items-center justify-center text-brand-400">
-                <Key className="w-5 h-5" />
+      {/* Mini-Tab Navigation Bar */}
+      <div
+        role="tablist"
+        aria-label="Scrim Navigation Tabs"
+        className="grid grid-cols-3 gap-1.5 sm:gap-3 p-1.5 sm:p-2 bg-dark-900/90 border border-gray-800 rounded-2xl backdrop-blur-xl sticky top-16 sm:top-20 z-20 shadow-xl"
+      >
+        {SCRIM_TABS.map((tab) => {
+          const isActive = activeTab === tab.id;
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              id={`tab-${tab.id}`}
+              role="tab"
+              type="button"
+              aria-selected={isActive}
+              aria-controls={`tabpanel-${tab.id}`}
+              onClick={() => handleTabChange(tab.id)}
+              className={`flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 sm:py-3 px-2 sm:px-4 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wider transition-all duration-200 ${
+                isActive
+                  ? 'bg-brand-500 text-black shadow-lg shadow-brand-500/25 border border-brand-400'
+                  : 'text-gray-400 hover:text-white hover:bg-surface/60 border border-transparent'
+              }`}
+            >
+              <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-black' : 'text-brand-400'}`} />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* TAB 1: DETAILS */}
+      {activeTab === 'details' && (
+        <div
+          role="tabpanel"
+          id="tabpanel-details"
+          aria-labelledby="tab-details"
+          className="space-y-6 animate-fade-in"
+        >
+          {/* Room Credentials Box (For Joined Participants) */}
+          {isJoined && (
+            <div className="bg-gradient-to-r from-brand-950/40 via-dark-900 to-dark-900 border-2 border-brand-500/40 rounded-3xl p-6 shadow-xl">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-800 pb-4 mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-brand-500/20 border border-brand-500/40 flex items-center justify-center text-brand-400">
+                    <Key className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-black text-white uppercase tracking-wider">
+                      Custom Match Room Credentials
+                    </h3>
+                    <p className="text-xs text-gray-400">
+                      {mySlotNumber ? `You are assigned to Slot #${mySlotNumber}. ` : ''}
+                      Join the custom room and occupy your designated slot.
+                    </p>
+                  </div>
+                </div>
+
+                {scrim.ytLink && (
+                  <a
+                    href={scrim.ytLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-3.5 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 text-xs font-bold flex items-center gap-1.5 transition-colors"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>Watch Live Stream</span>
+                  </a>
+                )}
               </div>
-              <div>
+
+              {roomCreds?.roomId ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="bg-surface/60 border border-gray-800 rounded-2xl p-4 flex items-center justify-between">
+                    <div>
+                      <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        Room ID
+                      </div>
+                      <div className="text-xl font-mono font-black text-white mt-1">
+                        {roomCreds.roomId}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleCopy(roomCreds.roomId!, 'id')}
+                      className="p-2.5 rounded-xl bg-surface hover:bg-surface-hover text-gray-300 hover:text-white transition-colors"
+                      title="Copy Room ID"
+                      aria-label="Copy Room ID"
+                    >
+                      {copiedField === 'id' ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                    </button>
+                  </div>
+
+                  <div className="bg-surface/60 border border-gray-800 rounded-2xl p-4 flex items-center justify-between">
+                    <div>
+                      <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        Password
+                      </div>
+                      <div className="text-xl font-mono font-black text-white mt-1">
+                        {roomCreds.roomPass || 'None'}
+                      </div>
+                    </div>
+                    {roomCreds.roomPass && (
+                      <button
+                        onClick={() => handleCopy(roomCreds.roomPass!, 'pass')}
+                        className="p-2.5 rounded-xl bg-surface hover:bg-surface-hover text-gray-300 hover:text-white transition-colors"
+                        title="Copy Password"
+                        aria-label="Copy Password"
+                      >
+                        {copiedField === 'pass' ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-surface/30 border border-dashed border-gray-800 rounded-2xl p-6 text-center text-gray-400 text-xs font-semibold">
+                  <Clock className="w-5 h-5 mx-auto mb-2 text-brand-400 animate-pulse" />
+                  Room credentials will appear here 10-15 minutes before the match start time.
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Scrim Information & Match Specs */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* General Match Specifications */}
+            <div className="bg-surface/30 border border-gray-800 rounded-3xl p-6 shadow-xl space-y-4">
+              <div className="flex items-center gap-2 border-b border-gray-800 pb-3">
+                <Gamepad2 className="w-5 h-5 text-brand-400" />
                 <h3 className="text-base font-black text-white uppercase tracking-wider">
-                  Custom Match Room Credentials
+                  Match Specifications
                 </h3>
-                <p className="text-xs text-gray-400">
-                  {mySlotNumber ? `You are assigned to Slot #${mySlotNumber}. ` : ''}
-                  Join the custom room and occupy your designated slot.
-                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 text-xs">
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 block">Game</span>
+                  <span className="font-bold text-white text-sm">{formatGameName(scrim.game)}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 block">Format</span>
+                  <span className="font-bold text-white text-sm">{format}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 block">Map</span>
+                  <span className="font-bold text-white text-sm">{scrim.map || 'Bermuda'}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 block">Lobby Capacity</span>
+                  <span className="font-bold text-brand-400 font-mono text-sm">{totalSlots} Slots</span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 block">Match Time</span>
+                  <span className="font-bold text-gray-300 text-sm">{formatDate(scrim.startTime)}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 block">Status</span>
+                  <span className="font-bold text-emerald-400 uppercase text-sm">{scrim.status}</span>
+                </div>
               </div>
             </div>
 
-            {scrim.ytLink && (
-              <a
-                href={scrim.ytLink}
-                target="_blank"
-                rel="noreferrer"
-                className="px-3.5 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 text-xs font-bold flex items-center gap-1.5 transition-colors"
-              >
-                <ExternalLink className="w-3.5 h-3.5" />
-                <span>Watch Live Stream</span>
-              </a>
-            )}
-          </div>
-
-          {roomCreds?.roomId ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="bg-surface/60 border border-gray-800 rounded-2xl p-4 flex items-center justify-between">
-                <div>
-                  <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                    Room ID
-                  </div>
-                  <div className="text-xl font-mono font-black text-white mt-1">
-                    {roomCreds.roomId}
-                  </div>
-                </div>
-                <button
-                  onClick={() => handleCopy(roomCreds.roomId!, 'id')}
-                  className="p-2.5 rounded-xl bg-surface hover:bg-surface-hover text-gray-300 hover:text-white transition-colors"
-                  title="Copy Room ID"
-                >
-                  {copiedField === 'id' ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                </button>
+            {/* Entry Fee & Rewards Card */}
+            <div className="bg-surface/30 border border-gray-800 rounded-3xl p-6 shadow-xl space-y-4">
+              <div className="flex items-center gap-2 border-b border-gray-800 pb-3">
+                <Trophy className="w-5 h-5 text-amber-400" />
+                <h3 className="text-base font-black text-white uppercase tracking-wider">
+                  Entry & Rewards
+                </h3>
               </div>
 
-              <div className="bg-surface/60 border border-gray-800 rounded-2xl p-4 flex items-center justify-between">
+              <div className="grid grid-cols-2 gap-4 text-xs">
                 <div>
-                  <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                    Password
-                  </div>
-                  <div className="text-xl font-mono font-black text-white mt-1">
-                    {roomCreds.roomPass || 'None'}
-                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 block">Entry Fee</span>
+                  <span className="font-bold text-white text-sm">
+                    {entryFee === 0 ? 'FREE' : formatCurrency(entryFee)}
+                  </span>
                 </div>
-                {roomCreds.roomPass && (
-                  <button
-                    onClick={() => handleCopy(roomCreds.roomPass!, 'pass')}
-                    className="p-2.5 rounded-xl bg-surface hover:bg-surface-hover text-gray-300 hover:text-white transition-colors"
-                    title="Copy Password"
-                  >
-                    {copiedField === 'pass' ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                  </button>
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 block">
+                    {isPerKill ? 'Per-Kill Reward' : 'Prize Pool'}
+                  </span>
+                  <span className="font-bold text-amber-400 text-sm">
+                    {isPerKill
+                      ? `${formatCurrency(scrim?.rewardPerKill || scrim?.rewardConfig?.rewardPerKill || 10)} / Kill`
+                      : (prizePool === 0 ? 'Practice Match' : formatCurrency(prizePool))}
+                  </span>
+                </div>
+                {isPerKill && (
+                  <div className="col-span-2 bg-brand-500/10 border border-brand-500/20 rounded-xl p-3 text-[11px] text-brand-300">
+                    ⚡ <strong>Per-Kill Bounty:</strong> Earn rewards for every verified kill confirmed by match referees. Payouts are credited directly to your NexPlay wallet upon finalization.
+                  </div>
+                )}
+                {!isPerKill && prizePool > 0 && (
+                  <div className="col-span-2 bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 text-[11px] text-amber-300">
+                    🏆 <strong>Prize Pool:</strong> Top ranked teams will be credited with prize money according to the official tournament settlement.
+                  </div>
                 )}
               </div>
             </div>
-          ) : (
-            <div className="bg-surface/30 border border-dashed border-gray-800 rounded-2xl p-6 text-center text-gray-400 text-xs font-semibold">
-              <Clock className="w-5 h-5 mx-auto mb-2 text-brand-400 animate-pulse" />
-              Room credentials will appear here 10-15 minutes before the match start time.
+          </div>
+
+          {/* Compact Scoring System Overview */}
+          <ScoringInfoCard tournament={scrim as any} compact={true} />
+
+          {/* Rules & Guidelines */}
+          {scrim.rules && (
+            <div className="bg-surface/30 border border-gray-800 rounded-3xl p-6 shadow-xl space-y-3">
+              <h3 className="text-base font-black text-white uppercase tracking-wider">
+                Match Rules & Guidelines
+              </h3>
+              <p className="text-xs text-gray-300 leading-relaxed whitespace-pre-line font-medium">
+                {scrim.rules}
+              </p>
             </div>
           )}
         </div>
       )}
 
-      {/* Scoring Rules Explanation */}
-      <ScoringInfoCard tournament={scrim as any} />
-
-      {/* Results / Scorecard Table if Completed */}
-      {hasResults && (
-        <div className="space-y-6">
+      {/* TAB 2: RESULTS */}
+      {activeTab === 'results' && (
+        <div
+          role="tabpanel"
+          id="tabpanel-results"
+          aria-labelledby="tab-results"
+          className="space-y-6 animate-fade-in"
+        >
+          {/* Per-Kill Results if Per-Kill Scrim */}
           {(isPerKill || (scrim?.killRewards && scrim.killRewards.length > 0)) && (
             <div className="bg-surface/30 border border-brand-500/30 rounded-3xl p-6 shadow-xl space-y-6">
               <div className="flex items-center gap-2">
@@ -455,6 +624,7 @@ export default function ScrimDetails() {
             </div>
           )}
 
+          {/* Battle Royale Standings & Scorecard */}
           <div className="bg-surface/30 border border-gray-800 rounded-3xl p-6 shadow-xl space-y-4">
             <div className="flex items-center gap-2">
               <Trophy className="w-5 h-5 text-amber-400" />
@@ -467,37 +637,134 @@ export default function ScrimDetails() {
               slots={slots}
             />
           </div>
+
+          {/* Full Placement Points System Breakdown */}
+          <div className="bg-surface/30 border border-gray-800 rounded-3xl p-6 shadow-xl space-y-4">
+            <div className="flex items-center gap-2">
+              <Shield className="w-5 h-5 text-brand-400" />
+              <h3 className="text-lg font-black text-white uppercase tracking-wider">
+                Placement Points System
+              </h3>
+            </div>
+            <ScoringInfoCard tournament={scrim as any} compact={false} />
+          </div>
         </div>
       )}
 
-      {/* Main Content: Interactive Slot Grid */}
-      <div className="bg-surface/30 border border-gray-800 rounded-3xl p-6 shadow-xl">
-        <SlotGrid
-          slots={slots}
-          totalSlots={totalSlots}
-          mySlotNumber={mySlotNumber}
-          isJoined={isJoined}
-          selectedSlotNumber={selectedSlotForBooking}
-          onSelectSlot={(slotNum) => {
-            if (!isJoined && scrim.status === 'open') {
-              setSelectedSlotForBooking(slotNum);
-              setShowJoinModal(true);
-            }
-          }}
-          showTitle={true}
-          isTeamEvent={format !== 'Solo'}
-        />
-      </div>
+      {/* TAB 3: SLOT */}
+      {activeTab === 'slot' && (
+        <div
+          role="tabpanel"
+          id="tabpanel-slot"
+          aria-labelledby="tab-slot"
+          className="space-y-6 animate-fade-in"
+        >
+          {/* Slot Allocation & Room Seating Summary Header */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-surface/30 border border-gray-800 rounded-3xl p-6 shadow-xl">
+            <div>
+              <div className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-brand-400" />
+                <h3 className="text-lg font-black text-white uppercase tracking-wider">
+                  Slot Allocation & Room Seating
+                </h3>
+              </div>
+              <p className="text-xs text-gray-400 mt-1">
+                Players must sit in their exact allocated slot number in the custom match room.
+              </p>
+            </div>
 
-      {/* Rules & Information */}
-      {scrim.rules && (
-        <div className="bg-surface/30 border border-gray-800 rounded-3xl p-6 shadow-xl space-y-3">
-          <h3 className="text-base font-black text-white uppercase tracking-wider">
-            Match Rules & Guidelines
-          </h3>
-          <p className="text-xs text-gray-300 leading-relaxed whitespace-pre-line font-medium">
-            {scrim.rules}
-          </p>
+            <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
+              <div className="text-right">
+                <span className="text-sm font-black text-white font-mono">
+                  {filledSlotsCount} / {totalSlots}
+                </span>
+                <span className="text-xs text-gray-400 font-bold uppercase tracking-widest ml-1">
+                  Booked
+                </span>
+              </div>
+              <div className="w-32 sm:w-44 bg-dark-900 rounded-full h-2.5 overflow-hidden border border-gray-800">
+                <div
+                  className="bg-brand-500 h-full rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(168,85,247,0.4)]"
+                  style={{ width: `${Math.min(100, Math.round((filledSlotsCount / (totalSlots || 1)) * 100))}%` }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Player Assigned Slot Card */}
+          {isJoined && mySlotNumber ? (
+            <div className="bg-emerald-500/10 border-2 border-emerald-500/40 p-5 rounded-3xl flex items-center justify-between shadow-xl shadow-emerald-950/30">
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0">
+                  <CheckCircle2 className="w-7 h-7" />
+                </div>
+                <div>
+                  <div className="text-xs font-black text-emerald-400 uppercase tracking-widest">
+                    Your Allocated Slot
+                  </div>
+                  <div className="text-base sm:text-lg font-black text-white">
+                    You are registered in <span className="text-emerald-400 font-mono">SLOT #{mySlotNumber}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="text-right hidden sm:block">
+                <span className="text-[10px] text-emerald-300/80 font-bold uppercase tracking-wider block">
+                  Custom Room Invariant
+                </span>
+                <span className="text-xs text-gray-300 font-medium">
+                  Sit strictly in Slot #{mySlotNumber}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-surface/20 border border-dashed border-gray-800 p-5 rounded-3xl flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-surface/60 border border-gray-700 flex items-center justify-center text-gray-400">
+                  <Users className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-xs font-black text-gray-400 uppercase tracking-widest">
+                    Slot Not Assigned
+                  </div>
+                  <div className="text-xs text-gray-300">
+                    {scrim.status === 'open'
+                      ? 'Select an open slot below to register and book your seat.'
+                      : 'Registration for this scrim is closed.'}
+                  </div>
+                </div>
+              </div>
+              {!isJoined && scrim.status === 'open' && (
+                <button
+                  onClick={() => {
+                    setSelectedSlotForBooking(null);
+                    setShowJoinModal(true);
+                  }}
+                  className="px-4 py-2 bg-brand-500 hover:bg-brand-400 text-black text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-md shadow-brand-500/20"
+                >
+                  Join Scrim
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Interactive Slot Grid */}
+          <div className="bg-surface/30 border border-gray-800 rounded-3xl p-6 shadow-xl">
+            <SlotGrid
+              slots={slots}
+              totalSlots={totalSlots}
+              mySlotNumber={mySlotNumber}
+              isJoined={isJoined}
+              selectedSlotNumber={selectedSlotForBooking}
+              onSelectSlot={(slotNum) => {
+                if (!isJoined && scrim.status === 'open') {
+                  setSelectedSlotForBooking(slotNum);
+                  setShowJoinModal(true);
+                }
+              }}
+              showTitle={false}
+              isTeamEvent={format !== 'Solo'}
+            />
+          </div>
         </div>
       )}
 
@@ -516,3 +783,4 @@ export default function ScrimDetails() {
     </div>
   );
 }
+
