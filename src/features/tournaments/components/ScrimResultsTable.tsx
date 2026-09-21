@@ -311,6 +311,9 @@ export const ScrimResultsTable: React.FC<ScrimResultsTableProps> = ({ tournament
         return () => { isMounted = false; };
     }, [tournament, participants, slots]);
 
+    const isPerKillMode = tournament.tournamentMode === 'PER_KILL_REWARD' || Number((tournament as any).rewardPerKill) > 0;
+    const rewardPerKill = Number((tournament as any).rewardPerKill || (tournament as any).rewardConfig?.rewardPerKill || 0);
+
     // Extract table rows from all possible result sources
     const rows: ScrimResultRow[] = useMemo(() => {
         const slotsArray = Array.isArray(slots) ? slots : Array.isArray(tournament.slots) ? (tournament.slots as any[]) : [];
@@ -338,58 +341,58 @@ export const ScrimResultsTable: React.FC<ScrimResultsTableProps> = ({ tournament
 
         // Source 1: manualResults (Official match result entries)
         if (tournament.manualResults && tournament.manualResults.length > 0) {
-            return [...tournament.manualResults]
-                .sort((a, b) => (Number(a.rank) || 999) - (Number(b.rank) || 999))
-                .map((m, idx) => {
-                    const sn = Number(m.rank) || (idx + 1);
-                    const kills = Number(m.kills) || 0;
-                    const defaultPlacementPts = scoring.placementPoints[String(sn)] ?? Math.max(0, 12 - (sn - 1));
-                    const placementPoints = Number((m as any).placementPoints ?? (m as any).placementPts ?? defaultPlacementPts);
-                    const totalPoints = Number((m as any).totalPoints ?? (m as any).points ?? m.score ?? (kills * scoring.killPoints + placementPoints));
+            const sortedResults = isPerKillMode
+                ? [...tournament.manualResults].sort((a, b) => (Number(b.kills) || 0) - (Number(a.kills) || 0))
+                : [...tournament.manualResults].sort((a, b) => (Number(a.rank) || 999) - (Number(b.rank) || 999));
 
-                    const prizeItem = tournament.prizeDistribution?.find(p => Number(p.rank) === sn);
-                    const winnerItem = tournament.winners?.find((w: any) => Number(w.rank) === sn);
-                    let prize = Number(prizeItem?.amount ?? (winnerItem as any)?.prize ?? (winnerItem as any)?.amount ?? 0);
+            return sortedResults.map((m, idx) => {
+                const sn = isPerKillMode ? (idx + 1) : (Number(m.rank) || (idx + 1));
+                const kills = Number(m.kills) || 0;
+                const defaultPlacementPts = scoring.placementPoints[String(sn)] ?? Math.max(0, 12 - (sn - 1));
+                const placementPoints = isPerKillMode ? 0 : Number((m as any).placementPoints ?? (m as any).placementPts ?? defaultPlacementPts);
+                const totalPoints = isPerKillMode ? 0 : Number((m as any).totalPoints ?? (m as any).points ?? m.score ?? (kills * scoring.killPoints + placementPoints));
 
-                    const isPerKillMode = tournament.tournamentMode === 'PER_KILL_REWARD' || Number((tournament as any).rewardPerKill) > 0;
-                    const rewardPerKill = Number((tournament as any).rewardPerKill || (tournament as any).rewardConfig?.rewardPerKill || 0);
-                    if (isPerKillMode && rewardPerKill > 0) {
-                        const killBounty = kills * rewardPerKill;
-                        if (winnerItem && (winnerItem as any).prize !== undefined) {
-                            prize = Number((winnerItem as any).prize);
-                        } else {
-                            prize = Number(prizeItem?.amount ?? 0) + killBounty;
-                        }
+                const prizeItem = tournament.prizeDistribution?.find(p => Number(p.rank) === sn);
+                const winnerItem = tournament.winners?.find((w: any) => Number(w.rank) === sn);
+                let prize = Number(prizeItem?.amount ?? (winnerItem as any)?.prize ?? (winnerItem as any)?.amount ?? 0);
+
+                if (isPerKillMode && rewardPerKill > 0) {
+                    const killBounty = kills * rewardPerKill;
+                    if (winnerItem && (winnerItem as any).prize !== undefined) {
+                        prize = Number((winnerItem as any).prize);
+                    } else {
+                        prize = Number(prizeItem?.amount ?? 0) + killBounty;
                     }
+                }
 
-                    const teamNameStr = m.team || (m as any).name || `Team #${sn}`;
-                    const normName = teamNameStr.trim().toLowerCase();
+                const teamNameStr = m.team || (m as any).name || `Team #${sn}`;
+                const normName = teamNameStr.trim().toLowerCase();
 
-                    const entityMatch = findEntityMatch(normName);
+                const entityMatch = findEntityMatch(normName);
 
-                    const resolvedLogo = (m as any).logo
-                        || entityMatch?.teamLogo
-                        || entityMatch?.logoUrl
-                        || (entityMatch?.teamId ? teamLogos[entityMatch.teamId] : null)
-                        || (m.teamId ? teamLogos[m.teamId] : null)
-                        || teamLogos[normName]
-                        || teamLogos[teamNameStr.trim()]
-                        || (entityMatch?.captainUid ? teamLogos[entityMatch.captainUid] : null)
-                        || (entityMatch?.userId ? teamLogos[entityMatch.userId] : null)
-                        || null;
+                const resolvedLogo = (m as any).logo
+                    || entityMatch?.teamLogo
+                    || entityMatch?.logoUrl
+                    || (entityMatch?.teamId ? teamLogos[entityMatch.teamId] : null)
+                    || (m.teamId ? teamLogos[m.teamId] : null)
+                    || teamLogos[normName]
+                    || teamLogos[teamNameStr.trim()]
+                    || (entityMatch?.captainUid ? teamLogos[entityMatch.captainUid] : null)
+                    || (entityMatch?.userId ? teamLogos[entityMatch.userId] : null)
+                    || null;
 
-                    return {
-                        sn,
-                        name: teamNameStr,
-                        tag: entityMatch?.slotNumber ? `Slot #${entityMatch.slotNumber}` : undefined,
-                        logo: resolvedLogo,
-                        kills,
-                        placementPoints,
-                        totalPoints,
-                        prize,
-                        isRealPlayer: true,
-                    };
-                });
+                return {
+                    sn,
+                    name: teamNameStr,
+                    tag: entityMatch?.slotNumber ? `Slot #${entityMatch.slotNumber}` : undefined,
+                    logo: resolvedLogo,
+                    kills,
+                    placementPoints,
+                    totalPoints,
+                    prize,
+                    isRealPlayer: true,
+                };
+            });
         }
 
         // Source 2: winners / results / podium array
@@ -402,52 +405,53 @@ export const ScrimResultsTable: React.FC<ScrimResultsTableProps> = ({ tournament
             : [];
 
         if (rawWinners.length > 0) {
-            return [...rawWinners]
-                .sort((a, b) => (Number(a.rank || a.placement) || 999) - (Number(b.rank || b.placement) || 999))
-                .map((w, idx) => {
-                    const sn = Number(w.rank || w.placement) || (idx + 1);
-                    const kills = Number(w.kills) || 0;
-                    const defaultPlacementPts = scoring.placementPoints[String(sn)] ?? Math.max(0, 12 - (sn - 1));
-                    const placementPoints = Number(w.placementPoints ?? defaultPlacementPts);
-                    const totalPoints = Number(w.totalPoints ?? w.points ?? (kills * scoring.killPoints + placementPoints));
-                    let prize = Number(w.prize || w.amount || 0);
-                    const isPerKillMode = tournament.tournamentMode === 'PER_KILL_REWARD' || Number((tournament as any).rewardPerKill) > 0;
-                    const rewardPerKill = Number((tournament as any).rewardPerKill || (tournament as any).rewardConfig?.rewardPerKill || 0);
-                    if (isPerKillMode && rewardPerKill > 0 && prize === 0 && kills > 0) {
-                        prize = kills * rewardPerKill;
-                    }
+            const sortedWinners = isPerKillMode
+                ? [...rawWinners].sort((a, b) => (Number(b.kills) || 0) - (Number(a.kills) || 0))
+                : [...rawWinners].sort((a, b) => (Number(a.rank || a.placement) || 999) - (Number(b.rank || b.placement) || 999));
 
-                    const teamNameStr = w.teamName || w.username || w.name || `Team #${sn}`;
-                    const normName = teamNameStr.trim().toLowerCase();
+            return sortedWinners.map((w, idx) => {
+                const sn = isPerKillMode ? (idx + 1) : (Number(w.rank || w.placement) || (idx + 1));
+                const kills = Number(w.kills) || 0;
+                const defaultPlacementPts = scoring.placementPoints[String(sn)] ?? Math.max(0, 12 - (sn - 1));
+                const placementPoints = isPerKillMode ? 0 : Number(w.placementPoints ?? defaultPlacementPts);
+                const totalPoints = isPerKillMode ? 0 : Number(w.totalPoints ?? w.points ?? (kills * scoring.killPoints + placementPoints));
+                let prize = Number(w.prize || w.amount || 0);
 
-                    const entityMatch = findEntityMatch(normName);
+                if (isPerKillMode && rewardPerKill > 0 && prize === 0 && kills > 0) {
+                    prize = kills * rewardPerKill;
+                }
 
-                    const resolvedLogo = w.logo
-                        || w.teamLogo
-                        || w.avatar
-                        || w.profilePicUrl
-                        || (w.teamId ? teamLogos[w.teamId] : null)
-                        || (entityMatch?.teamLogo || entityMatch?.logoUrl)
-                        || (entityMatch?.teamId ? teamLogos[entityMatch.teamId] : null)
-                        || teamLogos[normName]
-                        || teamLogos[teamNameStr.trim()]
-                        || (w.userId ? teamLogos[w.userId] : null)
-                        || (entityMatch?.captainUid ? teamLogos[entityMatch.captainUid] : null)
-                        || (entityMatch?.userId ? teamLogos[entityMatch.userId] : null)
-                        || null;
+                const teamNameStr = w.teamName || w.username || w.name || `Team #${sn}`;
+                const normName = teamNameStr.trim().toLowerCase();
 
-                    return {
-                        sn,
-                        name: teamNameStr,
-                        tag: w.slotNumber ? `Slot #${w.slotNumber}` : (entityMatch?.slotNumber ? `Slot #${entityMatch.slotNumber}` : undefined),
-                        logo: resolvedLogo,
-                        kills,
-                        placementPoints,
-                        totalPoints,
-                        prize,
-                        isRealPlayer: true,
-                    };
-                });
+                const entityMatch = findEntityMatch(normName);
+
+                const resolvedLogo = w.logo
+                    || w.teamLogo
+                    || w.avatar
+                    || w.profilePicUrl
+                    || (w.teamId ? teamLogos[w.teamId] : null)
+                    || (entityMatch?.teamLogo || entityMatch?.logoUrl)
+                    || (entityMatch?.teamId ? teamLogos[entityMatch.teamId] : null)
+                    || teamLogos[normName]
+                    || teamLogos[teamNameStr.trim()]
+                    || (w.userId ? teamLogos[w.userId] : null)
+                    || (entityMatch?.captainUid ? teamLogos[entityMatch.captainUid] : null)
+                    || (entityMatch?.userId ? teamLogos[entityMatch.userId] : null)
+                    || null;
+
+                return {
+                    sn,
+                    name: teamNameStr,
+                    tag: w.slotNumber ? `Slot #${w.slotNumber}` : (entityMatch?.slotNumber ? `Slot #${entityMatch.slotNumber}` : undefined),
+                    logo: resolvedLogo,
+                    kills,
+                    placementPoints,
+                    totalPoints,
+                    prize,
+                    isRealPlayer: true,
+                };
+            });
         }
 
         // Source 3: Pending match state — show roster preview if slots or participants exist
@@ -455,7 +459,7 @@ export const ScrimResultsTable: React.FC<ScrimResultsTableProps> = ({ tournament
 
         if (bookedSlots.length > 0) {
             return bookedSlots.map((s: any, idx: number) => {
-                const sn = typeof s.slotNumber === 'number' ? s.slotNumber : (idx + 1);
+                const sn = isPerKillMode ? (idx + 1) : (typeof s.slotNumber === 'number' ? s.slotNumber : (idx + 1));
                 const teamNameStr = s.teamName || s.inGameName || s.username || `Slot #${sn} Team`;
                 const normName = teamNameStr.trim().toLowerCase();
 
@@ -471,7 +475,7 @@ export const ScrimResultsTable: React.FC<ScrimResultsTableProps> = ({ tournament
                 return {
                     sn,
                     name: teamNameStr,
-                    tag: `Slot #${sn}`,
+                    tag: `Slot #${s.slotNumber || sn}`,
                     logo: resolvedLogo,
                     kills: 0,
                     placementPoints: 0,
@@ -485,7 +489,7 @@ export const ScrimResultsTable: React.FC<ScrimResultsTableProps> = ({ tournament
         // Source 3b: Fallback for tournaments where slots is a number and participants are in participants array
         if (partArray.length > 0) {
             return partArray.map((p: any, idx: number) => {
-                const sn = typeof p.slotNumber === 'number' ? p.slotNumber : (idx + 1);
+                const sn = isPerKillMode ? (idx + 1) : (typeof p.slotNumber === 'number' ? p.slotNumber : (idx + 1));
                 const teamNameStr = p.teamName || p.inGameName || p.username || `Team #${sn}`;
                 const normName = teamNameStr.trim().toLowerCase();
 
@@ -501,7 +505,7 @@ export const ScrimResultsTable: React.FC<ScrimResultsTableProps> = ({ tournament
                 return {
                     sn,
                     name: teamNameStr,
-                    tag: `Slot #${sn}`,
+                    tag: `Slot #${p.slotNumber || sn}`,
                     logo: resolvedLogo,
                     kills: 0,
                     placementPoints: 0,
@@ -513,7 +517,7 @@ export const ScrimResultsTable: React.FC<ScrimResultsTableProps> = ({ tournament
         }
 
         return [];
-    }, [tournament, participants, slots, scoring, teamLogos]);
+    }, [tournament, participants, slots, scoring, teamLogos, isPerKillMode, rewardPerKill]);
 
     const isMatchPending = !tournament.manualResults?.length && !tournament.winners?.length && !(tournament as any).results?.length;
 
@@ -540,7 +544,7 @@ export const ScrimResultsTable: React.FC<ScrimResultsTableProps> = ({ tournament
                     <div>
                         <div className="flex items-center gap-2">
                             <h3 className="text-white font-black text-base sm:text-xl uppercase tracking-tighter">
-                                Official Match Standings
+                                {isPerKillMode ? 'Per-Kill Match Standings' : 'Official Match Standings'}
                             </h3>
                             {isMatchPending ? (
                                 <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
@@ -553,7 +557,9 @@ export const ScrimResultsTable: React.FC<ScrimResultsTableProps> = ({ tournament
                             )}
                         </div>
                         <p className="text-xs text-gray-400 mt-0.5">
-                            {prizeWinnerCount > 0 
+                            {isPerKillMode
+                                ? 'Ranked by highest kills • Verified kill bounties credited to wallet'
+                                : prizeWinnerCount > 0 
                                 ? `Top ${prizeWinnerCount} places awarded in Golden Letters with verified wallet payout` 
                                 : 'All ranked teams and match scoring'}
                         </p>
@@ -562,13 +568,19 @@ export const ScrimResultsTable: React.FC<ScrimResultsTableProps> = ({ tournament
 
                 {/* Prize Pool & Scoring Quick Pill */}
                 <div className="flex items-center gap-3 shrink-0">
+                    {!isPerKillMode && (
+                        <div className="bg-dark/80 px-3.5 py-2 rounded-xl border border-gray-800 text-center">
+                            <span className="text-[10px] text-gray-400 uppercase font-black tracking-wider block">Top Places</span>
+                            <span className="text-xs sm:text-sm font-mono font-bold text-amber-400">Top {prizeWinnerCount} Golden</span>
+                        </div>
+                    )}
                     <div className="bg-dark/80 px-3.5 py-2 rounded-xl border border-gray-800 text-center">
-                        <span className="text-[10px] text-gray-400 uppercase font-black tracking-wider block">Top Places</span>
-                        <span className="text-xs sm:text-sm font-mono font-bold text-amber-400">Top {prizeWinnerCount} Golden</span>
-                    </div>
-                    <div className="bg-dark/80 px-3.5 py-2 rounded-xl border border-gray-800 text-center">
-                        <span className="text-[10px] text-gray-400 uppercase font-black tracking-wider block">Per Kill</span>
-                        <span className="text-xs sm:text-sm font-mono font-bold text-red-400">+{scoring.killPoints} Pts</span>
+                        <span className="text-[10px] text-gray-400 uppercase font-black tracking-wider block">
+                            {isPerKillMode ? 'Reward / Kill' : 'Per Kill'}
+                        </span>
+                        <span className="text-xs sm:text-sm font-mono font-bold text-red-400">
+                            {isPerKillMode ? `${formatCurrency(rewardPerKill)}` : `+${scoring.killPoints} Pts`}
+                        </span>
                     </div>
                 </div>
             </div>
@@ -577,7 +589,9 @@ export const ScrimResultsTable: React.FC<ScrimResultsTableProps> = ({ tournament
                 <div className="p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-center gap-2.5">
                     <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
                     <span className="text-xs text-amber-300 font-medium">
-                        Match is in progress or awaiting referee score verification. Team slot allocations are shown below; final kills, placement points, and golden winners will update live upon conclusion.
+                        {isPerKillMode
+                            ? 'Match is in progress or awaiting referee score verification. Slot allocations are shown below; final kills and rewards will update upon conclusion.'
+                            : 'Match is in progress or awaiting referee score verification. Team slot allocations are shown below; final kills, placement points, and golden winners will update live upon conclusion.'}
                     </span>
                 </div>
             )}
@@ -586,7 +600,6 @@ export const ScrimResultsTable: React.FC<ScrimResultsTableProps> = ({ tournament
             <div className="bg-card/50 rounded-2xl sm:rounded-3xl border border-gray-800 overflow-hidden shadow-2xl">
                 <div className="overflow-x-auto custom-scrollbar">
                     {(() => {
-                        const isPerKillMode = tournament.tournamentMode === 'PER_KILL_REWARD' || Number((tournament as any).rewardPerKill) > 0;
                         const hasPrizes = rows.some(r => r.prize > 0) || Number(tournament.prizePool) > 0 || isPerKillMode;
 
                         return (
@@ -602,15 +615,19 @@ export const ScrimResultsTable: React.FC<ScrimResultsTableProps> = ({ tournament
                                                 <span>Kills</span>
                                             </div>
                                         </th>
-                                        <th className="py-3.5 px-3 sm:px-5 text-center w-28 sm:w-36">
-                                            Placement Points
-                                        </th>
-                                        <th className="py-3.5 px-3 sm:px-5 text-center w-24 sm:w-32">
-                                            Total Points
-                                        </th>
+                                        {!isPerKillMode && (
+                                            <>
+                                                <th className="py-3.5 px-3 sm:px-5 text-center w-28 sm:w-36">
+                                                    Placement Points
+                                                </th>
+                                                <th className="py-3.5 px-3 sm:px-5 text-center w-24 sm:w-32">
+                                                    Total Points
+                                                </th>
+                                            </>
+                                        )}
                                         {hasPrizes && (
                                             <th className="py-3.5 px-3 sm:px-5 text-center w-24 sm:w-32">
-                                                {isPerKillMode ? 'Bounty' : 'Prize'}
+                                                {isPerKillMode ? 'Total Reward' : 'Prize'}
                                             </th>
                                         )}
                                     </tr>
@@ -707,25 +724,28 @@ export const ScrimResultsTable: React.FC<ScrimResultsTableProps> = ({ tournament
                                                     {isMatchPending ? '-' : row.kills}
                                                 </td>
 
-                                                {/* 5. Placement Points */}
-                                                <td className={`py-3.5 px-3 sm:px-5 text-center font-mono text-xs sm:text-sm font-bold ${
-                                                    isWinner 
-                                                        ? 'text-amber-400 drop-shadow-[0_0_6px_rgba(245,158,11,0.3)]' 
-                                                        : 'text-gray-300'
-                                                }`}>
-                                                    {isMatchPending ? '-' : row.placementPoints}
-                                                </td>
+                                                {/* 5. Placement Points & 6. Total Points (Only for non-per-kill) */}
+                                                {!isPerKillMode && (
+                                                    <>
+                                                        <td className={`py-3.5 px-3 sm:px-5 text-center font-mono text-xs sm:text-sm font-bold ${
+                                                            isWinner 
+                                                                ? 'text-amber-400 drop-shadow-[0_0_6px_rgba(245,158,11,0.3)]' 
+                                                                : 'text-gray-300'
+                                                        }`}>
+                                                            {isMatchPending ? '-' : row.placementPoints}
+                                                        </td>
 
-                                                {/* 6. Total Points */}
-                                                <td className={`py-3.5 px-3 sm:px-5 text-center font-mono text-sm sm:text-base font-black ${
-                                                    isWinner 
-                                                        ? 'text-amber-300 drop-shadow-[0_0_12px_rgba(245,158,11,0.5)]' 
-                                                        : 'text-white'
-                                                }`}>
-                                                    {isMatchPending ? '-' : row.totalPoints}
-                                                </td>
+                                                        <td className={`py-3.5 px-3 sm:px-5 text-center font-mono text-sm sm:text-base font-black ${
+                                                            isWinner 
+                                                                ? 'text-amber-300 drop-shadow-[0_0_12px_rgba(245,158,11,0.5)]' 
+                                                                : 'text-white'
+                                                        }`}>
+                                                            {isMatchPending ? '-' : row.totalPoints}
+                                                        </td>
+                                                    </>
+                                                )}
 
-                                                {/* 7. Prize / Bounty */}
+                                                {/* 7. Prize / Total Reward */}
                                                 {hasPrizes && (
                                                     <td className="py-3.5 px-3 sm:px-5 text-center font-mono text-xs sm:text-sm">
                                                         {row.prize > 0 ? (
@@ -750,10 +770,18 @@ export const ScrimResultsTable: React.FC<ScrimResultsTableProps> = ({ tournament
                 <div className="bg-gray-950/40 p-4 border-t border-gray-800/80 flex flex-col sm:flex-row justify-between items-center gap-2 text-[11px] text-gray-400">
                     <div className="flex items-center gap-2">
                         <Trophy className="w-3.5 h-3.5 text-amber-400" />
-                        <span>Winners highlighted in <strong className="text-amber-400 font-black">Golden Letters</strong> (Top {prizeWinnerCount}) receive prize wallet credit.</span>
+                        <span>
+                            {isPerKillMode
+                                ? <span>Top killers highlighted in <strong className="text-amber-400 font-black">Golden Letters</strong> receive verified wallet credit.</span>
+                                : <span>Winners highlighted in <strong className="text-amber-400 font-black">Golden Letters</strong> (Top {prizeWinnerCount}) receive prize wallet credit.</span>
+                            }
+                        </span>
                     </div>
                     <div className="font-mono text-gray-500">
-                        Total Points = Placement Points + (Kills × {scoring.killPoints})
+                        {isPerKillMode
+                            ? `Total Reward = Kills × ${formatCurrency(rewardPerKill)}`
+                            : `Total Points = Placement Points + (Kills × ${scoring.killPoints})`
+                        }
                     </div>
                 </div>
             </div>

@@ -585,8 +585,8 @@ export default function ScrimDetails() {
             </div>
           </div>
 
-          {/* Compact Scoring System Overview */}
-          <ScoringInfoCard tournament={scrim as any} compact={true} />
+          {/* Compact Scoring System Overview (Only for non-per-kill BR scoring) */}
+          {!isPerKill && <ScoringInfoCard tournament={scrim as any} compact={true} />}
 
           {/* Rules & Guidelines */}
           {scrim.rules && (
@@ -610,44 +610,63 @@ export default function ScrimDetails() {
           aria-labelledby="tab-results"
           className="space-y-6 animate-fade-in"
         >
-          {/* Per-Kill Results if Per-Kill Scrim */}
-          {(isPerKill || (scrim?.killRewards && scrim.killRewards.length > 0)) && (
-            <div className="bg-surface/30 border border-brand-500/30 rounded-3xl p-6 shadow-xl space-y-6">
-              <div className="flex items-center gap-2">
-                <Target className="w-5 h-5 text-brand-400" />
-                <h3 className="text-lg font-black text-white uppercase tracking-wider">
-                  Per-Kill Rewards & Leaderboard
-                </h3>
+          {isPerKill ? (
+            <>
+              {/* Per-Kill Summary & Performance Breakdown */}
+              {(scrim?.killRewards && scrim.killRewards.length > 0) && (
+                <div className="bg-surface/30 border border-brand-500/30 rounded-3xl p-6 shadow-xl space-y-6">
+                  <div className="flex items-center gap-2">
+                    <Target className="w-5 h-5 text-brand-400" />
+                    <h3 className="text-lg font-black text-white uppercase tracking-wider">
+                      Per-Kill Summary & Performance
+                    </h3>
+                  </div>
+                  <PerKillResultView tournament={scrim as any} />
+                </div>
+              )}
+
+              {/* Per-Kill Standings & Rewards Table (Ranked by highest kills: SN, Name, Logo, Kills, Total Reward) */}
+              <div className="bg-surface/30 border border-gray-800 rounded-3xl p-6 shadow-xl space-y-4">
+                <div className="flex items-center gap-2">
+                  <Trophy className="w-5 h-5 text-amber-400" />
+                  <h3 className="text-lg font-black text-white uppercase tracking-wider">
+                    Per-Kill Standings & Rewards
+                  </h3>
+                </div>
+                <ScrimResultsTable
+                  tournament={scrim as any}
+                  slots={slots}
+                />
               </div>
-              <PerKillResultView tournament={scrim as any} />
-              <PerKillLeaderboard tournament={scrim as any} />
-            </div>
+            </>
+          ) : (
+            <>
+              {/* Battle Royale Standings & Scorecard */}
+              <div className="bg-surface/30 border border-gray-800 rounded-3xl p-6 shadow-xl space-y-4">
+                <div className="flex items-center gap-2">
+                  <Trophy className="w-5 h-5 text-amber-400" />
+                  <h3 className="text-lg font-black text-white uppercase tracking-wider">
+                    Scrim Standings & Scorecard
+                  </h3>
+                </div>
+                <ScrimResultsTable
+                  tournament={scrim as any}
+                  slots={slots}
+                />
+              </div>
+
+              {/* Full Placement Points System Breakdown */}
+              <div className="bg-surface/30 border border-gray-800 rounded-3xl p-6 shadow-xl space-y-4">
+                <div className="flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-brand-400" />
+                  <h3 className="text-lg font-black text-white uppercase tracking-wider">
+                    Placement Points System
+                  </h3>
+                </div>
+                <ScoringInfoCard tournament={scrim as any} compact={false} />
+              </div>
+            </>
           )}
-
-          {/* Battle Royale Standings & Scorecard */}
-          <div className="bg-surface/30 border border-gray-800 rounded-3xl p-6 shadow-xl space-y-4">
-            <div className="flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-amber-400" />
-              <h3 className="text-lg font-black text-white uppercase tracking-wider">
-                Scrim Standings & Scorecard
-              </h3>
-            </div>
-            <ScrimResultsTable
-              tournament={scrim as any}
-              slots={slots}
-            />
-          </div>
-
-          {/* Full Placement Points System Breakdown */}
-          <div className="bg-surface/30 border border-gray-800 rounded-3xl p-6 shadow-xl space-y-4">
-            <div className="flex items-center gap-2">
-              <Shield className="w-5 h-5 text-brand-400" />
-              <h3 className="text-lg font-black text-white uppercase tracking-wider">
-                Placement Points System
-              </h3>
-            </div>
-            <ScoringInfoCard tournament={scrim as any} compact={false} />
-          </div>
         </div>
       )}
 
