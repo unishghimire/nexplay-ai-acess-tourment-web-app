@@ -4,6 +4,7 @@ import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { Game } from '../../../shared/types/types';
 import GameCard from '../../home/components/GameCard';
+import { PageHeaderSkeleton, CardGridSkeleton } from '../../../shared/components/Skeleton';
 import { Search, Gamepad2 } from 'lucide-react';
 import { withStaticCache } from '../../../shared/utils/staticCache';
 
@@ -76,9 +77,13 @@ export default function GameBrowser() {
                 "url": `https://www.nexplayorg.app/games`
             }}
         />
-            <div className="flex flex-col items-center justify-center min-h-[60vh]">
-                <div className="w-12 h-12 border-4 border-purple-500/20 border-t-purple-500 rounded-full animate-spin mb-4"></div>
-                <p className="text-purple-400 text-xs font-black tracking-widest uppercase">Loading Games...</p>
+            <div className="animate-fade-in max-w-7xl mx-auto px-4 sm:px-6 py-4 space-y-6">
+                <PageHeaderSkeleton />
+                <div className="animate-pulse bg-white/5 rounded-xl h-11 w-full max-w-2xl" />
+                <CardGridSkeleton
+                    count={8}
+                    gridClassName="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6"
+                />
             </div>
         </>
         );

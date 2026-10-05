@@ -6,6 +6,7 @@ import { collection, getDocs, query, where, limit, startAfter, QueryDocumentSnap
 import { db } from '../../../shared/config/firebase';
 import { Tournament, Game } from '../../../shared/types/types';
 import TournamentCard from '../components/TournamentCard';
+import { PageHeaderSkeleton, CardGridSkeleton } from '../../../shared/components/Skeleton';
 import { Filter, Search, ChevronDown } from 'lucide-react';
 import { formatGameModeLabel, formatGameName, toDateSafe, isTournamentEvent } from '../../../shared/utils/utils';
 
@@ -173,9 +174,12 @@ const Tournaments: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] p-4 text-center">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mb-4 sm:mb-6"></div>
-                <p className="text-brand-500 text-xs font-black uppercase tracking-widest animate-pulse">Establishing Uplink...</p>
+            <div className="animate-fade-in max-w-7xl mx-auto p-4 sm:p-6 md:p-8 w-full min-w-0">
+                <PageHeaderSkeleton filterBand />
+                <CardGridSkeleton
+                    count={6}
+                    gridClassName="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 min-h-[50vh] w-full"
+                />
             </div>
         );
     }

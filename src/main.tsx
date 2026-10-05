@@ -19,3 +19,9 @@ if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
       });
   });
 }
+
+// Web Vitals measurement (TC-E of the performance test plan) — dynamic import
+// so collection never blocks the critical rendering path it measures.
+if (typeof window !== 'undefined') {
+  void import('./shared/utils/webVitals').then((m) => m.initWebVitals());
+}

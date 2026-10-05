@@ -10,6 +10,7 @@ import { collection, getDocs, query, where, limit, startAfter, QueryDocumentSnap
 import { eventDetailUrl } from '../../../shared/utils/eventUrl';
 import { db } from '../../../shared/config/firebase';
 import TabErrorBoundary from '../../../shared/components/TabErrorBoundary';
+import { CardGridSkeleton } from '../../../shared/components/Skeleton';
 
 const scrimFaqs = [
     {
@@ -365,11 +366,10 @@ const ScrimsContent: React.FC = () => {
                 </div>
 
                 {loading ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-                        {[1,2,3,4,5,6].map(i => (
-                            <div key={i} className="bg-card/50 h-[400px] rounded-3xl animate-pulse border border-gray-800"></div>
-                        ))}
-                    </div>
+                    <CardGridSkeleton
+                        count={6}
+                        gridClassName="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8"
+                    />
                 ) : fetchError ? (
                     <div role="alert" className="bg-card/50 p-6 sm:p-12 rounded-3xl border border-red-500/30 text-center">
                         <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-6" />

@@ -4,6 +4,7 @@ import { collection, query, getDocs, limit, startAfter, QueryDocumentSnapshot } 
 import { db } from '../../shared/config/firebase';
 import { OrgPost } from '../../shared/types/types';
 import Seo from '../../shared/components/Seo';
+import { NewsSkeleton } from '../../shared/components/Skeleton';
 import { formatDate } from '../../shared/utils/utils';
 import { Calendar, ArrowLeft, Newspaper } from 'lucide-react';
 
@@ -65,9 +66,8 @@ const News: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="min-h-[60vh] flex flex-col items-center justify-center">
-                <div className="w-12 h-12 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mb-4" />
-                <p className="text-xs text-gray-500 font-black uppercase tracking-widest">Loading News...</p>
+            <div className="min-h-[60vh]">
+                <NewsSkeleton />
             </div>
         );
     }

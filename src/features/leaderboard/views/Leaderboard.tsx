@@ -1,4 +1,5 @@
 import Seo from '../../../shared/components/Seo';
+import { LeaderboardRowSkeleton } from '../../../shared/components/Skeleton';
 import React, { useState, useEffect } from 'react';
 import { collection, query, limit, getDocs } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
@@ -331,9 +332,21 @@ const Leaderboard: React.FC = () => {
             </div>
 
             {loading ? (
-                <div className="flex flex-col items-center justify-center py-20">
-                    <div className="w-12 h-12 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-                    <p className="text-gray-500 font-black uppercase tracking-widest text-xs">Fetching Rankings...</p>
+                <div data-skeleton>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-8 mb-8 sm:mb-16 items-end">
+                        {[1, 2, 3].map(i => (
+                            <div key={i} className={`rounded-3xl border border-white/5 bg-card/40 p-6 ${i === 1 ? 'sm:pb-10' : ''}`}>
+                                <div className="animate-pulse bg-white/5 rounded-full h-16 w-16 mx-auto mb-4" />
+                                <div className="animate-pulse bg-white/10 rounded h-4 w-28 mx-auto mb-2" />
+                                <div className="animate-pulse bg-white/5 rounded h-3 w-16 mx-auto" />
+                            </div>
+                        ))}
+                    </div>
+                    <div className="space-y-3">
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+                            <LeaderboardRowSkeleton key={i} />
+                        ))}
+                    </div>
                 </div>
             ) : fetchError ? (
                 <div role="alert" className="text-center py-20 bg-card/50 rounded-3xl border border-red-500/30">

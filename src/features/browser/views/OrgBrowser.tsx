@@ -9,6 +9,7 @@ import { Search, UserPlus, UserMinus, Building2, ChevronRight, Users, Zap } from
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { calculateLevel, getLevelProgress, getXPForNextLevel } from '../../../shared/utils/utils';
+import { CardGridSkeleton } from '../../../shared/components/Skeleton';
 
 const OrgBrowser: React.FC = () => {
     const { user, profile } = useAuth();
@@ -236,11 +237,10 @@ const OrgBrowser: React.FC = () => {
             </section>
 
             {loading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-                    {[1, 2, 3, 4, 5, 6].map(i => (
-                        <div key={i} className="bg-[#0e1628] h-44 rounded-2xl animate-pulse border border-slate-800/90" />
-                    ))}
-                </div>
+                <CardGridSkeleton
+                    count={6}
+                    gridClassName="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6"
+                />
             ) : filteredOrgs.length === 0 ? (
                 <div className="bg-[#0e1628] p-12 rounded-2xl border border-slate-800/90 text-center">
                     <Building2 className="w-14 h-14 text-slate-700 mx-auto mb-4" />

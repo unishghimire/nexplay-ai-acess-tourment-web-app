@@ -1,4 +1,5 @@
 import Seo from '../../../shared/components/Seo';
+import { PageHeaderSkeleton, CardGridSkeleton, SkeletonText } from '../../../shared/components/Skeleton';
 import React, { useEffect, useState } from 'react';
 import { collection, query, getDocs, limit, where, orderBy, startAfter, QueryDocumentSnapshot } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
@@ -235,9 +236,21 @@ const Results: React.FC = () => {
                 "url": `https://www.nexplayorg.app/results`
             }}
         />
-            <div className="flex flex-col items-center justify-center min-h-[60vh]">
-                <div className="w-12 h-12 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-                <p className="text-brand-500 text-xs font-black uppercase tracking-widest animate-pulse">Fetching Hall of Fame...</p>
+            <div className="animate-fade-in max-w-7xl mx-auto p-4 sm:p-6 md:p-8 w-full min-w-0">
+                <PageHeaderSkeleton filterBand />
+                <div data-skeleton className="rounded-3xl border border-white/5 bg-card/40 p-4 sm:p-8 mb-8">
+                    <div className="grid gap-4 sm:gap-8 md:grid-cols-[1.3fr_0.7fr]">
+                        <div>
+                            <div className="animate-pulse bg-white/10 rounded h-6 w-1/2 mb-4" />
+                            <SkeletonText lines={3} />
+                        </div>
+                        <div className="animate-pulse bg-white/5 rounded-2xl h-40" />
+                    </div>
+                </div>
+                <CardGridSkeleton
+                    count={4}
+                    gridClassName="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8"
+                />
             </div>
         </>
         );
