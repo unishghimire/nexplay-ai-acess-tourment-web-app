@@ -100,7 +100,7 @@ const Terms: React.FC = () => {
                 </div>
                 <a
                     href="mailto:support@nexplay.gg"
-                    className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white transition-colors shrink-0 shadow-sm"
+                    className="text-xs font-semibold px-3 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white transition-colors shrink-0 shadow-sm"
                 >
                     Inquire
                 </a>

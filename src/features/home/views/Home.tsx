@@ -295,7 +295,7 @@ const Home: React.FC = () => {
                     </div>
                     <button type="button" 
                         onClick={() => handleCtaClick('/tournaments', 'ViewAllFeatured')} 
-                        className="bg-[#131b2e] border border-slate-700/80 px-3 py-1.5 rounded-full text-xs font-semibold text-slate-300 hover:text-white flex items-center gap-1 transition active:scale-95 shadow-sm"
+                        className="bg-[#131b2e] border border-slate-700/80 px-3 py-2 rounded-full text-xs font-semibold text-slate-300 hover:text-white flex items-center gap-1 transition active:scale-95 shadow-sm"
                         aria-label="View all scheduled tournaments"
                     >
                         VIEW ALL <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
@@ -325,7 +325,7 @@ const Home: React.FC = () => {
                     </div>
                     <button type="button" 
                         onClick={() => handleCtaClick('/games', 'ViewAllGames')} 
-                        className="bg-[#131b2e] border border-slate-700/80 px-3 py-1.5 rounded-full text-xs font-semibold text-slate-300 hover:text-white flex items-center gap-1 transition active:scale-95 shadow-sm"
+                        className="bg-[#131b2e] border border-slate-700/80 px-3 py-2 rounded-full text-xs font-semibold text-slate-300 hover:text-white flex items-center gap-1 transition active:scale-95 shadow-sm"
                         aria-label="Explore tournament categories by game"
                     >
                         EXPLORE <ChevronRight className="w-3.5 h-3.5 text-slate-400" />

@@ -509,10 +509,10 @@ const Register: React.FC = () => {
                                 type="checkbox"
                                 checked={agreeTerms}
                                 onChange={(e) => setAgreeTerms(e.target.checked)}
-                                className="mt-1 h-5 w-5 rounded border-gray-700 bg-black text-brand-500 focus:ring-brand-500 cursor-pointer"
+                                className="mt-1 h-6 w-6 rounded border-gray-700 bg-black text-brand-500 focus:ring-brand-500 cursor-pointer"
                             />
                             <label htmlFor="agree-terms" className="ml-3 block text-sm font-bold text-gray-400 cursor-pointer select-none leading-relaxed">
-                                I agree to the <Link to="/terms" className="text-brand-500 hover:underline">Terms & Conditions</Link> and <Link to="/privacy" className="text-brand-500 hover:underline">Privacy Policy</Link>
+                                I agree to the <Link to="/terms" className="inline-block py-2 -my-2 text-brand-500 hover:underline">Terms & Conditions</Link> and <Link to="/privacy" className="inline-block py-2 -my-2 text-brand-500 hover:underline">Privacy Policy</Link>
                             </label>
                         </div>
 
@@ -608,7 +608,7 @@ const Register: React.FC = () => {
                     <div className="mt-10 pt-8 border-t border-gray-800 text-center">
                         <p className="text-sm text-gray-500 font-bold">
                             Already have an account?{' '}
-                            <Link to="/login" className="text-brand-500 font-black hover:text-brand-400 transition uppercase tracking-widest text-xs">
+                            <Link to="/login" className="inline-block py-2 -my-2 text-brand-500 font-black hover:text-brand-400 transition uppercase tracking-widest text-xs">
                                 Login Here
                             </Link>
                         </p>

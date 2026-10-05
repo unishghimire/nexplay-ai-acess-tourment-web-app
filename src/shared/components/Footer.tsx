@@ -150,21 +150,21 @@ const Footer: React.FC = () => {
 
             {/* Copyright & Legal Links */}
             <p className="text-gray-500 text-[11px] mb-2">© {new Date().getFullYear()} NexPlay Esports | Built for gamers</p>
-            <div className="flex items-center justify-center gap-3 text-gray-400 text-xs flex-wrap">
-                <Link to="/contact" className="hover:text-purple-400 transition-colors">Contact</Link>
+            <div className="flex items-center justify-center gap-1 text-gray-400 text-xs flex-wrap">
+                <Link to="/contact" className="inline-block py-2 px-2 hover:text-purple-400 transition-colors">Contact</Link>
                 <span className="text-gray-600">•</span>
-                <Link to="/about" className="hover:text-purple-400 transition-colors">About Us</Link>
+                <Link to="/about" className="inline-block py-2 px-2 hover:text-purple-400 transition-colors">About Us</Link>
                 <span className="text-gray-600">•</span>
-                <Link to="/terms" className="hover:text-purple-400 transition-colors">Terms</Link>
+                <Link to="/terms" className="inline-block py-2 px-2 hover:text-purple-400 transition-colors">Terms</Link>
                 <span className="text-gray-600">•</span>
-                <Link to="/privacy" className="hover:text-purple-400 transition-colors">Privacy</Link>
+                <Link to="/privacy" className="inline-block py-2 px-2 hover:text-purple-400 transition-colors">Privacy</Link>
             </div>
 
             {/* Back to Top */}
             <button
                 onClick={scrollToTop}
                 aria-label="Back to top"
-                className="mt-4 text-gray-500 hover:text-white transition-colors p-1.5 rounded-full hover:bg-slate-900 border border-transparent hover:border-slate-800"
+                className="mt-2 w-9 h-9 flex items-center justify-center text-gray-500 hover:text-white transition-colors rounded-full hover:bg-slate-900 border border-transparent hover:border-slate-800"
             >
                 <ArrowUp className="w-3.5 h-3.5" />
             </button>

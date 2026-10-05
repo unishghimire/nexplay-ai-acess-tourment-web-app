@@ -43,7 +43,7 @@ export const Faq: React.FC<FaqProps> = ({ items, title = 'Frequently Asked Quest
                             key={index}
                             className="group bg-surface border border-gray-800 rounded-2xl p-5 hover:border-brand-500/30 transition-colors cursor-pointer"
                         >
-                            <summary className="font-bold text-white text-base md:text-lg list-none flex justify-between items-center gap-4 select-none">
+                            <summary className="py-1 -my-1 font-bold text-white text-base md:text-lg list-none flex justify-between items-center gap-4 select-none">
                                 <span>{item.question}</span>
                                 <span aria-hidden="true" className="text-brand-500 font-bold text-xl group-open:rotate-45 transition-transform duration-200">
                                     +

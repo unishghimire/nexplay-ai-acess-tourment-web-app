@@ -86,7 +86,7 @@ const Contact: React.FC = () => {
                             </div>
                             <div className="min-w-0 flex-1">
                                 <span className="block text-[10px] font-bold text-slate-400 tracking-wider uppercase mb-0.5">EMAIL SUPPORT</span>
-                                <a href="mailto:nexplayorg@gmail.com" className="text-sm sm:text-base font-bold text-white hover:text-purple-400 truncate block transition-colors">
+                                <a href="mailto:nexplayorg@gmail.com" className="block py-2 -my-2 text-sm sm:text-base font-bold text-white hover:text-purple-400 truncate transition-colors">
                                     nexplayorg@gmail.com
                                 </a>
                             </div>
@@ -98,7 +98,7 @@ const Contact: React.FC = () => {
                             </div>
                             <div className="min-w-0 flex-1">
                                 <span className="block text-[10px] font-bold text-slate-400 tracking-wider uppercase mb-0.5">BUSINESS INQUIRIES</span>
-                                <a href="mailto:nex.unishghimire@gmail.com" className="text-sm sm:text-base font-bold text-white hover:text-cyan-400 truncate block transition-colors">
+                                <a href="mailto:nex.unishghimire@gmail.com" className="block py-2 -my-2 text-sm sm:text-base font-bold text-white hover:text-cyan-400 truncate transition-colors">
                                     next.unishghimire@gmail.com
                                 </a>
                             </div>

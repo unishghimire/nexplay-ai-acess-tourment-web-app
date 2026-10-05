@@ -44,8 +44,9 @@ const Navbar: React.FC = () => {
         <nav aria-label="Main navigation" className="sticky top-0 z-50 bg-dark/90 backdrop-blur-xl border-b border-gray-800 transition-colors duration-200">
             <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-[auto_1fr_auto] items-center h-14 sm:h-20 gap-1 sm:gap-2">
-                    {/* Logo */}
-                    <Link to="/" className="flex items-center gap-1.5 sm:gap-3 shrink-0 group">
+                    {/* Logo — negative vertical margins expand the tap area to ~48px
+                        without changing the header height */}
+                    <Link to="/" className="flex items-center gap-1.5 sm:gap-3 shrink-0 group py-2.5 -my-2.5">
                         <div className="relative w-7 h-7 sm:w-10 sm:h-10 rounded-lg overflow-hidden bg-[#151c33] p-0.5 border border-purple-500/40 shadow-inner flex items-center justify-center group-hover:border-purple-400 transition-colors">
                             <img src="/logo.png" alt="NexPlay Logo" className="w-full h-full rounded-md shrink-0 object-cover group-hover:scale-105 transition-transform" loading="eager" />
                         </div>

@@ -255,8 +255,9 @@ const Leaderboard: React.FC = () => {
                     ]
                 }}
             />
-            {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-8 mb-8 sm:mb-12">
+            {/* Header Section — lg breakpoint: at md (768px) the side-by-side layout
+                squeezes the toggle column and the segmented controls overflow the viewport */}
+            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 sm:gap-8 mb-8 sm:mb-12">
                 <div>
                     <div className="flex items-center gap-3 mb-2">
                         <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white uppercase tracking-tighter">Leaderboard</h1>

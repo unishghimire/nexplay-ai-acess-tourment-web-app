@@ -241,7 +241,7 @@ const News: React.FC = () => {
                 )}
 
                 <div className="pt-6">
-                    <Link to="/" className="inline-flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white bg-slate-800/40 hover:bg-slate-800/70 border border-slate-800 px-3 py-1.5 rounded-lg transition-all">
+                    <Link to="/" className="inline-flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white bg-slate-800/40 hover:bg-slate-800/70 border border-slate-800 px-3 py-2 rounded-lg transition-all">
                         <ArrowLeft className="w-4 h-4 text-purple-400" /> Back to Home
                     </Link>
                 </div>

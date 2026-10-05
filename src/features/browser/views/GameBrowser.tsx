@@ -130,7 +130,7 @@ export default function GameBrowser() {
                     <button 
                         type="button"
                         onClick={() => setSelectedGenre('all')}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${
+                        className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${
                             selectedGenre === 'all' 
                             ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-sm shadow-purple-900/50 border border-purple-400/30' 
                             : 'bg-[#0e1628] border border-[#1e2b45] text-slate-300 hover:text-white hover:border-slate-600'
@@ -142,7 +142,7 @@ export default function GameBrowser() {
                     <button 
                         type="button"
                         onClick={() => setSelectedGenre('br')}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${
+                        className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${
                             selectedGenre === 'br' 
                             ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-sm border border-purple-400/30' 
                             : 'bg-[#0e1628] border border-[#1e2b45] text-slate-300 hover:text-white hover:border-slate-600'
@@ -154,7 +154,7 @@ export default function GameBrowser() {
                     <button 
                         type="button"
                         onClick={() => setSelectedGenre('moba')}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${
+                        className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${
                             selectedGenre === 'moba' 
                             ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-sm border border-purple-400/30' 
                             : 'bg-[#0e1628] border border-[#1e2b45] text-slate-300 hover:text-white hover:border-slate-600'
@@ -166,7 +166,7 @@ export default function GameBrowser() {
                     <button 
                         type="button"
                         onClick={() => setSelectedGenre('fps')}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${
+                        className={`px-3 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${
                             selectedGenre === 'fps' 
                             ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-sm border border-purple-400/30' 
                             : 'bg-[#0e1628] border border-[#1e2b45] text-slate-300 hover:text-white hover:border-slate-600'

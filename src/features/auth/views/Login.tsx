@@ -293,10 +293,10 @@ const Login: React.FC = () => {
                         <div>
                             <div className="flex justify-between items-center mb-2 ml-1">
                                 <label htmlFor="password" className="block text-xs font-black text-gray-500 uppercase tracking-widest">Password</label>
-                                <button 
+                                <button
                                     type="button"
                                     onClick={handleForgotPassword}
-                                    className="text-xs font-black text-brand-500 hover:text-brand-400 uppercase tracking-widest transition"
+                                    className="py-2 -my-2 text-xs font-black text-brand-500 hover:text-brand-400 uppercase tracking-widest transition"
                                 >
                                     Forgot Password?
                                 </button>
@@ -417,7 +417,7 @@ const Login: React.FC = () => {
                     <div className="mt-10 pt-8 border-t border-gray-800 text-center">
                         <p className="text-sm text-gray-500 font-bold">
                             Don't have an account?{' '}
-                            <Link to="/register" className="text-brand-500 font-black hover:text-brand-400 transition uppercase tracking-widest text-xs">
+                            <Link to="/register" className="inline-block py-2 -my-2 text-brand-500 font-black hover:text-brand-400 transition uppercase tracking-widest text-xs">
                                 Create Account
                             </Link>
                         </p>
