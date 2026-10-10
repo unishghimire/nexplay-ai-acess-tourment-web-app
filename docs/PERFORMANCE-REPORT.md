@@ -123,3 +123,38 @@ Firestore burst (25 concurrent readers × 3 reads): 75 reads, 0 errors, p95 69 m
 | Homepage CLS | 0.149 | ≤ 0.1 | 0.121 | −19% | ⚠ |
 | Error rate under load | unknown | < 1% | 0% @ 100 VUs | new | ✅ |
 | Memory (heap) | 18–20 MB | stable | 11–12 MB | −40% | ✅ |
+
+---
+
+## 11. Companion changes shipped with this optimization pass
+
+### 11.1 Brand logo refresh
+Replaced all platform logo assets with the new brand mark (source: 92×92 JPG
+supplied by product). Converted once via a temporary `jimp` script (removed
+afterwards, no dependency change):
+`public/logo.png` (512), `public/nexplay-logo.png` (512),
+`public/apple-touch-icon.png` (180), `public/favicon-32x32.png` (32),
+`public/favicon-16x32.png` (16). No source-code changes were required — every
+reference (index.html favicons, PWA manifest, Navbar, Footer, Home app card,
+InstallAppPrompt, SEO defaults, push icons, sw.js precache) points at these
+files. Verified live on the production build.
+Note: a higher-resolution source (≥512px) would sharpen the 512px PWA icon.
+
+### 11.2 Security hardening (pre-commit scanner findings — fixed, not bypassed)
+Found while pushing; all three resolved at code level without weakening any
+control:
+
+| Finding | File | Fix |
+|---|---|---|
+| "Hardcoded credentials" — second copy of the Firebase web config | `public/firebase-messaging-sw.js` | SW now fetches `/firebase-applet-config.json` (the committed single source of truth; config copied to `public/`). Firebase web API keys are public identifiers by design; access control remains Firestore rules + Auth. Push init is now async with an explicit failure path (push disabled + warning) instead of a stale duplicate config. |
+| SSRF entry — `deleteFromImgBB` fetched a DB-stored URL with only an `http` prefix check | `server/shared.ts` | Delete URLs must be `https:` AND on an imgBB host (`ibb.co`, `www.ibb.co`, `i.ibb.co`) before any outbound request; violations are refused and logged. |
+| SSRF entry — custom `https.request` wrapper with dynamic paths | `tools/deploy-vercel-env.ts` | Wrapper replaced by `vercelApi()` built on `fetch` with a fixed `https://api.vercel.com` base and an origin assertion. |
+
+Verification after hardening: type-check clean, `npm test` 96/96, all assets
+serve 200 on the production build (logo, messaging SW, config JSON).
+
+### 11.3 Scanner limitations (disclosed)
+The final commit passed the hook in "compatibility mode" — the scanner did not
+produce a complete scan conclusion (`library_source_limit_exceeded`,
+`callgraph_fact_partial`). This report therefore does NOT claim the project is
+fully audited; re-run the complete security audit when convenient.
