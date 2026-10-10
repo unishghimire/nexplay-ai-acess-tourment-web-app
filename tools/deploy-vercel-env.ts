@@ -1,9 +1,37 @@
 import fs from 'fs';
 import path from 'path';
-import https from 'https';
 
 const VERCEL_TOKEN = process.env.VERCEL_TOKEN;
 const PROJECT_ID = process.env.VERCEL_PROJECT_ID || 'prj_ufG1YSkYxGPFF3ObFCXkpe3fOjmY';
+// SSRF guard: this ops tool only ever talks to the Vercel API — every request
+// is built against this fixed base URL via the Vercel API helper below.
+const VERCEL_API_BASE = 'https://api.vercel.com';
+
+interface VercelResponse { status: number; data: any }
+
+function vercelApi(pathname: string, method: string, body?: string): Promise<VercelResponse> {
+  const url = new URL(pathname, VERCEL_API_BASE);
+  if (url.origin !== VERCEL_API_BASE) {
+    return Promise.reject(new Error('Blocked non-Vercel API URL: ' + url.origin));
+  }
+  return fetch(url, {
+    method,
+    headers: {
+      Authorization: `Bearer ${VERCEL_TOKEN}`,
+      ...(body ? { 'Content-Type': 'application/json', 'Content-Length': String(Buffer.byteLength(body)) } : {}),
+    },
+    body,
+  }).then(async (res) => {
+    const raw = await res.text();
+    let data: any = raw;
+    try {
+      data = raw ? JSON.parse(raw) : {};
+    } catch {
+      // non-JSON body — return as-is
+    }
+    return { status: res.status, data } as VercelResponse;
+  });
+}
 
 if (!VERCEL_TOKEN) {
   console.error('❌ VERCEL_TOKEN environment variable is required.');
@@ -15,27 +43,6 @@ interface EnvVar {
   value: string;
   type: 'encrypted' | 'plain';
   target: ('production' | 'preview' | 'development')[];
-}
-
-function httpsRequest(options: https.RequestOptions, body?: string): Promise<{ status: number; data: any }> {
-  return new Promise((resolve, reject) => {
-    const req = https.request(options, (res) => {
-      let raw = '';
-      res.on('data', (chunk) => (raw += chunk));
-      res.on('end', () => {
-        try {
-          const parsed = raw ? JSON.parse(raw) : {};
-          resolve({ status: res.statusCode || 0, data: parsed });
-        } catch {
-          resolve({ status: res.statusCode || 0, data: raw });
-        }
-      });
-    });
-
-    req.on('error', reject);
-    if (body) req.write(body);
-    req.end();
-  });
 }
 
 async function main() {
@@ -51,12 +58,7 @@ async function main() {
   const saBase64 = Buffer.from(saSingleLine).toString('base64');
 
   // 2. Fetch existing env vars to delete/overwrite cleanly
-  const existingRes = await httpsRequest({
-    hostname: 'api.vercel.com',
-    path: `/v9/projects/${PROJECT_ID}/env`,
-    method: 'GET',
-    headers: { Authorization: `Bearer ${VERCEL_TOKEN}` },
-  });
+  const existingRes = await vercelApi(`/v9/projects/${PROJECT_ID}/env`, 'GET');
 
   const existingEnvs: any[] = existingRes.data?.envs || [];
   console.log(`📋 Found ${existingEnvs.length} existing environment variables.`);
@@ -124,12 +126,7 @@ async function main() {
     const matches = existingEnvs.filter((e) => e.key === env.key);
     for (const match of matches) {
       console.log(`  🗑️ Removing old entry for ${match.key} (ID: ${match.id})...`);
-      await httpsRequest({
-        hostname: 'api.vercel.com',
-        path: `/v9/projects/${PROJECT_ID}/env/${match.id}`,
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${VERCEL_TOKEN}` },
-      });
+      await vercelApi(`/v9/projects/${PROJECT_ID}/env/${match.id}`, 'DELETE');
     }
   }
 
@@ -143,19 +140,7 @@ async function main() {
       target: env.target,
     });
 
-    const res = await httpsRequest(
-      {
-        hostname: 'api.vercel.com',
-        path: `/v10/projects/${PROJECT_ID}/env`,
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${VERCEL_TOKEN}`,
-          'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(body),
-        },
-      },
-      body
-    );
+    const res = await vercelApi(`/v10/projects/${PROJECT_ID}/env`, 'POST', body);
 
     if (res.status === 200 || res.status === 201) {
       console.log(`  ✅ Successfully set: ${env.key} -> [${env.target.join(', ')}]`);

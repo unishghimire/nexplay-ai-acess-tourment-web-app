@@ -7,6 +7,7 @@ import { db } from '../../../shared/config/firebase';
 import { Tournament, Game } from '../../../shared/types/types';
 import TournamentCard from '../components/TournamentCard';
 import { PageHeaderSkeleton, CardGridSkeleton } from '../../../shared/components/Skeleton';
+import { withStaticCache } from '../../../shared/utils/staticCache';
 import { Filter, Search, ChevronDown } from 'lucide-react';
 import { formatGameModeLabel, formatGameName, toDateSafe, isTournamentEvent } from '../../../shared/utils/utils';
 
@@ -51,13 +52,17 @@ const Tournaments: React.FC = () => {
         setFetchError(null);
         try {
             // Fetch initial page of tournaments and published games in parallel
+            // (games via the shared TTL cache — reference data, not worth a
+            // full unbounded read on every mount)
             const [tournamentsSnap, gamesSnap] = await Promise.all([
                 getDocs(query(
                     collection(db, 'tournaments'),
                     where('status', 'in', ['upcoming', 'published', 'live', 'completed']),
                     limit(PAGE_SIZE)
                 )),
-                getDocs(query(collection(db, 'games'), where('isPublished', '==', true)))
+                withStaticCache('games_published', () =>
+                    getDocs(query(collection(db, 'games'), where('isPublished', '==', true)))
+                )
             ]);
             
             const docs = tournamentsSnap.docs;

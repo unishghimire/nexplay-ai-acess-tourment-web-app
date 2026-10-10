@@ -44,11 +44,20 @@ export { db };
 
 export let analytics: any = null;
 if (typeof window !== 'undefined') {
-    isSupported().then((supported) => {
-        if (supported) {
-            analytics = getAnalytics(app);
-        }
-    });
+    // ponytail: analytics pulls ~450KB of gtag.js — initialize it after the page
+    // has fully loaded (idle) so it never competes with first-paint resources.
+    const initAnalytics = () => {
+        isSupported().then((supported) => {
+            if (supported) {
+                analytics = getAnalytics(app);
+            }
+        });
+    };
+    if (document.readyState === 'complete') {
+        setTimeout(initAnalytics, 3000);
+    } else {
+        window.addEventListener('load', () => setTimeout(initAnalytics, 3000), { once: true });
+    }
 
     // Reconnect Firestore when network comes back online
     window.addEventListener('online', () => {

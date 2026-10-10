@@ -94,23 +94,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Sync live user presence to Firebase Realtime Database
     useUserPresence();
 
-    const logout = async () => {
-        if (user) {
-            try {
-                await updateDoc(doc(db, 'users', user.uid), {
-                    status: 'offline',
-                    lastActive: serverTimestamp()
-                });
-            } catch (e) {
-                // Failed to update status on logout
-            }
-        }
-        await signOut(auth);
-        firebaseUserRef.current = null;
-        setAuthError(null);
-        setUser(null);
-        setProfile(null);
-    };
+    // logout lives in the memoized context value below (logoutCb)
 
     const initProfile = useCallback(async () => {
         const firebaseUser = firebaseUserRef.current;
@@ -320,8 +304,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return () => { cancelled = true; };
     }, [profile?.role]);
 
+    // ponytail: the context value must be memoized — an inline object hands a
+    // new identity to every useAuth() consumer on each provider render
+    // (user set, profile set, role-claim update, profileLoading toggles —
+    // several cascading full-consumer re-renders during startup alone).
+    const logoutCb = React.useCallback(async () => {
+        if (user) {
+            try {
+                await updateDoc(doc(db, 'users', user.uid), {
+                    status: 'offline',
+                    lastActive: serverTimestamp()
+                });
+            } catch (e) {
+                // Failed to update status on logout
+            }
+        }
+        await signOut(auth);
+        firebaseUserRef.current = null;
+        setAuthError(null);
+        setUser(null);
+        setProfile(null);
+    }, [user]);
+    const retryAuth = React.useCallback(() => void initProfile(), [initProfile]);
+    const authValue = React.useMemo(
+        () => ({ user, profile, loading, profileLoading, authError, retryAuth, logout: logoutCb, refreshProfile }),
+        [user, profile, loading, profileLoading, authError, retryAuth, logoutCb, refreshProfile],
+    );
+
     return (
-        <AuthContext.Provider value={{ user, profile, loading, profileLoading, authError, retryAuth: () => void initProfile(), logout, refreshProfile }}>
+        <AuthContext.Provider value={authValue}>
             {children}
         </AuthContext.Provider>
     );

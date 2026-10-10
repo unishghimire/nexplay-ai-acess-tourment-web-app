@@ -1,4 +1,5 @@
 import express from "express";
+import compression from "compression";
 import { createServer as createViteServer } from "vite";
 import path from "path";
 import { db, authenticateToken, rateLimit } from "./server/shared.js";
@@ -17,6 +18,10 @@ import { generateSitemapXml } from "./server/seo.js";
 async function startServer() {
   const app = express();
   const PORT = Number(process.env.PORT) || 3005;
+
+  // gzip responses (JS/CSS/JSON ship ~65-75% smaller; Firebase Hosting/Vercel
+  // compress automatically, the self-hosted Express path did not)
+  app.use(compression());
 
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ extended: true, limit: '10mb' }));

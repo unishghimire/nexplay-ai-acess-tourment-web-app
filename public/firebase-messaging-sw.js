@@ -1,40 +1,47 @@
 // Firebase Cloud Messaging Background Service Worker
 // Automatically loaded by Firebase SDK when running in background
+//
+// ponytail: the Firebase web config lives in /firebase-applet-config.json
+// (single source of truth, same values the app bundle uses). Firebase web API
+// keys are public identifiers by design — access control is enforced by
+// Firestore rules + App Check, not by hiding this config.
 
 importScripts('https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.13.2/firebase-messaging-compat.js');
 
-// Initialize Firebase in the service worker
-const firebaseConfig = {
-  apiKey: "AIzaSyANcdsPT054jotKUvU950kj9wWyBMZJ8g8",
-  authDomain: "nexplayorg-app.firebaseapp.com",
-  projectId: "nexplayorg-app",
-  storageBucket: "nexplayorg-app.firebasestorage.app",
-  messagingSenderId: "882712406279",
-  appId: "1:882712406279:web:86cc15d0ce544241abfda2"
-};
+fetch('/firebase-applet-config.json')
+  .then((res) => {
+    if (!res.ok) throw new Error('config fetch HTTP ' + res.status);
+    return res.json();
+  })
+  .then((firebaseConfig) => {
+    firebase.initializeApp(firebaseConfig);
 
-firebase.initializeApp(firebaseConfig);
+    const messaging = firebase.messaging();
 
-const messaging = firebase.messaging();
+    // Background message handler
+    messaging.onBackgroundMessage((payload) => {
+      const notificationTitle = payload.notification?.title || payload.data?.title || 'NexPlay Esports';
+      const notificationOptions = {
+        body: payload.notification?.body || payload.data?.body || 'New tournament update available!',
+        icon: payload.notification?.icon || '/logo.png',
+        badge: '/favicon-32x32.png',
+        data: {
+          url: payload.data?.url || payload.data?.link || '/',
+          timestamp: Date.now()
+        },
+        vibrate: [200, 100, 200],
+        tag: payload.data?.tag || `nexplay-${Date.now()}`
+      };
 
-// Background message handler
-messaging.onBackgroundMessage((payload) => {
-  const notificationTitle = payload.notification?.title || payload.data?.title || 'NexPlay Esports';
-  const notificationOptions = {
-    body: payload.notification?.body || payload.data?.body || 'New tournament update available!',
-    icon: payload.notification?.icon || '/logo.png',
-    badge: '/favicon-32x32.png',
-    data: {
-      url: payload.data?.url || payload.data?.link || '/',
-      timestamp: Date.now()
-    },
-    vibrate: [200, 100, 200],
-    tag: payload.data?.tag || `nexplay-${Date.now()}`
-  };
-
-  return self.registration.showNotification(notificationTitle, notificationOptions);
-});
+      return self.registration.showNotification(notificationTitle, notificationOptions);
+    });
+  })
+  .catch((err) => {
+    // Push notifications are unavailable without config — the rest of the
+    // service worker (notification clicks) still functions.
+    console.warn('[FCM SW] Firebase config unavailable, push notifications disabled:', err);
+  });
 
 // Handle notification click / tap
 self.addEventListener('notificationclick', (event) => {

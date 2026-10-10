@@ -55,8 +55,10 @@ export const SiteSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ 
         };
     }, []);
 
+    const settingsValue = React.useMemo(() => ({ settings, loading }), [settings, loading]);
+
     return (
-        <SiteSettingsContext.Provider value={{ settings, loading }}>
+        <SiteSettingsContext.Provider value={settingsValue}>
             {children}
         </SiteSettingsContext.Provider>
     );

@@ -6,6 +6,7 @@ import { Tournament, Game, Slide } from '../../../shared/types/types';
 import { PromoSlide } from '../components/HotPromotionsSlider';
 import TournamentCard from '../../tournaments/components/TournamentCard';
 import GameCard from '../components/GameCard';
+import { CardGridSkeleton } from '../../../shared/components/Skeleton';
 import HotPromotionsSlider from '../components/HotPromotionsSlider';
 import { useNavigate, Link } from 'react-router-dom';
 import { 
@@ -35,66 +36,66 @@ const Home: React.FC = () => {
         // Track Page View
 
         const fetchData = async () => {
-            
-            // Fetch active slides
-            try {
-                const slidesSnap = await getDocs(query(
+            // All four sections are independent queries — run them in parallel so
+            // data-ready time equals the slowest query, not the sum of all four
+            // (each round trip costs full network RTT for real users).
+            const [slidesRes, tournamentsRes, gamesRes, resultsRes] = await Promise.allSettled([
+                getDocs(query(
                     collection(db, 'slides'),
                     where('isActive', '==', true),
                     limit(10)
-                ));
-                let slidesData = slidesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Slide));
+                )),
+                getDocs(query(
+                    collection(db, 'tournaments'),
+                    where('isFeatured', '==', true),
+                    limit(10)
+                )),
+                getDocs(query(
+                    collection(db, 'games'),
+                    where('isPublished', '==', true),
+                    limit(8)
+                )),
+                getDocs(query(
+                    collection(db, 'tournaments'),
+                    where('status', '==', 'completed'),
+                    orderBy('startTime', 'desc'),
+                    limit(4)
+                )),
+            ]);
+
+            if (slidesRes.status === 'fulfilled') {
+                let slidesData = slidesRes.value.docs.map(doc => ({ id: doc.id, ...doc.data() } as Slide));
                 slidesData.sort((a, b) => {
                     const aTime = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
                     const bTime = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
                     return bTime - aTime;
                 });
                 setSlides(slidesData.slice(0, 5));
-            } catch (error) {
-                console.warn("Could not fetch slides:", error);
+            } else {
+                console.warn("Could not fetch slides:", slidesRes.reason);
             }
 
-            // Fetch featured tournaments
-            try {
-                const tournamentsSnap = await getDocs(query(
-                    collection(db, 'tournaments'),
-                    where('isFeatured', '==', true),
-                    limit(10)
-                ));
-                let tournamentsData = tournamentsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Tournament));
+            if (tournamentsRes.status === 'fulfilled') {
+                let tournamentsData = tournamentsRes.value.docs.map(doc => ({ id: doc.id, ...doc.data() } as Tournament));
                 tournamentsData = tournamentsData.filter(t => t.status === 'upcoming' && isTournamentEvent(t));
                 setFeaturedTournaments(tournamentsData.slice(0, 6));
-            } catch (error) {
-                console.warn("Could not fetch tournaments:", error);
+            } else {
+                console.warn("Could not fetch tournaments:", tournamentsRes.reason);
             }
 
-            // Fetch popular games
-            try {
-                const gamesSnap = await getDocs(query(
-                    collection(db, 'games'),
-                    where('isPublished', '==', true),
-                    limit(8)
-                ));
-                const gamesData = gamesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Game));
-                setPopularGames(gamesData);
-            } catch (error) {
-                console.warn("Could not fetch games:", error);
+            if (gamesRes.status === 'fulfilled') {
+                setPopularGames(gamesRes.value.docs.map(doc => ({ id: doc.id, ...doc.data() } as Game)));
+            } else {
+                console.warn("Could not fetch games:", gamesRes.reason);
             }
 
-            // Fetch recent results
-            try {
-                const resultsSnap = await getDocs(query(
-                    collection(db, 'tournaments'),
-                    where('status', '==', 'completed'),
-                    orderBy('startTime', 'desc'),
-                    limit(4)
-                ));
-                const resultsData = resultsSnap.docs
+            if (resultsRes.status === 'fulfilled') {
+                const resultsData = resultsRes.value.docs
                     .map(doc => ({ id: doc.id, ...doc.data() } as Tournament))
                     .filter(isTournamentEvent);
                 setRecentResults(resultsData);
-            } catch (error) {
-                console.warn("Could not fetch results:", error);
+            } else {
+                console.warn("Could not fetch results:", resultsRes.reason);
             }
 
             setLoading(false);
@@ -108,10 +109,19 @@ const Home: React.FC = () => {
     };
 
     if (loading) {
+        // Geometry-matched skeleton: reserves the hero band and section grids so
+        // the content swap does not push the footer (home CLS was 0.149).
         return (
-            <div className="flex flex-col items-center justify-center min-h-[60vh]" role="status">
-                <div className="w-12 h-12 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-                <p className="text-brand-400 text-xs font-black uppercase tracking-widest animate-pulse">Establishing Uplink...</p>
+            <div className="animate-fade-in space-y-8 sm:space-y-12 md:space-y-16 pb-12 sm:pb-20 relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" role="status" aria-label="Loading content">
+                <div data-skeleton className="animate-pulse bg-white/5 rounded-2xl sm:rounded-3xl h-[320px] sm:h-[400px] md:h-[500px]" />
+                <CardGridSkeleton
+                    count={4}
+                    gridClassName="grid grid-cols-2 md:grid-cols-4 gap-3.5"
+                />
+                <CardGridSkeleton
+                    count={4}
+                    gridClassName="grid grid-cols-2 md:grid-cols-4 gap-3.5"
+                />
             </div>
         );
     }

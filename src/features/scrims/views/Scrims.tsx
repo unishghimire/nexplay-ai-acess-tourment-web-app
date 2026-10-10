@@ -11,6 +11,7 @@ import { eventDetailUrl } from '../../../shared/utils/eventUrl';
 import { db } from '../../../shared/config/firebase';
 import TabErrorBoundary from '../../../shared/components/TabErrorBoundary';
 import { CardGridSkeleton } from '../../../shared/components/Skeleton';
+import { withStaticCache } from '../../../shared/utils/staticCache';
 
 const scrimFaqs = [
     {
@@ -206,7 +207,11 @@ const ScrimsContent: React.FC = () => {
     useEffect(() => {
         const fetchDbGames = async () => {
             try {
-                const snap = await getDocs(query(collection(db, 'games'), where('isPublished', '==', true)));
+                // Shared TTL cache with GameBrowser/Tournaments — games are
+                // admin-managed reference data, not worth a fetch per mount.
+                const snap = await withStaticCache('games_published', () =>
+                    getDocs(query(collection(db, 'games'), where('isPublished', '==', true)))
+                );
                 const names = snap.docs.map(d => d.data().name).filter(Boolean);
                 setDbGames(names);
             } catch (err) {

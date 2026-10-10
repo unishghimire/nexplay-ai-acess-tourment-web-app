@@ -247,11 +247,21 @@ export async function uploadBase64ToImgBB(base64String: string): Promise<ImgBBRe
  * Delete an image from ImgBB using the delete_url returned at upload time.
  * ImgBB does NOT support deletion by public ID — only via the delete_url.
  * ponytail: if delete_url is missing or expired, we cannot delete the physical file. Document this limitation.
+ *
+ * SSRF guard: the delete URL comes from a Firestore document, so it must be
+ * https AND on an imgBB host before any outbound request is made.
  */
+const IMGBB_DELETE_HOSTS = new Set(["ibb.co", "www.ibb.co", "i.ibb.co"]);
+
 export async function deleteFromImgBB(deleteUrl: string): Promise<boolean> {
   if (!deleteUrl || !deleteUrl.startsWith("http")) return false;
   try {
-    const resp = await fetch(deleteUrl, { method: "GET" });
+    const parsed = new URL(deleteUrl);
+    if (parsed.protocol !== "https:" || !IMGBB_DELETE_HOSTS.has(parsed.hostname)) {
+      console.warn("[ImgBB Delete] Blocked non-imgBB delete URL:", parsed.hostname);
+      return false;
+    }
+    const resp = await fetch(parsed, { method: "GET" });
     return resp.ok;
   } catch {
     return false;

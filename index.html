@@ -23,8 +23,9 @@
     <link rel="preconnect" href="https://www.gstatic.com" />
     <link rel="dns-prefetch" href="https://www.google.com" />
     <link rel="dns-prefetch" href="https://api.imgbb.com" />
-    <!-- Google reCAPTCHA Enterprise -->
-    <script src="https://www.google.com/recaptcha/enterprise.js?render=6LfF2KAtAAAAAE90jzyt4N4-bQbpkC4Mj4mZ47bN" async defer></script>
+    <!-- Google reCAPTCHA Enterprise: loaded on demand by
+         src/shared/utils/recaptchaEnterprise.ts only on auth/form pages
+         (~1.6MB third-party JS must not run on every route) -->
 
     <!-- Primary Meta Tags -->
     <title>NexPlay | The Ultimate Esports Platform & Tournament Hub</title>

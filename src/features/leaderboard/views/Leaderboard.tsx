@@ -1,7 +1,7 @@
 import Seo from '../../../shared/components/Seo';
 import { LeaderboardRowSkeleton } from '../../../shared/components/Skeleton';
 import React, { useState, useEffect } from 'react';
-import { collection, query, limit, getDocs } from 'firebase/firestore';
+import { collection, query, limit, getDocs, orderBy } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { UserProfile, Team } from '../../../shared/types/types';
 import { Trophy, Users, ArrowUp, ArrowDown, Minus, Search, ChevronRight, AlertCircle, Zap, Award, Building2 } from 'lucide-react';
@@ -141,15 +141,23 @@ const Leaderboard: React.FC = () => {
 
     useEffect(() => {
         fetchLeaderboard();
-    }, [view]);
+        // sortBy is fetched server-side now (top-100 by the active metric),
+        // so switching the metric must re-query.
+    }, [view, sortBy]);
 
     const fetchLeaderboard = async () => {
         setLoading(true);
         setFetchError(null);
         try {
+            // Server-side ordering (single-field indexes are automatic in
+            // Firestore): fetching the top-100 by the actual ranking metric
+            // both removes the client-side sort of arbitrary docs and fixes a
+            // correctness bug — an unordered limit(100) could silently omit
+            // high-XP players from the leaderboard.
             if (view === 'players') {
                 const q = query(
                     collection(db, 'users_public'),
+                    orderBy(sortBy === 'level' ? 'xp' : 'totalEarnings', 'desc'),
                     limit(100)
                 );
                 const querySnapshot = await getDocs(q);
@@ -161,6 +169,7 @@ const Leaderboard: React.FC = () => {
             } else if (view === 'teams') {
                 const q = query(
                     collection(db, 'teams'),
+                    orderBy(sortBy === 'level' ? 'xp' : 'totalEarnings', 'desc'),
                     limit(100)
                 );
                 const querySnapshot = await getDocs(q);
@@ -172,6 +181,7 @@ const Leaderboard: React.FC = () => {
             } else {
                 const q = query(
                     collection(db, 'users_public'),
+                    orderBy(sortBy === 'level' ? 'xp' : 'totalEarnings', 'desc'),
                     limit(100)
                 );
                 const querySnapshot = await getDocs(q);
