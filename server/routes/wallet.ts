@@ -2,8 +2,99 @@ import { Router } from "express";
 import { createHash } from "crypto";
 import { db, admin, authenticateToken, rateLimit } from "../shared.js";
 import { applyExpWithSeasonCheck } from "../levelSystem.js";
+import {
+  validateWithdrawalMethodInput,
+  maskWithdrawalMethod,
+  buildDestinationSnapshot,
+  buildAccountDetailsLine,
+  type StoredWithdrawalMethod,
+} from "../withdrawalMethod.js";
+
+const WITHDRAWAL_METHODS_COLLECTION = 'withdrawal_methods';
+
+async function getStoredWithdrawalMethod(uid: string): Promise<StoredWithdrawalMethod | null> {
+  const snap = await db.collection(WITHDRAWAL_METHODS_COLLECTION).doc(uid).get();
+  if (!snap.exists) return null;
+  return snap.data() as StoredWithdrawalMethod;
+}
 
 const router = Router();
+
+// ═════════════════════════════════════════════════════════════════════
+// SAVED WITHDRAWAL PAYMENT METHOD — one active method per user
+// Stored at withdrawal_methods/{uid}; Admin-SDK only (default-deny to
+// clients in firestore.rules). Masked in list views; the owner may read
+// the full number for their own edit form.
+// ═════════════════════════════════════════════════════════════════════
+
+// GET /api/wallet/withdrawal-method — the caller's saved method (or null)
+router.get("/api/wallet/withdrawal-method",
+  authenticateToken,
+  rateLimit(30, 15 * 60 * 1000),
+  async (req: any, res) => {
+    try {
+      const uid = req.user.userId;
+      const stored = await getStoredWithdrawalMethod(uid);
+      return res.status(200).json({ success: true, method: stored });
+    } catch (error: any) {
+      console.error("Get withdrawal method error:", error);
+      return res.status(500).json({ success: false, message: "Failed to load saved payment method" });
+    }
+  }
+);
+
+// PUT /api/wallet/withdrawal-method — add or replace (replace semantics: one active method)
+router.put("/api/wallet/withdrawal-method",
+  authenticateToken,
+  rateLimit(5, 15 * 60 * 1000),
+  async (req: any, res) => {
+    try {
+      const uid = req.user.userId;
+      const result = validateWithdrawalMethodInput(req.body);
+      if (result.error || !result.value) {
+        return res.status(400).json({ success: false, message: result.error ?? 'Invalid payment method payload' });
+      }
+
+      const now = admin.firestore.FieldValue.serverTimestamp();
+      const ref = db.collection(WITHDRAWAL_METHODS_COLLECTION).doc(uid);
+      const existing = await ref.get();
+
+      const stored: StoredWithdrawalMethod = {
+        uid,
+        ...result.value,
+        createdAt: existing.exists ? (existing.data() as StoredWithdrawalMethod).createdAt ?? now : now,
+        updatedAt: now,
+      };
+      await ref.set(stored);
+
+      // Respond with the masked view — the full number is only re-read via GET
+      // for the owner's own edit form.
+      return res.status(200).json({ success: true, method: maskWithdrawalMethod(stored) });
+    } catch (error: any) {
+      console.error("Save withdrawal method error:", error);
+      return res.status(500).json({ success: false, message: "Failed to save payment method" });
+    }
+  }
+);
+
+// DELETE /api/wallet/withdrawal-method — remove the saved method.
+// Historical withdrawals keep their embedded destination snapshot, so removal
+// only affects future submissions.
+router.delete("/api/wallet/withdrawal-method",
+  authenticateToken,
+  rateLimit(5, 15 * 60 * 1000),
+  async (req: any, res) => {
+    try {
+      const uid = req.user.userId;
+      await db.collection(WITHDRAWAL_METHODS_COLLECTION).doc(uid).delete();
+      return res.status(200).json({ success: true });
+    } catch (error: any) {
+      console.error("Delete withdrawal method error:", error);
+      return res.status(500).json({ success: false, message: "Failed to remove payment method" });
+    }
+  }
+);
+
 
 // â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• 
 
@@ -95,7 +186,7 @@ router.post("/api/wallet/withdraw",
   rateLimit(3, 15 * 60 * 1000),
   async (req: any, res) => {
     try {
-      const { amount, method, accountDetails } = req.body;
+      const { amount } = req.body;
       const uid = req.user.userId;
 
       const numAmount = Number(amount);
@@ -105,12 +196,21 @@ router.post("/api/wallet/withdraw",
       if (numAmount > 50000) {
         return res.status(400).json({ success: false, message: "Amount exceeds maximum withdrawal limit (Rs. 50,000)" });
       }
-      if (!method || typeof method !== 'string' || method.length > 100) {
-        return res.status(400).json({ success: false, message: "Invalid withdrawal method" });
+
+      // Backend enforcement: the payout destination comes exclusively from the
+      // user's saved payment method — never from request body fields.
+      const savedMethod = await getStoredWithdrawalMethod(uid);
+      if (!savedMethod) {
+        return res.status(400).json({
+          success: false,
+          message: "A saved withdrawal payment method is required. Add one before withdrawing.",
+          code: "WITHDRAWAL_METHOD_REQUIRED",
+        });
       }
-      if (!accountDetails || typeof accountDetails !== 'string' || accountDetails.length > 500) {
-        return res.status(400).json({ success: false, message: "Invalid account details" });
-      }
+
+      const destination = buildDestinationSnapshot(savedMethod);
+      const accountDetails = buildAccountDetailsLine(savedMethod);
+      const method = savedMethod.provider;
 
       const result = await db.runTransaction(async (tx) => {
         const userRef = db.collection('users').doc(uid);
@@ -151,6 +251,8 @@ router.post("/api/wallet/withdraw",
           status: 'pending',
           timestamp: admin.firestore.FieldValue.serverTimestamp(),
           accountDetails,
+          // Immutable payout-destination snapshot (survives method replacement)
+          destination,
           refId: `WIT-${Date.now()}`,
           balanceBefore,
           balanceAfter,

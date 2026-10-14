@@ -455,6 +455,37 @@ export interface PaymentMethod {
     createdAt: Timestamp | any;
 }
 
+// ── Saved Withdrawal Payment Method (one active method per user) ──
+export type WithdrawalMethodType = 'ewallet' | 'bank';
+
+export interface WithdrawalMethod {
+    uid: string;
+    type: WithdrawalMethodType;
+    provider: string;
+    accountHolderName: string;
+    accountNumber: string;
+    bankName?: string;
+    createdAt?: Timestamp | any;
+    updatedAt?: Timestamp | any;
+}
+
+export interface WithdrawalMethodInput {
+    type: WithdrawalMethodType;
+    provider: string;
+    accountHolderName: string;
+    accountNumber: string;
+    bankName?: string;
+}
+
+export interface MaskedWithdrawalMethod {
+    type: WithdrawalMethodType;
+    provider: string;
+    accountHolderName: string;
+    maskedAccountNumber: string;
+    bankName?: string;
+}
+
+
 export interface Slide {
     id: string;
     imageUrl: string;

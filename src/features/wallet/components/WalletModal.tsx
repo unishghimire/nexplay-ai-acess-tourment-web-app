@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, CreditCard, AlertTriangle, Upload, Copy, Check, QrCode, ShieldCheck } from 'lucide-react';
+import { X, CreditCard, AlertTriangle, Upload, Copy, Check, QrCode, ShieldCheck, Wallet, Pencil, Trash2, Plus } from 'lucide-react';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db, auth } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
-import { PaymentMethod, PaymentCategory, SiteSettings } from '../../../shared/types/types';
+import { PaymentMethod, PaymentCategory, SiteSettings, WithdrawalMethod, WithdrawalMethodType } from '../../../shared/types/types';
 import { formatCurrency } from '../../../shared/utils/utils';
 import { uploadImage, MediaCategory } from '../../../shared/services/mediaService';
+import { fetchWithdrawalMethod, saveWithdrawalMethod, removeWithdrawalMethod, invalidateWithdrawalMethodCache } from '../../../shared/services/withdrawalMethodService';
+
+const EWALLET_PROVIDERS = ['eSewa', 'Khalti', 'IME Pay'];
 
 interface WalletModalProps {
   isOpen: boolean;
@@ -97,13 +100,48 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
 
   // Withdrawal State
   const [withdrawAmount, setWithdrawAmount] = useState('');
-  const [withdrawMethod, setWithdrawMethod] = useState('');
-  const [accountDetails, setAccountDetails] = useState('');
+  const [savedMethod, setSavedMethod] = useState<WithdrawalMethod | null>(null);
+  const [methodLoading, setMethodLoading] = useState(true);
+  const [isEditingMethod, setIsEditingMethod] = useState(false);
+  const [isSavingMethod, setIsSavingMethod] = useState(false);
+  const [confirmingRemove, setConfirmingRemove] = useState(false);
+  // Add/replace form state
+  const [methodType, setMethodType] = useState<WithdrawalMethodType>('ewallet');
+  const [provider, setProvider] = useState('eSewa');
+  const [holderName, setHolderName] = useState('');
+  const [accountNumber, setAccountNumber] = useState('');
+  const [bankName, setBankName] = useState('');
+
+  const loadSavedMethod = async () => {
+    setMethodLoading(true);
+    try {
+      setSavedMethod(await fetchWithdrawalMethod());
+    } catch (error: any) {
+      showToast(error.message || 'Could not load your saved payment method', 'error');
+      setSavedMethod(null);
+    } finally {
+      setMethodLoading(false);
+    }
+  };
+
+  const startEditMethod = (m: WithdrawalMethod | null) => {
+    setMethodType(m?.type === 'bank' ? 'bank' : 'ewallet');
+    setProvider(m?.provider ?? 'eSewa');
+    setHolderName(m?.accountHolderName ?? '');
+    setAccountNumber(m?.accountNumber ?? '');
+    setBankName(m?.bankName ?? '');
+    setIsEditingMethod(true);
+    setConfirmingRemove(false);
+  };
 
   useEffect(() => {
     if (isOpen) {
       setActiveTab(initialTab);
       fetchData();
+      if (initialTab === 'withdraw') {
+        loadSavedMethod();
+        setIsEditingMethod(false);
+      }
     }
   }, [isOpen, initialTab]);
 
@@ -254,10 +292,53 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
     }
   };
 
-  const handleWithdrawSubmit = async () => {
-    if (!user || !withdrawAmount || !withdrawMethod || !accountDetails) {
-      return showToast('Please fill all fields', 'error');
+  const handleSaveMethod = async () => {
+    if (holderName.trim().length < 2) return showToast('Enter the account holder name', 'error');
+    const num = accountNumber.replace(/\s+/g, '');
+    if (!/^[A-Za-z0-9-]{5,32}$/.test(num)) return showToast('Account number must be 5-32 letters, digits or dashes', 'error');
+    if (methodType === 'bank' && bankName.trim().length < 2) return showToast('Enter the bank name', 'error');
+
+    setIsSavingMethod(true);
+    try {
+      const saved = await saveWithdrawalMethod({
+        type: methodType,
+        provider: provider.trim(),
+        accountHolderName: holderName.trim(),
+        accountNumber: num,
+        ...(methodType === 'bank' ? { bankName: bankName.trim() } : {}),
+      });
+      setSavedMethod(saved);
+      setIsEditingMethod(false);
+      showToast('Payment method saved — future withdrawals will use it automatically', 'success');
+    } catch (error: any) {
+      showToast(error.message || 'Failed to save payment method', 'error');
+    } finally {
+      setIsSavingMethod(false);
     }
+  };
+
+  const handleRemoveMethod = async () => {
+    setIsSavingMethod(true);
+    try {
+      await removeWithdrawalMethod();
+      setSavedMethod(null);
+      setIsEditingMethod(false);
+      setConfirmingRemove(false);
+      showToast('Payment method removed', 'success');
+    } catch (error: any) {
+      showToast(error.message || 'Failed to remove payment method', 'error');
+    } finally {
+      setIsSavingMethod(false);
+    }
+  };
+
+  const handleWithdrawSubmit = async () => {
+    if (!user) return showToast('You must be signed in', 'error');
+    if (!savedMethod) {
+      setIsEditingMethod(true);
+      return showToast('Add a withdrawal payment method first', 'error');
+    }
+    if (!withdrawAmount) return showToast('Please enter an amount', 'error');
 
     const amount = parseFloat(withdrawAmount);
     if (isNaN(amount) || amount <= 0) return showToast('Invalid amount', 'error');
@@ -275,26 +356,27 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
         return;
       }
 
+      // Destination is supplied server-side from the saved method — the
+      // client never posts payout details.
       const res = await fetch('/api/wallet/withdraw', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({
-          amount,
-          method: withdrawMethod,
-          accountDetails,
-        }),
+        body: JSON.stringify({ amount }),
       });
 
       const data = await res.json();
       if (!res.ok) {
+        if (data.code === 'WITHDRAWAL_METHOD_REQUIRED') {
+          invalidateWithdrawalMethodCache();
+          setSavedMethod(null);
+          setIsEditingMethod(true);
+        }
         showToast(data.message || 'Failed to withdraw', 'error');
         return;
       }
 
       showToast('Withdrawal request submitted!', 'success');
       setWithdrawAmount('');
-      setWithdrawMethod('');
-      setAccountDetails('');
       onClose();
       onSuccess?.();
     } catch (error) {
@@ -678,53 +760,222 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
                   {formatCurrency(profile?.balance || 0)}
                 </p>
               </div>
-              <div className="space-y-4">
+
+              {/* Saved Withdrawal Payment Method */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] text-gray-400 uppercase font-bold">Withdrawal Payment Method</label>
+                  {savedMethod && !isEditingMethod && (
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => startEditMethod(savedMethod)}
+                        className="text-[10px] font-black uppercase tracking-wider text-brand-400 hover:text-brand-300 px-2 py-1 rounded-lg bg-brand-500/10 border border-brand-500/20 flex items-center gap-1 transition"
+                      >
+                        <Pencil className="w-3 h-3" /> Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmingRemove(true)}
+                        className="text-[10px] font-black uppercase tracking-wider text-gray-400 hover:text-red-400 px-2 py-1 rounded-lg bg-surface border border-gray-800 flex items-center gap-1 transition"
+                      >
+                        <Trash2 className="w-3 h-3" /> Remove
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {methodLoading ? (
+                  <div className="bg-dark border border-gray-800 rounded-2xl p-4 animate-pulse">
+                    <div className="h-3.5 w-28 bg-white/10 rounded mb-2" />
+                    <div className="h-3 w-40 bg-white/5 rounded" />
+                  </div>
+                ) : savedMethod && !isEditingMethod ? (
+                  <div className="bg-dark border border-brand-500/30 rounded-2xl p-4 flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center shrink-0">
+                      <Wallet className="w-5 h-5 text-brand-400" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-black text-white">{savedMethod.provider}</span>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-brand-300 bg-brand-500/10 border border-brand-500/20 px-2 py-0.5 rounded-full">
+                          {savedMethod.type === 'bank' ? 'Bank Account' : 'E-Wallet'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-300 font-bold mt-1 truncate">{savedMethod.accountHolderName}</p>
+                      <p className="text-xs text-gray-500 font-mono">
+                        {savedMethod.type === 'bank' && savedMethod.bankName ? `${savedMethod.bankName} • ` : ''}••••{savedMethod.accountNumber.slice(-4)}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-2xl p-3 flex items-start gap-2.5 text-[11px] text-yellow-200">
+                    <AlertTriangle className="w-4 h-4 text-yellow-500 shrink-0 mt-0.5" />
+                    <span className="font-bold">A saved withdrawal method is required before you can request a withdrawal. Add yours below — you only need to do this once.</span>
+                  </div>
+                )}
+
+                {/* Confirm remove */}
+                {confirmingRemove && savedMethod && !isEditingMethod && (
+                  <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-3 space-y-2">
+                    <p className="text-[11px] text-red-200 font-bold">Remove this payment method? Future withdrawals will be blocked until you add a new one. Past withdrawal requests are not affected.</p>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={handleRemoveMethod}
+                        disabled={isSavingMethod}
+                        className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white text-[10px] font-black uppercase tracking-widest transition disabled:opacity-50"
+                      >
+                        {isSavingMethod ? 'Removing...' : 'Yes, Remove'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmingRemove(false)}
+                        className="px-3 py-1.5 rounded-lg bg-surface border border-gray-700 text-gray-300 text-[10px] font-black uppercase tracking-widest transition hover:text-white"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Add / Replace form */}
+                {(isEditingMethod || (!savedMethod && !methodLoading)) && (
+                  <div className="bg-dark/80 border border-gray-800 rounded-2xl p-4 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] text-gray-300 font-black uppercase tracking-wider">
+                        {savedMethod ? 'Replace Payment Method' : 'Add Payment Method'}
+                      </span>
+                      {savedMethod && (
+                        <button type="button" onClick={() => setIsEditingMethod(false)} className="text-[10px] text-gray-400 hover:text-white font-bold uppercase tracking-widest">
+                          Cancel
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Method type toggle */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => { setMethodType('ewallet'); setProvider('eSewa'); }}
+                        className={`py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest border transition ${methodType === 'ewallet' ? 'bg-brand-500/15 border-brand-500 text-white' : 'bg-surface border-gray-800 text-gray-400 hover:text-white'}`}
+                      >
+                        E-Wallet
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setMethodType('bank'); setProvider(''); }}
+                        className={`py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest border transition ${methodType === 'bank' ? 'bg-brand-500/15 border-brand-500 text-white' : 'bg-surface border-gray-800 text-gray-400 hover:text-white'}`}
+                      >
+                        Bank Account
+                      </button>
+                    </div>
+
+                    {methodType === 'ewallet' ? (
+                      <div>
+                        <label className="text-[10px] text-gray-400 uppercase font-bold block mb-1">Wallet Provider</label>
+                        <select
+                          value={provider}
+                          aria-label="Wallet Provider"
+                          onChange={(e) => setProvider(e.target.value)}
+                          className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 focus-visible:outline-none font-bold"
+                        >
+                          {EWALLET_PROVIDERS.map((p) => (
+                            <option key={p} value={p}>{p}</option>
+                          ))}
+                        </select>
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="text-[10px] text-gray-400 uppercase font-bold block mb-1">Bank Name</label>
+                        <input
+                          type="text"
+                          aria-label="Bank Name"
+                          placeholder="e.g., Nabil Bank"
+                          value={bankName}
+                          onChange={(e) => setBankName(e.target.value)}
+                          maxLength={80}
+                          className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 focus-visible:outline-none font-bold"
+                        />
+                      </div>
+                    )}
+
+                    <div>
+                      <label className="text-[10px] text-gray-400 uppercase font-bold block mb-1">Account Holder Name</label>
+                      <input
+                        type="text"
+                        aria-label="Account Holder Name"
+                        placeholder="Exactly as registered in your wallet/bank"
+                        value={holderName}
+                        onChange={(e) => setHolderName(e.target.value)}
+                        maxLength={80}
+                        className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 focus-visible:outline-none font-bold"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] text-gray-400 uppercase font-bold block mb-1">
+                        {methodType === 'ewallet' ? 'Wallet Number / Mobile' : 'Bank Account Number'}
+                      </label>
+                      <input
+                        type="text"
+                        aria-label="Account Number"
+                        inputMode="numeric"
+                        placeholder={methodType === 'ewallet' ? 'e.g., 98XXXXXXXX' : 'e.g., 01201017500123'}
+                        value={accountNumber}
+                        onChange={(e) => setAccountNumber(e.target.value)}
+                        maxLength={32}
+                        className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 focus-visible:outline-none font-bold font-mono"
+                      />
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleSaveMethod}
+                      disabled={isSavingMethod}
+                      className="w-full bg-brand-600 hover:bg-brand-500 text-white py-3.5 rounded-xl font-black uppercase tracking-widest transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-xs flex items-center justify-center gap-2"
+                    >
+                      {isSavingMethod ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          <span>Saving...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="w-4 h-4" />
+                          <span>{savedMethod ? 'Replace Method' : 'Save Payment Method'}</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Amount + submit — only enabled with a saved method */}
+              <div className="space-y-4 border-t border-gray-800 pt-4">
                 <div>
                   <label className="text-[10px] text-gray-400 uppercase font-bold block mb-1">Withdrawal Amount</label>
                   <input
                     type="number"
                     aria-label="Withdraw Amount"
-                    placeholder="Enter amount (Rs.)"
+                    placeholder={savedMethod ? 'Enter amount (Rs.)' : 'Add a payment method first'}
                     value={withdrawAmount}
                     onChange={(e) => setWithdrawAmount(e.target.value)}
-                    className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 focus-visible:outline-none font-bold"
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] text-gray-400 uppercase font-bold block mb-1">Withdrawal Method</label>
-                  <select
-                    value={withdrawMethod}
-                    aria-label="Withdraw Method"
-                    onChange={(e) => setWithdrawMethod(e.target.value)}
-                    className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 focus-visible:outline-none font-bold"
-                  >
-                    <option value="">Select Method</option>
-                    {paymentMethods.map(pm => (
-                      <option key={pm.id} value={pm.name}>{pm.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[10px] text-gray-400 uppercase font-bold block mb-1">Account Details</label>
-                  <textarea
-                    aria-label="Account Details"
-                    placeholder="Your Account Name, Mobile Number / Account Number, Bank Name..."
-                    value={accountDetails}
-                    onChange={(e) => setAccountDetails(e.target.value)}
-                    className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 focus-visible:outline-none font-bold h-24 resize-none"
+                    disabled={!savedMethod || isEditingMethod}
+                    className="w-full bg-dark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brand-500 focus-visible:outline-none font-bold disabled:opacity-50"
                   />
                 </div>
                 <div className="bg-yellow-500/10 border border-yellow-500/20 p-3 rounded-xl flex gap-2">
                   <AlertTriangle className="w-4 h-4 text-yellow-500 shrink-0" />
                   <p className="text-[10px] text-yellow-200 uppercase font-black leading-tight">
-                    Processed within 24-48 hours. Ensure your account details are exact.
+                    Processed within 24-48 hours to your saved {savedMethod ? savedMethod.provider : 'account'}. Ensure the details are exact.
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={handleWithdrawSubmit}
-                  disabled={isSubmitting}
-                  className="w-full bg-brand-600 hover:bg-brand-500 text-white py-4 rounded-xl font-black uppercase tracking-widest transition shadow-lg disabled:opacity-50 cursor-pointer text-sm"
+                  disabled={isSubmitting || !savedMethod || isEditingMethod}
+                  className="w-full bg-brand-600 hover:bg-brand-500 text-white py-4 rounded-xl font-black uppercase tracking-widest transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-sm"
                 >
                   {isSubmitting ? 'Processing...' : 'Request Withdrawal'}
                 </button>
