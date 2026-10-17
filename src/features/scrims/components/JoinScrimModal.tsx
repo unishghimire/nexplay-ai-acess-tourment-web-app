@@ -5,6 +5,7 @@ import { collection, query, where, getDocs } from 'firebase/firestore';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { formatCurrency } from '../../../shared/utils/utils';
+import { resolveEntryFee } from '../../../shared/utils/entryFee';
 
 interface JoinScrimModalProps {
   scrim: {
@@ -59,7 +60,7 @@ export const JoinScrimModal: React.FC<JoinScrimModalProps> = ({
     fetchTeammates();
   }, [profile?.teamId, scrim.format, user?.uid]);
 
-  const entryFee = Number(scrim.entryFee) || 0;
+  const entryFee = resolveEntryFee(scrim);
   const userBalance = Number(profile?.balance) || 0;
   const hasSufficientBalance = entryFee === 0 || userBalance >= entryFee;
 

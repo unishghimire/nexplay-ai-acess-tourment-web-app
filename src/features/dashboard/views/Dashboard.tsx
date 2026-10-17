@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { Tournament } from '../../../shared/types/types';
@@ -37,10 +37,12 @@ const Dashboard: React.FC = () => {
         if (!user) return;
         setFetchError(null);
         try {
-            // Fetch Joined Tournaments
+            // Fetch Joined Tournaments — bounded by participants(userId, timestamp DESC)
             const partSnap = await getDocs(query(
                 collection(db, 'participants'),
-                where('userId', '==', user.uid)
+                where('userId', '==', user.uid),
+                orderBy('timestamp', 'desc'),
+                limit(200)
             ));
             
             const partDocs = partSnap.docs.map(doc => doc.data());
@@ -89,8 +91,11 @@ const Dashboard: React.FC = () => {
                                         id: sDoc.id,
                                         ...sDoc.data(),
                                         role: 'participant',
-                                        registration: pDoc.data()
-                                    } as Tournament & { role: 'participant' | 'organizer'; registration?: any });
+                                        registration: pDoc.data(),
+                                        // Marks which collection this event lives in, so the
+                                        // credentials lookup targets the right subcollection path.
+                                        _sourceCollection: 'scrims',
+                                     } as Tournament & { role: 'participant' | 'organizer'; registration?: any; _sourceCollection?: 'scrims' });
                                 }
                             });
                         } catch (scrimErr) {
@@ -105,10 +110,17 @@ const Dashboard: React.FC = () => {
                 index === self.findIndex((m) => m.id === t.id)
             );
             
+            // AUD-013b: room credentials come only from the protected credentials
+            // subcollection. Any roomId/roomPass sitting on the public event document is
+            // stripped before rendering, so a legacy leaked value is not re-displayed here.
             const tournamentsWithCredentials = await Promise.all(uniqueTours.map(async tournament => {
-                if (tournament.status !== 'live' && tournament.status !== 'upcoming') return tournament;
-                const credentials = await fetchRoomCredentials(tournament.id);
-                return credentials ? { ...tournament, ...credentials } : tournament;
+                const { roomId: _leakedRoomId, roomPass: _leakedRoomPass, roomPassword: _leakedRoomPassword, roomDetails: _leakedRoomDetails, ...safeTournament } = tournament as any;
+                if (tournament.status !== 'live' && tournament.status !== 'upcoming') return safeTournament as Tournament & { role: 'participant' | 'organizer'; registration?: any };
+                const collectionName = (tournament as any)._sourceCollection === 'scrims' ? 'scrims' as const : 'tournaments' as const;
+                const credentials = await fetchRoomCredentials(tournament.id, undefined, collectionName);
+                return credentials
+                    ? { ...safeTournament, roomId: credentials.roomId, roomPass: credentials.roomPass } as Tournament & { role: 'participant' | 'organizer'; registration?: any }
+                    : safeTournament as Tournament & { role: 'participant' | 'organizer'; registration?: any };
             }));
             setMyTournaments(tournamentsWithCredentials);
 

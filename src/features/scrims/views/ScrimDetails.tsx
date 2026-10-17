@@ -5,6 +5,7 @@ import { db, auth } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { Seo } from '../../../shared/components/Seo';
+import { resolveEntryFee } from '../../../shared/utils/entryFee';
 import { SlotGrid } from '../../tournaments/components/SlotGrid';
 import { JoinScrimModal } from '../components/JoinScrimModal';
 import ScrimResultsTable from '../../tournaments/components/ScrimResultsTable';
@@ -85,6 +86,11 @@ export default function ScrimDetails() {
     Number(scrim?.rewardPerKill) > 0 ||
     Number(scrim?.rewardConfig?.rewardPerKill) > 0
   );
+
+  // AUD-043: a scrim that never configured a rate used to render "Rs.10 / Kill".
+  // The number has to come from the scrim, or the panel has to say it is unset.
+  const rewardPerKillValue = Math.max(0, Number(scrim?.rewardPerKill ?? scrim?.rewardConfig?.rewardPerKill ?? 0) || 0);
+  const perKillRateLabel = rewardPerKillValue > 0 ? `${formatCurrency(rewardPerKillValue)} / Kill` : 'Rate not set';
 
   // 1. Live subscription to scrim document in 'scrims' collection
   useEffect(() => {
@@ -239,7 +245,7 @@ export default function ScrimDetails() {
   const totalSlots = Number(scrim.totalSlots) || (format === 'Solo' ? 48 : format === 'Duo' ? 25 : 12);
   const slots = Array.isArray(scrim.slots) ? scrim.slots : [];
   const filledSlotsCount = slots.filter((s: any) => s.status === 'filled').length;
-  const entryFee = Number(scrim.entryFee) || 0;
+  const entryFee = resolveEntryFee(scrim);
   const prizePool = Number(scrim.prizePool) || 0;
   const hasResults = Boolean(scrim.results && scrim.results.length > 0) || scrim.status === 'completed';
 
@@ -276,7 +282,7 @@ export default function ScrimDetails() {
             </span>
             {isPerKill ? (
               <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-brand-500/20 border border-brand-500/40 text-brand-400 backdrop-blur-md flex items-center gap-1">
-                <Target className="w-3.5 h-3.5" /> Per-Kill Scrim ({formatCurrency(scrim?.rewardPerKill || scrim?.rewardConfig?.rewardPerKill || 10)}/kill)
+                <Target className="w-3.5 h-3.5" /> Per-Kill Scrim ({rewardPerKillValue > 0 ? `${formatCurrency(rewardPerKillValue)}/kill` : 'rate not set'})
               </span>
             ) : (
               <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-surface/90 border border-gray-700 text-brand-400 backdrop-blur-md">
@@ -296,7 +302,7 @@ export default function ScrimDetails() {
                   : 'bg-gray-500/20 text-gray-400 border border-gray-500/40'
               }`}
             >
-              {scrim.status === 'credentials_sent' ? 'Credentials Sent' : scrim.status.toUpperCase()}
+              {scrim.status === 'credentials_sent' ? 'Credentials Sent' : (scrim.status || 'scheduled').toUpperCase()}
             </span>
           </div>
 
@@ -365,7 +371,7 @@ export default function ScrimDetails() {
             </div>
             <div className="text-base font-black text-amber-400 mt-0.5">
               {isPerKill
-                ? `${formatCurrency(scrim?.rewardPerKill || scrim?.rewardConfig?.rewardPerKill || 10)} / Kill`
+                ? perKillRateLabel
                 : (prizePool === 0 ? 'Practice Match' : formatCurrency(prizePool))}
             </div>
           </div>
@@ -567,7 +573,7 @@ export default function ScrimDetails() {
                   </span>
                   <span className="font-bold text-amber-400 text-sm">
                     {isPerKill
-                      ? `${formatCurrency(scrim?.rewardPerKill || scrim?.rewardConfig?.rewardPerKill || 10)} / Kill`
+                      ? perKillRateLabel
                       : (prizePool === 0 ? 'Practice Match' : formatCurrency(prizePool))}
                   </span>
                 </div>

@@ -8,6 +8,7 @@ import { Tournament, Game } from '../../../shared/types/types';
 import TournamentCard from '../components/TournamentCard';
 import { PageHeaderSkeleton, CardGridSkeleton } from '../../../shared/components/Skeleton';
 import { withStaticCache } from '../../../shared/utils/staticCache';
+import { resolveEntryFee } from '../../../shared/utils/entryFee';
 import { Filter, Search, ChevronDown } from 'lucide-react';
 import { formatGameModeLabel, formatGameName, toDateSafe, isTournamentEvent } from '../../../shared/utils/utils';
 
@@ -161,7 +162,7 @@ const Tournaments: React.FC = () => {
             (statusFilter === 'upcoming' 
                 ? (t.status === 'upcoming' || t.status === 'published')
                 : t.status === statusFilter);
-        const matchesEntry = entryFilter === 'all' || (entryFilter === 'free' ? t.entryFee === 0 : t.entryFee > 0);
+        const matchesEntry = entryFilter === 'all' || (entryFilter === 'free' ? resolveEntryFee(t) === 0 : resolveEntryFee(t) > 0);
         const matchesTeamType = teamTypeFilter === 'all' || t.teamType === teamTypeFilter || t.teamType?.toLowerCase() === teamTypeFilter.toLowerCase();
         
         return matchesGame && matchesMode && matchesStatus && matchesEntry && matchesTeamType;

@@ -2,6 +2,7 @@ import Seo from '../../../shared/components/Seo';
 import React, { useEffect, useState } from 'react';
 import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
+import { withStaticCache } from '../../../shared/utils/staticCache';
 import { Tournament, Game, Slide } from '../../../shared/types/types';
 import { PromoSlide } from '../components/HotPromotionsSlider';
 import TournamentCard from '../../tournaments/components/TournamentCard';
@@ -50,11 +51,12 @@ const Home: React.FC = () => {
                     where('isFeatured', '==', true),
                     limit(10)
                 )),
-                getDocs(query(
-                    collection(db, 'games'),
-                    where('isPublished', '==', true),
-                    limit(8)
-                )),
+                withStaticCache('games_published', () =>
+                    getDocs(query(
+                        collection(db, 'games'),
+                        where('isPublished', '==', true)
+                    ))
+                ),
                 getDocs(query(
                     collection(db, 'tournaments'),
                     where('status', '==', 'completed'),
@@ -84,7 +86,7 @@ const Home: React.FC = () => {
             }
 
             if (gamesRes.status === 'fulfilled') {
-                setPopularGames(gamesRes.value.docs.map(doc => ({ id: doc.id, ...doc.data() } as Game)));
+                setPopularGames(gamesRes.value.docs.slice(0, 8).map(doc => ({ id: doc.id, ...doc.data() } as Game)));
             } else {
                 console.warn("Could not fetch games:", gamesRes.reason);
             }

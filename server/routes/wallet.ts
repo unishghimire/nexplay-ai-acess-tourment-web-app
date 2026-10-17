@@ -9,6 +9,7 @@ import {
   buildAccountDetailsLine,
   type StoredWithdrawalMethod,
 } from "../withdrawalMethod.js";
+import { isDuplicateDeposit, resolveFrozenRefundFee } from "../walletPolicy.js";
 
 const WITHDRAWAL_METHODS_COLLECTION = 'withdrawal_methods';
 
@@ -135,7 +136,9 @@ router.post("/api/wallet/deposit",
         }
       }
 
-      // Duplicate detection: same transactionCode + amount within 24h (only if active/pending)
+      // Duplicate detection: same transactionCode + amount (only if active/pending).
+      // R-04: the age window is gone — an approved deposit must never be reset to
+      // pending by a late resubmit, at any age.
       const dupQuery = db.collection('transactions')
         .where('userId', '==', uid)
         .where('transactionCode', '==', transactionCode)
@@ -143,34 +146,37 @@ router.post("/api/wallet/deposit",
         .where('type', '==', 'deposit')
         .limit(1);
       const dupSnap = await dupQuery.get();
-      if (!dupSnap.empty) {
-        const existingTx = dupSnap.docs[0].data();
-        if (existingTx.status !== 'rejected') {
-          const age = Date.now() - (existingTx.timestamp?.toMillis?.() || 0);
-          if (age < 24 * 60 * 60 * 1000) {
-            return res.status(409).json({ success: false, message: "Duplicate transaction detected. This transaction code was already submitted." });
-          }
-        }
+      if (!dupSnap.empty && isDuplicateDeposit(dupSnap.docs[0].data()?.status)) {
+        return res.status(409).json({ success: false, message: "Duplicate transaction detected. This transaction code was already submitted." });
       }
 
-      // Deposit is pending â€” balance credited when admin approves (atomic in useAdminData handleApproveTx)
-      // Deterministic ID makes concurrent double-submits converge on a single doc (idempotent replay).
+      // Deposit is pending — balance credited when admin approves.
+      // Deterministic ID makes concurrent double-submits converge on a single doc;
+      // the transactional existence check keeps an approved/replayed doc immutable.
       const depositKey = createHash('sha1').update(`${uid}|${numAmount}|${transactionCode}`).digest('hex').slice(0, 24);
       const txRef = db.collection('transactions').doc(`${uid}_DEP_${depositKey}`);
-      await txRef.set({
-        id: txRef.id,
-        userId: uid,
-        type: 'deposit',
-        amount: numAmount,
-        method,
-        status: 'pending',
-        timestamp: admin.firestore.FieldValue.serverTimestamp(),
-        accountDetails: `Sender Name: ${typeof senderName === 'string' && senderName.trim() ? senderName.trim() : 'N/A'}\nSender Number: ${senderNumber}\nTransaction Code/Name: ${transactionCode}`,
-        senderName: typeof senderName === 'string' ? senderName.trim() : '',
-        transactionCode,
-        proofUrl: finalProofUrl,
-        refId: `DEP-${Date.now()}`,
+      const committed = await db.runTransaction(async (tx) => {
+        const existing = await tx.get(txRef);
+        if (existing.exists && isDuplicateDeposit(existing.data()?.status)) return false;
+        tx.set(txRef, {
+          id: txRef.id,
+          userId: uid,
+          type: 'deposit',
+          amount: numAmount,
+          method,
+          status: 'pending',
+          timestamp: admin.firestore.FieldValue.serverTimestamp(),
+          accountDetails: `Sender Name: ${typeof senderName === 'string' && senderName.trim() ? senderName.trim() : 'N/A'}\nSender Number: ${senderNumber}\nTransaction Code/Name: ${transactionCode}`,
+          senderName: typeof senderName === 'string' ? senderName.trim() : '',
+          transactionCode,
+          proofUrl: finalProofUrl,
+          refId: `DEP-${Date.now()}`,
+        });
+        return true;
       });
+      if (!committed) {
+        return res.status(409).json({ success: false, message: "Duplicate transaction detected. This transaction code was already submitted." });
+      }
 
       return res.status(201).json({ success: true, message: "Deposit request submitted", transactionId: txRef.id });
     } catch (error: any) {
@@ -409,6 +415,19 @@ router.post("/api/wallet/join-tournament",
           ...validTeammateUids.map(tid => tx.get(db.collection('users').doc(tid)))
         ]);
 
+        // R-11: EXP attribution must follow verified team membership, mirroring the
+        // scrims join route — a client-supplied teamId/teammateUids is not proof.
+        const memberSnap = (isTeamEvent && teamRef)
+          ? await tx.get(db.collection('team_members').where('teamId', '==', effectiveTeamId))
+          : null;
+        const teamMemberUids: string[] = memberSnap
+          ? memberSnap.docs.map((d: any) => d.data()?.userId).filter((v: any): v is string => typeof v === 'string')
+          : [];
+        const verifiedTeamId = teamRef && teamMemberUids.includes(uid) ? effectiveTeamId : null;
+        const verifiedTeammateUids = verifiedTeamId
+          ? validTeammateUids.filter(tid => teamMemberUids.includes(tid))
+          : [];
+
         const effectiveEntryFee = Math.max(
           0,
           Math.round(Number(tData.entryFee ?? tData.requirements?.entryFee ?? tData.fee ?? 0))
@@ -558,8 +577,8 @@ router.post("/api/wallet/join-tournament",
           updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         }, { merge: true });
 
-        // Award +70 EXP to Team in Duo/Squad
-        if (teamRef && teamDoc && teamDoc.exists) {
+        // Award +70 EXP to Team in Duo/Squad (only a verified membership earns it)
+        if (verifiedTeamId && teamRef && teamDoc && teamDoc.exists) {
           const teamData = teamDoc.data()!;
           const teamExpUpdate = applyExpWithSeasonCheck(teamData, 70);
           const teamUpdates: any = {
@@ -574,11 +593,10 @@ router.post("/api/wallet/join-tournament",
           tx.update(teamRef, teamUpdates);
         }
 
-        // Award +50 EXP to all participating roster teammates in Duo/Squad
-        for (let i = 0; i < validTeammateUids.length; i++) {
-          const tmSnap = teammateDocs[i];
+        // Award +50 EXP to roster teammates confirmed on the same verified team
+        for (const tmId of verifiedTeammateUids) {
+          const tmSnap = teammateDocs[validTeammateUids.indexOf(tmId)];
           if (tmSnap && tmSnap.exists) {
-            const tmId = validTeammateUids[i];
             const tmData = tmSnap.data()!;
             const tmExpUpdate = applyExpWithSeasonCheck(tmData, 50);
             const tmUpdates: any = {
@@ -736,19 +754,28 @@ router.post("/api/wallet/leave-tournament",
         const tData = actualTDoc.data()!;
         const uData = uDoc.data()!;
 
+        // R-05: read the host wallet doc during the read phase so the escrow debit
+        // can be clamped to what the host actually holds (and a missing host doc is
+        // never created with negative balances by a merge-set).
+        const leaveHostId = tData.hostUid || tData.orgId || tData.hostId;
+        const leaveHostSnap = leaveHostId ? await tx.get(db.collection('users').doc(leaveHostId)) : null;
+
         if (partDoc.data().status === 'refunded') throw new Error("Already refunded");
         if (['live', 'paused', 'completed', 'cancelled'].includes(tData.status)) throw new Error("Cannot leave a tournament that has already started");
         const partData = partDoc.data();
-        const refundAmount = Math.max(
-          0,
-          Number(
-            partData?.entryFeePaid ??
-            tData.entryFee ??
-            tData.requirements?.entryFee ??
-            tData.fee ??
-            0
-          )
+        const leaveSlots = Array.isArray(tData.slots) ? tData.slots : [];
+        const mySlotNum = partData?.slotNumber;
+        const slotIdx = leaveSlots.findIndex((s: any) =>
+          (mySlotNum && s.slotNumber === mySlotNum) ||
+          s.userId === uid ||
+          s.captainUid === uid ||
+          s.reservedBy === uid ||
+          s.teamId === uid ||
+          (uData.teamId && s.teamId === uData.teamId)
         );
+        // R-05: refund only the fee frozen at join time (participant first, then
+        // slot). The live event fee is organizer-editable and must never pay refunds.
+        const refundAmount = resolveFrozenRefundFee(partData ?? null, slotIdx !== -1 ? leaveSlots[slotIdx] : null);
         const balanceBefore = uData.balance;
         const balanceAfter = balanceBefore + refundAmount;
 
@@ -762,18 +789,8 @@ router.post("/api/wallet/leave-tournament",
           tournamentUpdates.escrowBalance = admin.firestore.FieldValue.increment(-refundAmount);
         }
 
-        if (Array.isArray(tData.slots) && tData.slots.length > 0) {
-          const mySlotNum = partDoc.data()?.slotNumber;
-          const slotIdx = tData.slots.findIndex((s: any) => 
-            (mySlotNum && s.slotNumber === mySlotNum) ||
-            s.userId === uid ||
-            s.captainUid === uid ||
-            s.reservedBy === uid ||
-            s.teamId === uid ||
-            (uData.teamId && s.teamId === uData.teamId)
-          );
-          if (slotIdx !== -1) {
-            const updatedSlots = [...tData.slots];
+        if (slotIdx !== -1) {
+          const updatedSlots = [...leaveSlots];
             updatedSlots[slotIdx] = {
               slotNumber: updatedSlots[slotIdx].slotNumber || (slotIdx + 1),
               status: 'open',
@@ -793,7 +810,6 @@ router.post("/api/wallet/leave-tournament",
             if (tData.status === 'full') {
               tournamentUpdates.status = 'upcoming';
             }
-          }
         }
 
         // 2. ALL WRITES AFTER (No tx.get calls allowed past this point)
@@ -809,13 +825,18 @@ router.post("/api/wallet/leave-tournament",
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
           }, { merge: true });
 
-          const hostId = tData.hostUid || tData.orgId || tData.hostId;
-          if (hostId) {
-            const hostRef = db.collection('users').doc(hostId);
-            tx.set(hostRef, {
-              orgTournamentsLockedBalance: admin.firestore.FieldValue.increment(-refundAmount),
-              orgPendingEarnings: admin.firestore.FieldValue.increment(-refundAmount),
-            }, { merge: true });
+          // R-05: clamp the host escrow debit to the host's actual held balances and
+          // skip hosts without a user doc (a merge-set would create one in negative).
+          if (leaveHostId && leaveHostSnap && leaveHostSnap.exists) {
+            const hostData = leaveHostSnap.data() as any;
+            const debitLocked = Math.min(refundAmount, Math.max(0, Math.round(Number(hostData.orgTournamentsLockedBalance) || 0)));
+            const debitPending = Math.min(refundAmount, Math.max(0, Math.round(Number(hostData.orgPendingEarnings) || 0)));
+            if (debitLocked > 0 || debitPending > 0) {
+              tx.set(db.collection('users').doc(leaveHostId), {
+                orgTournamentsLockedBalance: admin.firestore.FieldValue.increment(-debitLocked),
+                orgPendingEarnings: admin.firestore.FieldValue.increment(-debitPending),
+              }, { merge: true });
+            }
           }
 
           const txRef = db.collection('transactions').doc();

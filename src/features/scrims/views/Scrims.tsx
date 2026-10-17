@@ -5,6 +5,7 @@ import { Scrim } from '../../../shared/types/types';
 import { Trophy, Search, Filter, Calendar, Clock, Gamepad2, AlertCircle, Target } from 'lucide-react';
 import { motion } from 'motion/react';
 import { formatCurrency, formatDate, formatDateShort, formatGameName, isScrimEvent } from '../../../shared/utils/utils';
+import { resolveEntryFee } from '../../../shared/utils/entryFee';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { collection, getDocs, query, where, limit, startAfter, QueryDocumentSnapshot } from 'firebase/firestore';
 import { eventDetailUrl } from '../../../shared/utils/eventUrl';
@@ -460,7 +461,7 @@ const ScrimsContent: React.FC = () => {
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                             <div className="bg-black p-3 rounded-2xl border border-gray-800">
                                                 <div className="text-[10px] text-gray-500 uppercase font-black mb-1">Entry</div>
-                                                <div className="text-white font-black">{!scrim.entryFee || scrim.entryFee === 0 ? 'FREE' : formatCurrency(scrim.entryFee)}</div>
+                                                <div className="text-white font-black">{resolveEntryFee(scrim) === 0 ? 'FREE' : formatCurrency(resolveEntryFee(scrim))}</div>
                                             </div>
                                             <div className="bg-black p-3 rounded-2xl border border-gray-800">
                                                 <div className="text-[10px] text-gray-500 uppercase font-black mb-1">{isPerKill ? 'Per-Kill' : 'Prize Pool'}</div>

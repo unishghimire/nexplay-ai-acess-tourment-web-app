@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Tournament } from '../../../shared/types/types';
 import { DEFAULT_BANNER } from '../../../shared/constants/constants';
 import { formatCurrency, formatDate, formatDateShort, formatGameName, isScrimEvent } from '../../../shared/utils/utils';
+import { resolveEntryFee } from '../../../shared/utils/entryFee';
 import { Clock, Users, Trophy, ChevronRight, Gamepad2, MapPin, Target } from 'lucide-react';
 import { motion } from 'motion/react';
 import { ScoringInfoCard } from './ScoringInfoCard';
@@ -14,6 +15,7 @@ interface TournamentCardProps {
 
 const TournamentCard: React.FC<TournamentCardProps> = ({ tournament }) => {
     const bannerUrl = tournament.bannerUrl || DEFAULT_BANNER;
+    const entryFee = resolveEntryFee(tournament);
     const isLive = tournament.status === 'live';
     const isCompleted = tournament.status === 'completed';
     const statusLabel = isLive ? 'LIVE' : isCompleted ? 'COMPLETED' : 'UPCOMING';
@@ -112,8 +114,8 @@ const TournamentCard: React.FC<TournamentCardProps> = ({ tournament }) => {
                         <div className="flex justify-between items-end mb-2 gap-2">
                             <div className="flex flex-col min-w-0">
                                 <span className="text-[8px] sm:text-[9px] text-slate-400 font-black uppercase tracking-widest truncate">Entry Fee</span>
-                                <span className={`text-xs sm:text-sm font-black truncate ${tournament.entryFee === 0 ? 'text-emerald-400' : 'text-white'}`}>
-                                    {tournament.entryFee === 0 ? 'FREE' : formatCurrency(tournament.entryFee)}
+                                <span className={`text-xs sm:text-sm font-black truncate ${entryFee === 0 ? 'text-emerald-400' : 'text-white'}`}>
+                                    {entryFee === 0 ? 'FREE' : formatCurrency(entryFee)}
                                 </span>
                             </div>
                             <div className="text-right shrink-0">

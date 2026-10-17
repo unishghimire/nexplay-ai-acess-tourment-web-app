@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { isScrimEvent, isTournamentEvent } from './utils.js';
+import { isScrimEvent, isTournamentEvent, isActiveEventStatus } from './utils.js';
 
 console.log('Testing eventFilter (isScrimEvent and isTournamentEvent)...');
 
@@ -99,5 +99,16 @@ assert.equal(isScrimEvent(null), false);
 assert.equal(isTournamentEvent(null), false);
 assert.equal(isScrimEvent(undefined), false);
 assert.equal(isTournamentEvent(undefined), false);
+
+// isActiveEventStatus — live-listener eligibility for NotificationContext
+assert.equal(isActiveEventStatus('upcoming'), true);
+assert.equal(isActiveEventStatus('published'), true);
+assert.equal(isActiveEventStatus('live'), true);
+assert.equal(isActiveEventStatus('paused'), true);
+assert.equal(isActiveEventStatus('open'), true);
+assert.equal(isActiveEventStatus('full'), true);
+assert.equal(isActiveEventStatus('completed'), false);
+assert.equal(isActiveEventStatus('cancelled'), false);
+assert.equal(isActiveEventStatus(undefined), true, 'missing status stays subscribed (fail-safe)');
 
 console.log('All eventFilter tests passed successfully! [OK]');

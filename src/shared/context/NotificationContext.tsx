@@ -1,12 +1,12 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { eventDetailUrl } from '../utils/eventUrl';
-import { collection, query, where, getDocs, onSnapshot, doc } from 'firebase/firestore';
+import { collection, query, where, getDocs, onSnapshot, doc, orderBy, limit } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from './AuthContext';
 import { Tournament } from '../types/types';
 import { NotificationService } from '../services/NotificationService';
 import { X } from 'lucide-react';
-import { toDateSafe } from '../utils/utils';
+import { toDateSafe, isActiveEventStatus } from '../utils/utils';
 
 interface Toast {
     id: string;
@@ -49,9 +49,13 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
         const setupLiveListeners = async () => {
             try {
+                // Bounded by the participants(userId, timestamp DESC) index: a user's
+                // lifetime join history is never streamed in full again.
                 const partSnap = await getDocs(query(
                     collection(db, 'participants'),
-                    where('userId', '==', user.uid)
+                    where('userId', '==', user.uid),
+                    orderBy('timestamp', 'desc'),
+                    limit(200)
                 ));
 
                 if (!isMounted) return;
@@ -64,7 +68,31 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
                 if (tourIds.length === 0) return;
 
-                tourIds.forEach((tId) => {
+                // PERF: only events that can still go LIVE need a permanent listener.
+                // Completed/cancelled events are probed once here and skipped.
+                let liveCandidateIds = tourIds;
+                try {
+                    const BATCH = 30;
+                    const snaps = await Promise.all(
+                        Array.from({ length: Math.ceil(tourIds.length / BATCH) }, (_, i) =>
+                            getDocs(query(
+                                collection(db, 'tournaments'),
+                                where('__name__', 'in', tourIds.slice(i * BATCH, (i + 1) * BATCH))
+                            ))
+                        )
+                    );
+                    const statusById = new Map<string, unknown>();
+                    snaps.forEach(s => s.docs.forEach(d => statusById.set(d.id, (d.data() as any)?.status)));
+                    liveCandidateIds = tourIds.filter(id => isActiveEventStatus(statusById.get(id)));
+                } catch (err) {
+                    // Probe failure must not cost the LIVE-toast feature: fall back to
+                    // today's behaviour (subscribe to every joined event).
+                    console.warn("Event status probe failed; subscribing to all joined events:", err);
+                }
+
+                if (!isMounted) return;
+
+                liveCandidateIds.forEach((tId) => {
                     let isInitial = true;
                     const unsub = onSnapshot(
                         doc(db, 'tournaments', tId),
@@ -103,7 +131,12 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
                 // before setupLiveListeners has completed.
                 let tourIds = tourIdsRef.current;
                 if (tourIds.length === 0) {
-                    const partSnap = await getDocs(query(collection(db, 'participants'), where('userId', '==', user.uid)));
+                    const partSnap = await getDocs(query(
+                        collection(db, 'participants'),
+                        where('userId', '==', user.uid),
+                        orderBy('timestamp', 'desc'),
+                        limit(200)
+                    ));
                     tourIds = partSnap.docs.map(d => d.data().tournamentId).filter(Boolean);
                     tourIdsRef.current = tourIds;
                 }

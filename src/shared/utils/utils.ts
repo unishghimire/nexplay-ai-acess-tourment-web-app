@@ -292,6 +292,16 @@ export function isSafeInternalPath(pathname: unknown): pathname is string {
 }
 
 /**
+ * Live-listener eligibility: an event can still transition to `live` (or resume
+ * from `paused`) only while it is not completed/cancelled. NotificationContext
+ * uses this to avoid attaching a permanent document listener to every event a
+ * user ever joined — completed events can never fire a "now LIVE" toast.
+ */
+export function isActiveEventStatus(status: unknown): boolean {
+    return status !== 'completed' && status !== 'cancelled';
+}
+
+/**
  * Determines whether an event represents an esports Scrim (practice match).
  * A scrim is NOT a tournament: it must not have explicit tournament markers,
  * and must have explicit or implicit scrim markers.

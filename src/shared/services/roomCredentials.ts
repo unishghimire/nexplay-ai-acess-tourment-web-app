@@ -11,8 +11,12 @@ export interface RoomCredentials {
 
 /**
  * Fetches room credentials for a tournament, scrim, or specific group.
- * Uses the /{collection}/{id}/credentials subcollection which is protected
+ * Reads ONLY the /{collection}/{id}/credentials subcollection, which is protected
  * by Firestore rules — only host + joined participants can read.
+ *
+ * AUD-013b: the previous fallbacks that read roomId/roomPass off the public event
+ * document (and off the sibling collection) were removed. Those documents are
+ * `allow read: if true`, so falling back to them handed room credentials to anyone.
  *
  * @param id The tournament or scrim ID
  * @param groupId Optional group ID for per-group credentials
@@ -26,42 +30,10 @@ export async function fetchRoomCredentials(
 ): Promise<RoomCredentials | null> {
     try {
         const credId = groupId ? `group_${groupId}` : 'main';
-        const credRef = doc(db, collectionName, id, 'credentials', credId);
-        const credSnap = await getDoc(credRef);
+        const credSnap = await getDoc(doc(db, collectionName, id, 'credentials', credId));
 
         if (credSnap.exists()) {
             return credSnap.data() as RoomCredentials;
-        }
-
-        // Direct parent document fallback
-        const mainSnap = await getDoc(doc(db, collectionName, id));
-        if (mainSnap.exists()) {
-            const d = mainSnap.data() as any;
-            const docRoomId = d.roomId || d.roomDetails?.roomId;
-            const docRoomPass = d.roomPass || d.roomPassword || d.roomDetails?.roomPass || d.roomDetails?.roomPassword;
-            if (docRoomId || docRoomPass) {
-                return {
-                    roomId: docRoomId ? String(docRoomId) : undefined,
-                    roomPass: docRoomPass ? String(docRoomPass) : undefined,
-                    streamUrl: d.streamUrl || d.ytLink || d.roomDetails?.streamUrl,
-                };
-            }
-        }
-
-        // Cross-collection fallback ('scrims' <-> 'tournaments')
-        const altCollection = collectionName === 'tournaments' ? 'scrims' : 'tournaments';
-        const altSnap = await getDoc(doc(db, altCollection, id));
-        if (altSnap.exists()) {
-            const d = altSnap.data() as any;
-            const docRoomId = d.roomId || d.roomDetails?.roomId;
-            const docRoomPass = d.roomPass || d.roomPassword || d.roomDetails?.roomPass || d.roomDetails?.roomPassword;
-            if (docRoomId || docRoomPass) {
-                return {
-                    roomId: docRoomId ? String(docRoomId) : undefined,
-                    roomPass: docRoomPass ? String(docRoomPass) : undefined,
-                    streamUrl: d.streamUrl || d.ytLink || d.roomDetails?.streamUrl,
-                };
-            }
         }
 
         return null;
@@ -145,26 +117,9 @@ export function subscribeRoomCredentials(
         // Fallback gracefully
     }
 
-    // 3. Direct document listener for organizers broadcasting directly on scrim/tournament doc
-    let unsubMainDoc: Unsubscribe | null = null;
-    try {
-        const mainRef = doc(db, collectionName, id);
-        unsubMainDoc = onSnapshot(mainRef, (snap) => {
-            if (snap.exists()) {
-                const d = snap.data() as any;
-                const docRoomId = d.roomId || d.roomDetails?.roomId;
-                const docRoomPass = d.roomPass || d.roomPassword || d.roomDetails?.roomPass || d.roomDetails?.roomPassword;
-                const docStream = d.streamUrl || d.ytLink || d.roomDetails?.streamUrl;
-                if (docRoomId || docRoomPass) {
-                    emitIfChanged({
-                        roomId: docRoomId ? String(docRoomId) : undefined,
-                        roomPass: docRoomPass ? String(docRoomPass) : undefined,
-                        streamUrl: docStream ? String(docStream) : undefined,
-                    });
-                }
-            }
-        }, () => {});
-    } catch {}
+    // AUD-013b: the third listener used to read roomId/roomPass off the public event
+    // document. That document is `allow read: if true`, so it leaked credentials to
+    // anyone who could guess a scrim/tournament ID. Removed.
 
     return () => {
         isUnsubscribed = true;
@@ -173,9 +128,6 @@ export function subscribeRoomCredentials(
         }
         if (unsubFirestore) {
             try { unsubFirestore(); } catch {}
-        }
-        if (unsubMainDoc) {
-            try { unsubMainDoc(); } catch {}
         }
     };
 }

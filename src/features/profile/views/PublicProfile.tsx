@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import Seo from '../../../shared/components/Seo';
-import { doc, getDoc, collection, query, where, orderBy, limit, getDocs, addDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, orderBy, limit, getDocs, addDoc, deleteDoc, serverTimestamp, getCountFromServer } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { UserProfile, Team, Tournament, OrgPost, MatchHistory } from '../../../shared/types/types';
@@ -78,9 +78,9 @@ const PublicProfile: React.FC = () => {
                     setMatchHistory(matches);
                 }));
 
-                // 5. Fetch Follow Data
-                promises.push(getDocs(query(collection(db, 'follows'), where('followingId', '==', id))).then(snap => setFollowerCount(snap.size)));
-                promises.push(getDocs(query(collection(db, 'follows'), where('followerId', '==', id))).then(snap => setFollowingCount(snap.size)));
+                // 5. Fetch Follow Data — server-side count (1 read, not N docs)
+                promises.push(getCountFromServer(query(collection(db, 'follows'), where('followingId', '==', id))).then(c => setFollowerCount(c.data().count)));
+                promises.push(getCountFromServer(query(collection(db, 'follows'), where('followerId', '==', id))).then(c => setFollowingCount(c.data().count)));
 
                 if (user && user.uid !== id) {
                     promises.push(getDocs(query(collection(db, 'follows'), where('followerId', '==', user.uid), where('followingId', '==', id))).then(snap => {

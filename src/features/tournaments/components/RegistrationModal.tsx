@@ -6,6 +6,7 @@ import { Tournament, UserProfile } from '../../../shared/types/types';
 import Modal from '../../../shared/components/Modal';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { NotificationService } from '../../../shared/services/NotificationService';
+import { resolveEntryFee } from '../../../shared/utils/entryFee';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { Trophy, Users, DollarSign, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { formatCurrency, formatGameName } from '../../../shared/utils/utils';
@@ -32,6 +33,7 @@ const RegistrationModal: React.FC<RegistrationModalProps> = ({
     const { showToast } = useNotification();
     const [loading, setLoading] = useState(false);
     const [selectedSlot, setSelectedSlot] = useState<number | ''>(initialSlotNumber || '');
+    const entryFee = resolveEntryFee(tournament);
 
     // SCRIM ENGINE: captain's webapp UID is required to reserve a slot
     const isScrim = tournament.matchType === 'scrims' || (tournament as any).isScrim === true || (tournament as any).type === 'scrim' || (tournament as any).type === 'scrims';
@@ -134,7 +136,7 @@ const RegistrationModal: React.FC<RegistrationModalProps> = ({
                             <div className="text-[9px] text-gray-500 font-black uppercase tracking-widest mb-1 flex items-center gap-1">
                                 <DollarSign className="w-3 h-3" /> Entry Fee
                             </div>
-                            <div className="text-white font-black">{tournament.entryFee > 0 ? formatCurrency(tournament.entryFee) : 'FREE'}</div>
+                            <div className="text-white font-black">{entryFee > 0 ? formatCurrency(entryFee) : 'FREE'}</div>
                         </div>
                         <div className="bg-dark/50 p-3 rounded-xl border border-white/5">
                             <div className="text-[9px] text-gray-500 font-black uppercase tracking-widest mb-1 flex items-center gap-1">
@@ -202,7 +204,7 @@ const RegistrationModal: React.FC<RegistrationModalProps> = ({
                         </div>
                         <div className="flex justify-between items-center pt-2 border-t border-gray-800">
                             <span className="text-xs text-gray-500 font-bold">Available Balance</span>
-                            <span className={`text-sm font-black ${profile.balance >= (tournament.entryFee || 0) ? 'text-green-500' : 'text-red-500'}`}>
+                            <span className={`text-sm font-black ${profile.balance >= entryFee ? 'text-green-500' : 'text-red-500'}`}>
                                 {formatCurrency(profile.balance)}
                             </span>
                         </div>
@@ -226,7 +228,7 @@ const RegistrationModal: React.FC<RegistrationModalProps> = ({
                     </button>
                     <button type="button" 
                         onClick={handleSubmit}
-                        disabled={loading || profile.balance < (tournament.entryFee || 0)}
+                        disabled={loading || profile.balance < entryFee}
                         className="flex-1 bg-brand-600 hover:bg-brand-500 text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-brand-600/20 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
                     >
                         {loading ? (

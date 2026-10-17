@@ -227,13 +227,16 @@ export function aggregateTeamRewards(params: {
         if (!teamMap[entry.teamId]) {
             teamMap[entry.teamId] = {
                 teamId: entry.teamId,
-                teamName: entry.playerName, // Will be overridden below
+                teamName: entry.teamName || '',
                 totalKills: 0,
                 totalReward: 0,
                 playerBreakdown: [],
             };
         }
         const team = teamMap[entry.teamId];
+        // Solo scrims have no team doc, so fall back to the player's own name —
+        // but only after exhausting any real team name carried by the entries.
+        if (!team.teamName && entry.teamName) team.teamName = entry.teamName;
         team.totalKills += entry.verifiedKills;
         team.totalReward += entry.rewardAmount;
         team.playerBreakdown.push({
@@ -245,7 +248,12 @@ export function aggregateTeamRewards(params: {
     }
 
     // Sort teams by total kills desc
-    return Object.values(teamMap).sort((a, b) => b.totalKills - a.totalKills);
+    return Object.values(teamMap)
+        .map(team => ({
+            ...team,
+            teamName: team.teamName || team.playerBreakdown[0]?.playerName || team.teamId,
+        }))
+        .sort((a, b) => b.totalKills - a.totalKills);
 }
 
 /**

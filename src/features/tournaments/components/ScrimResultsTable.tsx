@@ -4,6 +4,7 @@ import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firesto
 import { db } from '../../../shared/config/firebase';
 import { Tournament } from '../../../shared/types/types';
 import { FREE_FIRE_DEFAULT_SCORING } from '../../../shared/types/scoring';
+import { calculatePlayerReward } from '../../../shared/services/perKillEngine';
 import { formatCurrency } from '../../../shared/utils/utils';
 
 export interface ScrimResultRow {
@@ -16,6 +17,8 @@ export interface ScrimResultRow {
     totalPoints: number;
     prize?: number;
     isRealPlayer?: boolean;
+    /** Result row whose name matched no registered slot/participant. */
+    unresolved?: boolean;
 }
 
 interface ScrimResultsTableProps {
@@ -54,8 +57,10 @@ export function getPrizeWinnerCount(tournament: Tournament): number {
         }
     }
 
-    // 3. Fallback based on prizePool
-    const pool = Number(tournament.prizePool || (tournament as any).requirements?.entryFee || 0);
+    // 3. Fallback based on prizePool.
+    // AUD-044: requirements.entryFee is what a player PAYS, not what the event pays
+    // out, so it must never resolve a prize pool (it invented "top 3 paid" on free scrims).
+    const pool = Number(tournament.prizePool || 0);
     if (pool > 0) {
         return 3; // Default esports standard top 3 payout
     }
@@ -98,6 +103,10 @@ export const ScrimResultsTable: React.FC<ScrimResultsTableProps> = ({ tournament
     // Dynamic Team Logo cache: maps teamId, normalized teamName, and ownerId -> logoUrl
     const [teamLogos, setTeamLogos] = useState<Record<string, string>>({});
     const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
+    // PERF: identifiers already resolved (found or definitively missing) plus an
+    // input signature, so live snapshot ticks that change nothing re-query nothing.
+    const logoResolvedRef = React.useRef<Set<string>>(new Set());
+    const logoSigRef = React.useRef('');
 
     useEffect(() => {
         let isMounted = true;
@@ -203,6 +212,26 @@ export const ScrimResultsTable: React.FC<ScrimResultsTableProps> = ({ tournament
                 }
             });
 
+            // PERF: drop identifiers already resolved (found or missing) during this
+            // mount, and skip the whole round-trip when nothing about the inputs
+            // changed — live snapshot ticks used to re-query every logo every time.
+            const known = logoResolvedRef.current;
+            Array.from(teamIdsToFetch).forEach(v => { if (known.has('id:' + v)) teamIdsToFetch.delete(v); });
+            Array.from(teamNamesToFetch).forEach(v => { if (known.has('name:' + v)) teamNamesToFetch.delete(v); });
+            Array.from(ownerIdsToFetch).forEach(v => { if (known.has('owner:' + v)) ownerIdsToFetch.delete(v); });
+            const sig = [
+                Array.from(teamIdsToFetch).sort().join(','),
+                Array.from(teamNamesToFetch).sort().join(','),
+                Array.from(ownerIdsToFetch).sort().join(','),
+            ].join('|');
+            if (sig === logoSigRef.current) return;
+            logoSigRef.current = sig;
+            const newlyResolved = [
+                ...Array.from(teamIdsToFetch).map(v => 'id:' + v),
+                ...Array.from(teamNamesToFetch).map(v => 'name:' + v),
+                ...Array.from(ownerIdsToFetch).map(v => 'owner:' + v),
+            ];
+
             try {
                 // 1. Fetch by teamId directly
                 const teamIdArr = Array.from(teamIdsToFetch).filter(Boolean);
@@ -299,10 +328,14 @@ export const ScrimResultsTable: React.FC<ScrimResultsTableProps> = ({ tournament
                     }
                 }
 
+                newlyResolved.forEach(k => logoResolvedRef.current.add(k));
+
                 if (isMounted) {
                     setTeamLogos(prev => ({ ...prev, ...logoMap }));
                 }
             } catch (error) {
+                // Allow the next snapshot to retry a failed resolution round.
+                logoSigRef.current = '';
                 console.warn('Could not resolve all team logos:', error);
             }
         }
@@ -313,6 +346,26 @@ export const ScrimResultsTable: React.FC<ScrimResultsTableProps> = ({ tournament
 
     const isPerKillMode = tournament.tournamentMode === 'PER_KILL_REWARD' || Number((tournament as any).rewardPerKill) > 0;
     const rewardPerKill = Number((tournament as any).rewardPerKill || (tournament as any).rewardConfig?.rewardPerKill || 0);
+    const rewardConfig = (tournament as any).rewardConfig ?? (tournament as any).rewardSnapshot ?? null;
+
+    /**
+     * AUD-041/042: the bounty shown per row must come from perKillEngine so the
+     * configured minimum-kill threshold and per-match cap are honoured, and a rank
+     * prize stacked on top of it is clamped to the per-player cap. Raw
+     * kills x rewardPerKill ignored both and silently exceeded the configured pool.
+     */
+    const killBountyFor = (kills: number) => {
+        if (!isPerKillMode || rewardPerKill <= 0) return 0;
+        return calculatePlayerReward({
+            verifiedKills: Math.max(0, Math.floor(Number(kills) || 0)),
+            rewardPerKill,
+            minimumKillsForReward: Math.max(0, Math.floor(Number(rewardConfig?.minimumKillsForReward) || 0)),
+            maximumRewardPerMatch: Number(rewardConfig?.maximumRewardPerMatch) || undefined,
+        }).rewardAmount;
+    };
+
+    const perPlayerCap = Number(rewardConfig?.maximumRewardPerPlayer ?? rewardConfig?.capPerPlayer) || 0;
+    const withPlayerCap = (amount: number) => (perPlayerCap > 0 ? Math.min(amount, perPlayerCap) : amount);
 
     // Extract table rows from all possible result sources
     const rows: ScrimResultRow[] = useMemo(() => {
@@ -357,12 +410,9 @@ export const ScrimResultsTable: React.FC<ScrimResultsTableProps> = ({ tournament
                 let prize = Number(prizeItem?.amount ?? (winnerItem as any)?.prize ?? (winnerItem as any)?.amount ?? 0);
 
                 if (isPerKillMode && rewardPerKill > 0) {
-                    const killBounty = kills * rewardPerKill;
-                    if (winnerItem && (winnerItem as any).prize !== undefined) {
-                        prize = Number((winnerItem as any).prize);
-                    } else {
-                        prize = Number(prizeItem?.amount ?? 0) + killBounty;
-                    }
+                    const killBounty = killBountyFor(kills);
+                    const rankPrize = Number(prizeItem?.amount ?? (winnerItem as any)?.prize ?? (winnerItem as any)?.amount ?? 0);
+                    prize = withPlayerCap(rankPrize + killBounty);
                 }
 
                 const teamNameStr = m.team || (m as any).name || `Team #${sn}`;
@@ -391,6 +441,7 @@ export const ScrimResultsTable: React.FC<ScrimResultsTableProps> = ({ tournament
                     totalPoints,
                     prize,
                     isRealPlayer: true,
+                    unresolved: !entityMatch && !(m as any).userId && !m.teamId,
                 };
             });
         }
@@ -417,8 +468,8 @@ export const ScrimResultsTable: React.FC<ScrimResultsTableProps> = ({ tournament
                 const totalPoints = isPerKillMode ? 0 : Number(w.totalPoints ?? w.points ?? (kills * scoring.killPoints + placementPoints));
                 let prize = Number(w.prize || w.amount || 0);
 
-                if (isPerKillMode && rewardPerKill > 0 && prize === 0 && kills > 0) {
-                    prize = kills * rewardPerKill;
+                if (isPerKillMode && rewardPerKill > 0) {
+                    prize = withPlayerCap(prize + killBountyFor(kills));
                 }
 
                 const teamNameStr = w.teamName || w.username || w.name || `Team #${sn}`;
@@ -450,6 +501,7 @@ export const ScrimResultsTable: React.FC<ScrimResultsTableProps> = ({ tournament
                     totalPoints,
                     prize,
                     isRealPlayer: true,
+                    unresolved: !entityMatch && !w.userId && !w.teamId,
                 };
             });
         }
@@ -600,7 +652,7 @@ export const ScrimResultsTable: React.FC<ScrimResultsTableProps> = ({ tournament
             <div className="bg-card/50 rounded-2xl sm:rounded-3xl border border-gray-800 overflow-hidden shadow-2xl">
                 <div className="overflow-x-auto custom-scrollbar">
                     {(() => {
-                        const hasPrizes = rows.some(r => r.prize > 0) || Number(tournament.prizePool) > 0 || isPerKillMode;
+                        const hasPrizes = rows.some(r => r.prize > 0) || Number(tournament.prizePool) > 0 || (isPerKillMode && rewardPerKill > 0);
 
                         return (
                             <table className="w-full text-left border-collapse">
@@ -676,6 +728,14 @@ export const ScrimResultsTable: React.FC<ScrimResultsTableProps> = ({ tournament
                                                             </span>
                                                             {isWinner && row.sn === 1 && (
                                                                 <Crown className="w-3.5 h-3.5 text-amber-400 shrink-0 drop-shadow-[0_0_6px_rgba(245,158,11,0.6)]" />
+                                                            )}
+                                                            {row.unresolved && (
+                                                                <span
+                                                                    className="inline-flex items-center gap-1 font-black text-[9px] uppercase tracking-wider text-red-400 bg-red-500/10 border border-red-500/25 px-1.5 py-0.5 rounded-lg shrink-0"
+                                                                    title="This result row did not match any registered team or player in this event."
+                                                                >
+                                                                    <AlertCircle className="w-3 h-3" /> Unverified entry
+                                                                </span>
                                                             )}
                                                             {row.prize !== undefined && row.prize > 0 && !hasPrizes && (
                                                                 <span className="hidden sm:inline-flex items-center gap-0.5 font-mono font-black text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-lg shrink-0">

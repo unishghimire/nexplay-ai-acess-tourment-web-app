@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { doc, updateDoc, writeBatch, serverTimestamp, collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
+import { doc, updateDoc, writeBatch, serverTimestamp, collection, query, where, orderBy, limit, getDocs, getCountFromServer } from 'firebase/firestore';
 import { updateEmail, sendPasswordResetEmail } from 'firebase/auth';
 import { db, auth } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
@@ -120,13 +120,12 @@ const Profile: React.FC = () => {
         if (user) {
             const fetchFollowCounts = async () => {
                 try {
+                    // Server-side aggregation: counts cost 1 read instead of N docs.
                     const followersQ = query(collection(db, 'follows'), where('followingId', '==', user.uid));
-                    const followersSnap = await getDocs(followersQ);
-                    setFollowerCount(followersSnap.size);
+                    setFollowerCount((await getCountFromServer(followersQ)).data().count);
 
                     const followingQ = query(collection(db, 'follows'), where('followerId', '==', user.uid));
-                    const followingSnap = await getDocs(followingQ);
-                    setFollowingCount(followingSnap.size);
+                    setFollowingCount((await getCountFromServer(followingQ)).data().count);
                 } catch (error) {
                     console.error("Error fetching follow counts:", error);
                 }

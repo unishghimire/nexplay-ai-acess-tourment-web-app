@@ -85,6 +85,7 @@ export interface PlayerKillReward {
     groupId: string;
     matchId: string;
     teamId: string;                  // Team the player belongs to (solo = solo team)
+    teamName?: string;               // Display name of that team, when the caller knows it
     playerId: string;                // The actual player who performed the kills
     playerName: string;
     submittedKills: number;          // What admin entered

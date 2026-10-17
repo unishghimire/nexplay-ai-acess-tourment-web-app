@@ -8,6 +8,7 @@ import Modal from '../../../shared/components/Modal';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { NotificationService } from '../../../shared/services/NotificationService';
 import { useAuth } from '../../../shared/context/AuthContext';
+import { resolveEntryFee } from '../../../shared/utils/entryFee';
 import { ShieldCheck, Users, Trophy, DollarSign, Shield } from 'lucide-react';
 import { formatCurrency, formatGameName, isScrimEvent } from '../../../shared/utils/utils';
 import { normalizeScrimSlots, getSlotCount } from '../../../shared/utils/scrimSlots';
@@ -34,6 +35,7 @@ const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
     const { user, refreshProfile } = useAuth();
     const { showToast } = useNotification();
     const navigate = useNavigate();
+    const entryFee = resolveEntryFee(tournament);
 
     const [userTeams, setUserTeams] = useState<Team[]>([]);
     const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
@@ -288,11 +290,11 @@ const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
                     <div className="grid grid-cols-2 gap-3">
                         <div className="bg-dark/50 p-2.5 rounded-xl border border-white/5">
                             <div className="text-[9px] text-gray-500 font-black uppercase tracking-widest">Entry Fee</div>
-                            <div className="text-white font-black text-sm">{tournament.entryFee > 0 ? formatCurrency(tournament.entryFee) : 'FREE'}</div>
+                            <div className="text-white font-black text-sm">{entryFee > 0 ? formatCurrency(entryFee) : 'FREE'}</div>
                         </div>
                         <div className="bg-dark/50 p-2.5 rounded-xl border border-white/5">
                             <div className="text-[9px] text-gray-500 font-black uppercase tracking-widest">Your Balance</div>
-                            <div className={`text-sm font-black ${profile.balance < tournament.entryFee ? 'text-red-400' : 'text-emerald-400'}`}>
+                            <div className={`text-sm font-black ${profile.balance < entryFee ? 'text-red-400' : 'text-emerald-400'}`}>
                                 {formatCurrency(profile.balance || 0)}
                             </div>
                         </div>
@@ -486,7 +488,7 @@ const JoinTournamentModal: React.FC<JoinTournamentModalProps> = ({
                     </button>
                     <button type="button" 
                         onClick={handleSubmit} 
-                        disabled={loading || (isTeamEvent && userTeams.length === 0) || profile.balance < (tournament.entryFee || 0)}
+                        disabled={loading || (isTeamEvent && userTeams.length === 0) || profile.balance < entryFee}
                         className="flex-1 bg-brand-600 hover:bg-brand-500 text-white py-3 rounded-xl font-black uppercase text-xs tracking-wider transition shadow-lg disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
                     >
                         {loading ? (

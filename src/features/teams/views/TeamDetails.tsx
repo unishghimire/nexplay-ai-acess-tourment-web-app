@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp, updateDoc, deleteDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp, updateDoc, deleteDoc, setDoc, orderBy, limit } from 'firebase/firestore';
 import { db } from '../../../shared/config/firebase';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
@@ -155,7 +155,9 @@ const TeamDetails: React.FC = () => {
                 setInvites([]);
             }
 
-            const activitiesQ = query(collection(db, 'team_activity'), where('teamId', '==', id));
+            // Bounded by the team_activity(teamId, timestamp DESC) index; the feed
+            // shows the latest 50 actions instead of streaming the whole history.
+            const activitiesQ = query(collection(db, 'team_activity'), where('teamId', '==', id), orderBy('timestamp', 'desc'), limit(50));
             const activitiesSnap = await getDocs(activitiesQ);
             const acts = activitiesSnap.docs.map(d => ({ id: d.id, ...(d.data() as object) } as TeamActivity));
             acts.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));

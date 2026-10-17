@@ -6,6 +6,7 @@ import { useAuth } from '../../../shared/context/AuthContext';
 import { useNotification } from '../../../shared/context/NotificationContext';
 import { PaymentMethod, PaymentCategory, SiteSettings, WithdrawalMethod, WithdrawalMethodType } from '../../../shared/types/types';
 import { formatCurrency } from '../../../shared/utils/utils';
+import { withStaticCache } from '../../../shared/utils/staticCache';
 import { uploadImage, MediaCategory } from '../../../shared/services/mediaService';
 import { fetchWithdrawalMethod, saveWithdrawalMethod, removeWithdrawalMethod, invalidateWithdrawalMethodCache } from '../../../shared/services/withdrawalMethodService';
 
@@ -148,10 +149,10 @@ const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose, initialTab =
   const fetchData = async () => {
     setLoading(true);
     try {
-      const paySnap = await getDocs(query(
+      const paySnap = await withStaticCache('paymentMethods_active', () => getDocs(query(
         collection(db, 'paymentMethods'),
         where('isActive', '==', true)
-      ));
+      )));
       const loadedMethods = paySnap.docs.map(doc => {
         const data = doc.data();
         return {

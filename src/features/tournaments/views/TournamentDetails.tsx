@@ -7,6 +7,7 @@ import { DEFAULT_BANNER } from '../../../shared/constants/constants';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { formatCurrency, formatDate, formatGameName, getYoutubeId, toDateSafe, sanitizeUrl, isScrimEvent, isTournamentEvent } from '../../../shared/utils/utils';
 import { getSlotCount, getFilledSlotCount, normalizeScrimSlots } from '../../../shared/utils/scrimSlots';
+import { resolveEntryFee } from '../../../shared/utils/entryFee';
 import { Clock, Users, Trophy, Lock, Eye, EyeOff, Play, Share2, Calendar, MapPin, Info, Medal, ExternalLink, ChevronRight, AlertCircle, CheckCircle2, Search, Building2 , Target, Trash2, Settings2, AlertTriangle, ShieldAlert, Shield } from 'lucide-react';
 import RegistrationModal from '../components/RegistrationModal';
 import JoinTournamentModal from '../components/JoinTournamentModal';
@@ -213,7 +214,7 @@ export default function TournamentDetails() {
         if (tournament?.prizeDistribution && tournament.prizeDistribution.length > 0) {
             return tournament.prizeDistribution;
         }
-        const pool = Number(tournament?.prizePool || (tournament as any)?.requirements?.entryFee || 0);
+        const pool = Number(tournament?.prizePool || 0);
         if (pool > 0) {
             return [
                 { id: 'p1', rank: 1, label: '1st Place (Champion)', amount: Math.round(pool * 0.5) },
@@ -222,7 +223,7 @@ export default function TournamentDetails() {
             ];
         }
         return [];
-    }, [tournament?.prizeDistribution, tournament?.prizePool, (tournament as any)?.requirements?.entryFee]);
+    }, [tournament?.prizeDistribution, tournament?.prizePool]);
 
     const hasResults = Boolean(
         tournament?.status === 'completed' ||
@@ -231,11 +232,13 @@ export default function TournamentDetails() {
         ((tournament as any)?.results && (tournament as any).results.length > 0)
     );
 
+    const tournamentEntryFee = resolveEntryFee(tournament);
+
     const isAwaitingFunding = Boolean(
         !isEventScrim && tournament && (
             tournament.status === 'pending_funding' ||
             tournament.fundingStatus === 'PENDING_FUNDING' ||
-            ((tournament.prizePool || 0) > 0 && (tournament.entryFee || 0) === 0 && tournament.fundingStatus !== 'RESERVED')
+            ((tournament.prizePool || 0) > 0 && tournamentEntryFee === 0 && tournament.fundingStatus !== 'RESERVED')
         )
     );
 
@@ -248,7 +251,18 @@ export default function TournamentDetails() {
             if (snapshot.exists()) {
                 const tData = { id: snapshot.id, ...snapshot.data() } as Tournament;
                 if (isScrimEvent(tData)) {
-                    navigate(`/scrims/${snapshot.id}`, { replace: true });
+                    // R-09: only bounce to /scrims/:id when the canonical scrim doc
+                    // exists. Legacy scrim-titled docs living in `tournaments` used to
+                    // ping-pong between the two routes forever.
+                    getDoc(doc(db, 'scrims', snapshot.id)).then((scrimSnap) => {
+                        if (scrimSnap.exists()) {
+                            navigate(`/scrims/${snapshot.id}`, { replace: true });
+                            return;
+                        }
+                        setTournament(tData);
+                        setEventCollection('tournaments');
+                        setLoading(false);
+                    });
                     return;
                 }
                 setTournament(tData);
@@ -365,53 +379,15 @@ export default function TournamentDetails() {
         };
     }, [id]);
 
-    // Independent effect for join status (depends on user/profile which might resolve later)
+    // Synchronize user slot number and joined status directly from tournament slots array & effectiveParticipants
+    // (PERF: this replaces a dedicated participants listener plus a team-fallback
+    // query — the merged roster subscription above already streams exactly this data.)
     useEffect(() => {
-        if (!user || !id) {
+        if (!user) {
             setIsJoined(false);
             return;
         }
-
-        const unsubJoin = onSnapshot(query(
-            collection(db, 'participants'),
-            where('tournamentId', '==', id),
-            where('userId', '==', user.uid)
-        ), async (snapshot) => {
-            let joined = !snapshot.empty;
-            let mySlot: number | null = null;
-            if (!snapshot.empty) {
-                const partData = snapshot.docs[0].data();
-                if (partData.slotNumber) mySlot = partData.slotNumber;
-            }
-
-            // Team-registration fallback
-            if (!joined && profile?.teamId) {
-                try {
-                    const teamSnap = await getDocs(query(
-                        collection(db, 'participants'),
-                        where('tournamentId', '==', id),
-                        where('teamId', '==', profile.teamId)
-                    ));
-                    if (!teamSnap.empty) {
-                        joined = true;
-                        if (teamSnap.docs[0].data()?.slotNumber) {
-                            mySlot = teamSnap.docs[0].data().slotNumber;
-                        }
-                    }
-                } catch (err) {
-                    console.warn('Team join-status fallback failed:', err);
-                }
-            }
-            setIsJoined(joined);
-            if (mySlot) setMySlotNumber(mySlot);
-        }, (err) => console.warn('Join status subscription failed:', err));
-
-        return () => unsubJoin();
-    }, [id, user, profile?.teamId]);
-
-    // Synchronize user slot number and joined status directly from tournament slots array & effectiveParticipants
-    useEffect(() => {
-        if (!user || !tournament) return;
+        if (!tournament) return;
         const slotMatch = normalizedSlots.find(s => 
             s.userId === user.uid || 
             s.captainUid === user.uid || 
@@ -423,11 +399,16 @@ export default function TournamentDetails() {
             setIsJoined(true);
             return;
         }
-        const partMatch = effectiveParticipants.find(p => p.userId === user.uid);
-        if (partMatch?.slotNumber) {
-            setMySlotNumber(partMatch.slotNumber);
+        const partMatch = effectiveParticipants.find(p =>
+            p.userId === user.uid ||
+            (Boolean(profile?.teamId) && p.teamId === profile?.teamId)
+        );
+        if (partMatch) {
+            if (partMatch.slotNumber) setMySlotNumber(partMatch.slotNumber);
             setIsJoined(true);
+            return;
         }
+        setIsJoined(false);
     }, [user, tournament, normalizedSlots, effectiveParticipants, profile?.teamId]);
 
     useEffect(() => {
@@ -706,8 +687,11 @@ export default function TournamentDetails() {
     const bannerUrl = tournament.bannerUrl || DEFAULT_BANNER;
     const bannerStyle = { backgroundImage: `url('${bannerUrl}')`, backgroundSize: 'cover', backgroundPosition: 'center' };
 
-    const effectiveRoomId = roomCreds?.roomId || (tournament as any)?.roomId || (tournament as any)?.roomDetails?.roomId;
-    const effectiveRoomPass = roomCreds?.roomPass || (tournament as any)?.roomPass || (tournament as any)?.roomPassword || (tournament as any)?.roomDetails?.roomPass || (tournament as any)?.roomDetails?.roomPassword;
+    // AUD-013b: credentials come only from the protected credentials subcollection
+    // (via subscribeRoomCredentials). Falling back to tournament.roomId/roomPass read
+    // straight off the public event document, which leaks the room to anyone.
+    const effectiveRoomId = roomCreds?.roomId;
+    const effectiveRoomPass = roomCreds?.roomPass;
     const hasRoomCreds = Boolean(effectiveRoomId || effectiveRoomPass);
     const showRoom = isJoined && (
         hasRoomCreds || 
@@ -747,7 +731,7 @@ export default function TournamentDetails() {
                         },
                         offers: {
                             "@type": "Offer",
-                            price: tournament.entryFee ? String(tournament.entryFee) : "0",
+                            price: tournamentEntryFee > 0 ? String(tournamentEntryFee) : "0",
                             priceCurrency: "NPR",
                             availability: "https://schema.org/InStock",
                             url: `https://www.nexplayorg.app/tournaments/${id}`,
@@ -909,7 +893,7 @@ export default function TournamentDetails() {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
                                     {[
                                         { label: 'Prize Pool', value: formatCurrency(tournament.prizePool), icon: Trophy, color: 'text-yellow-500' },
-                                        { label: 'Entry Fee', value: tournament.entryFee > 0 ? formatCurrency(tournament.entryFee) : 'FREE', icon: Medal, color: 'text-brand-500' },
+                                        { label: 'Entry Fee', value: tournamentEntryFee > 0 ? formatCurrency(tournamentEntryFee) : 'FREE', icon: Medal, color: 'text-brand-500' },
                                         { label: 'Slots', value: `${filledCount}/${totalCount}`, icon: Users, color: 'text-blue-500' },
                                         { label: 'Game Mode', value: tournament.type, icon: Play, color: 'text-red-500' },
                                     ].map((stat, i) => (
@@ -1472,7 +1456,7 @@ export default function TournamentDetails() {
                             <div className="flex justify-between items-center p-3 sm:p-4 bg-dark rounded-2xl border border-gray-800">
                                 <span className="text-xs text-gray-500 font-black uppercase tracking-widest">Entry Fee</span>
                                 <span className="text-lg sm:text-xl font-black text-white">
-                                    {tournament.entryFee > 0 ? formatCurrency(tournament.entryFee) : 'FREE'}
+                                    {tournamentEntryFee > 0 ? formatCurrency(tournamentEntryFee) : 'FREE'}
                                 </span>
                             </div>
                             <div className="p-3 sm:p-4 bg-dark rounded-2xl border border-gray-800">

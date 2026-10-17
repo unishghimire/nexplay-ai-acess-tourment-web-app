@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import fs from "fs";
 import multer from "multer";
 import { getFirestore } from "firebase-admin/firestore";
+import { resolveRoleFromToken } from "./authPolicy.js";
 dotenv.config();
 
 let filename = process.cwd();
@@ -345,8 +346,8 @@ export const authenticateToken = async (req: any, res: any, next: any) => {
     // Custom claims are the single source of truth for role (BUG-030).
     // The Firestore-doc fallback has been REMOVED — run /api/admin/sync-claims
     // before deploying so existing doc-role admins/orgs are migrated to claims.
-    const SUPER_ADMIN_EMAILS = ['nexplayorg@gmail.com', 'nex.unishghimire@gmail.com', 'admin@nexplay.gg'];
-    const role = decodedIdToken.role || (SUPER_ADMIN_EMAILS.includes(decodedIdToken.email || '') ? 'admin' : 'player');
+    // R-03: the mailbox fallback lives in authPolicy and requires email_verified.
+    const role = resolveRoleFromToken(decodedIdToken);
     const username = decodedIdToken.name || decodedIdToken.email?.split("@")[0] || "User";
     req.user = { userId: decodedIdToken.uid, email: decodedIdToken.email, username, role };
     return next();

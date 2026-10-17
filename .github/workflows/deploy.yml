@@ -16,6 +16,9 @@ jobs:
           node-version: '20'
           cache: 'npm'
       - run: npm ci
+      # R-13: deployment must not ship a commit whose test suite is red. This
+      # workflow runs in parallel with ci.yml, so the gate lives here too.
+      - run: npm test
       - run: npx tsc --noEmit
       - run: npm run build
       - name: Deploy to Firebase Hosting

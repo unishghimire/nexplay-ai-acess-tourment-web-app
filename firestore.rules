@@ -88,6 +88,20 @@ service cloud.firestore {
     }
 
     // ═══════════════════════════════════════════════════════════════
+    // ROOM CREDENTIAL GUARD (AUD-013b)
+    // Scrim/tournament docs are publicly readable, so room ID + password must
+    // never be stored on them — not at the root and not nested under
+    // roomDetails, which older organizer flows used. Credentials belong in the
+    // protected {collection}/{id}/credentials/{credId} subcollection.
+    // ═══════════════════════════════════════════════════════════════
+    function hasCredentialFields(data) {
+      return data.keys().hasAny(['roomId', 'roomPass', 'roomPassword', 'credentials'])
+        || ('roomDetails' in data
+            && data.roomDetails is map
+            && data.roomDetails.keys().hasAny(['roomId', 'roomPass', 'roomPassword']));
+    }
+
+    // ═══════════════════════════════════════════════════════════════
     // VALIDATION BLUEPRINTS
     // ═══════════════════════════════════════════════════════════════
     function isValidUserProfile(data) {
@@ -106,7 +120,7 @@ service cloud.firestore {
             // 'open' is the lifecycle status used by practice scrims (stored in the tournaments collection)
             data.status in ['draft', 'published', 'upcoming', 'live', 'paused', 'completed', 'cancelled', 'open'] &&
              isValidId(data.hostUid) &&
-             !data.keys().hasAny(['roomId', 'roomPass']);
+             !hasCredentialFields(data);
     }
 
     // Validates a transaction record on creation — prevents amount/type manipulation
@@ -183,9 +197,16 @@ service cloud.firestore {
     match /users_public/{userId} {
       allow get:    if true && isValidId(userId);
       allow list:   if true;
+      // R-07: stats and badges are server-earned only. A create may not carry
+      // xp/level/wins/rank/badge keys at all — buildPublicProfile() writes none of
+      // them, and the server merges stats later via the Admin SDK.
       allow create: if isSignedIn() && isValidId(userId) && isOwner(userId) &&
                        incoming().uid == userId && incoming().role == 'player' &&
-                       incoming().totalEarnings == 0 && isValidPublicProfile(incoming());
+                       incoming().totalEarnings == 0 && isValidPublicProfile(incoming()) &&
+                       !incoming().keys().hasAny([
+                         'xp', 'level', 'points', 'wins', 'winRate', 'rank',
+                         'rankChange', 'isVerified', 'isChampion',
+                         'tournamentsPlayed', 'seasonId', 'previousSeasonStats']);
       allow update: if isValidId(userId) && isValidPublicProfile(incoming()) && (
                        (isOwner(userId) && incoming().uid == existing().uid &&
                         incoming().role == existing().role &&
@@ -230,7 +251,9 @@ service cloud.firestore {
 
       // Organizer can update any field on their own tournament.
       // Field-level restriction removed — organizers need to update groups,
-      // bracketMatches, roomId, roomPass, winners, etc. Admin has full access.
+      // bracketMatches, winners, etc. Admin has full access.
+      // Exception: room credentials stay blocked by isValidTournament (AUD-013b);
+      // they belong in the tournaments/{id}/credentials subcollection.
       // Security: completed/cancelled tournaments cannot be re-opened by organizers.
       allow update: if isValidId(tournamentId) && (
         isAdmin() ||
@@ -287,7 +310,6 @@ service cloud.firestore {
       // Organizer/admin can update status + check-in fields (approve/reject/check-in)
       // and per-participant tournament stats/moderation fields (result upload, roster lock,
       // strikes/warnings, bans). Players can check themselves in (toggle checkedIn only).
-      // Player can delete their own registration (leave tournament).
       allow update: if isAdmin() ||
                        (isOrganizer() && isEventHost(existing().tournamentId) &&
                         incoming().diff(existing()).affectedKeys().hasOnly([
@@ -298,28 +320,35 @@ service cloud.firestore {
                        (isVerified() && existing().userId == request.auth.uid &&
                         incoming().diff(existing()).affectedKeys().hasOnly(['checkedIn', 'checkedInAt']));
 
-      allow delete: if isAdmin() ||
-                       (isVerified() && (
-                         existing().userId == request.auth.uid ||
-                         isEventHost(existing().tournamentId)
-                       ));
+      // R-06: deleting a paid registration outside the transactional leave routes
+      // stranded refunds and corrupted escrow accounting, so only admins delete.
+      // Player leave and host kicks go through the server routes (Admin SDK).
+      allow delete: if isAdmin();
     }
 
     // ═══════════════════════════════════════════════════════════════
     // SCRIMS
     // ═══════════════════════════════════════════════════════════════
-    // AUD-013: scrim credentials must NOT be stored in the public scrim doc.
-    // Credentials live in the protected credentials subcollection below.
+    // AUD-013 + AUD-013b: credentials must NOT be stored in the public scrim doc,
+    // at the root or nested under roomDetails. They live in the protected
+    // credentials subcollection below, which only host/admin/joined participants read.
     match /scrims/{scrimId} {
       allow read:   if true;
       allow create: if isOrganizer() && (
         incoming().hostUid == request.auth.uid ||
         incoming().orgId == request.auth.uid ||
         isAdmin()
-      ) && !(('roomId' in incoming()) || ('roomPassword' in incoming()) || ('roomPass' in incoming()));
+      ) && !hasCredentialFields(incoming());
+      // R-01: settlement state and escrow counters feed the server settlement
+      // budget, so the host must not be able to rewrite them client-side. Only
+      // the Admin SDK settlement route and admins may touch these fields.
       allow update: if isAdmin() || ((isOrganizer() && (existing().hostUid == request.auth.uid || existing().orgId == request.auth.uid))
-        // Reject any update that tries to write credential fields to the public doc
-        && !(('roomId' in incoming()) || ('roomPassword' in incoming()) || ('roomPass' in incoming())));
+        && !hasCredentialFields(incoming())
+        && !incoming().diff(existing()).affectedKeys().hasAny([
+             'winners', 'manualResults', 'killRewards', 'results', 'podium',
+             'payoutStatus', 'resultsFinalized', 'payoutsReleased',
+             'prizePool', 'prizeDistribution',
+             'collectedEntryFees', 'lockedMoney', 'escrowBalance']));
       allow delete: if isAdmin() || (isOrganizer() && (existing().hostUid == request.auth.uid || existing().orgId == request.auth.uid));
     }
 
@@ -365,7 +394,13 @@ service cloud.firestore {
     match /notifications/{notificationId} {
       allow get:    if isOwner(existing().userId) && isValidId(notificationId);
       allow list:   if isSignedIn() && resource.data.userId == request.auth.uid;
-      allow create: if isVerified() && incoming().userId is string;
+      // R-08: client fan-out is limited to the known notification shape, must start
+      // unread, and may not smuggle arbitrary payloads into another user's feed.
+      allow create: if isVerified() && incoming().userId is string &&
+                       incoming().read == false &&
+                       incoming().keys().hasOnly([
+                         'userId', 'title', 'message', 'type', 'read', 'link',
+                         'timestamp', 'createdAt']);
       allow update: if isOwner(existing().userId) &&
                        incoming().diff(existing()).affectedKeys().hasOnly(['read']);
       allow delete: if isOwner(existing().userId) || isAdmin();
